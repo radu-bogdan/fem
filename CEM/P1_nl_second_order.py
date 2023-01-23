@@ -11,6 +11,9 @@ import scipy.sparse.linalg
 import time
 import geometries
 
+from matplotlib.pyplot import spy
+
+
 import plotly.io as pio
 pio.renderers.default = 'browser'
 
@@ -40,7 +43,7 @@ g2 = lambda x,y :  1+0*x
 # Kxx, Kyy, Kxy, Kyx = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'K'))
 # M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'M'))
 
-M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
+M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'M'))
 
 sizeM = M.shape[0]
 
@@ -48,18 +51,18 @@ walls = np.r_[5,6,7,8,9,10,11,12]
 left_block = np.r_[5,6,7,8]
 right_block = np.r_[9,10,11,12]
 
-B_full = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P1', size = sizeM))
-B_left_block = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P1', size = sizeM, edges = left_block))
-B_right_block = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P1', size = sizeM, edges = right_block))
-B_walls = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P1', size = sizeM, edges = walls))
+B_full = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P2', size = sizeM))
+B_left_block = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P2', size = sizeM, edges = left_block))
+B_right_block = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P2', size = sizeM, edges = right_block))
+B_walls = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P2', size = sizeM, edges = walls))
 # M_f = pde.projections.assem(MESH, BASIS, LISTS, dict(trig = 'P1'), f_rhs)
-Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'C'))
+Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'C'))
 
-B_g  = pde.projections.assem_H1_b(MESH, BASIS, dict(space = 'P1', order = 2, edges = left_block, size = sizeM), g1)
-B_g += pde.projections.assem_H1_b(MESH, BASIS, dict(space = 'P1', order = 2, edges = right_block, size = sizeM), g2)
+B_g  = pde.projections.assem_H1_b(MESH, BASIS, LISTS, dict(space = 'P2', order = 2, edges = left_block, size = sizeM), g1)
+B_g += pde.projections.assem_H1_b(MESH, BASIS, LISTS, dict(space = 'P2', order = 2, edges = right_block, size = sizeM), g2)
 
-MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'BDM1-BDM1'); 
-D = MAT['BDM1-BDM1']['D'];
+MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'RT1-BDFM1'); 
+D = MAT['RT1-BDFM1']['D'];
 
 
 fx = lambda x,y : 2*x+y+0.4*x**3
@@ -74,10 +77,10 @@ penalty = 10**10
 
 def update_left(ux,uy):
     
-    fxx_grad_u_Kxx = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff_const = fxx(ux,uy)))[0]
-    fyy_grad_u_Kyy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff_const = fyy(ux,uy)))[1]
-    fxy_grad_u_Kxy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff_const = fxy(ux,uy)))[2]
-    fyx_grad_u_Kyx = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff_const = fyx(ux,uy)))[3]
+    fxx_grad_u_Kxx = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'K', coeff_const = fxx(ux,uy)))[0]
+    fyy_grad_u_Kyy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'K', coeff_const = fyy(ux,uy)))[1]
+    fxy_grad_u_Kxy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'K', coeff_const = fxy(ux,uy)))[2]
+    fyx_grad_u_Kyx = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'K', coeff_const = fyx(ux,uy)))[3]
     
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx)
 

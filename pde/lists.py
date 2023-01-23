@@ -169,7 +169,7 @@ def lists(MESH):
     LISTS['P2']['TRIG']['LIST_DOF'] = np.c_[MESH.t,MESH.np+MESH.TriangleToEdges].astype(np.uint64)
     
     LISTS['P2']['B'] = {}
-    LISTS['P2']['B']['LIST_DOF'] = np.c_[MESH.e,MESH.NoEdges+MESH.Boundary.Edges]
+    LISTS['P2']['B']['LIST_DOF'] = np.c_[MESH.e,MESH.np+MESH.Boundary.Edges].astype(np.uint64)
 
 
     LISTS['Q0']['QUAD'] = {}

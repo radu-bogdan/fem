@@ -224,17 +224,17 @@ def basis():
     BASIS['P2']['TRIG']['phi'][0] = lambda x,y: (1-x-y)*(1-2*x-2*y)
     BASIS['P2']['TRIG']['phi'][1] = lambda x,y: x*(2*x-1)
     BASIS['P2']['TRIG']['phi'][2] = lambda x,y: y*(2*y-1)
-    BASIS['P2']['TRIG']['phi'][3] = lambda x,y: 4*x*(1-x-y)
+    BASIS['P2']['TRIG']['phi'][3] = lambda x,y: 4*x*y
     BASIS['P2']['TRIG']['phi'][4] = lambda x,y: 4*y*(1-x-y)
-    BASIS['P2']['TRIG']['phi'][5] = lambda x,y: 4*x*y
+    BASIS['P2']['TRIG']['phi'][5] = lambda x,y: 4*x*(1-x-y)
     
     BASIS['P2']['TRIG']['dphi'] = {}
     BASIS['P2']['TRIG']['dphi'][0] = lambda x,y: np.r_[4*x+4*y-3, 4*x+4*y-3]
     BASIS['P2']['TRIG']['dphi'][1] = lambda x,y: np.r_[4*x-1, 0*x]
     BASIS['P2']['TRIG']['dphi'][2] = lambda x,y: np.r_[0*x, 4*y-1]
-    BASIS['P2']['TRIG']['dphi'][3] = lambda x,y: np.r_[-4*(2*x+y-1), -4*x]
+    BASIS['P2']['TRIG']['dphi'][3] = lambda x,y: np.r_[4*y, 4*x]
     BASIS['P2']['TRIG']['dphi'][4] = lambda x,y: np.r_[-4*y, -4*(x+2*y-1)]
-    BASIS['P2']['TRIG']['dphi'][5] = lambda x,y: np.r_[4*y, 4*x]
+    BASIS['P2']['TRIG']['dphi'][5] = lambda x,y: np.r_[-4*(2*x+y-1), -4*x]
     
     # BASIS.P2.phi{1}  = @(x,y) (1-x-y)*(1-2*x-2*y);
     # BASIS.P2.phi{2}  = @(x,y) x*(2*x-1);

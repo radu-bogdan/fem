@@ -95,15 +95,15 @@ def __evaluate_quad(MESH,quad,U,real_indices):
 
 
 ###############################################################################
-def assem(MESH, BASIS, LISTS, Dict, U):
+def assemH1(MESH, BASIS, LISTS, Dict, U):
     
     if MESH.q.shape[0]!=0:
-        uh_quad = __assem_quad(MESH, BASIS, LISTS, Dict, U)
+        uh_quad = __assem_quadH1(MESH, BASIS, LISTS, Dict, U)
     else:
         uh_quad = npy.array([],dtype=npy.uint64)
     
     if MESH.t.shape[0]!=0:
-        uh_trig = __assem_trig(MESH, BASIS, LISTS, Dict, U)
+        uh_trig = __assem_trigH1(MESH, BASIS, LISTS, Dict, U)
     else:
         uh_trig = npy.array([],dtype=npy.uint64)
     
@@ -111,7 +111,7 @@ def assem(MESH, BASIS, LISTS, Dict, U):
     
     return uh
     
-def __assem_trig(MESH, BASIS, LISTS, Dict, U):
+def __assem_trigH1(MESH, BASIS, LISTS, Dict, U):
     
     trig = Dict.get('trig')
     
@@ -159,7 +159,7 @@ def __assem_trig(MESH, BASIS, LISTS, Dict, U):
 
 
 
-def __assem_quad(MESH, BASIS, LISTS, Dict, U):
+def __assem_quadH1(MESH, BASIS, LISTS, Dict, U):
     
     quad = Dict.get('quad')
     
@@ -286,7 +286,7 @@ def assem_HDIV_b(MESH, BASIS, Dict, U):
 
 
 ###############################################################################
-def assem_H1_b(MESH, BASIS, Dict, U):
+def assem_H1_b(MESH, BASIS, LISTS, Dict, U):
     space = Dict.get('space')
     edges = Dict.get('edges')
     order = Dict.get('order')
@@ -307,12 +307,9 @@ def assem_H1_b(MESH, BASIS, Dict, U):
     e0 = e[:,0]; e1 = e[:,1]
     A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
     detA = npy.sqrt(A0**2+A1**2)
-    
-    phi = {}
-    if space == 'P1':
-        phi[0] = lambda x : 1-x
-        phi[1] = lambda x : x
-        dofs = e
+        
+    phi = BASIS[space]['B']['phi']
+    dofs = LISTS[space]['B']['LIST_DOF'][indices,:]
         
     lphi = len(phi)
     

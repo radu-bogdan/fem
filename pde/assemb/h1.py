@@ -6,8 +6,6 @@ from scipy import sparse as sp
 # import matplotlib.pyplot as plt
 import time
 
-print('lele')
-
 def get_info(MESH,space):
     
     def get_info_trig(space):
@@ -35,17 +33,33 @@ def get_info(MESH,space):
             
         return INFO
     
-    INFO = {}
+    INFO = {}   
     
     ###########################################################################
     if space == 'P1-Q1': 
         INFO = INFO | get_info_trig('P1')
         INFO = INFO | get_info_quad('Q1')
         INFO['sizeM'] = MESH.np
+        INFO['sizeD'] = MESH.nt # +MESH.nq
     ###########################################################################
     
-    if space == 'P1b':
+    
+    ###########################################################################
+    if space == 'P1': 
+        INFO = INFO | get_info_trig('P1')
+        INFO['sizeM'] = MESH.np
+        INFO['sizeD'] = MESH.nt
         INFO['qp_we_B'] = quadrature.one_d(order = 2)
+    ###########################################################################
+    
+    
+    ###########################################################################
+    if space == 'P2': 
+        INFO = INFO | get_info_trig('P2')
+        INFO['sizeM'] = MESH.np + MESH.NoEdges
+        INFO['sizeD'] = 3*MESH.nt
+        INFO['qp_we_B'] = quadrature.one_d(order = 5) # 4 would suffice
+    ###########################################################################
     
     return INFO
 

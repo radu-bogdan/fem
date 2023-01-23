@@ -24,7 +24,7 @@ gmsh.initialize()
 gmsh.model.add("Capacitor plates")
 geometries.capacitorPlates(a = 20,b = 20,c = 0.5,d = d,l = l)
 gmsh.option.setNumber("Mesh.Algorithm", 2)
-gmsh.option.setNumber("Mesh.MeshSizeMax", 0.2)
+gmsh.option.setNumber("Mesh.MeshSizeMax", 1)
 # gmsh.fltk.run()
 p,e,t,q = pde.petq_generate()
 
@@ -53,8 +53,8 @@ B_walls = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P1', size = sizeM, edg
 # M_f = pde.projections.assem(MESH, BASIS, LISTS, dict(trig = 'P1'), f_rhs)
 Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'C'))
 
-B_g  = pde.projections.assem_H1_b(MESH, BASIS, dict(space = 'P1', order = 2, edges = left_block, size = sizeM), g1)
-B_g += pde.projections.assem_H1_b(MESH, BASIS, dict(space = 'P1', order = 2, edges = right_block, size = sizeM), g2)
+B_g  = pde.projections.assem_H1_b(MESH, BASIS, LISTS, dict(space = 'P1', order = 2, edges = left_block, size = sizeM), g1)
+B_g += pde.projections.assem_H1_b(MESH, BASIS, LISTS, dict(space = 'P1', order = 2, edges = right_block, size = sizeM), g2)
 
 MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'BDM1-BDM1');
 D = MAT['BDM1-BDM1']['D'];

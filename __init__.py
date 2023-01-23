@@ -6,4 +6,4 @@ from pde.assemble import *
 from pde.projections import *
 from pde.petq_generate import *
 from pde.pcg import *
-import pde.assemb
+# import pde.assemb

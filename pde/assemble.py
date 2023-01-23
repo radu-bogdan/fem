@@ -187,6 +187,7 @@ def get_info(MESH,space):
         INFO = INFO | get_info_trig('P2')
         INFO['sizeM'] = MESH.np + MESH.NoEdges
         INFO['sizeD'] = 3*MESH.nt
+        INFO['qp_we_B'] = quadrature.one_d(order = 5) # 4 would suffice
     ###########################################################################
     
     

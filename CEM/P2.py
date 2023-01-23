@@ -61,13 +61,12 @@ M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
 
 Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'C'))
 
-MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'BDM1-BDM1'); 
-D = MAT['BDM1-BDM1']['D'];
+MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'BDM1-BDM1'); D = MAT['BDM1-BDM1']['D'];
 
 B = pde.assemble.h1b(MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
 
-M_f_1 = pde.projections.assem(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[7]), f1)
-M_f_2 = pde.projections.assem(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[8]), f2)
+M_f_1 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[7]), f1)
+M_f_2 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[8]), f2)
 
 M_f = M_f_1 + M_f_2
 

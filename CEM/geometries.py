@@ -23,6 +23,8 @@ def unitSquare():
     c1 = gmsh.model.geo.addCurveLoop([1, 2, 3, 4])
     s1 = gmsh.model.geo.addPlaneSurface([c1])
     
+    gmsh.model.geo.synchronize()
+    
     gmsh.model.addPhysicalGroup(1, [l1])
     gmsh.model.addPhysicalGroup(1, [l2])
     gmsh.model.addPhysicalGroup(1, [l3])
