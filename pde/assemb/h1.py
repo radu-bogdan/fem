@@ -125,13 +125,15 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     
     if matrix == 'M':
         nqp = len(we_M)
-        ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
-        # phii_H1 = npy.zeros((nqp,lphi_H1))
+        ellmatsM_H1 = npy.zeros((lphi_H1,nqp*nt))
+        # phii_H1 = npy.zeros((nt,lphi_H1))
         
-        for i in range(nqp):
-            for j in range(lphi_H1):
-                ellmatsM_H1[:,j+i] = phi_H1[j](qp_M[0,i],qp_M[1,i])
-            
+        for j in range(lphi_H1):
+            for i in range(nqp):
+                ellmatsM_H1[j,i*nt:(i+1)*nt] = phi_H1[j](qp_M[0,i],qp_M[1,i])
+                
+        
+                
             
             # ellmatsM_H1 = ellmatsM_H1 + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]
         
