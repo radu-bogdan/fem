@@ -26,7 +26,7 @@ tri = mtri.Triangulation(u, v)
 
 # Plot the surface.  The triangles in parameter space determine which x, y, z
 # points are connected by an edge.
-ax = fig.add_subplot(1, 2, 1, projection='3d')
+ax = fig.add_subplot(1, 1, 1, projection='3d')
 ax.plot_trisurf(x, y, z, triangles=tri.triangles, cmap=plt.cm.Spectral)
 ax.set_zlim(-1, 1)
 
@@ -60,8 +60,8 @@ mask = xmid**2 + ymid**2 < min_radius**2
 triang.set_mask(mask)
 
 # Plot the surface.
-ax = fig.add_subplot(1, 2, 2, projection='3d')
-ax.plot_trisurf(triang, z, cmap=plt.cm.CMRmap)
+# ax = fig.add_subplot(1, 2, 2, projection='3d')
+# ax.plot_trisurf(triang, z, cmap=plt.cm.CMRmap)
 
 
 plt.show()

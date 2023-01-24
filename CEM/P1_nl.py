@@ -257,7 +257,11 @@ def fem_objective(u):
     ux = sps.linalg.spsolve(D,Cx*u)
     uy = sps.linalg.spsolve(D,Cy*u)
     
+<<<<<<< Updated upstream
     return np.ones(MESH.nt)@D@f(ux,uy) - penalty*u@B_g + 1/2*penalty*u@B_walls@u+penalty*B_g@B_g
+=======
+    return np.ones(MESH.nt)@D@f(ux,uy) + penalty*u@B_g - 1/2*penalty*u@B_walls@u
+>>>>>>> Stashed changes
     
     
 # alpha = WulffePowell()c

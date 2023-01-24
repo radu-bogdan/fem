@@ -124,17 +124,19 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     #####################################################################################
     
     if matrix == 'M':
-        ellmatsM_H1 = npy.zeros((nt,lphi_H1*lphi_H1))
+        nqp = len(we_M)
+        ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
+        # phii_H1 = npy.zeros((nqp,lphi_H1))
         
-        for i in range(len(we_M)):
-            qpT_i_1 = A00*qp_M[0,i]+A01*qp_M[1,i]+p[t0,0]
-            qpT_i_2 = A10*qp_M[0,i]+A11*qp_M[1,i]+p[t0,1]
-            coeff_qpT_i = coeff(qpT_i_1,qpT_i_2)
+        for i in range(nqp):
             for j in range(lphi_H1):
-                phii_H1[:,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])
-    
-            ellmatsM_H1 = ellmatsM_H1 + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-    
+                ellmatsM_H1[:,j+i] = phi_H1[j](qp_M[0,i],qp_M[1,i])
+            
+            
+            # ellmatsM_H1 = ellmatsM_H1 + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]
+        
+        
+        
         ellmatsM_H1[abs(ellmatsM_H1)<1e-14] = 0
         M = sparse(im_H1,jm_H1,ellmatsM_H1,sizeM,sizeM)
         M.eliminate_zeros()
