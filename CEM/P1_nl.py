@@ -161,6 +161,7 @@ def Newton(J,dJ,ddJ,x0,maxIter=1000,eps=0.0000001, printoption=1):#performs maxI
 def AmijoBacktracking(F,dF,factor=1/2,mu=0.1):
     alpha=1
     dphi=dF(0.)
+    print(dphi)
     phi=F(0.)
     for i in range(100):
         if F(alpha)<=phi+dphi*mu*alpha:
@@ -169,27 +170,28 @@ def AmijoBacktracking(F,dF,factor=1/2,mu=0.1):
             alpha=alpha*factor
     return alpha;
 
-def NewtonSparse(J,dJ,ddJ,x0,maxIter=1000,eps=0.0000001, printoption=1):#performs maxIterSteps of Newton or until |df|<eps
+def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=0.00001, printoption=1):#performs maxIterSteps of Newton or until |df|<eps
     epsangle=0.00001;
     x=x0
     flag=0
     angleCondition=np.zeros(5);
     for i in range(maxIter):
-        sx=sps.linalg.spsolve(ddJ(x),-dJ(x))
-        if (np.dot(sx,-dJ(x))/np.linalg.norm(sx)/np.linalg.norm(dJ(x))<epsangle):
+        dJx=dJ(x)
+        sx=sps.linalg.spsolve(ddJ(x),-dJx)
+        if (np.dot(sx,-dJx)/np.linalg.norm(sx)/np.linalg.norm(dJx)<epsangle):
             angleCondition[i%5]=1      
             if np.product(angleCondition)>0:
-                sx=-dJ(x)
+                sx=-dJx
                 print("STEP IN NEGATIVE GRADIENT DIRECTION")
         else:
             angleCondition[i%5]=0
         F = lambda alpha:J(x+alpha*sx)
         dF = lambda alpha: np.dot(dJ(x+alpha*sx),sx)
-        alpha=AmijoBacktracking(F,dF)
+        alpha=WolfePowell(F,dF)
         x=x+alpha*sx
         if printoption:
             print ("NEWTON: Iteration: %2d" %(i+1)+"||obj: %2e" % (J(x))+"|| ||grad||: %2e" % (np.linalg.norm(dJ(x)))+"||alpha: %2e" % (alpha))
-        if(np.linalg.norm(dF(alpha))<eps):
+        if(np.linalg.norm(np.linalg.norm(dJ(x)))<eps):
             flag=1
             return x,flag
     return x,flag
@@ -242,7 +244,7 @@ def femg(u):
     ux = sps.linalg.spsolve(D,Cx*u)
     uy = sps.linalg.spsolve(D,Cy*u)
    
-    return update_right(u,ux,uy)
+    return -update_right(u,ux,uy)
     
     
 def femH(u):
@@ -255,16 +257,15 @@ def fem_objective(u):
     ux = sps.linalg.spsolve(D,Cx*u)
     uy = sps.linalg.spsolve(D,Cy*u)
     
-    return np.ones(MESH.nt)@D@f(ux,uy) + penalty*B_g - 1/2*penalty*B_walls*u
+    return np.ones(MESH.nt)@D@f(ux,uy) - penalty*u@B_g + 1/2*penalty*u@B_walls@u+penalty*B_g@B_g
     
     
-    return 0
-# alpha = WulffePowell()
+# alpha = WulffePowell()c
 
 u = 1+np.zeros(shape = M.shape[0])
 
 # NewtonSparse(J,dJ,ddJ,x0,maxIter=1000,eps=0.0000001, printoption=1)
-NewtonSparse(fem_objective,femg,femH,x0 = np.r_[0:MESH.np])
+NewtonSparse(fem_objective,femg,femH,u)
 
 
 for i in range(1):
@@ -279,19 +280,20 @@ for i in range(1):
     
     u_try = u
     
-    for i in range(10):
+    for i in range(1):
         alphak = 2**(-i)
         u_try = u + alphak*w
         print(alphak)
         ux_try = sps.linalg.spsolve(D,Cx*u)
         uy_try = sps.linalg.spsolve(D,Cy*u)
+        print(np.linalg.norm(F(u,ux,uy)))
         if np.linalg.norm(F(u,ux,uy))>np.linalg.norm(F(u_try,ux_try,uy_try)):
             break
     
     u = u_try
     
     # print('Norm' + str(np.linalg.norm(F(u,ux,uy))))
-    if np.linalg.norm(F(u,ux,uy))<1e-5:
+    if np.linalg.norm(F(u,ux,uy))<1e-9:
         break
     
     # u = u_new
