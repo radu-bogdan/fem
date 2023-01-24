@@ -117,6 +117,7 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
     detA = A00*A11-A01*A10
     
+    
     im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
     
     #####################################################################################
@@ -128,19 +129,25 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
         ellmatsM_H1 = npy.zeros((lphi_H1,nqp*nt))
         # phii_H1 = npy.zeros((nt,lphi_H1))
         
+        qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
+        
         for j in range(lphi_H1):
             for i in range(nqp):
                 ellmatsM_H1[j,i*nt:(i+1)*nt] = phi_H1[j](qp_M[0,i],qp_M[1,i])
-                
+        
+        
         
                 
-            
+                
+                
             # ellmatsM_H1 = ellmatsM_H1 + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]
         
+        # ellmatsM_H1[abs(ellmatsM_H1)<1e-14] = 0
         
         
-        ellmatsM_H1[abs(ellmatsM_H1)<1e-14] = 0
-        M = sparse(im_H1,jm_H1,ellmatsM_H1,sizeM,sizeM)
+        
+        im_H1,jm_H1 = create_indices(qp_list_DOF,H1_LIST_DOF)
+        M = sparse(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
         M.eliminate_zeros()
         return M
 
