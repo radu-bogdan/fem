@@ -126,27 +126,16 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     
     if matrix == 'M':
         nqp = len(we_M)
-        ellmatsM_H1 = npy.zeros((lphi_H1,nqp*nt))
+        ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
         # phii_H1 = npy.zeros((nt,lphi_H1))
         
         qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
         
         for j in range(lphi_H1):
             for i in range(nqp):
-                ellmatsM_H1[j,i*nt:(i+1)*nt] = phi_H1[j](qp_M[0,i],qp_M[1,i])
+                ellmatsM_H1[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])*npy.sqrt(1/2*npy.abs(detA)*we_M[i])            
         
-        
-        
-                
-                
-                
-            # ellmatsM_H1 = ellmatsM_H1 + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]
-        
-        # ellmatsM_H1[abs(ellmatsM_H1)<1e-14] = 0
-        
-        
-        
-        im_H1,jm_H1 = create_indices(qp_list_DOF,H1_LIST_DOF)
+        im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
         M = sparse(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
         M.eliminate_zeros()
         return M
@@ -321,8 +310,8 @@ def create_indices(ind1,ind2):
     if ind1.ndim == 1: ind1 = ind1[:,None]
     if ind2.ndim == 1: ind2 = ind2[:,None]
 
-    ii = npy.tile(ind2,(ind1.shape[1],1))
-    jj = npy.tile(ind1,(1,ind2.shape[1]))
+    ii = npy.tile(ind1,(1,ind2.shape[1]))
+    jj = npy.tile(ind2,(ind1.shape[1],1))
 
     return ii,jj
 
