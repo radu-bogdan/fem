@@ -132,7 +132,7 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
         ellmatsD = npy.zeros((nqp*nt))
         
         im = npy.tile(H1_LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.r_[0:nt*nqp],(3,1)).T
+        jm = npy.tile(npy.c_[0:nt*nqp],(1,3))
         
         for j in range(lphi_H1):
             for i in range(nqp):
