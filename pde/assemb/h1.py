@@ -107,6 +107,10 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     phiiy_H1 = npy.zeros((nt,lphi_H1))
     phii_H1 = npy.zeros((nt,lphi_H1))
     phii_L2 = npy.zeros((nt,lphi_L2))
+    
+    
+    
+    im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
 
     #####################################################################################
     # Mappings
@@ -117,28 +121,30 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
     detA = A00*A11-A01*A10
     
-    
-    im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
-    
     #####################################################################################
     # Mass matrix
     #####################################################################################
     
     if matrix == 'M':
         nqp = len(we_M)
-        ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
-        # phii_H1 = npy.zeros((nt,lphi_H1))
         
-        qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
+        ellmatsB = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsD = npy.zeros((nqp*nt))
+        
+        im = npy.tile(H1_LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.r_[0:nt*nqp],(3,1)).T
         
         for j in range(lphi_H1):
             for i in range(nqp):
-                ellmatsM_H1[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])*npy.sqrt(1/2*npy.abs(detA)*we_M[i])            
+                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])#*npy.sqrt(1/2*npy.abs(detA)*we_M[i])
+                ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_M[i]
         
-        im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
-        M = sparse(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
-        M.eliminate_zeros()
-        return M
+        # im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
+        B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
+        B.eliminate_zeros()
+        
+        D = sp.diags(diagonals = ellmatsD,shape = (nqp*nt,nqp*nt))
+        return B, D
 
     #####################################################################################
     # Stiffness matrix
@@ -331,4 +337,6 @@ def sparse(i, j, v, m, n):
         s: 2-D array
             Matrix full of zeros excepting values v at indexes i, j
     """
-    return sp.csc_matrix((v.flatten(order='F'), (i.flatten(order='F'), j.flatten(order='F'))), shape=(m, n))
+    # return sp.csc_matrix((v.flatten(order='F'), (i.flatten(order='F'), j.flatten(order='F'))), shape=(m, n))
+    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
+    # return sp.csr_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
