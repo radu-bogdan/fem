@@ -102,7 +102,7 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
 
     H1_LIST_DOF = LISTS[spaceTrig]['TRIG']['LIST_DOF'][indices,:]
     H1_DX_LIST_DOF = LISTS[spaceTrig_dx]['TRIG']['LIST_DOF'][indices,:]
-
+    
     phiix_H1 = npy.zeros((nt,lphi_H1))
     phiiy_H1 = npy.zeros((nt,lphi_H1))
     phii_H1 = npy.zeros((nt,lphi_H1))
@@ -143,7 +143,7 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
         B.eliminate_zeros()
         
-        D = sp.diags(diagonals = ellmatsD,shape = (nqp*nt,nqp*nt))
+        D = sp.diags(diagonals = ellmatsD, shape = (nqp*nt,nqp*nt), format="csc")
         return B, D
 
     #####################################################################################
