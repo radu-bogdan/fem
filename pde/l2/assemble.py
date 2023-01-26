@@ -61,14 +61,23 @@ def assemble(MESH,BASIS,LISTS,Dict):
     
     
     spaceTrig = INFO['TRIG']['space'];
+    spaceTrig_dx = INFO['TRIG']['space_dx'];
     sizeM = INFO['sizeM']
+    sizeD = INFO['sizeD']
     qp_M = INFO['TRIG']['qp_we_M'][0]; we_M = INFO['TRIG']['qp_we_M'][1]
     qp_K = INFO['TRIG']['qp_we_K'][0]; we_K = INFO['TRIG']['qp_we_K'][1]
 
     phi_H1 = BASIS[spaceTrig]['TRIG']['phi']; lphi_H1 = len(phi_H1)
     dphi_H1 = BASIS[spaceTrig]['TRIG']['dphi']; ldphi_H1 = len(dphi_H1)
+    phi_L2 = BASIS[spaceTrig_dx]['TRIG']['phi']; lphi_L2 = len(phi_L2)
 
     H1_LIST_DOF = LISTS[spaceTrig]['TRIG']['LIST_DOF'][indices,:]
+    H1_DX_LIST_DOF = LISTS[spaceTrig_dx]['TRIG']['LIST_DOF'][indices,:]
+    
+    phiix_H1 = npy.zeros((nt,lphi_H1))
+    phiiy_H1 = npy.zeros((nt,lphi_H1))
+    phii_H1 = npy.zeros((nt,lphi_H1))
+    phii_L2 = npy.zeros((nt,lphi_L2))
     
     im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
 
@@ -111,15 +120,15 @@ def assemble(MESH,BASIS,LISTS,Dict):
     if matrix == 'K':
         nqp = len(we_K)
         
-        ellmatsBKx = npy.zeros((nqp*nt,ldphi_H1))
-        ellmatsBKy = npy.zeros((nqp*nt,ldphi_H1))
+        ellmatsBKx = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsBKy = npy.zeros((nqp*nt,lphi_H1))
         ellmatsD = npy.zeros((nqp*nt))
         
         im = npy.tile(H1_LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi_H1,1)).T
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi_H1,1)).T
         iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
         
-        for j in range(ldphi_H1):
+        for j in range(lphi_H1):
             for i in range(nqp):
                 dphii_H1 = dphi_H1[j](qp_K[0,i],qp_K[1,i])
                 ellmatsBKx[i*nt:(i+1)*nt,j] = 1/detA*(A11*dphii_H1[0]-A10*dphii_H1[1])
