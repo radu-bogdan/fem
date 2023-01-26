@@ -182,6 +182,21 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
        M.eliminate_zeros()
        
        return M,M
+       
+    if matrix == 'M4':
+        nqp = len(we_M)
+        ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
+        qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
+        
+        for j in range(lphi_H1):
+            for i in range(nqp):
+                ellmatsM_H1[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])*npy.sqrt(1/2*npy.abs(detA)*we_M[i])            
+        
+        im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
+        M = sparse_old(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
+        M.eliminate_zeros()
+        
+        return M,M
 
     #####################################################################################
     # Stiffness matrix

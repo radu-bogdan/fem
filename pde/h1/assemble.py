@@ -42,25 +42,12 @@ def get_info(MESH,space):
 
 
 
-# def assemble(MESH,BASIS,LISTS,Dict):
-def assemble(MESH,Dict):
-    BASIS = basis()
-    LISTS = lists(MESH)
+def assemble(MESH,BASIS,LISTS,Dict):
     
     space = Dict.get('space')
+    matrix = Dict.get('matrix')
     
     INFO = get_info(MESH,space)
-    
-    matrix = Dict.get('matrix')
-    if 'coeff' in Dict.keys():
-        coeff = Dict.get('coeff')
-    else:
-        coeff = lambda x,y : 1+x*0+y*0
-        
-    if 'coeff_const' in Dict.keys():
-        coeff_const = Dict.get('coeff_const')
-    else:
-        coeff_const = npy.ones(shape = MESH.nt)
         
     if 'regions' in Dict.keys():
         regions = Dict.get('regions')
@@ -127,95 +114,59 @@ def assemble(MESH,Dict):
         return B, D
 
     #####################################################################################
-    # Stiffness matrix
+    # Stiffness matrices
     #####################################################################################
-
-    if matrix == 'K':
-        ellmatsKxx_H1 = npy.zeros((nt,ldphi_H1*ldphi_H1))
-        ellmatsKyy_H1 = npy.zeros((nt,ldphi_H1*ldphi_H1))
-        ellmatsKxy_H1 = npy.zeros((nt,ldphi_H1*ldphi_H1))
-        ellmatsKyx_H1 = npy.zeros((nt,ldphi_H1*ldphi_H1))
+    
+    if matrix == 'Kx':
+        nqp = len(we_K)
         
-        for i in range(len(we_K)):
-            qpT_i_1 = A00*qp_K[0,i]+A01*qp_K[1,i]+p[t0,0]
-            qpT_i_2 = A10*qp_K[0,i]+A11*qp_K[1,i]+p[t0,1]
-            coeff_qpT_i = coeff(qpT_i_1,qpT_i_2)
-            
-            for j in range(lphi_H1):
+        ellmatsBKx = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsBKy = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsD = npy.zeros((nqp*nt))
+        
+        im = npy.tile(H1_LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi_H1,1)).T
+        iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
+        
+        for j in range(lphi_H1):
+            for i in range(nqp):
                 dphii_H1 = dphi_H1[j](qp_K[0,i],qp_K[1,i])
-                phiix_H1[:,j] = 1/detA*( A11*dphii_H1[0] -A10*dphii_H1[1])
-                phiiy_H1[:,j] = 1/detA*(-A01*dphii_H1[0] +A00*dphii_H1[1])
-    
-            ellmatsKxx_H1 = ellmatsKxx_H1 + 1/2*we_K[i]*assem_ellmats(phiix_H1,phiix_H1)*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-            ellmatsKyy_H1 = ellmatsKyy_H1 + 1/2*we_K[i]*assem_ellmats(phiiy_H1,phiiy_H1)*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-            ellmatsKxy_H1 = ellmatsKxy_H1 + 1/2*we_K[i]*assem_ellmats(phiix_H1,phiiy_H1)*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-            ellmatsKyx_H1 = ellmatsKyx_H1 + 1/2*we_K[i]*assem_ellmats(phiiy_H1,phiix_H1)*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-            
-        ellmatsKxx_H1[abs(ellmatsKxx_H1)<1e-14] = 0
-        ellmatsKyy_H1[abs(ellmatsKyy_H1)<1e-14] = 0
-        ellmatsKxy_H1[abs(ellmatsKxy_H1)<1e-14] = 0
-        ellmatsKyx_H1[abs(ellmatsKyx_H1)<1e-14] = 0
+                ellmatsBKx[i*nt:(i+1)*nt,j] = 1/detA*(A11*dphii_H1[0]-A10*dphii_H1[1])
+                ellmatsBKy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*dphii_H1[0] +A00*dphii_H1[1])
+                ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_K[i]
         
-        Kxx = sparse(im_H1,jm_H1,ellmatsKxx_H1,sizeM,sizeM); Kxx.eliminate_zeros()
-        Kyy = sparse(im_H1,jm_H1,ellmatsKyy_H1,sizeM,sizeM); Kyy.eliminate_zeros()
-        Kxy = sparse(im_H1,jm_H1,ellmatsKxy_H1,sizeM,sizeM); Kxy.eliminate_zeros()
-        Kyx = sparse(im_H1,jm_H1,ellmatsKyx_H1,sizeM,sizeM); Kyx.eliminate_zeros()
-        
-        return Kxx, Kyy, Kxy, Kyx
-
-    #####################################################################################
-    # grad trafo matrix
-    #####################################################################################
-
-    if matrix == 'C':
-        ellmatsCx_H1 = npy.zeros((nt,lphi_H1*lphi_L2))
-        ellmatsCy_H1 = npy.zeros((nt,lphi_H1*lphi_L2))
-        
-        for i in range(len(we_M)):
-            qpT_i_1 = A00*qp_M[0,i]+A01*qp_M[1,i]+p[t0,0]
-            qpT_i_2 = A10*qp_M[0,i]+A11*qp_M[1,i]+p[t0,1]
-            coeff_qpT_i = coeff(qpT_i_1,qpT_i_2)
-            
-            for j in range(lphi_H1):
-                dphii_H1 = dphi_H1[j](qp_M[0,i],qp_M[1,i])
-                phiix_H1[:,j] = 1/detA*( A11*dphii_H1[0] -A10*dphii_H1[1])
-                phiiy_H1[:,j] = 1/detA*(-A01*dphii_H1[0] +A00*dphii_H1[1])
-            for j in range(lphi_L2):
-                phii_L2[:,j] = phi_L2[j](qp_M[0,i],qp_M[1,i])
-    
-            ellmatsCx_H1 = ellmatsCx_H1 + 1/2*we_M[i]*assem_ellmats(phiix_H1,phii_L2)*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-            ellmatsCy_H1 = ellmatsCy_H1 + 1/2*we_M[i]*assem_ellmats(phiiy_H1,phii_L2)*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
-            
-        ellmatsCx_H1[abs(ellmatsCx_H1)<1e-14] = 0
-        ellmatsCy_H1[abs(ellmatsCy_H1)<1e-14] = 0
-        
-        ic_H1,jc_H1 = create_indices(H1_LIST_DOF,H1_DX_LIST_DOF)
-        Cx = sparse(ic_H1,jc_H1,ellmatsCx_H1,sizeD,sizeM); Cx.eliminate_zeros()
-        Cy = sparse(ic_H1,jc_H1,ellmatsCy_H1,sizeD,sizeM); Cy.eliminate_zeros()
-        return Cx,Cy
+        BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
+        BKy = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
+        D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
+        return B, D
         
     #####################################################################################
     # Lumped mass matrix
     #####################################################################################
 
     if matrix == 'Mh':
-        ellmatsM_H1_LUMPED = npy.zeros((nt,lphi_H1*lphi_H1))
+        ellmatsB = npy.zeros((nqp*nt,lphi_H1))
         
         if 'qp_we_Mh' in INFO['TRIG']:
             qp_Mh = INFO['TRIG']['qp_we_Mh'][0]; we_Mh = INFO['TRIG']['qp_we_Mh'][1]
-            for i in range(len(we_Mh)):
-                qpT_i_1 = A00*qp_K[0,i]+A01*qp_K[1,i]+p[t0,0]
-                qpT_i_2 = A10*qp_K[0,i]+A11*qp_K[1,i]+p[t0,1]
-                coeff_qpT_i = coeff(qpT_i_1,qpT_i_2)
-                for j in range(lphi_H1):
-                    phii_H1[:,j] = phi_H1[j](qp_Mh[0,i],qp_Mh[1,i])
-    
-                ellmatsM_H1_LUMPED = ellmatsM_H1_LUMPED + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]*coeff_qpT_i[:,None]*coeff_const[indices,None]
             
-            ellmatsM_H1_LUMPED[abs(ellmatsM_H1_LUMPED)<1e-14] = 0
-            Mh = sparse(im_H1,jm_H1,ellmatsM_H1_LUMPED,sizeM,sizeM)
-            Mh.eliminate_zeros()
-            return Mh
+            nqp = len(qp_Mh)
+            
+            ellmatsB = npy.zeros((nqp*nt,lphi_H1))
+            ellmatsD = npy.zeros((nqp*nt))
+            
+            im = npy.tile(H1_LIST_DOF,(nqp,1))
+            jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi_H1,1)).T
+            iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
+            
+            for j in range(lphi_H1):
+                for i in range(nqp):
+                    ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_Mh[0,i],qp_Mh[1,i])
+                    ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_Mh[i]
+            
+            B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
+            D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
+            return B, D
 
 
 

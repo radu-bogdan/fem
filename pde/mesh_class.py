@@ -6,10 +6,11 @@ npy.set_printoptions(linewidth = npy.inf)
 npy.set_printoptions(precision=2)
 
 
+
 import plotly.graph_objects as go
 # import plotly.colors as plyc
-
 from scipy.interpolate import griddata
+from . import lists as femlists
 
 # import plotly.figure_factory as ff
 
@@ -164,6 +165,7 @@ class initmesh:
             self.JustQuad = parent._Lists_JustQuad
             self.QuadLayerEdges = parent._Lists_QuadLayerEdges
             self.QuadsAtTriangleInterface = parent._Lists_QuadsAtTriangleInterface
+        
             
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
