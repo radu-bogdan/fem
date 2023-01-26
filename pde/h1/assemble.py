@@ -79,6 +79,15 @@ def assembleD(MESH,BASIS,LISTS,D,Dict):
     # Custom config matrix
     #####################################################################################
     
+    if matrix == 'M':
+        qp = qp_M
+        we = we_M
+        
+    if matrix == 'K':
+        qp = qp_K
+        we = we_K
+    
+    nqp = len(we)
     ellmatsD = npy.zeros((nqp*nt))
     
     iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
@@ -96,16 +105,9 @@ def assemble(MESH,BASIS,LISTS,Dict):
     matrix = Dict.get('matrix')
     
     INFO = get_info(MESH,space)
-        
-    if 'regions' in Dict.keys():
-        regions = Dict.get('regions')
-    else:
-        regions = MESH.RegionsT
     
-    indices = npy.argwhere(npy.in1d(MESH.RegionsT,regions))[:,0]
-
     p = MESH.p;
-    t = MESH.t[indices,:]; nt = t.shape[0]
+    t = MESH.t; nt = t.shape[0]
     
     
     sizeM = INFO['sizeM']
@@ -116,7 +118,7 @@ def assemble(MESH,BASIS,LISTS,Dict):
     phi_H1 = BASIS[spaceTrig]['TRIG']['phi']; lphi_H1 = len(phi_H1)
     dphi_H1 = BASIS[spaceTrig]['TRIG']['dphi']; ldphi_H1 = len(dphi_H1)
 
-    H1_LIST_DOF = LISTS[spaceTrig]['TRIG']['LIST_DOF'][indices,:]
+    H1_LIST_DOF = LISTS[spaceTrig]['TRIG']['LIST_DOF']
 
     #####################################################################################
     # Mappings
