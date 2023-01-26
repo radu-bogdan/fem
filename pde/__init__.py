@@ -7,5 +7,5 @@ from pde.projections import *
 from pde.petq_generate import *
 from pde.pcg import *
 
-from pde.assemb.h1 import * 
-# from pde.proj.assemb import * 
+import pde.assemb.h1
+import pde.h1

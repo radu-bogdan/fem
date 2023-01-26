@@ -1,38 +1,25 @@
 
 from .. import quadrature
+from .. import basis
+from .. import lists
 import numpy as npy
 from scipy import sparse as sp
 # import matplotlib.pyplot as plt
 import time
 
+
 def get_info(MESH,space):
     
-    def get_info_trig(space):
-        
-        INFO = {}
-        INFO['TRIG'] = {}
-            
-        if space == 'P1':
-            INFO['TRIG']['space'] = 'P1'
-            INFO['TRIG']['space_dx'] = 'P0'
-            INFO['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
-            INFO['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = 1)
-            INFO['TRIG']['qp_we_K'] = quadrature.dunavant(order = 0)
-            
-        if space == 'P2':
-            INFO['TRIG']['space'] = 'P2'
-            INFO['TRIG']['space_dx'] = 'P1'
-            INFO['TRIG']['qp_we_M'] = quadrature.dunavant(order = 4)
-            # INFO['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = 1)
-            INFO['TRIG']['qp_we_K'] = quadrature.dunavant(order = 2)
-            
-        return INFO
-    
     INFO = {}
+    INFO['TRIG'] = {}
     
     ###########################################################################
     if space == 'P1': 
-        INFO = INFO | get_info_trig('P1')
+        INFO['TRIG']['space'] = 'P1'
+        INFO['TRIG']['space_dx'] = 'P0'
+        INFO['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
+        INFO['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = 1)
+        INFO['TRIG']['qp_we_K'] = quadrature.dunavant(order = 0)
         INFO['sizeM'] = MESH.np
         INFO['sizeD'] = MESH.nt
         INFO['qp_we_B'] = quadrature.one_d(order = 2)
@@ -41,7 +28,11 @@ def get_info(MESH,space):
     
     ###########################################################################
     if space == 'P2': 
-        INFO = INFO | get_info_trig('P2')
+        INFO['TRIG']['space'] = 'P2'
+        INFO['TRIG']['space_dx'] = 'P1'
+        INFO['TRIG']['qp_we_M'] = quadrature.dunavant(order = 4)
+        # INFO['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = 1)
+        INFO['TRIG']['qp_we_K'] = quadrature.dunavant(order = 2)
         INFO['sizeM'] = MESH.np + MESH.NoEdges
         INFO['sizeD'] = 3*MESH.nt
         INFO['qp_we_B'] = quadrature.one_d(order = 5) # 4 would suffice
@@ -51,20 +42,14 @@ def get_info(MESH,space):
 
 
 
-
-def h1(MESH,BASIS,LISTS,Dict):
+# def assemble(MESH,BASIS,LISTS,Dict):
+def assemble(MESH,Dict):
+    BASIS = basis()
+    LISTS = lists(MESH)
+    
     space = Dict.get('space')
-    time_elapsed = time.time()
     
     INFO = get_info(MESH,space)
-    
-    MAT = h1_trig(MESH,BASIS,LISTS,INFO,Dict)
-    
-    elapsed = time.time()-time_elapsed
-    print('Assembling ' + space + ' took ' + str(elapsed)[0:5] + ' seconds.')
-    return MAT
-
-def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     
     matrix = Dict.get('matrix')
     if 'coeff' in Dict.keys():
@@ -107,8 +92,6 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     phii_H1 = npy.zeros((nt,lphi_H1))
     phii_L2 = npy.zeros((nt,lphi_L2))
     
-    
-    
     im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
 
     #####################################################################################
@@ -123,7 +106,7 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     #####################################################################################
     # Mass matrix
     #####################################################################################
-    
+        
     if matrix == 'M':
         nqp = len(we_M)
         
@@ -131,57 +114,17 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
         ellmatsD = npy.zeros((nqp*nt))
         
         im = npy.tile(H1_LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp],(1,3))
-        
-        for j in range(lphi_H1):
-            for i in range(nqp):
-                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])#*npy.sqrt(1/2*npy.abs(detA)*we_M[i])
-                ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_M[i]
-        
-        # im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
-        B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
-        B.eliminate_zeros()
-        
-        D = sp.diags(diagonals = ellmatsD, shape = (nqp*nt,nqp*nt), format="csc")
-        return B, D
-        
-    if matrix == 'M3':
-        nqp = len(we_M)
-        
-        ellmatsB = npy.zeros((nqp*nt,lphi_H1))
-        ellmatsD = npy.zeros((nqp*nt))
-        
-        im = npy.tile(H1_LIST_DOF,(nqp,1))
         jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi_H1,1)).T
-        # jm = npy.tile(npy.c_[0:nt*nqp],(1,3))
+        iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
         
         for j in range(lphi_H1):
             for i in range(nqp):
-                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])#*npy.sqrt(1/2*npy.abs(detA)*we_M[i])
+                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])
                 ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_M[i]
         
-        # im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
-        # D = sp.diags(diagonals = ellmatsD, shape = (nqp*nt,nqp*nt), format="csc")
-        
-        iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
         D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
         return B, D
-        
-    if matrix == 'M2':
-       nqp = len(we_M)
-       ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
-       qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
-
-       for j in range(lphi_H1):
-           for i in range(nqp):
-               ellmatsM_H1[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])*npy.sqrt(1/2*npy.abs(detA)*we_M[i])            
-
-       im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
-       M = sparse_old(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
-       M.eliminate_zeros()
-       
-       return M,M
 
     #####################################################################################
     # Stiffness matrix
@@ -273,7 +216,6 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
             Mh = sparse(im_H1,jm_H1,ellmatsM_H1_LUMPED,sizeM,sizeM)
             Mh.eliminate_zeros()
             return Mh
-        
 
 
 

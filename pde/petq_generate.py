@@ -49,7 +49,7 @@ numpy.set_printoptions(edgeitems=30, linewidth = 1000000)
 def petq_generate():
     
     # gmsh.initialize()
-    # gmsh.option.setNumber("General.Verbosity", 0) # Supress the output of GMSH
+    gmsh.option.setNumber("General.Verbosity", 0) # Supress the output of GMSH
     # gmsh.option.setNumber("Mesh.MeshSizeFactor", hmax)
     # gmsh.option.setNumber("Mesh.MeshSizeMin", hmax)
     # gmsh.option.setNumber("Mesh.MeshSizeMax", hmax)
