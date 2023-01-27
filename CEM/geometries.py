@@ -29,6 +29,8 @@ def unitSquare():
     gmsh.model.addPhysicalGroup(1, [l2])
     gmsh.model.addPhysicalGroup(1, [l3])
     gmsh.model.addPhysicalGroup(1, [l4])
+    
+    gmsh.option.setNumber("Mesh.SaveAll", 1)
 
 def capacitorPlates(a,b,c,d,l):
     p1 = gmsh.model.geo.addPoint(-a/2, -b/2, 0)
@@ -91,6 +93,8 @@ def capacitorPlates(a,b,c,d,l):
     gmsh.model.addPhysicalGroup(1, [l12])
     
     gmsh.model.geo.synchronize()
+    
+    gmsh.option.setNumber("Mesh.SaveAll", 1)
     
     
 
@@ -207,4 +211,6 @@ def geometryP2():
     gmsh.model.addPhysicalGroup(dim = 1, tags = [l2])
     gmsh.model.addPhysicalGroup(dim = 1, tags = [l3])
     gmsh.model.addPhysicalGroup(dim = 1, tags = [l4])
+    
+    gmsh.option.setNumber("Mesh.SaveAll", 1)
     

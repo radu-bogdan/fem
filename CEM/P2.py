@@ -37,7 +37,8 @@ p,e,t,q = pde.petq_generate()
 gmsh.clear()
 gmsh.finalize()
 
-MESH = pde.initmesh(p,e,t,q)
+MESH = pde.mesh(p,e,t,q)
+MESH.makeFemLists()
 # fig = MESH.pdemesh()
 # fig.show()
 
@@ -53,11 +54,20 @@ nu2 = lambda x,y : 1 + 0*x +0*y
 
 # TODO : iwas stimmt net wenn ma quads hat
 
-Kxx1,Kyy1,Kxy1,Kyx1 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu1, regions = np.r_[2,3]))
-Kxx2,Kyy2,Kxy2,Kyx2 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu2, regions = np.r_[1,4,5,6,7,8]))
-Kxx = Kxx1 + Kxx2; Kyy = Kyy1 + Kyy2
+# Kxx1,Kyy1,Kxy1,Kyx1 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu1, regions = np.r_[2,3]))
+# Kxx2,Kyy2,Kxy2,Kyx2 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu2, regions = np.r_[1,4,5,6,7,8]))
+# Kxx = Kxx1 + Kxx2; Kyy = Kyy1 + Kyy2
 
-M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
+# M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
+
+BKx,BKy,DK = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
+D1 = pde.h1.assembleD(MESH, order = 0, coeff = nu1, regions = np.r_[2,3])
+D2 = pde.h1.assembleD(MESH, order = 0, coeff = nu2, regions = np.r_[1,4,5,6,7,8])
+Kxx = BKx@DK@(D1+D2)@BKx.T
+Kyy = BKy@DK@(D1+D2)@BKy.T
+
+BM,DM = pde.h1.assemble(MESH, space = 'P1', matrix = 'M')
+M = BM@DM@BM.T
 
 Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'C'))
 

@@ -5,8 +5,6 @@ npy.set_printoptions(threshold = npy.inf)
 npy.set_printoptions(linewidth = npy.inf)
 npy.set_printoptions(precision=2)
 
-
-
 import plotly.graph_objects as go
 # import plotly.colors as plyc
 from scipy.interpolate import griddata
@@ -19,7 +17,7 @@ from . import lists as femlists
 # import plotly.express as px
 # import pandas as pd
 
-class initmesh:
+class mesh:
     def __init__(self, p,e,t,q):
         
         if t.size != 0:
@@ -166,7 +164,10 @@ class initmesh:
             self.QuadLayerEdges = parent._Lists_QuadLayerEdges
             self.QuadsAtTriangleInterface = parent._Lists_QuadsAtTriangleInterface
         
-            
+    def makeFemLists(self):
+        self.FEMLISTS = femlists.lists(self)
+
+        
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
         bool_ind = npy.isin(a_vec,b_vec)

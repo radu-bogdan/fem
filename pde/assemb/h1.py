@@ -108,7 +108,6 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     phii_L2 = npy.zeros((nt,lphi_L2))
     
     
-    
     im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
 
     #####################################################################################

@@ -86,6 +86,12 @@ fxy = lambda x,y : 1+0*x
 fyx = lambda x,y : 1+0*x
 fyy = lambda x,y : 2+1.2*y**4
 
+
+# fm = lambda x,y : np.array([(x,y),
+#                             (2*x,y)])
+
+# fm(ux,uy)
+
 # pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P2', matrix = 'K'))[3]
 
 penalty = 10**10
@@ -256,12 +262,7 @@ def femH(u):
 def fem_objective(u):
     ux = sps.linalg.spsolve(D,Cx*u)
     uy = sps.linalg.spsolve(D,Cy*u)
-    
-<<<<<<< Updated upstream
     return np.ones(MESH.nt)@D@f(ux,uy) - penalty*u@B_g + 1/2*penalty*u@B_walls@u+penalty*B_g@B_g
-=======
-    return np.ones(MESH.nt)@D@f(ux,uy) + penalty*u@B_g - 1/2*penalty*u@B_walls@u
->>>>>>> Stashed changes
     
     
 # alpha = WulffePowell()c

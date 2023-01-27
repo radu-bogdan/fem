@@ -22,11 +22,12 @@ gmsh.initialize()
 gmsh.model.add("Capacitor plates")
 geometries.unitSquare()
 gmsh.option.setNumber("Mesh.Algorithm", 2)
-gmsh.option.setNumber("Mesh.MeshSizeMax", 2)
+gmsh.option.setNumber("Mesh.MeshSizeMax", 0.01)
+gmsh.option.setNumber("Mesh.MeshSizeMin", 0.01)
 # gmsh.fltk.run()
 p,e,t,q = pde.petq_generate()
 
-MESH = pde.initmesh(p,e,t,q)
+MESH = pde.mesh(p,e,t,q)
 
 # stop()
 
@@ -34,19 +35,19 @@ MESH = pde.initmesh(p,e,t,q)
 BASIS = pde.basis()
 LISTS = pde.lists(MESH)
 
-f = lambda x,y : (np.pi**2*np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
+f = lambda x,y : (np.pi**2+np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
 g = lambda x,y : 0*x
 
 # TODO : iwas stimmt net wenn ma quads hat
-Kxx,Kyy,Kxy,Kyx = pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P2', matrix = 'K'))
-M = pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P2', matrix = 'M'))
+Kxx,Kyy,Kxy,Kyx = pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P1', matrix = 'K'))
+M = pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P1', matrix = 'M'))
 
 sizeM = M.shape[0]
 
-B_full = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P2', size = sizeM))
-M_f = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P2'), f)
+B_full = pde.assemble.h1b(MESH,BASIS,LISTS,dict(space = 'P1', size = sizeM))
+M_f = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1'), f)
 
-B_g  = pde.projections.assem_H1_b(MESH, BASIS, LISTS, dict(space = 'P2', order = 2, size = sizeM), g)
+B_g  = pde.projections.assem_H1_b(MESH, BASIS, LISTS, dict(space = 'P1', order = 2, size = sizeM), g)
 
 gamma = 10**8
 
@@ -60,6 +61,6 @@ phi = sps.linalg.spsolve(A,b)
 elapsed = time.time()-tm
 print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 1), phi[0:MESH.np])
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 1), phi)
 fig.show()
 
