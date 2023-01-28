@@ -10,3 +10,4 @@ from pde.pcg import *
 
 import pde.assemb.h1
 import pde.h1
+import pde.l2

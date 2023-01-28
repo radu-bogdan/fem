@@ -39,7 +39,7 @@ def get_info(MESH,space):
     
     return INFO
 
-def assembleD(MESH, order, coeff, regions = npy.empty(0)):
+def assembleD(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
     
     if regions.size == 0:
         regions = MESH.RegionsT
@@ -61,9 +61,7 @@ def assembleD(MESH, order, coeff, regions = npy.empty(0)):
     # Custom config matrix
     #####################################################################################
     
-    qp,we =  quadrature.dunavant(order); nqp = len(we)
-    
-    nqp = len(we)
+    qp,we = quadrature.dunavant(order); nqp = len(we)
     ellmatsD = npy.zeros((nqp*nt))
     
     iD = npy.r_[0:nqp*MESH.nt].reshape(MESH.nt,nqp).T
@@ -77,6 +75,45 @@ def assembleD(MESH, order, coeff, regions = npy.empty(0)):
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
+
+
+def assembleDB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
+    
+    if edges.size == 0:
+        edges = MESH.Boundary.Region
+    
+    indices = npy.argwhere(npy.in1d(MESH.Boundary.Region,edges))[:,0]
+
+    p = MESH.p;    
+    e = MESH.e[indices,:]; ne = e.shape[0]
+    
+    #####################################################################################
+    # Mappings
+    #####################################################################################
+
+    e0 = e[:,0]; e1 = e[:,1]
+    A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
+    
+    #####################################################################################
+    # Custom config matrix
+    #####################################################################################
+    
+    qp,we = quadrature.one_d(order); nqp = len(we)
+    ellmatsD = npy.zeros((nqp*ne))
+    
+    iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
+    iD = iD[:,indices]
+        
+    for i in range(nqp):
+        qpT_i_1 = A0*qp[i] + p[e0,0]
+        qpT_i_2 = A1*qp[i] + p[e0,1]
+        ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
+    
+    D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
+    return D
+
+
+
 def assemble(MESH,space,matrix,order=-1):
     
     INFO = get_info(MESH,space)
@@ -88,12 +125,12 @@ def assemble(MESH,space,matrix,order=-1):
     sizeM = INFO['sizeM']
     spaceTrig = INFO['TRIG']['space'];
 
-    phi_H1 = BASIS[spaceTrig]['TRIG']['phi']; lphi_H1 = len(phi_H1)
-    dphi_H1 = BASIS[spaceTrig]['TRIG']['dphi']; ldphi_H1 = len(dphi_H1)
-    H1_LIST_DOF = MESH.FEMLISTS[spaceTrig]['TRIG']['LIST_DOF']
+    phi = BASIS[spaceTrig]['TRIG']['phi']; lphi = len(phi)
+    dphi = BASIS[spaceTrig]['TRIG']['dphi']; ldphi = len(dphi)
+    LIST_DOF = MESH.FEMLISTS[spaceTrig]['TRIG']['LIST_DOF']
     
     if order != -1:
-        qp,we =  quadrature.dunavant(order); nqp = len(we)
+        qp,we = quadrature.dunavant(order); nqp = len(we)
 
     #####################################################################################
     # Mappings
@@ -112,16 +149,16 @@ def assemble(MESH,space,matrix,order=-1):
         if order == -1:
             qp = INFO['TRIG']['qp_we_M'][0]; we = INFO['TRIG']['qp_we_M'][1]; nqp = len(we)
         
-        ellmatsB = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsB = npy.zeros((nqp*nt,lphi))
         ellmatsD = npy.zeros((nqp*nt))
         
-        im = npy.tile(H1_LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi_H1,1)).T
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
         iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
         
-        for j in range(lphi_H1):
+        for j in range(lphi):
             for i in range(nqp):
-                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp[0,i],qp[1,i])
+                ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i])
                 ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we[i]
         
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
@@ -136,19 +173,19 @@ def assemble(MESH,space,matrix,order=-1):
         if order == -1:
             qp = INFO['TRIG']['qp_we_K'][0]; we = INFO['TRIG']['qp_we_K'][1]; nqp = len(we)
         
-        ellmatsBKx = npy.zeros((nqp*nt,ldphi_H1))
-        ellmatsBKy = npy.zeros((nqp*nt,ldphi_H1))
+        ellmatsBKx = npy.zeros((nqp*nt,ldphi))
+        ellmatsBKy = npy.zeros((nqp*nt,ldphi))
         ellmatsD = npy.zeros((nqp*nt))
         
-        im = npy.tile(H1_LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi_H1,1)).T
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
         iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
         
-        for j in range(ldphi_H1):
+        for j in range(ldphi):
             for i in range(nqp):
-                dphii_H1 = dphi_H1[j](qp[0,i],qp[1,i])
-                ellmatsBKx[i*nt:(i+1)*nt,j] = 1/detA*(A11*dphii_H1[0]-A10*dphii_H1[1])
-                ellmatsBKy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*dphii_H1[0]+A00*dphii_H1[1])
+                dphii = dphi[j](qp[0,i],qp[1,i])
+                ellmatsBKx[i*nt:(i+1)*nt,j] = 1/detA*(A11*dphii[0]-A10*dphii[1])
+                ellmatsBKy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*dphii[0]+A00*dphii[1])
                 ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we[i]
         
         BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
@@ -156,57 +193,54 @@ def assemble(MESH,space,matrix,order=-1):
         DK = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
         return BKx, BKy, DK
 
-# def h1b(MESH,BASIS,LISTS,Dict):
+
+
+def assembleB(MESH,space,matrix,shape,order=-1):
     
-#     space = Dict.get('space')
-#     size = Dict.get('size')
-#     edges = Dict.get('edges')
+    INFO = get_info(MESH,space)
+    BASIS = basis()
     
-#     if 'edges' in Dict.keys():
-#         edges = Dict.get('edges')
-#     else:
-#         edges = MESH.Boundary.Region
+    p = MESH.p;
+    e = MESH.e; ne = e.shape[0]
     
-#     indices = npy.argwhere(npy.in1d(MESH.Boundary.Region,edges))[:,0]
+    phi = BASIS[space]['B']['phi']; lphi = len(phi)
     
-#     p = MESH.p;    
-#     e = MESH.e[indices,:]; ne = e.shape[0]
+    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
     
-#     INFO = get_info(MESH,space)
-#     qp_B = INFO['qp_we_B'][0]; we_B = INFO['qp_we_B'][1]
-#     phi_H1_B = BASIS[space]['B']['phi']; lphi_H1_B = len(phi_H1_B)
-    
-#     H1_BOUNDARY_LIST_DOF = LISTS[space]['B']['LIST_DOF'][indices,:]
-#     ellmatsB_H1 = npy.zeros((ne,lphi_H1_B*lphi_H1_B))
-#     phii_H1_B = npy.zeros((ne,lphi_H1_B))
-    
-#     #####################################################################################
-#     # Mappings
-#     #####################################################################################
+    if order != -1:
+        qp,we = quadrature.one_d(order); nqp = len(we)
+            
+    #####################################################################################
+    # Mappings
+    #####################################################################################
         
-#     e0 = e[:,0]; e1 = e[:,1]
-#     A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
-#     detA = npy.sqrt(A0**2+A1**2)
+    e0 = e[:,0]; e1 = e[:,1]
+    A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
+    detA = npy.sqrt(A0**2+A1**2)
     
-#     #####################################################################################
-#     # Mass matrix (over the edge)
-#     #####################################################################################
-    
-#     for i in range(len(we_B)):
-#         for j in range(lphi_H1_B):
-#             phii_H1_B[:,j] = phi_H1_B[j](qp_B[i])
+    #####################################################################################
+    # Mass matrix (over the edge)
+    #####################################################################################
 
-#         ellmatsB_H1 = ellmatsB_H1 + we_B[i]*(assem_ellmats(phii_H1_B,phii_H1_B))*npy.abs(detA)[:,None]
-
-#     # ellmatsB_H1 = ellmatsB_H1[indices,:]
-    
-#     ib_H1,jb_H1 = create_indices(H1_BOUNDARY_LIST_DOF,H1_BOUNDARY_LIST_DOF)
-    
-#     ellmatsB_H1[abs(ellmatsB_H1)<1e-14] = 0
-#     B = sparse(ib_H1,jb_H1,ellmatsB_H1,size,size)
-#     B.eliminate_zeros()
-    
-#     return B
+    if matrix == 'M':
+        if order == -1:
+            qp = INFO['qp_we_B'][0]; we = INFO['qp_we_B'][1]; nqp = len(we)
+        
+        ellmatsB = npy.zeros((nqp*ne,lphi))
+        ellmatsD = npy.zeros((nqp*ne))
+        
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:ne*nqp].reshape(ne,nqp).T.flatten(),(lphi,1)).T
+        iD = npy.r_[0:nqp*ne].reshape(ne,nqp).T
+        
+        for j in range(lphi):
+            for i in range(nqp):
+                ellmatsB[i*ne:(i+1)*ne,j] = phi[j](qp[i])
+                ellmatsD[i*ne:(i+1)*ne] = npy.abs(detA)*we[i]
+        
+        B = sparse(im,jm,ellmatsB,shape[0],nqp*ne)
+        D = sparse(iD,iD,ellmatsD,nqp*ne,nqp*ne)
+        return B, D
 
 def sparse(i, j, v, m, n):
     """

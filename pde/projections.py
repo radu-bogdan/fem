@@ -129,7 +129,7 @@ def __assem_trigH1(MESH, BASIS, LISTS, Dict, U):
     liste_cut = liste[indices,:]
     
     p = MESH.p; t = MESH.t[indices,:]; nt = t.shape[0];
-    qp,we = quadrature.dunavant(order = 6)
+    qp,we = quadrature.dunavant(order = 2)
     
     lphi = len(phi)
     phii = npy.zeros((nt,lphi))
