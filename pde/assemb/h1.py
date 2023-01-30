@@ -28,7 +28,6 @@ def get_info(MESH,space):
             
         return INFO
     
-    
     INFO = {}
     
     ###########################################################################
@@ -102,11 +101,15 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
 
     H1_LIST_DOF = LISTS[spaceTrig]['TRIG']['LIST_DOF'][indices,:]
     H1_DX_LIST_DOF = LISTS[spaceTrig_dx]['TRIG']['LIST_DOF'][indices,:]
-
+    
     phiix_H1 = npy.zeros((nt,lphi_H1))
     phiiy_H1 = npy.zeros((nt,lphi_H1))
     phii_H1 = npy.zeros((nt,lphi_H1))
     phii_L2 = npy.zeros((nt,lphi_L2))
+    
+    
+    
+    im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
 
     #####################################################################################
     # Mappings
@@ -117,32 +120,83 @@ def h1_trig(MESH,BASIS,LISTS,INFO,Dict):
     A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
     detA = A00*A11-A01*A10
     
-    im_H1,jm_H1 = create_indices(H1_LIST_DOF,H1_LIST_DOF)
-    
     #####################################################################################
     # Mass matrix
     #####################################################################################
     
     if matrix == 'M':
         nqp = len(we_M)
-        ellmatsM_H1 = npy.zeros((lphi_H1,nqp*nt))
-        # phii_H1 = npy.zeros((nt,lphi_H1))
+        
+        ellmatsB = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsD = npy.zeros((nqp*nt))
+        
+        im = npy.tile(H1_LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:nt*nqp],(1,3))
         
         for j in range(lphi_H1):
             for i in range(nqp):
-                ellmatsM_H1[j,i*nt:(i+1)*nt] = phi_H1[j](qp_M[0,i],qp_M[1,i])
-                
+                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])#*npy.sqrt(1/2*npy.abs(detA)*we_M[i])
+                ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_M[i]
         
-                
-            
-            # ellmatsM_H1 = ellmatsM_H1 + 1/2*we_M[i]*(assem_ellmats(phii_H1,phii_H1))*npy.abs(detA)[:,None]
+        # im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
+        B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
+        B.eliminate_zeros()
         
+        D = sp.diags(diagonals = ellmatsD, shape = (nqp*nt,nqp*nt), format="csc")
+        return B, D
         
+    if matrix == 'M3':
+        nqp = len(we_M)
         
-        ellmatsM_H1[abs(ellmatsM_H1)<1e-14] = 0
-        M = sparse(im_H1,jm_H1,ellmatsM_H1,sizeM,sizeM)
+        ellmatsB = npy.zeros((nqp*nt,lphi_H1))
+        ellmatsD = npy.zeros((nqp*nt))
+        
+        im = npy.tile(H1_LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi_H1,1)).T
+        # jm = npy.tile(npy.c_[0:nt*nqp],(1,3))
+        
+        for j in range(lphi_H1):
+            for i in range(nqp):
+                ellmatsB[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])#*npy.sqrt(1/2*npy.abs(detA)*we_M[i])
+                ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we_M[i]
+        
+        # im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
+        B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
+        # D = sp.diags(diagonals = ellmatsD, shape = (nqp*nt,nqp*nt), format="csc")
+        
+        iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
+        D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
+        return B, D
+        
+    if matrix == 'M2':
+       nqp = len(we_M)
+       ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
+       qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
+
+       for j in range(lphi_H1):
+           for i in range(nqp):
+               ellmatsM_H1[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])*npy.sqrt(1/2*npy.abs(detA)*we_M[i])            
+
+       im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
+       M = sparse_old(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
+       M.eliminate_zeros()
+       
+       return M,M
+       
+    if matrix == 'M4':
+        nqp = len(we_M)
+        ellmatsM_H1 = npy.zeros((nqp*nt,lphi_H1))
+        qp_list_DOF = npy.r_[0:nt*nqp].reshape(nt,nqp)
+        
+        for j in range(lphi_H1):
+            for i in range(nqp):
+                ellmatsM_H1[i*nt:(i+1)*nt,j] = phi_H1[j](qp_M[0,i],qp_M[1,i])*npy.sqrt(1/2*npy.abs(detA)*we_M[i])            
+        
+        im_H1,jm_H1 = create_indices(H1_LIST_DOF,qp_list_DOF)
+        M = sparse_old(im_H1,jm_H1,ellmatsM_H1,sizeM,nqp*nt)
         M.eliminate_zeros()
-        return M
+        
+        return M,M
 
     #####################################################################################
     # Stiffness matrix
@@ -314,8 +368,8 @@ def create_indices(ind1,ind2):
     if ind1.ndim == 1: ind1 = ind1[:,None]
     if ind2.ndim == 1: ind2 = ind2[:,None]
 
-    ii = npy.tile(ind2,(ind1.shape[1],1))
-    jj = npy.tile(ind1,(1,ind2.shape[1]))
+    ii = npy.tile(ind1,(1,ind2.shape[1]))
+    jj = npy.tile(ind2,(ind1.shape[1],1))
 
     return ii,jj
 
@@ -335,4 +389,26 @@ def sparse(i, j, v, m, n):
         s: 2-D array
             Matrix full of zeros excepting values v at indexes i, j
     """
+    # return sp.csc_matrix((v.flatten(order='F'), (i.flatten(order='F'), j.flatten(order='F'))), shape=(m, n))
+    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
+    # return sp.csr_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
+
+def sparse_old(i, j, v, m, n):
+    """
+    Create and compressing a matrix that have many zeros
+    Parameters:
+        i: 1-D array representing the index 1 values 
+            Size n1
+        j: 1-D array representing the index 2 values 
+            Size n1
+        v: 1-D array representing the values 
+            Size n1
+        m: integer representing x size of the matrix >= n1
+        n: integer representing y size of the matrix >= n1
+    Returns:
+        s: 2-D array
+            Matrix full of zeros excepting values v at indexes i, j
+    """
     return sp.csc_matrix((v.flatten(order='F'), (i.flatten(order='F'), j.flatten(order='F'))), shape=(m, n))
+    # return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
+    # return sp.csr_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))

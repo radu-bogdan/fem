@@ -5,11 +5,10 @@ npy.set_printoptions(threshold = npy.inf)
 npy.set_printoptions(linewidth = npy.inf)
 npy.set_printoptions(precision=2)
 
-
 import plotly.graph_objects as go
 # import plotly.colors as plyc
-
 from scipy.interpolate import griddata
+from . import lists as femlists
 
 # import plotly.figure_factory as ff
 
@@ -18,7 +17,7 @@ from scipy.interpolate import griddata
 # import plotly.express as px
 # import pandas as pd
 
-class initmesh:
+class mesh:
     def __init__(self, p,e,t,q):
         
         if t.size != 0:
@@ -139,10 +138,11 @@ class initmesh:
         #############################################################################################################
         
         regions_to_points = npy.empty(shape = [0,2],dtype = 'uint64')
-        for i in range(max(self.RegionsT)):
-            indices = npy.unique(self.t[npy.argwhere(self.RegionsT == (i+1))[:,0],:])            
-            vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape,dtype = 'uint64'), indices]
-            regions_to_points = npy.r_[regions_to_points, vtr]
+        if t.shape[1]>3:
+            for i in range(max(self.RegionsT)):
+                indices = npy.unique(self.t[npy.argwhere(self.RegionsT == (i+1))[:,0],:])            
+                vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape,dtype = 'uint64'), indices]
+                regions_to_points = npy.r_[regions_to_points, vtr]
             
         self.RegionsToPoints = regions_to_points
 
@@ -164,7 +164,27 @@ class initmesh:
             self.JustQuad = parent._Lists_JustQuad
             self.QuadLayerEdges = parent._Lists_QuadLayerEdges
             self.QuadsAtTriangleInterface = parent._Lists_QuadsAtTriangleInterface
-            
+        
+    def makeFemLists(self):
+        self.FEMLISTS = femlists.lists(self)
+    
+    def refinemesh(self):
+        pn = 1/2*(self.p[self.EdgesToVertices[:,0],:]+
+                  self.p[self.EdgesToVertices[:,1],:])
+        p_new = npy.r_[self.p,pn]
+        
+        tn = self.np + self.TriangleToEdges
+        t_new = npy.r_[npy.c_[self.t[:,0],tn[:,2],tn[:,1],self.RegionsT],
+                       npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.RegionsT],
+                       npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.RegionsT],
+                       npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.RegionsT]].astype(npy.uint64)
+        bn = self.np + self.Boundary.Edges
+        e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary.Region],
+                       npy.c_[bn,self.e[:,1],self.Boundary.Region]].astype(npy.uint64)
+        
+        return p_new,e_new,t_new
+        
+        
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
         bool_ind = npy.isin(a_vec,b_vec)
@@ -310,7 +330,7 @@ class initmesh:
         
         # camera = dict(up = dict(x = 1, y = 0., z = 0),
         #               eye = dict(x = 0, y = 0, z = 2*max(u)))
-        camera = dict(eye = dict(x = 0, y = -1e-5, z = 10*max(abs(u))))
+        camera = dict(eye = dict(x = 0, y = -1e-5, z = 1e10))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
         fig.update_layout(scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
                                        xaxis = dict(showspikes = False),

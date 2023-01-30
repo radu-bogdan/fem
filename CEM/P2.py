@@ -37,7 +37,8 @@ p,e,t,q = pde.petq_generate()
 gmsh.clear()
 gmsh.finalize()
 
-MESH = pde.initmesh(p,e,t,q)
+MESH = pde.mesh(p,e,t,q)
+MESH.makeFemLists()
 # fig = MESH.pdemesh()
 # fig.show()
 
@@ -53,22 +54,45 @@ nu2 = lambda x,y : 1 + 0*x +0*y
 
 # TODO : iwas stimmt net wenn ma quads hat
 
-Kxx1,Kyy1,Kxy1,Kyx1 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu1, regions = np.r_[2,3]))
-Kxx2,Kyy2,Kxy2,Kyx2 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu2, regions = np.r_[1,4,5,6,7,8]))
-Kxx = Kxx1 + Kxx2; Kyy = Kyy1 + Kyy2
+# Kxx1,Kyy1,Kxy1,Kyx1 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu1, regions = np.r_[2,3]))
+# Kxx2,Kyy2,Kxy2,Kyx2 = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'K', coeff = nu2, regions = np.r_[1,4,5,6,7,8]))
+# Kxx = Kxx1 + Kxx2; Kyy = Kyy1 + Kyy2
 
-M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
+# M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
 
-Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'C'))
+BKx,BKy = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
+D2 = pde.int.assemble(MESH, order = 2)
+D0 = pde.int.assemble(MESH, order = 0)
 
-MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'BDM1-BDM1'); D = MAT['BDM1-BDM1']['D'];
+Co1 = pde.int.evaluate(MESH, order = 0, coeff = nu1, regions = np.r_[2,3])
+Co2 = pde.int.evaluate(MESH, order = 0, coeff = nu2, regions = np.r_[1,4,5,6,7,8])
 
-B = pde.assemble.h1b(MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
+Kxx = BKx@D0@(Co1+Co2)@BKx.T; Kyy = BKy@D0@(Co1+Co2)@BKy.T
 
-M_f_1 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[7]), f1)
-M_f_2 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[8]), f2)
+BM = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
+M = BM@D2@BM.T
 
-M_f = M_f_1 + M_f_2
+D = pde.l2.assemble(MESH, space = 'P0', matrix = 'M')
+
+
+# B = pde.assemble.h1b(MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
+# D2 = pde.int.assemble(MESH, order = 2)
+
+CoF1 = pde.int.evaluate(MESH, order = 2, coeff = f1, regions = np.r_[7])
+CoF2 = pde.int.evaluate(MESH, order = 2, coeff = f2, regions = np.r_[8])
+M_f = BM@D2@(CoF1.diagonal()+CoF2.diagonal())
+
+Mb = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = Kxx.shape)
+Db2 = pde.int.assembleB(MESH, order = 2)
+
+B = Mb@Db2@Mb.T
+
+# (MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
+
+# M_f_1 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[7]), f1)
+# M_f_2 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[8]), f2)
+
+# M_f = M_f_1 + M_f_2
 
 A = Kxx + Kyy + 10**10*B
 b = M_f
@@ -85,8 +109,8 @@ nu_vek += pde.projections.evaluateP0_trig(MESH, dict(regions = np.r_[1,4,5,6,7,8
 j_vek  = pde.projections.evaluateP0_trig(MESH, dict(regions = np.r_[7]), f1)
 j_vek += pde.projections.evaluateP0_trig(MESH, dict(regions = np.r_[8]), f2)
 
-ux = sps.linalg.spsolve(D,Cx*u)
-uy = sps.linalg.spsolve(D,Cy*u)
+ux = BKx.T@u
+uy = BKy.T@u
 
 u_P0 = 1/3*(u[MESH.t[:,0]]+u[MESH.t[:,1]]+u[MESH.t[:,2]])
 eu = nu_vek*1/2*ux**2+uy**2-j_vek*u_P0
