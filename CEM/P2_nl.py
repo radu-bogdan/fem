@@ -99,7 +99,7 @@ fxy = lambda x,y : 0*x
 fyx = lambda x,y : 0*x
 fyy = lambda x,y : 1+0*y
 
-g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0, b = 1)
+g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0.1, b = 1)
 
 
 penalty = 10**7
@@ -115,13 +115,13 @@ def update_left(ux,uy):
 
 def update_right(u,ux,uy):
     
-    return -Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[0,:] + M_f -penalty*B@u
+    return -Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u
 
 
 
 u = 1+np.zeros(shape = Kxx.shape[0])
 
-for i in range(100):
+for i in range(40):
     
     ux = BKx.T@u
     uy = BKy.T@u

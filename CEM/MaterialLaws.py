@@ -34,8 +34,8 @@ def HerbertsMaterialG(a,b):
     fx=lambda x,y,nu0: nu0*x+ a*x/normxyz(x,y,b)
     fy=lambda x,y,nu0: nu0*y+ a*y/normxyz(x,y,b)
     
-    fxx=lambda x,y,nu0: nu0+a/normxyz(x,y,b)-x**2/normxyz(x, y, b)/(x**2+y**2+b**2)
-    fyy=lambda x,y,nu0: nu0+a/normxyz(x,y,b)-y**2/normxyz(x, y, b)/(x**2+y**2+b**2)
+    fxx=lambda x,y,nu0: nu0+a/normxyz(x,y,b)-a*x**2/normxyz(x, y, b)/(x**2+y**2+b**2)
+    fyy=lambda x,y,nu0: nu0+a/normxyz(x,y,b)-a*y**2/normxyz(x, y, b)/(x**2+y**2+b**2)
     fxy=fyx=lambda x,y,nu0: a*x*y/normxyz(x, y, b)/(x**2+y**2+b**2)
     df= lambda x,y,nu0:np.array ([fx(x,y,nu0),fy(x,y,nu0)])
     ddf= lambda x,y,nu0:np.array([[fxx(x,y,nu0),fxy(x,y,nu0)],[fyx(x,y,nu0),fyy(x,y,nu0)]])
