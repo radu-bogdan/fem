@@ -45,17 +45,14 @@ def HerbertsMaterialE(a,b,nu0):
     normxy=lambda x,y: np.linalg.norm(np.array([x,y])) 
     g,dg,ddg=HerbertsMaterialG(a,b,nu0)
     I_dg_inv_radial=lambda R: np.sqrt(R**2*b**2/((a/nu0)**2-R**2))
-    dex=lambda x,y:dg(I_dg_inv_radial(normxy(x,y))*x/normxy(x,y))
-    dey=lambda x,y:dg(I_dg_inv_radial(normxy(x,y))*y/normxy(x,y))
-    
-    de= lambda x,y:np.array ([dex(x,y),dey(x,y)])
+    de=lambda x,y:dg(I_dg_inv_radial(normxy(x,y))*x/normxy(x,y),I_dg_inv_radial(normxy(x,y))*y/normxy(x,y))
     
     def Hesse(x,y):
         dirx=x/normxy(x,y)
         diry=x/normxy(x,y)
         ru=I_dg_inv_radial(normxy(x,y))
         ddg_=ddg(ru*dirx,ru*diry)
-        H=ddg_@np.linalg.inv(np.eye(2,2)-1./nu0*ddg_)
+        H=ddg_@ np.linalg.inv(np.eye(2,2)-1./nu0*ddg_)
         return H
     
     dde=lambda x,y:Hesse(x,y)

@@ -60,17 +60,21 @@ D_g = pde.int.evaluateB(MESH, order = 2, coeff = g)
 B_g = Mb@Db0@D_g.diagonal()
 
 
-gamma = 10**8
+gamma = 10**10
 
-A = Kxx + Kyy +gamma*B_full
+lam = 1
+A = Kxx + Kyy -lam*M + gamma*B_full
 b = gamma*B_g + M_f
 
+sigma = 3
+# x = sps.linalg.eigs(Kxx+Kyy-sigma*M+gamma*B_full,M = M, sigma = sigma)
+x = sps.linalg.eigs(Kxx+Kyy,M = M, sigma = sigma)
+phi = np.real(x[1][:,0])
 
-
-tm = time.time()
-phi = sps.linalg.spsolve(A,b)
-elapsed = time.time()-tm
-print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
+# tm = time.time()
+# phi = sps.linalg.spsolve(A,b)
+# elapsed = time.time()-tm
+# print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
 
 fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 1), phi)
 fig.show()

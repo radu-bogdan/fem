@@ -28,7 +28,7 @@ gmsh.option.setNumber("Mesh.MeshSizeMax", 0.2)
 # gmsh.fltk.run()
 p,e,t,q = pde.petq_generate()
 
-MESH = pde.initmesh(p,e,t,q)
+MESH = pde.mesh(p,e,t,q)
 
 # TODO:  MESH = pde.refinemesh(p,e,t,q)
 BASIS = pde.basis()
