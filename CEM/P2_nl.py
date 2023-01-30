@@ -82,29 +82,15 @@ penalty = 10**10
 A = Kxx + Kyy + penalty*B
 b = M_f
 
-
-# fx = lambda x,y : 2*x+y+0.4*x**3
-# fy = lambda x,y : 2*y+x+0.4*y**3
-
-# fxx = lambda x,y : 2+1.2*x**4
-# fxy = lambda x,y : 1+0*x
-# fyx = lambda x,y : 1+0*x
-# fyy = lambda x,y : 2+1.2*y**4
-
-fx = lambda x,y : x
-fy = lambda x,y : y
-
-fxx = lambda x,y : 1+0*x
-fxy = lambda x,y : 0*x
-fyx = lambda x,y : 0*x
-fyy = lambda x,y : 1+0*y
-
 g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0.1, b = 1)
 
 
 penalty = 10**7
 
-def update_left(ux,uy):
+def update_left(u):
+    
+    ux = BKx.T@u
+    uy = BKy.T@u
     
     fxx_grad_u_Kxx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,0,:])@ BKx.T
     fyy_grad_u_Kyy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,1,:])@ BKy.T
@@ -113,31 +99,39 @@ def update_left(ux,uy):
     
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx)
 
-def update_right(u,ux,uy):
-    
-    return -Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u
-
-
-
-u = 1+np.zeros(shape = Kxx.shape[0])
-
-for i in range(40):
+def update_right(u):
     
     ux = BKx.T@u
     uy = BKy.T@u
     
-    Au = update_left(ux,uy) + penalty*B
-    rhs = update_right(u,ux,uy)
-    
-    w = sps.linalg.spsolve(Au,rhs)
-    u_new = u + w
-    
-    if np.linalg.norm(w)<1e-16:
-        break
-    print(np.linalg.norm(w))
-    u = u_new
+    return -(-Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u)
 
+def fem_objective(u):
+    
+    ux = BKx.T@u
+    uy = BKy.T@u
+    
+    return np.ones(MESH.nt)@D@g(ux,uy,nu_aus) + 1/2*penalty*u@B@u
+    
 
+u = 1+np.zeros(shape = Kxx.shape[0])
+
+# for i in range(40):
+    
+    
+#     Au = update_left(u) + penalty*B
+#     rhs = update_right(u)
+    
+#     w = sps.linalg.spsolve(Au,rhs)
+#     u_new = u + w
+    
+#     if np.linalg.norm(w)<1e-16:
+#         break
+#     print(np.linalg.norm(w))
+#     u = u_new
+
+import nonlinear_Algorithms
+nonlinear_Algorithms.NewtonSparse(fem_objective,update_right,update_left,u)
 
 
 # tm = time.time()
