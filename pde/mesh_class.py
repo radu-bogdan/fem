@@ -313,7 +313,7 @@ class mesh:
         
         # camera = dict(up = dict(x = 1, y = 0., z = 0),
         #               eye = dict(x = 0, y = 0, z = 2*max(u)))
-        camera = dict(eye = dict(x = 0, y = -1e-5, z = 10*max(abs(u))))
+        camera = dict(eye = dict(x = 0, y = -1e-5, z = 1e10))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
         fig.update_layout(scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
                                        xaxis = dict(showspikes = False),

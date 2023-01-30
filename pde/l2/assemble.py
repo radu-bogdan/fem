@@ -40,20 +40,16 @@ def assemble(MESH,space,matrix,order=-1):
             qp = INFO['TRIG']['qp_we_M'][0]; we = INFO['TRIG']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
-        ellmatsD = npy.zeros((nqp*nt))
         
         im = npy.tile(H1_LIST_DOF,(nqp,1))
         jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
-        iD = npy.r_[0:nqp*nt].reshape(nt,nqp).T
         
         for j in range(lphi):
             for i in range(nqp):
                 ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i])
-                ellmatsD[i*nt:(i+1)*nt] = 1/2*npy.abs(detA)*we[i]
         
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
-        D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
-        return B, D
+        return B
 
 def sparse(i, j, v, m, n):
     """

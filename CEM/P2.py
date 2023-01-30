@@ -60,25 +60,39 @@ nu2 = lambda x,y : 1 + 0*x +0*y
 
 # M = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'M'))
 
-BKx,BKy,DK = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
-D1 = pde.h1.assembleD(MESH, order = 0, coeff = nu1, regions = np.r_[2,3])
-D2 = pde.h1.assembleD(MESH, order = 0, coeff = nu2, regions = np.r_[1,4,5,6,7,8])
-Kxx = BKx@DK@(D1+D2)@BKx.T
-Kyy = BKy@DK@(D1+D2)@BKy.T
+BKx,BKy = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
+D2 = pde.int.assemble(MESH, order = 2)
+D0 = pde.int.assemble(MESH, order = 0)
 
-BM,DM = pde.h1.assemble(MESH, space = 'P1', matrix = 'M')
-M = BM@DM@BM.T
+Co1 = pde.int.evaluate(MESH, order = 0, coeff = nu1, regions = np.r_[2,3])
+Co2 = pde.int.evaluate(MESH, order = 0, coeff = nu2, regions = np.r_[1,4,5,6,7,8])
 
-Cx,Cy = pde.assemble.h1(MESH, BASIS, LISTS, dict(space = 'P1', matrix = 'C'))
+Kxx = BKx@D0@(Co1+Co2)@BKx.T; Kyy = BKy@D0@(Co1+Co2)@BKy.T
 
-MAT = pde.assemble.hdiv(MESH, BASIS, LISTS, space = 'BDM1-BDM1'); D = MAT['BDM1-BDM1']['D'];
+BM = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
+M = BM@D2@BM.T
 
-B = pde.assemble.h1b(MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
+D = pde.l2.assemble(MESH, space = 'P0', matrix = 'M')
 
-M_f_1 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[7]), f1)
-M_f_2 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[8]), f2)
 
-M_f = M_f_1 + M_f_2
+# B = pde.assemble.h1b(MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
+# D2 = pde.int.assemble(MESH, order = 2)
+
+CoF1 = pde.int.evaluate(MESH, order = 2, coeff = f1, regions = np.r_[7])
+CoF2 = pde.int.evaluate(MESH, order = 2, coeff = f2, regions = np.r_[8])
+M_f = BM@D2@(CoF1.diagonal()+CoF2.diagonal())
+
+Mb = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = Kxx.shape)
+Db2 = pde.int.assembleB(MESH, order = 2)
+
+B = Mb@Db2@Mb.T
+
+# (MESH,BASIS,LISTS, dict(space = 'P1', edges = np.r_[1,2,3,4], size = Kxx.shape[0]))
+
+# M_f_1 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[7]), f1)
+# M_f_2 = pde.projections.assemH1(MESH, BASIS, LISTS, dict(trig = 'P1', regions = np.r_[8]), f2)
+
+# M_f = M_f_1 + M_f_2
 
 A = Kxx + Kyy + 10**10*B
 b = M_f
@@ -95,8 +109,8 @@ nu_vek += pde.projections.evaluateP0_trig(MESH, dict(regions = np.r_[1,4,5,6,7,8
 j_vek  = pde.projections.evaluateP0_trig(MESH, dict(regions = np.r_[7]), f1)
 j_vek += pde.projections.evaluateP0_trig(MESH, dict(regions = np.r_[8]), f2)
 
-ux = sps.linalg.spsolve(D,Cx*u)
-uy = sps.linalg.spsolve(D,Cy*u)
+ux = BKx.T@u
+uy = BKy.T@u
 
 u_P0 = 1/3*(u[MESH.t[:,0]]+u[MESH.t[:,1]]+u[MESH.t[:,2]])
 eu = nu_vek*1/2*ux**2+uy**2-j_vek*u_P0
