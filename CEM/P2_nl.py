@@ -10,6 +10,7 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
 import geometries
+import MaterialLaws
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
@@ -54,6 +55,8 @@ Co2 = pde.int.evaluate(MESH, order = 0, coeff = nu2, regions = np.r_[1,4,5,6,7,8
 Kxx = BKx@D0@(Co1+Co2)@BKx.T
 Kyy = BKy@D0@(Co1+Co2)@BKy.T
 
+nu_aus = Co1.diagonal()+Co2.diagonal()
+
 BM = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
 M = BM@D2@BM.T
 
@@ -61,6 +64,8 @@ D = pde.l2.assemble(MESH, space = 'P0', matrix = 'M')
 
 CoF1 = pde.int.evaluate(MESH, order = 2, coeff = f1, regions = np.r_[7])
 CoF2 = pde.int.evaluate(MESH, order = 2, coeff = f2, regions = np.r_[8])
+
+
 M_f = BM@D2@(CoF1.diagonal()+CoF2.diagonal())
 
 Mb = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = Kxx.shape)
@@ -86,28 +91,31 @@ b = M_f
 # fyx = lambda x,y : 1+0*x
 # fyy = lambda x,y : 2+1.2*y**4
 
-fx = lambda x,y : 2*x
-fy = lambda x,y : 2*y
+fx = lambda x,y : x
+fy = lambda x,y : y
 
-fxx = lambda x,y : 2+0*x
+fxx = lambda x,y : 1+0*x
 fxy = lambda x,y : 0*x
 fyx = lambda x,y : 0*x
-fyy = lambda x,y : 2+0*y
+fyy = lambda x,y : 1+0*y
+
+g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0, b = 1)
+
 
 penalty = 10**7
 
 def update_left(ux,uy):
     
-    fxx_grad_u_Kxx = BKx @ D0 @(Co1+Co2) @ sps.diags(fxx(ux,uy))@ BKx.T
-    fyy_grad_u_Kyy = BKy @ D0 @(Co1+Co2) @ sps.diags(fyy(ux,uy))@ BKy.T
-    fxy_grad_u_Kxy = BKy @ D0 @(Co1+Co2) @ sps.diags(fxy(ux,uy))@ BKx.T
-    fyx_grad_u_Kyx = BKx @ D0 @(Co1+Co2) @ sps.diags(fyx(ux,uy))@ BKy.T
+    fxx_grad_u_Kxx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,0,:])@ BKx.T
+    fyy_grad_u_Kyy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,1,:])@ BKy.T
+    fxy_grad_u_Kxy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,0,:])@ BKx.T
+    fyx_grad_u_Kyx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,1,:])@ BKy.T
     
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx)
 
 def update_right(u,ux,uy):
     
-    return -Cx.T @(Co1+Co2)@ fx(ux,uy) -Cy.T @(Co1+Co2)@ fy(ux,uy) + M_f -penalty*B@u
+    return -Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[0,:] + M_f -penalty*B@u
 
 
 
@@ -118,24 +126,24 @@ for i in range(100):
     ux = BKx.T@u
     uy = BKy.T@u
     
-    Au = 1/2*update_left(ux,uy) + penalty*B
+    Au = update_left(ux,uy) + penalty*B
     rhs = update_right(u,ux,uy)
     
     w = sps.linalg.spsolve(Au,rhs)
     u_new = u + w
     
-    if np.linalg.norm(rhs)<1e-7:
+    if np.linalg.norm(w)<1e-16:
         break
-    
+    print(np.linalg.norm(w))
     u = u_new
 
 
 
 
-tm = time.time()
-u = sps.linalg.spsolve(A,b)
-elapsed = time.time()-tm
-print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
+# tm = time.time()
+# u = sps.linalg.spsolve(A,b)
+# elapsed = time.time()-tm
+# print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
 
 # ux = BKx.T@u
 # uy = BKy.T@u
