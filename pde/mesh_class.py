@@ -138,10 +138,11 @@ class mesh:
         #############################################################################################################
         
         regions_to_points = npy.empty(shape = [0,2],dtype = 'uint64')
-        for i in range(max(self.RegionsT)):
-            indices = npy.unique(self.t[npy.argwhere(self.RegionsT == (i+1))[:,0],:])            
-            vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape,dtype = 'uint64'), indices]
-            regions_to_points = npy.r_[regions_to_points, vtr]
+        if t.shape[1]>3:
+            for i in range(max(self.RegionsT)):
+                indices = npy.unique(self.t[npy.argwhere(self.RegionsT == (i+1))[:,0],:])            
+                vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape,dtype = 'uint64'), indices]
+                regions_to_points = npy.r_[regions_to_points, vtr]
             
         self.RegionsToPoints = regions_to_points
 
@@ -166,7 +167,23 @@ class mesh:
         
     def makeFemLists(self):
         self.FEMLISTS = femlists.lists(self)
-
+    
+    def refinemesh(self):
+        pn = 1/2*(self.p[self.EdgesToVertices[:,0],:]+
+                  self.p[self.EdgesToVertices[:,1],:])
+        p_new = npy.r_[self.p,pn]
+        
+        tn = self.np + self.TriangleToEdges
+        t_new = npy.r_[npy.c_[self.t[:,0],tn[:,2],tn[:,1],self.RegionsT],
+                       npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.RegionsT],
+                       npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.RegionsT],
+                       npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.RegionsT]].astype(npy.uint64)
+        bn = self.np + self.Boundary.Edges
+        e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary.Region],
+                       npy.c_[bn,self.e[:,1],self.Boundary.Region]].astype(npy.uint64)
+        
+        return p_new,e_new,t_new
+        
         
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """

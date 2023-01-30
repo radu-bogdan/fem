@@ -22,26 +22,20 @@ gmsh.initialize()
 gmsh.model.add("Capacitor plates")
 geometries.unitSquare()
 gmsh.option.setNumber("Mesh.Algorithm", 2)
-gmsh.option.setNumber("Mesh.MeshSizeMax", 0.01)
-gmsh.option.setNumber("Mesh.MeshSizeMin", 0.01)
+gmsh.option.setNumber("Mesh.MeshSizeMax", 0.05)
+gmsh.option.setNumber("Mesh.MeshSizeMin", 0.05)
 # gmsh.fltk.run()
+
 p,e,t,q = pde.petq_generate()
 
 MESH = pde.mesh(p,e,t,q)
 MESH.makeFemLists()
 
-# stop()
-
-# TODO:  MESH = pde.refinemesh(p,e,t,q)
 BASIS = pde.basis()
 LISTS = pde.lists(MESH)
 
-f = lambda x,y : (x-1/2)**2+(y-1/2)**2+0*(np.pi**2+np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
-f = lambda x,y : 1+0*(np.pi**2+np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
+f = lambda x,y : (np.pi**2+np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
 g = lambda x,y : 0*x
-
-# Kxx,Kyy,Kxy,Kyx = pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P1', matrix = 'K'))
-# M = pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P1', matrix = 'M'))
 
 Kx,Ky = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
 D0 = pde.int.assemble(MESH, order = 0)
@@ -59,7 +53,7 @@ B_full = Mb@Db0@Mb.T
 
 
 ff = pde.int.evaluate(MESH, coeff = f, order = 2)
-M_f = MB@D2@ff.diagonal()
+M_f = MB@D2@ ff.diagonal()
 
 D_g = pde.int.evaluateB(MESH, order = 2, coeff = g)
 
@@ -68,9 +62,7 @@ B_g = Mb@Db0@D_g.diagonal()
 
 gamma = 10**8
 
-lam = 1
-
-A = Kxx + Kyy - 0*lam*M  + gamma*B_full
+A = Kxx + Kyy +gamma*B_full
 b = gamma*B_g + M_f
 
 

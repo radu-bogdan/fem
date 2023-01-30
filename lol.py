@@ -23,7 +23,7 @@ p,e,t,q = pde.petq_from_gmsh(filename = 'mesh_new.geo',hmax = 0.25)
 
 
 
-MESH = pde.initmesh(p,e,t,q)
+MESH = pde.mesh(p,e,t,q)
 BASIS = pde.basis()
 LISTS = pde.lists(MESH)
 
@@ -31,7 +31,7 @@ MAT = {}
 # MAT = MAT | pde.assemble.hdiv(MESH,BASIS,LISTS,space = 'RT0-RT0')
 MAT = MAT | pde.assemble.hdiv(MESH,BASIS,LISTS,space = 'BDM1-BDM1')
 # MAT = MAT | pde.assemble.h1(MESH,BASIS,LISTS,space = 'P1-Q1')
-MAT = MAT | pde.assemble.h1(MESH,BASIS,LISTS,space = 'P1d-Q1d')
+MAT = MAT | pde.assemble.h1(MESH,BASIS,LISTS,dict(space = 'P1d-Q1d'))
 # MAT = MAT | pde.assemble.hdiv(MESH,BASIS,LISTS,space = 'RT1-BDFM1')
 # MAT = MAT | pde.assemble.hdiv(MESH,BASIS,LISTS,space = 'EJ1-RT0')
 
@@ -90,7 +90,6 @@ A = sps.vstack((sps.hstack((Mh,-C.T)),
 
 b = np.r_[-p_n_BDM1,
            M_divuex_P0_Q0_new]
-
 
 
 res = sps.linalg.spsolve(A,b)

@@ -7,6 +7,8 @@ from pde.assemble import *
 from pde.projections import *
 from pde.petq_generate import *
 from pde.pcg import *
+from pde.refinemesh import *
+
 
 import pde.assemb.h1
 import pde.h1

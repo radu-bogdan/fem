@@ -636,12 +636,12 @@ def h1(MESH,BASIS,LISTS,Dict):
 
     if t.shape[0] != 0: MAT_TRIG = h1_trig(MESH,BASIS,LISTS,INFO,Dict)
     if q.shape[0] != 0: MAT_QUAD = h1_quad(MESH,BASIS,LISTS,INFO,Dict)
-
+    
     if t.shape[0] == 0: MAT = MAT_QUAD
     if q.shape[0] == 0: MAT = MAT_TRIG
     
     # MAT_BOUNDARY = h1_boundary(MESH,BASIS,LISTS,INFO)
-
+    
     if t.shape[0] != 0 and q.shape[0] != 0:
         MAT_TRIG_Set = set(MAT_TRIG)
         MAT_QUAD_Set = set(MAT_QUAD)
