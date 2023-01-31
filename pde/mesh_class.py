@@ -5,10 +5,13 @@ npy.set_printoptions(threshold = npy.inf)
 npy.set_printoptions(linewidth = npy.inf)
 npy.set_printoptions(precision=2)
 
+# import pandas as pd
 import plotly.graph_objects as go
 # import plotly.colors as plyc
 from scipy.interpolate import griddata
 from . import lists as femlists
+import numba as jit
+from .tools import nb_unique
 
 # import plotly.figure_factory as ff
 
@@ -18,6 +21,7 @@ from . import lists as femlists
 # import pandas as pd
 
 class mesh:
+    # @profile
     def __init__(self, p,e,t,q):
         
         if t.size != 0:
@@ -58,6 +62,9 @@ class mesh:
         #############################################################################################################
         edges = npy.r_[npy.sort(edges_trigs),npy.sort(edges_quads)].astype(int)
         EdgesToVertices, je = npy.unique(edges,axis=0, return_inverse=True)
+        
+        # EdgesToVertices3, je3 = npy.unique(edges,axis=0, return_index=True)
+        # EdgesToVertices2, je2, trei = nb_unique(edges,axis=0)
 
         NoEdges = EdgesToVertices.shape[0]
         TriangleToEdges = je[0:3*nt].reshape(nt,3, order='F')

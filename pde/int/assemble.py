@@ -2,7 +2,10 @@
 from scipy import sparse as sp
 import numpy as npy
 from .. import quadrature
+import numba as nb
 
+
+# @profile
 def assemble(MESH,order):
     
     p = MESH.p;
@@ -96,6 +99,7 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
+# @profile
 def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
     
     if edges.size == 0:

@@ -4,8 +4,9 @@ import numpy as npy
 from .spaces import spaceInfo
 from .. import basis
 from .. import quadrature
+# import numba as nb
 
-
+# @nb.jit(cache=True)
 def assemble(MESH,space,matrix,order=-1):
     
     INFO = spaceInfo(MESH,space)
@@ -77,8 +78,7 @@ def assemble(MESH,space,matrix,order=-1):
         BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)
         return BKx, BKy
 
-
-
+# @nb.jit(cache=True)
 def assembleB(MESH,space,matrix,shape,order=-1):
     
     INFO = spaceInfo(MESH,space)

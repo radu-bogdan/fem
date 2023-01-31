@@ -97,14 +97,14 @@ def update_left(u):
     fxy_grad_u_Kxy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,0,:])@ BKx.T
     fyx_grad_u_Kyx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,1,:])@ BKy.T
     
-    return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx)
+    return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B
 
 def update_right(u):
     
     ux = BKx.T@u
     uy = BKy.T@u
     
-    return -(-Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u)
+    return (-Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u)
 
 def fem_objective(u):
     
@@ -116,22 +116,23 @@ def fem_objective(u):
 
 u = 1+np.zeros(shape = Kxx.shape[0])
 
-# for i in range(40):
+for i in range(40):
     
     
-#     Au = update_left(u) + penalty*B
-#     rhs = update_right(u)
+    Au = update_left(u)
+    rhs = update_right(u)
     
-#     w = sps.linalg.spsolve(Au,rhs)
-#     u_new = u + w
+    w = sps.linalg.spsolve(Au,rhs)
+    u_new = u + w
     
-#     if np.linalg.norm(w)<1e-16:
-#         break
-#     print(np.linalg.norm(w))
-#     u = u_new
+    if np.linalg.norm(w)<1e-16:
+        break
+    
+    print(np.linalg.norm(rhs))
+    u = u_new
 
-import nonlinear_Algorithms
-nonlinear_Algorithms.NewtonSparse(fem_objective,update_right,update_left,u)
+# import nonlinear_Algorithms
+# nonlinear_Algorithms.NewtonSparse(fem_objective,update_right,update_left,u)
 
 
 # tm = time.time()
