@@ -23,8 +23,8 @@ gmsh.initialize()
 gmsh.model.add("Capacitor plates")
 geometries.unitSquare()
 gmsh.option.setNumber("Mesh.Algorithm", 2)
-gmsh.option.setNumber("Mesh.MeshSizeMax", 0.2)
-gmsh.option.setNumber("Mesh.MeshSizeMin", 0.2)
+gmsh.option.setNumber("Mesh.MeshSizeMax", 0.02)
+gmsh.option.setNumber("Mesh.MeshSizeMin", 0.02)
 
 f = lambda x,y : (np.pi**2+np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
 g = lambda x,y : 0*x
@@ -68,7 +68,7 @@ u = MB@D2@ pde.int.evaluate(MESH, coeff = f, order = 2).diagonal()
 
 sigma = 1
 # x = sps.linalg.eigs(Kxx+Kyy-sigma*M+gamma*B_full,M = M, sigma = sigma)
-x = sps.linalg.eigsh(Kxx + Kyy + gamma*B_full, M = M, sigma = 2, which='SM', maxiter=1e6)
+x = sps.linalg.eigsh(Kxx + Kyy+ 10**10*B_full, M = M, sigma = 1, k = 100)
 phi = np.real(x[1][:,0])
 
 print(x[0])
