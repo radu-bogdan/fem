@@ -11,6 +11,7 @@ import scipy.sparse.linalg
 import time
 import geometries
 import MaterialLaws
+import nonlinear_Algorithms
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
@@ -82,7 +83,7 @@ penalty = 10**10
 A = Kxx + Kyy + penalty*B
 b = M_f
 
-g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0.1, b = 1)
+g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 1, b = 1)
 
 
 penalty = 10**7
@@ -111,28 +112,33 @@ def fem_objective(u):
     ux = BKx.T@u
     uy = BKy.T@u
     
-    return np.ones(MESH.nt)@D@g(ux,uy,nu_aus) + 1/2*penalty*u@B@u
+    return np.ones(MESH.nt)@D@g(ux,uy,nu_aus)-u@M_f + 1/2*penalty*u@B@u
+
+def femg(u):
+    return -update_right(u)
     
+    
+def femH(u):
+    return update_left(u)
 
 u = 1+np.zeros(shape = Kxx.shape[0])
 
-for i in range(40):
+# for i in range(40):
     
     
-    Au = update_left(u)
-    rhs = update_right(u)
+#     Au = update_left(u)
+#     rhs = update_right(u)
     
-    w = sps.linalg.spsolve(Au,rhs)
-    u_new = u + w
+#     w = sps.linalg.spsolve(Au,rhs)
+#     u_new = u + w
     
-    if np.linalg.norm(w)<1e-16:
-        break
+#     if np.linalg.norm(w)<1e-16:
+#         break
     
-    print(np.linalg.norm(rhs))
-    u = u_new
+#     print(np.linalg.norm(rhs))
+#     u = u_new
 
-# import nonlinear_Algorithms
-# nonlinear_Algorithms.NewtonSparse(fem_objective,update_right,update_left,u)
+u,flag=nonlinear_Algorithms.NewtonSparse(fem_objective,femg,femH,u)
 
 
 # tm = time.time()

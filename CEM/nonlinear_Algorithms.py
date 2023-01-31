@@ -49,19 +49,18 @@ def Newton(J,dJ,ddJ,x0,maxIter=1000,eps=0.0000001, printoption=1):#performs maxI
             return x,flag
     return x,flag
 
-def AmijoBacktracking(F,dF,factor=1/2,mu=0.1):
+def AmijoBacktracking(F,dF,factor=1/2,mu=0.00001):
     alpha=1
     dphi=dF(0.)
-    print(dphi)
     phi=F(0.)
     for i in range(1000):
-        if F(alpha)<=phi+dphi*mu*alpha:
+        if F(alpha)<=phi+dphi*mu*alpha+phi*np.finfo(float).eps:
             return alpha
         else:
             alpha=alpha*factor
     return alpha;
 
-def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=0.00001, printoption=1):#performs maxIterSteps of Newton or until |df|<eps
+def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=0.00000001, printoption=1):#performs maxIterSteps of Newton or until |df|<eps
     epsangle=0.00001;
     x=x0
     flag=0
@@ -76,10 +75,12 @@ def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=0.00001, printoption=1):#performs m
                 print("STEP IN NEGATIVE GRADIENT DIRECTION")
         else:
             angleCondition[i%5]=0
-        F = lambda alpha:J(x+alpha*sx)
-        dF = lambda alpha: np.dot(dJ(x+alpha*sx),sx)
+        #F = lambda alpha:J(x+alpha*sx)
+        #dF = lambda alpha: np.dot(dJ(x+alpha*sx),sx)
+        dJsx= lambda alpha: dJ(x+alpha*sx)
         #alpha=WolfePowell(F,dF)
-        alpha=AmijoBacktracking(F, dF)
+        #alpha=AmijoBacktracking(F, dF)
+        alpha=ResidualLinesearch(dJsx)
         x=x+alpha*sx
         if printoption:
             print ("NEWTON: Iteration: %2d" %(i+1)+"||obj: %2e" % (J(x))+"|| ||grad||: %2e" % (np.linalg.norm(dJ(x)))+"||alpha: %2e" % (alpha))
@@ -87,6 +88,15 @@ def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=0.00001, printoption=1):#performs m
             flag=1
             return x,flag
     return x,flag
+
+def ResidualLinesearch(dJsx,factor=1/2,mu=0.01):
+    alpha=1
+    for i in range(1000):
+        if np.linalg.norm(dJsx(alpha))<=np.linalg.norm(dJsx(0)):
+            return alpha
+        else:
+            alpha=alpha*factor
+    return alpha;
 
 def WolfePowell(F,dF): # Finds proper line search parameter 
     mu = 0.01; sigma = 0.9; tau = 0.1; tau1 = 0.1; tau2 = 0.6; zeta1 = 1; zeta2 = 10; alpha = 1;
