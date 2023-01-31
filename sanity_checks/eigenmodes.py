@@ -68,8 +68,8 @@ u = MB@D2@ pde.int.evaluate(MESH, coeff = f, order = 2).diagonal()
 
 sigma = 1
 # x = sps.linalg.eigs(Kxx+Kyy-sigma*M+gamma*B_full,M = M, sigma = sigma)
-x = sps.linalg.eigsh(Kxx + Kyy+ 10**10*B_full, M = M, sigma = 1, k = 100)
-phi = np.real(x[1][:,0])
+x = sps.linalg.eigsh(Kxx + Kyy+ 10**10*B_full, M = 2*np.pi**2*M, sigma = 1, k = 100)
+phi = np.real(x[1][:,5])
 
 print(x[0])
 

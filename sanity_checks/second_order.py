@@ -30,7 +30,7 @@ gmsh.option.setNumber("Mesh.MeshSizeMin", 1)
 m = 4; n = 5;
 
 f = lambda x,y : (m**2*np.pi**2+n**2*np.pi**2)*np.sin(np.pi*m*x)*np.sin(np.pi*n*y)
-g = lambda x,y : 0*x
+g = lambda x,y : 0*x+0*y
 u = lambda x,y : np.sin(np.pi*m*x)*np.sin(np.pi*n*y)
 
 p,e,t,q = pde.petq_generate()

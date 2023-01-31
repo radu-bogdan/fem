@@ -52,7 +52,20 @@ def HerbertsMaterialE(a,b):
         diry=x/normxy(x,y)
         ru=I_dg_inv_radial(normxy(x,y),nu0)
         ddg_=ddg(ru*dirx,ru*diry,nu0)
-        H=ddg_@ np.linalg.inv(np.eye(2,2)-1./nu0*ddg_)
+        
+        e00 = 1-1/nu0*ddg_[0,0,:]
+        e10 = 0-1/nu0*ddg_[1,0,:]
+        e01 = 0-1/nu0*ddg_[0,1,:]
+        e11 = 1-1/nu0*ddg_[1,1,:]
+        
+        detE = e00*e11-e10*e01
+        
+        # H=ddg_@ np.linalg.inv(np.eye(2,2)-1./nu0*ddg_)
+        H=ddg_@ (1/detE*np.array([e11,-e10],
+                                 [-e01,e00]))
+        
+        
+        
         return H
     
     dde=lambda x,y,nu0:Hesse(x,y,nu0)
