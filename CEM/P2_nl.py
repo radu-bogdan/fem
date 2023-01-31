@@ -25,7 +25,8 @@ gmsh.model.add("Capacitor plates")
 geometries.geometryP2()
 gmsh.option.setNumber("Mesh.Algorithm", 2)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
-gmsh.option.setNumber("Mesh.MeshSizeMax",0.6)
+gmsh.option.setNumber("Mesh.MeshSizeMax",0.2)
+gmsh.option.setNumber("Mesh.MeshSizeMin",0.2)
 
 # gmsh.fltk.run()
 # quit()
@@ -83,7 +84,7 @@ penalty = 10**10
 A = Kxx + Kyy + penalty*B
 b = M_f
 
-g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 1, b = 1)
+g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 25, b = 1)
 
 
 penalty = 10**7
