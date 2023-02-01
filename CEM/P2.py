@@ -33,10 +33,11 @@ gmsh.clear()
 gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists()
+MESH.makeFemLists(space = 'P1')
+MESH.makeFemLists(space = 'P0')
 
-BASIS = pde.basis()
-LISTS = pde.lists(MESH)
+# BASIS = pde.basis()
+# LISTS = pde.lists(MESH)
 
 f1 = lambda x,y : -1+0*x
 f2 = lambda x,y :  1+0*x
