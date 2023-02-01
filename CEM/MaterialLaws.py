@@ -5,13 +5,6 @@ Created on Tue Jan 24 18:15:52 2023
 @author: Michael
 """
 import numpy as np
-from autograd import grad
-from autograd import jacobian
-
-def makeHandles(f):
-    df=jacobian(f)
-    ddf=jacobian(df)
-    return df, ddf
 
 def nonlinearMaterial1():
     f = lambda x,y : x**2 + y**2 + 0.1*x**4 + 0.1*y**4
@@ -42,33 +35,16 @@ def HerbertsMaterialG(a,b):
     return f,df,ddf
 
 def HerbertsMaterialE(a,b):
-    normxy=lambda x,y: np.linalg.norm(np.array([x,y])) 
-    g,dg,ddg=HerbertsMaterialG(a,b)
-    I_dg_inv_radial=lambda R,nu0: np.sqrt(R**2*b**2/((a/nu0)**2-R**2))
-    de=lambda x,y,nu0:dg(I_dg_inv_radial(normxy(x,y),nu0)*x/normxy(x,y),I_dg_inv_radial(normxy(x,y),nu0)*y/normxy(x,y))
+    Nenner=lambda x,y,a: np.sqrt(a**2-x**2-y**2)
     
-    def Hesse(x,y,nu0):
-        dirx=x/normxy(x,y)
-        diry=x/normxy(x,y)
-        ru=I_dg_inv_radial(normxy(x,y),nu0)
-        ddg_=ddg(ru*dirx,ru*diry,nu0)
-        
-        e00 = 1-1/nu0*ddg_[0,0,:]
-        e10 = 0-1/nu0*ddg_[1,0,:]
-        e01 = 0-1/nu0*ddg_[0,1,:]
-        e11 = 1-1/nu0*ddg_[1,1,:]
-        
-        detE = e00*e11-e10*e01
-        
-        # H=ddg_@ np.linalg.inv(np.eye(2,2)-1./nu0*ddg_)
-        H=ddg_@ (1/detE*np.array([e11,-e10],
-                                 [-e01,e00]))
-        
-        
-        
-        return H
+    f=lambda x,y,nu0: nu0/2*(x**2+y**2)-b*Nenner(x*nu0,y*nu0,a)
     
-    dde=lambda x,y,nu0:Hesse(x,y,nu0)
+    fx=lambda x,y,nu0: nu0*x+ nu0**2*b*x/Nenner(x*nu0,y*nu0,a)
+    fy=lambda x,y,nu0: nu0*y+ nu0**2*b*y/Nenner(x*nu0,y*nu0,a)
     
-    return de, dde
-    
+    fxx=lambda x,y,nu0: nu0+b*nu0**2/Nenner(x*nu0,y*nu0,a)+b*nu0**4*x**2/Nenner(x*nu0,y*nu0,a)**3
+    fyy=lambda x,y,nu0: nu0+b*nu0**2*Nenner(x*nu0,y*nu0,a)+b*nu0**4*y**2/Nenner(x*nu0,y*nu0,a)**3
+    fxy=fyx=lambda x,y,nu0: b*nu0**4*x*y/Nenner(x*nu0,y*nu0,a)**3
+    df= lambda x,y,nu0:npp.array ([fx(x,y,nu0),fy(x,y,nu0)])
+    ddf= lambda x,y,nu0:np.array([[fxx(x,y,nu0),fxy(x,y,nu0)],[fyx(x,y,nu0),fyy(x,y,nu0)]])
+    return f,df,ddf
