@@ -13,6 +13,7 @@ import geometries
 import plotly.io as pio
 pio.renderers.default = 'browser'
 from matplotlib.pyplot import spy
+from sksparse.cholmod import cholesky
 
 
 np.set_printoptions(threshold = np.inf)
@@ -35,9 +36,9 @@ u = lambda x,y : np.sin(np.pi*m*x)*np.sin(np.pi*n*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists()
+MESH.makeFemLists(space = 'P2')
 
-iterations = 9
+iterations = 10
 
 err = np.empty(shape = (iterations,1))
 for i in range(iterations):
@@ -70,12 +71,11 @@ for i in range(iterations):
     b = gamma*B_g + M_f
     
     
+    mp = 1/2*(MESH.p[MESH.EdgesToVertices[:,0],:] + 
+              MESH.p[MESH.EdgesToVertices[:,1],:])
     
-    # MESH.TriangleToEdges
-    
-    mp = 1/2*(MESH.p[MESH.EdgesToVertices[:,0],:] + MESH.p[MESH.EdgesToVertices[:,1],:])
-    
-    u_ex = np.r_[u(MESH.p[:,0],MESH.p[:,1]),u(mp[:,0],mp[:,1])]
+    u_ex = np.r_[u(MESH.p[:,0],MESH.p[:,1]),
+                 u(mp[:,0],mp[:,1])]
     
     elapsed = time.time()-tm; print('Assembling stuff took ' + str(elapsed)[0:5] + ' seconds.')
     
@@ -87,7 +87,8 @@ for i in range(iterations):
     # phi = np.real(x[1][:,0])
     
     tm = time.time()
-    uh = sps.linalg.spsolve(A,b)
+    factor = cholesky(A)
+    uh = factor(b)
     elapsed = time.time()-tm
     print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
     
@@ -103,13 +104,13 @@ for i in range(iterations):
         elapsed = time.time()-tm; print('Making mesh took ' + str(elapsed)[0:5] + ' seconds.')
         
         tm = time.time()
-        MESH.makeFemLists()
+        MESH.makeFemLists(space = 'P2')
         elapsed = time.time()-tm; print('Making lists took ' + str(elapsed)[0:5] + ' seconds.')
         
         print(MESH.np)
     
 print(np.log2(err[1:-1]/err[2:]))
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 1), u_ex[0:MESH.np])
-fig.show()
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 1), u_ex[0:MESH.np])
+# fig.show()
 

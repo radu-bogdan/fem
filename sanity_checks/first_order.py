@@ -9,6 +9,7 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
 import geometries
+from sksparse.cholmod import cholesky
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
@@ -33,9 +34,9 @@ u = lambda x,y : np.sin(np.pi*x)*np.sin(np.pi*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists()
+MESH.makeFemLists(space = 'P1')
 
-iterations = 8
+iterations = 4
 
 err = np.empty(shape = (iterations,1))
 for i in range(iterations):
@@ -78,7 +79,8 @@ for i in range(iterations):
     # phi = np.real(x[1][:,0])
     
     tm = time.time()
-    uh = sps.linalg.spsolve(A,b)
+    factor = cholesky(A)
+    uh = factor(b)
     elapsed = time.time()-tm
     print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
     
@@ -94,7 +96,7 @@ for i in range(iterations):
     elapsed = time.time()-tm; print('Making mesh took ' + str(elapsed)[0:5] + ' seconds.')
     
     tm = time.time()
-    MESH.makeFemLists()
+    MESH.makeFemLists(space = 'P1')
     elapsed = time.time()-tm; print('Making lists took ' + str(elapsed)[0:5] + ' seconds.')
     
     print(MESH.np)

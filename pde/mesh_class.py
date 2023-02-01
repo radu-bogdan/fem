@@ -67,7 +67,7 @@ class mesh:
         # EdgesToVertices2, je2, trei = nb_unique(edges,axis=0)
 
         NoEdges = EdgesToVertices.shape[0]
-        TriangleToEdges = je[0:3*nt].reshape(nt,3, order='F')
+        TriangleToEdges = je[0:3*nt].reshape(nt,3, order='F').astype(npy.uint64)
         QuadToEdges = je[3*nt:].reshape(nq,4, order='F')
         #############################################################################################################
         
@@ -141,6 +141,7 @@ class mesh:
 
         self.Boundary = self.boundary(self)
         self.Lists = self.lists(self)
+        self.FEMLISTS = {}
         
         #############################################################################################################
         
@@ -172,8 +173,8 @@ class mesh:
             self.QuadLayerEdges = parent._Lists_QuadLayerEdges
             self.QuadsAtTriangleInterface = parent._Lists_QuadsAtTriangleInterface
         
-    def makeFemLists(self):
-        self.FEMLISTS = femlists.lists(self)
+    def makeFemLists(self,space):
+        self.FEMLISTS = femlists.lists(self,space)
     
     def refinemesh(self):
         pn = 1/2*(self.p[self.EdgesToVertices[:,0],:]+
