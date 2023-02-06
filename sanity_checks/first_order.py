@@ -36,14 +36,14 @@ p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
 MESH.makeFemLists(space = 'P1')
 
-iterations = 4
+iterations = 9
 
-err = np.empty(shape = (iterations,1))
+err = np.zeros(shape = (iterations,1))
 for i in range(iterations):
     
     tm = time.time()
     
-    # Mass & Stifness    
+    # Mass & Stifness
     Kx,Ky = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
     D0 = pde.int.assemble(MESH, order = 0)
     
@@ -57,11 +57,15 @@ for i in range(iterations):
     
     # Boundary stuff
     Mb = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = Kxx.shape, order = 2)
-    Db0 = pde.int.assembleB(MESH, order = 2)
-    B_full = Mb@Db0@Mb.T
+    D0b = pde.int.assembleB(MESH, order = 2)
+    B_full = Mb@D0b@Mb.T
     
     D_g = pde.int.evaluateB(MESH, order = 2, coeff = g)
-    B_g = Mb@Db0@ D_g.diagonal()
+    B_g = Mb@D0b@D_g.diagonal()
+    
+    # New boundary stuff
+    
+    
     
     gamma = 10**10
     
@@ -84,7 +88,7 @@ for i in range(iterations):
     elapsed = time.time()-tm
     print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
     
-    err[i] = np.sqrt((u_ex-uh)@M@(u_ex-uh))
+    err[i] = np.sqrt((u_ex-uh)@(M + Kxx + Kyy)@(u_ex-uh))
     
     
     tm = time.time()

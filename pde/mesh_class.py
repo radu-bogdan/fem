@@ -202,7 +202,7 @@ class mesh:
         common_ind = b_ind[npy.isin(b_unique, common_unique, assume_unique=True)]
         return bool_ind, common_ind[common_inv]
     
-    def pdemesh(self,dpi=500,info=0,border=0.5):
+    def pdemesh(self,dpi=500,info=0,border=0):
 
         p = self.p; t = self.t; q = self.q
 
@@ -336,14 +336,14 @@ class mesh:
         if self.q.shape[0]!=0:
             fig = self.__pdesurf_quad(fig,DATAQ,u)
         
-        # camera = dict(up = dict(x = 1, y = 0., z = 0),
-        #               eye = dict(x = 0, y = 0, z = 2*max(u)))
+        
         camera = dict(eye = dict(x = 0, y = -1e-5, z = 1e10))
+        # camera = dict(eye = dict(x = -1e-10, y = -1e-10, z = 1e10))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
         fig.update_layout(scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
-                                       xaxis = dict(showspikes = False),
-                                       yaxis = dict(showspikes = False),
-                                       zaxis = dict(showspikes = False)),
+                                        xaxis = dict(showspikes = False),
+                                        yaxis = dict(showspikes = False),
+                                        zaxis = dict(showspikes = False)),
                           scene_camera = camera,
                           legend = dict(yanchor = "top",
                                         y = 1,
@@ -352,16 +352,17 @@ class mesh:
                                         bgcolor = "LightSteelBlue",
                                         bordercolor = "Black",
                                         borderwidth = 2),
-                          # yaxis=dict(
-                          #       range=[0, 300]
-                          #   ),
-                          #   xaxis=dict(
-                          #       range=[0, 300]
-                             # )
                           )
         
         fig.layout.scene.camera.projection.type = "orthographic"
+        # fig.layout.paper_bgcolor = "#7f7f7f"
+        # fig.layout.plot_bgcolor = "#c7c7c7"
         fig.update_traces(showlegend = True)
+        
+        # border = 0
+        # fig.update_xaxes(scaleanchor = "y", scaleratio = 1)
+        # fig.update_xaxes(range=[npy.min(self.p[:,0])-border,npy.max(self.p[:,0])+border])
+        # fig.update_yaxes(range=[npy.min(self.p[:,1])-border,npy.max(self.p[:,1])+border])
         
         if controls == 1:
             
@@ -450,13 +451,13 @@ class mesh:
         zzz_trig = npy.c_[zz,zz[:,0],npy.nan*zz[:,0]]
         
         fig.add_trace(go.Scatter3d(name = 'Trig traces',
-                                   mode = 'lines',
-                                   x = xxx_trig.flatten(),
-                                   y = yyy_trig.flatten(),
-                                   z = zzz_trig.flatten(),
-                                   line = go.scatter3d.Line(color = 'black', 
+                                    mode = 'lines',
+                                    x = xxx_trig.flatten(),
+                                    y = yyy_trig.flatten(),
+                                    z = zzz_trig.flatten(),
+                                    line = go.scatter3d.Line(color = 'black', 
                                                             width = 1.5),
-                                   showlegend = False))
+                                    showlegend = False))
         
         
         if DATAT == 'P1':
@@ -466,24 +467,24 @@ class mesh:
             Z = griddata((x, y), z, (xr, yr) , method='cubic')
 
             fig.add_trace(go.Surface(name = 'Isolines',
-                                     x = xr[0],
-                                     y = yr[:,0],
-                                     z = Z, hidesurface = True,
-                                     showlegend = None,
-                                     showscale = False,
-                                     contours_z = dict(show = True,
-                                                       start = Z.min(),
-                                                       end = Z.max(),
-                                                       size = (Z.max()-Z.min())/30,
-                                                       width = 1,
-                                                       # usecolormap = True,
-                                                       # project_z = True,
-                                                       highlightcolor = "#FFFFFF",
-                                                       usecolormap = False,
-                                                       # highlightwidth = 16,
-                                                       color = "white"
-                                                       )
-                                     ))
+                                      x = xr[0],
+                                      y = yr[:,0],
+                                      z = Z, hidesurface = True,
+                                      showlegend = None,
+                                      showscale = False,
+                                      contours_z = dict(show = True,
+                                                        start = Z.min(),
+                                                        end = Z.max(),
+                                                        size = (Z.max()-Z.min())/30,
+                                                        width = 1,
+                                                        # usecolormap = True,
+                                                        # project_z = True,
+                                                        highlightcolor = "#FFFFFF",
+                                                        usecolormap = False,
+                                                        # highlightwidth = 16,
+                                                        color = "white"
+                                                        )
+                                      ))
         
         fig.update_traces()
         

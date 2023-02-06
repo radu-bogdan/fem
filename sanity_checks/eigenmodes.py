@@ -32,7 +32,7 @@ u = lambda x,y : np.sin(np.pi*x)*np.sin(np.pi*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists()
+MESH.makeFemLists(space = 'P1')
     
 tm = time.time()
 
@@ -69,7 +69,7 @@ u = MB@D2@ pde.int.evaluate(MESH, coeff = f, order = 2).diagonal()
 sigma = 1
 # x = sps.linalg.eigs(Kxx+Kyy-sigma*M+gamma*B_full,M = M, sigma = sigma)
 x = sps.linalg.eigsh(Kxx + Kyy+ 10**10*B_full, M = 2*np.pi**2*M, sigma = 1, k = 100)
-phi = np.real(x[1][:,5])
+phi = np.real(x[1][:,20])
 
 print(x[0])
 
@@ -79,6 +79,11 @@ print(x[0])
 # print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
 
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 1), phi)
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1', controls = 0), phi)
 fig.show()
 
+
+
+# import plotly.graph_objects as go
+# f2 = go.FigureWidget(fig)
+# f2
