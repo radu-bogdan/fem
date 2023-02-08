@@ -316,12 +316,25 @@ def basis():
     BASIS['DOF'] = {}
     BASIS['DOF']['HDIV'] = {}
     
-    BASIS['DOF']['HDIV']['RT0'] = {}  
+    BASIS['DOF']['HDIV']['RT0'] = {}
     BASIS['DOF']['HDIV']['RT0'][0] = lambda x: 1+0*x
     
     BASIS['DOF']['HDIV']['BDM1'] = {}
     BASIS['DOF']['HDIV']['BDM1'][0] = lambda x: 6*x-2 # dual to x and 1-x on the edge...
     BASIS['DOF']['HDIV']['BDM1'][1] = lambda x: -6*x+4
+    
+    
+    
+    BASIS['SP1'] = {}
+    BASIS['SP1']['TRIG'] = {}
+    BASIS['SP1']['TRIG']['phi'] = {}
+    BASIS['SP1']['TRIG']['phi'][0] = lambda x,y: np.array([[0,x],[x,0]])
+    BASIS['SP1']['TRIG']['phi'][1] = lambda x,y: np.array([[0,y],[y,0]])
+    BASIS['SP1']['TRIG']['phi'][2] = lambda x,y: np.array([[2*y,-y],[-y,0]])
+    BASIS['SP1']['TRIG']['phi'][3] = lambda x,y: np.array([[2*(1-x-y),-(1-x-y)],[-(1-x-y),0]])
+    BASIS['SP1']['TRIG']['phi'][4] = lambda x,y: np.array([[0,-(1-x-y)],[-(1-x-y),2*(1-x-y)]])
+    BASIS['SP1']['TRIG']['phi'][5] = lambda x,y: np.array([[0,-x],[-x,2*x]])
+    
     
     
     

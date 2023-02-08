@@ -13,3 +13,4 @@ import pde.assemb.h1
 import pde.h1
 import pde.l2
 import pde.int
+import pde.hdivdiv

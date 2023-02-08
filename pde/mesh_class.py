@@ -33,9 +33,9 @@ class mesh:
                                                 t[:,0]-t[:,1]].astype(int))*(-1)
             mp_trig = 1/3*(p[t[:,0],:] + p[t[:,1],:] + p[t[:,2],:])
         else:
-            edges_trigs = npy.array([], dtype=npy.int64).reshape(0,2)
-            EdgeDirectionTrig= npy.array([], dtype=npy.int64).reshape(0,3)
-            mp_trig = npy.array([], dtype=npy.int64).reshape(0,2)
+            edges_trigs = npy.empty(shape = (0,2), dtype = npy.int64)
+            EdgeDirectionTrig = npy.empty(shape = (0,3), dtype = npy.int64)
+            mp_trig = npy.empty(shape = (0,2), dtype = npy.int64)
         
 
         if q.size != 0:
@@ -49,9 +49,9 @@ class mesh:
                                                 q[:,0]-q[:,1]].astype(int))*(-1)
             mp_quad = 1/4*(p[q[:,0],:] + p[q[:,1],:] + p[q[:,2],:] + p[q[:,3],:])
         else:
-            edges_quads = npy.array([], dtype=npy.int64).reshape(0,2)
-            EdgeDirectionQuad= npy.array([], dtype=npy.int64).reshape(0,4)
-            mp_quad = npy.array([], dtype=npy.int64).reshape(0,2)
+            edges_quads = npy.empty(shape = (0,2), dtype = npy.int64)
+            EdgeDirectionQuad = npy.empty(shape = (0,4), dtype = npy.int64)
+            mp_quad = npy.empty(shape = (0,2), dtype = npy.int64)
 
         e_new = npy.sort(e[:,0:2])
         nt = t.shape[0]

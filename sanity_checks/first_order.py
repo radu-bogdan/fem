@@ -73,35 +73,28 @@ for i in range(iterations):
     b = gamma*B_g + M_f
     
     u_ex = u(MESH.p[:,0],MESH.p[:,1])
-    elapsed = time.time()-tm; print('Assembling stuff took ' + str(elapsed)[0:5] + ' seconds.')
+    elapsed = time.time()-tm; print('Assembling stuff took  {:4.8f} seconds.'.format(elapsed))
     
-    # u = MB@D2@ pde.int.evaluate(MESH, coeff = f, order = 2).diagonal()
-    
-    # sigma = 3
-    # # x = sps.linalg.eigs(Kxx+Kyy-sigma*M+gamma*B_full,M = M, sigma = sigma)
-    # x = sps.linalg.eigs(Kxx+Kyy,M = M, sigma = sigma)
-    # phi = np.real(x[1][:,0])
     
     tm = time.time()
     factor = cholesky(A)
     uh = factor(b)
-    elapsed = time.time()-tm
-    print('Solving took ' + str(elapsed)[0:5] + ' seconds.')
+    elapsed = time.time()-tm; print('Solving took  {:4.8f} seconds.'.format(elapsed))
     
     err[i] = np.sqrt((u_ex-uh)@(M + Kxx + Kyy)@(u_ex-uh))
     
     
     tm = time.time()
     p,e,t = MESH.refinemesh()
-    elapsed = time.time()-tm; print('Refining mesh took ' + str(elapsed)[0:5] + ' seconds.')
+    elapsed = time.time()-tm; print('Refining mesh took {:4.8f} seconds.'.format(elapsed))
     
     tm = time.time()
     MESH = pde.mesh(p,e,t,q)
-    elapsed = time.time()-tm; print('Making mesh took ' + str(elapsed)[0:5] + ' seconds.')
+    elapsed = time.time()-tm; print('Making mesh took {:4.8f} seconds.'.format(elapsed))
     
     tm = time.time()
     MESH.makeFemLists(space = 'P1')
-    elapsed = time.time()-tm; print('Making lists took ' + str(elapsed)[0:5] + ' seconds.')
+    elapsed = time.time()-tm; print('Making lists took {:4.8f} seconds.'.format(elapsed))
     
     print(MESH.np)
     
