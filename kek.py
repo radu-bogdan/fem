@@ -5,7 +5,7 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 from sksparse.cholmod import cholesky
 import time
-from scikits import umfpack
+# from scikits import umfpack
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
@@ -14,9 +14,9 @@ np.set_printoptions(precision = 8)
 
 # p,e,t,q = pde.petq_from_gmsh(filename = 'unit_square.geo',hmax = 1*1/np.sqrt(2)**5)
 p,e,t,q = pde.petq_from_gmsh(filename = 'mesh_new.geo', hmax = 1/np.sqrt(2)**2)
-MESH = pde.initmesh(p,e,t,q)
-BASIS = pde.basis()
-LISTS = pde.lists(MESH)
+MESH = pde.mesh(p,e,t,q)
+# BASIS = pde.basis()
+# LISTS = pde.lists(MESH)
 
 pex = lambda x,y : (1-x)**4+(1-y)**3*(1-x) + np.sin(1-y)*np.cos(1-x)
 u1ex = lambda x,y : -np.sin(1-x)*np.sin(1-y)-4*(x-1)**3-(y-1)**3

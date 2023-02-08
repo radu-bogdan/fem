@@ -1,3 +1,9 @@
+from __future__ import annotations
+
+from typing import Callable
+from numpy.typing import ArrayLike
+
+
 import numba as nb
 import numpy as np
 
@@ -127,3 +133,22 @@ def np_all(x, axis = None):
             return _np_all_flat(x)
 
         return _np_all_impl
+
+
+def unique_rows(a: ArrayLike, **kwargs) -> np.ndarray | tuple[np.ndarray, ...]:
+    # The numpy alternative `np.unique(a, axis=0)` is slow; cf.
+    # <https://github.com/numpy/numpy/issues/11136>.
+    # a = np.asarray(a)
+
+    a_shape = a.shape
+    a = a.reshape(a.shape[0], np.prod(a.shape[1:], dtype=int))
+
+    b = a.view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
+    out = np.unique(b, **kwargs)
+    # out[0] are the sorted, unique rows
+    if isinstance(out, tuple):
+        out = (out[0].view(a.dtype).reshape(out[0].shape[0], *a_shape[1:]), *out[1:])
+    else:
+        out = out.view(a.dtype).reshape(out.shape[0], *a_shape[1:])
+
+    return out

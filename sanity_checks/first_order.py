@@ -36,9 +36,10 @@ p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
 MESH.makeFemLists(space = 'P1')
 
-iterations = 9
+iterations = 11
 
 err = np.zeros(shape = (iterations,1))
+
 for i in range(iterations):
     
     tm = time.time()
@@ -64,7 +65,7 @@ for i in range(iterations):
     B_g = Mb@D0b@D_g.diagonal()
     
     # New boundary stuff
-    
+    # TODO
     
     
     gamma = 10**10
@@ -83,6 +84,7 @@ for i in range(iterations):
     
     err[i] = np.sqrt((u_ex-uh)@(M + Kxx + Kyy)@(u_ex-uh))
     
+    print(MESH.np)
     
     tm = time.time()
     p,e,t = MESH.refinemesh()
@@ -95,8 +97,6 @@ for i in range(iterations):
     tm = time.time()
     MESH.makeFemLists(space = 'P1')
     elapsed = time.time()-tm; print('Making lists took {:4.8f} seconds.'.format(elapsed))
-    
-    print(MESH.np)
     
 print(np.log2(err[1:-1]/err[2:]))
 

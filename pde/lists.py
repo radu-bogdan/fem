@@ -166,7 +166,10 @@ def lists(MESH,space):
                                                  2*MESH.TriangleToEdges[:,1]   -1/2*(MESH.EdgeDirectionTrig[:,1]-1),
                                                  2*MESH.TriangleToEdges[:,1]+1 +1/2*(MESH.EdgeDirectionTrig[:,1]-1),
                                                  2*MESH.TriangleToEdges[:,2]   -1/2*(MESH.EdgeDirectionTrig[:,2]-1),
-                                                 2*MESH.TriangleToEdges[:,2]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1)]
+                                                 2*MESH.TriangleToEdges[:,2]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1),
+                                                 range(2*MESH.NoEdges+0,2*MESH.NoEdges+3*MESH.nt,3),
+                                                 range(2*MESH.NoEdges+1,2*MESH.NoEdges+3*MESH.nt,3),
+                                                 range(2*MESH.NoEdges+2,2*MESH.NoEdges+3*MESH.nt,3)]
         #############################################################################################################
     
     
