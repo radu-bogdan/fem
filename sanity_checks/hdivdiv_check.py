@@ -115,11 +115,16 @@ elapsed = time.time()-tm; print('Inverting1 took {:4.8f} seconds.'.format(elapse
 dataN = N.data
 indicesN = N.indices
 indptrN = N.indptr
-block_lengths = np.r_[block_ends[1:]-block_ends[0:-1]]
 
 @nb.njit()
-def whatever(dataN,indicesN,indptrN,block_ends,block_lengths):
+def whatever(dataN,indicesN,indptrN,block_ends):
+
+    block_lengths = block_ends[1:]-block_ends[0:-1]
+    
     C = np.zeros(sum(block_lengths**2))
+    indices_iN = np.zeros(sum(block_lengths**2))
+    indptr_iN = np.zeros(sum(block_lengths**2))
+    
     for i,ii in enumerate(block_ends[:-1]):
         CC = np.zeros(shape=(block_lengths[i],block_lengths[i]),dtype=np.float64)
         
@@ -127,11 +132,13 @@ def whatever(dataN,indicesN,indptrN,block_ends,block_lengths):
             in_k = np.arange(start = indptrN[block_ends[i]+k], stop = indptrN[block_ends[i]+k+1], step = 1, dtype = np.int64)
             for j,jj in enumerate(in_k):
                 CC[k,indicesN[jj]-block_ends[i]] = dataN[jj]
-    
+                
         iCC = np.linalg.inv(CC)
-        
         C[sum((block_lengths**2)[0:i]):sum((block_lengths**2)[0:i+1])] = iCC.flatten()
-        # nur noch die indices and im done :) 
+        
+        
+        
+        # nur noch die indices and im done :)
         
     return C
 
@@ -154,7 +161,7 @@ def whatever(dataN,indicesN,indptrN,block_ends,block_lengths):
     # pause
 
 tm = time.time()
-C = whatever(dataN,indicesN,indptrN,block_ends,block_lengths)        
+C = whatever(dataN,indicesN,indptrN,block_ends)
 elapsed = time.time()-tm; print('Njit took {:4.8f} seconds.'.format(elapsed))
 #####################################################################################
 
