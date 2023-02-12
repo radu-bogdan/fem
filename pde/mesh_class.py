@@ -11,7 +11,8 @@ import plotly.graph_objects as go
 from scipy.interpolate import griddata
 from . import lists as femlists
 import numba as jit
-from .tools import *
+# from .tools import *
+from .tools import unique_rows
 
 # import plotly.figure_factory as ff
 
@@ -553,10 +554,10 @@ def intersect2d(X, Y):
             
             
         dims = X.max(0)+1
-        X1D = np.ravel_multi_index(X.T,dims)
-        searched_valuesID = np.ravel_multi_index(Y.T,dims)
+        X1D = npy.ravel_multi_index(X.T,dims)
+        searched_valuesID = npy.ravel_multi_index(Y.T,dims)
         sidx = X1D.argsort()
-        out = sidx[np.searchsorted(X1D,searched_valuesID,sorter=sidx)]    
+        out = sidx[npy.searchsorted(X1D,searched_valuesID,sorter=sidx)]    
         return out
 
 
