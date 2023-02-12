@@ -84,11 +84,12 @@ class mesh:
 
         indices_boundary = npy.r_[index_trig,index_quad]
         direction_boundary = npy.r_[EdgeDirectionTrig[loc_trig],EdgeDirectionQuad[loc_quad]]
-        b = npy.argsort(indices_boundary)
+        b = npy.argsort(indices_boundary)        
         #############################################################################################################
         
         #############################################################################################################
-        self._Boundary_Region = e[:,2]
+        index_e = intersect2d(e[:,0:2],e_new)
+        self._Boundary_Region = e[index_e,2]
         self._Boundary_p_index = npy.unique(e)
         self._Boundary_np = self._Boundary_p_index.size
         self._Boundary_Edges = BoundaryEdges
@@ -540,6 +541,24 @@ class mesh:
                                    line = go.scatter3d.Line(color = 'black', width = 1.5),
                                    showlegend = False))
         return fig
+
+def intersect2d(X, Y):
+        """
+        Function to find intersection of two 2D arrays.
+        Returns index of rows in X that are common to Y.
+        """
+        # dims = X.max(0)+1
+        # out = np.where(np.in1d(np.ravel_multi_index(X.T,dims),\
+        #                np.ravel_multi_index(Y.T,dims)))[0]
+            
+            
+        dims = X.max(0)+1
+        X1D = np.ravel_multi_index(X.T,dims)
+        searched_valuesID = np.ravel_multi_index(Y.T,dims)
+        sidx = X1D.argsort()
+        out = sidx[np.searchsorted(X1D,searched_valuesID,sorter=sidx)]    
+        return out
+
 
 
 # def bog_unique(ar, return_index=False, return_inverse=False,

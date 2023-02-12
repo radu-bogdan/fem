@@ -1,4 +1,3 @@
-
 #!/usr/bin/python --relpath_append ../
 
 import sys
@@ -26,7 +25,8 @@ gmsh.model.add("Capacitor plates")
 geometries.geometryP2()
 gmsh.option.setNumber("Mesh.Algorithm", 2)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
-gmsh.option.setNumber("Mesh.MeshSizeMax",0.6)
+gmsh.option.setNumber("Mesh.MeshSizeMax",0.2)
+gmsh.option.setNumber("Mesh.MeshSizeMin",0.2)
 
 # gmsh.fltk.run()
 # quit()
@@ -36,11 +36,10 @@ gmsh.clear()
 gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists(space = 'P1')
-MESH.makeFemLists(space = 'P0')
+MESH.makeFemLists()
 
-# BASIS = pde.basis()
-# LISTS = pde.lists(MESH)
+BASIS = pde.basis()
+LISTS = pde.lists(MESH)
 
 f1 = lambda x,y : -1+0*x
 f2 = lambda x,y :  1+0*x
@@ -85,22 +84,31 @@ penalty = 10**10
 A = Kxx + Kyy + penalty*B
 b = M_f
 
-g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 1, b = 1)
+de, dde = MaterialLaws.HerbertsMaterialE(a = 0.1, b = 1)
 
 
 penalty = 10**7
 
-def update_left(u):
+K = Kxx + Kyy + penalty*B
+
+def update_left(px,py):
     
-    ux = BKx.T@u
-    uy = BKy.T@u
+    Dxx = D @ D0 @ sps.diags(1+dde(px,py,nu_aus)[0,0,:])@ D.T
+    Dyy = D @ D0 @ sps.diags(1+dde(px,py,nu_aus)[1,1,:])@ D.T
+    Dxy = D @ D0 @ sps.diags(dde(px,py,nu_aus)[1,0,:])@ D.T
+    Dyx = D @ D0 @ sps.diags(dde(py,px,nu_aus)[0,1,:])@ D.T
     
-    fxx_grad_u_Kxx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,0,:])@ BKx.T
-    fyy_grad_u_Kyy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,1,:])@ BKy.T
-    fxy_grad_u_Kxy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,0,:])@ BKx.T
-    fyx_grad_u_Kyx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,1,:])@ BKy.T
+    # return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B
     
-    return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B
+    return sps.vstack((sps.hstack((K,-Cx.T,-Cy.T)),
+                       sps.hstack((Cx.T, Dxx,Dxy)),
+                       sps.hstack((Cy.T, Dyx,Dyy))))
+    
+    return 0
+
+px = np.zeros(MESH.nt)
+py = np.zeros(MESH.nt)
+update_left(px,py)
 
 def update_right(u):
     

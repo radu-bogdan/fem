@@ -99,7 +99,7 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
-# @profile
+
 def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
     
     if edges.size == 0:
