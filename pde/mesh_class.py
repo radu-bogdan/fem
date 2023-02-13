@@ -55,6 +55,7 @@ class mesh:
             mp_quad = npy.empty(shape = (0,2), dtype = npy.int64)
             
         e_new = npy.sort(e[:,0:2])
+        
         nt = t.shape[0]
         nq = q.shape[0]
         np = p.shape[0]

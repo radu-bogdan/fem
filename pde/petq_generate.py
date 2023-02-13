@@ -46,6 +46,7 @@ import numpy
 import numpy.matlib
 numpy.set_printoptions(edgeitems=30, linewidth = 1000000)
 
+# @profile
 def petq_generate():
     
     # gmsh.initialize()

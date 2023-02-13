@@ -6,13 +6,13 @@ from numpy.typing import ArrayLike
 
 import numba as nb
 import numpy as np
+import pandas as pd
 
 from numba import types
 from numba.extending import overload, register_jitable
 from numba.core.errors import TypingError
 
 @nb.jit(nopython=True, cache=True)
-
 def nb_unique(input_data, axis=0):
     """2D np.unique(a, return_index=True, return_counts=True)
     
@@ -135,7 +135,8 @@ def np_all(x, axis = None):
         return _np_all_impl
 
 
-
+# @profile
+# @nb.njit()
 def unique_rows(a: ArrayLike, **kwargs) -> np.ndarray | tuple[np.ndarray, ...]:
     # The numpy alternative `np.unique(a, axis=0)` is slow; cf.
     # <https://github.com/numpy/numpy/issues/11136>.
