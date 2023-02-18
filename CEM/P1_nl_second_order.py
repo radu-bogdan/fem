@@ -31,11 +31,11 @@ gmsh.option.setNumber("Mesh.MeshSizeMax", 0.1)
 p,e,t,q = pde.petq_generate()
 
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists()
+# MESH.makeFemLists()
 
 # TODO:  MESH = pde.refinemesh(p,e,t,q)
-BASIS = pde.basis()
-LISTS = pde.lists(MESH)
+# BASIS = pde.basis()
+# LISTS = pde.lists(MESH)
 
 g1 = lambda x,y : -1+0*x
 g2 = lambda x,y :  1+0*x

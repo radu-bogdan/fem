@@ -2,7 +2,7 @@
 from scipy import sparse as sp
 import numpy as npy
 from .. import quadrature
-import numba as nb
+# import numba as nb
 
 
 # @profile
@@ -126,7 +126,7 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
     
     iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
     iD = iD[:,indices]
-        
+    
     for i in range(nqp):
         qpT_i_1 = A0*qp[i] + p[e0,0]
         qpT_i_2 = A1*qp[i] + p[e0,1]
