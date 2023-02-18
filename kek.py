@@ -119,7 +119,7 @@ ph2 = res2[2*MESH.NoEdges:]
 print(np.linalg.norm(ph1-ph3,np.inf) + np.linalg.norm(uh1-uh3,np.inf))
 
 
-exit()
+# exit()
 
 
 uh1r = uh1.reshape((uh1.size//2,2))

@@ -218,7 +218,7 @@ def lists(MESH,space):
         LISTS['P2']['QUAD']['LIST_DOF'] = np.c_[MESH.q,MESH.np+MESH.QuadToEdges]
     
         LISTS['P2']['B'] = {}
-        LISTS['P2']['B']['LIST_DOF'] = np.c_[MESH.e,MESH.np+MESH.Boundary.Edges].astype(np.uint64)
+        LISTS['P2']['B']['LIST_DOF'] = np.c_[MESH.e,MESH.np+MESH.Boundary_Edges].astype(np.uint64)
 
 
     if space == 'Q0':

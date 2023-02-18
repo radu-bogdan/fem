@@ -103,9 +103,9 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
 def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
     
     if edges.size == 0:
-        edges = MESH.Boundary.Region
+        edges = MESH.Boundary_Region
     
-    indices = npy.argwhere(npy.in1d(MESH.Boundary.Region,edges))[:,0]
+    indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
 
     p = MESH.p;    
     e = MESH.e[indices,:]; ne = e.shape[0]

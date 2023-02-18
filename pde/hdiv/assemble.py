@@ -8,15 +8,17 @@ from .. import quadrature
 
 def assemble(MESH,space,matrix,order=-1):
     
-    INFO = spaceInfo(MESH,space)
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
     
     p = MESH.p;
     t = MESH.t; nt = t.shape[0]
     
-    sizeM = INFO['sizeM']
+    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
 
-    phi = INFO['TRIG']['phi']; lphi = len(phi)
-    # dphi = INFO['TRIG']['dphi']; ldphi = len(dphi)
+    phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
+    divphi = MESH.FEMLISTS[space]['TRIG']['divphi']; ldivphi = len(divphi)
+
     LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     
     if order != -1:
@@ -60,32 +62,8 @@ def assemble(MESH,space,matrix,order=-1):
         B10 = sparse(im,jm,ellmatsB10,sizeM,nqp*nt)
         B11 = sparse(im,jm,ellmatsB11,sizeM,nqp*nt)
         return B00,B01,B10,B11
-
-    # #####################################################################################
-    # # Stiffness matrices
-    # #####################################################################################
     
-    # if matrix == 'K':
-    #     if order == -1:
-    #         qp = INFO['TRIG']['qp_we_K'][0]; we = INFO['TRIG']['qp_we_K'][1]; nqp = len(we)
-        
-    #     ellmatsBKx = npy.zeros((nqp*nt,ldphi))
-    #     ellmatsBKy = npy.zeros((nqp*nt,ldphi))
-        
-    #     im = npy.tile(LIST_DOF,(nqp,1))
-    #     jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
-        
-    #     for j in range(ldphi):
-    #         for i in range(nqp):
-    #             dphii = dphi[j](qp[0,i],qp[1,i])
-    #             ellmatsBKx[i*nt:(i+1)*nt,j] = 1/detA*(A11*dphii[0]-A10*dphii[1])
-    #             ellmatsBKy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*dphii[0]+A00*dphii[1])
-        
-    #     BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
-    #     BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)
-    #     return BKx, BKy
 
-# @nb.jit(cache=True)
 def assembleB(MESH,space,matrix,shape,order=-1):
     
     INFO = spaceInfo(MESH,space)
@@ -130,6 +108,4 @@ def assembleB(MESH,space,matrix,shape,order=-1):
         return B
 
 def sparse(i, j, v, m, n):
-    # return sp.csc_matrix((v.flatten(order='F'), (i.flatten(order='F'), j.flatten(order='F'))), shape=(m, n))
-    # return sp.csr_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
-    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
+    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

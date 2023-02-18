@@ -49,7 +49,7 @@ def get_info(MESH,space):
             INFO['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = '2l')
             INFO['TRIG']['qp_we_C'] = quadrature.dunavant(order = 1)
             INFO['TRIG']['qp_we_D'] = quadrature.dunavant(order = 2)
-            INFO['TRIG']['qp_we_K'] = quadrature.dunavant(order = 0)
+            INFO['TRIG']['qp_we_K'] = quadrature.dunavant(order = 2)
             INFO['TRIG']['qp_we_MT'] = quadrature.dunavant(order = 2)
             
         if space == 'P1':

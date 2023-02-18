@@ -23,7 +23,7 @@ gmsh.model.add("Capacitor plates")
 geometries.geometryP2()
 gmsh.option.setNumber("Mesh.Algorithm", 1)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
-gmsh.option.setNumber("Mesh.MeshSizeMax",0.05)
+gmsh.option.setNumber("Mesh.MeshSizeMax",1)
 
 # gmsh.fltk.run()
 # quit()
@@ -33,8 +33,12 @@ gmsh.clear()
 gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists(space = 'P1')
-MESH.makeFemLists(space = 'P0')
+MESH.refinemesh()
+MESH.refinemesh()
+MESH.refinemesh()
+
+# MESH.makeFemLists(space = 'P1')
+# MESH.makeFemLists(space = 'P0')
 
 # BASIS = pde.basis()
 # LISTS = pde.lists(MESH)

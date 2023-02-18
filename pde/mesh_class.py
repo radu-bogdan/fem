@@ -64,119 +64,88 @@ class mesh:
         #############################################################################################################
         edges = npy.r_[npy.sort(edges_trigs),
                        npy.sort(edges_quads)].astype(int)
-        # EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
-        EdgesToVertices, je = unique_rows(edges, return_inverse = True)
+        EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
+        # EdgesToVertices, je = unique_rows(edges, return_inverse = True)
         
         NoEdges = EdgesToVertices.shape[0]
-        TriangleToEdges = je[0:3*nt].reshape(nt,3, order='F').astype(npy.int64)
-        QuadToEdges = je[3*nt:].reshape(nq,4, order='F')
+        TriangleToEdges = je[0:3*nt].reshape(nt,3, order = 'F').astype(npy.int64)
+        QuadToEdges = je[3*nt:].reshape(nq,4, order = 'F')
+        
+        BoundaryEdges = intersect2d(EdgesToVertices,e_new)
         #############################################################################################################
         
-        #############################################################################################################
-        # Need this so we can find the indices of the boundary edges in the global edge list
-        BoundaryEdges2 = npy.argwhere(npy.bincount(je)==1)[:,0]
-        _,je_new = npy.unique(e_new, axis=0, return_inverse=True)
-        BoundaryEdges = BoundaryEdges2[je_new]
-        e_new = EdgesToVertices[BoundaryEdges,:]
-        #############################################################################################################
-        
-        #############################################################################################################
-        loc_trig,index_trig = self.__ismember(TriangleToEdges,BoundaryEdges)
-        loc_quad,index_quad = self.__ismember(QuadToEdges,BoundaryEdges)
-
-        indices_boundary = npy.r_[index_trig,index_quad]
-        direction_boundary = npy.r_[EdgeDirectionTrig[loc_trig],EdgeDirectionQuad[loc_quad]]
-        b = npy.argsort(indices_boundary)        
-        #############################################################################################################
-        
-        #############################################################################################################
-        index_e = intersect2d(e[:,0:2],e_new)
-        self._Boundary_Region = e[index_e,2]
-        self._Boundary_p_index = npy.unique(e)
-        self._Boundary_np = self._Boundary_p_index.size
-        self._Boundary_Edges = BoundaryEdges
-        self._Boundary_NoEdges = BoundaryEdges.shape[0]
-        self._Boundary_EdgeOrientation = direction_boundary[b]
-        #############################################################################################################
-        
-        #############################################################################################################
         self.EdgesToVertices = EdgesToVertices
         self.TriangleToEdges = TriangleToEdges
         self.QuadToEdges = QuadToEdges
         self.NoEdges = NoEdges
-        
         self.EdgeDirectionTrig = EdgeDirectionTrig
         self.EdgeDirectionQuad = EdgeDirectionQuad
+        self.Boundary_Region = e[:,2]
+        self.Boundary_Edges = BoundaryEdges
+        self.Boundary_NoEdges = BoundaryEdges.shape[0]
 
-        self.p = p
-        self.e = e_new
-        self.t = t[:,0:3]
-        self.q = q[:,0:4]
-        
-        if t.shape[1]>3:
-            self.RegionsT = t[:,3]
-        if q.shape[1]>4:
-            self.RegionsQ = q[:,4]
-            
-        self.np = np
-        self.ne = ne
-        self.nt = nt
-        self.nq = nq
+        self.p = p; self.np = np
+        self.e = e_new; self.ne = ne
+        self.t = t[:,0:3]; self.nt = nt
+        self.q = q[:,0:4]; self.nq = nq
         self.mp = npy.r_[mp_trig,mp_quad]
-        #############################################################################################################
         
-        Edges_Triangle_Mix = npy.unique(TriangleToEdges)
-        Edges_Quad_Mix = npy.unique(QuadToEdges)
-        self._Lists_InterfaceTriangleQuad = npy.intersect1d(Edges_Triangle_Mix,Edges_Quad_Mix)
-        self._Lists_JustTrig = npy.setdiff1d(Edges_Triangle_Mix,self._Lists_InterfaceTriangleQuad)
-        self._Lists_JustQuad = npy.setdiff1d(Edges_Quad_Mix,self._Lists_InterfaceTriangleQuad)
-        self._Lists_TrigBoundaryEdges = npy.intersect1d(self._Lists_JustTrig,BoundaryEdges)
+        if t.shape[1]>3: self.RegionsT = t[:,3]
+        if q.shape[1]>4: self.RegionsQ = q[:,4]
         
-        loc,_ = self.__ismember(QuadToEdges,self._Lists_InterfaceTriangleQuad)
-        QuadsAtTriangleInterface = npy.argwhere(loc)[:,0]
-        QuadLayerEdges = npy.unique(QuadToEdges[QuadsAtTriangleInterface,:])
-        
-    
-        self._Lists_QuadLayerEdges = QuadLayerEdges
-        self._Lists_QuadBoundaryEdges = npy.intersect1d(self._Lists_JustQuad,BoundaryEdges)
-        self._Lists_QuadsAtTriangleInterface = QuadsAtTriangleInterface
-        
-        self.Boundary = self.boundary(self)
-        self.Lists = self.lists(self)
         self.FEMLISTS = {}
         
+    # @profile
+    def makeRest(self):
+        #############################################################################################################
+        # loc_trig,index_trig = self.__ismember(self.TriangleToEdges,self.Boundary_Edges)
+        # loc_quad,index_quad = self.__ismember(self.QuadToEdges,self.Boundary_Edges)
+
+        # indices_boundary = npy.r_[index_trig,index_quad]
+        # direction_boundary = npy.r_[self.EdgeDirectionTrig[loc_trig],self.EdgeDirectionQuad[loc_quad]]
+        # b = npy.argsort(indices_boundary)
+        
+        # self.Boundary_EdgeOrientation = direction_boundary[b]
+        
+        gem_list = npy.r_[self.TriangleToEdges.ravel(),self.QuadToEdges.ravel()]
+        gem_dir_list = npy.r_[self.EdgeDirectionTrig.ravel(),self.EdgeDirectionQuad.ravel()]
+        
+        _,j,i = npy.intersect1d(gem_list,self.Boundary_Edges, return_indices = True)
+        
+        Boundary_EdgeOrientation = npy.zeros(shape = i.shape)
+        Boundary_EdgeOrientation[i] = gem_dir_list[j]
+        self.Boundary_EdgeOrientation = Boundary_EdgeOrientation
+        
         #############################################################################################################
         
-        regions_to_points = npy.empty(shape = [0,2],dtype = 'int64')
-        if t.shape[1]>3:
+        Edges_Triangle_Mix = npy.unique(self.TriangleToEdges)
+        Edges_Quad_Mix = npy.unique(self.QuadToEdges)
+        self.Lists_InterfaceTriangleQuad = npy.intersect1d(Edges_Triangle_Mix,Edges_Quad_Mix)
+        self.Lists_JustTrig = npy.setdiff1d(Edges_Triangle_Mix,self.Lists_InterfaceTriangleQuad)
+        self.Lists_JustQuad = npy.setdiff1d(Edges_Quad_Mix,self.Lists_InterfaceTriangleQuad)
+        self.Lists_TrigBoundaryEdges = npy.intersect1d(self.Lists_JustTrig,self.Boundary_Edges)
+        
+        loc,_ = self.__ismember(self.QuadToEdges,self.Lists_InterfaceTriangleQuad)
+        QuadsAtTriangleInterface = npy.argwhere(loc)[:,0]
+        QuadLayerEdges = npy.unique(self.QuadToEdges[QuadsAtTriangleInterface,:])
+    
+        self.Lists_QuadLayerEdges = QuadLayerEdges
+        self.Lists_QuadBoundaryEdges = npy.intersect1d(self.Lists_JustQuad,self.Boundary_Edges)
+        self.Lists_QuadsAtTriangleInterface = QuadsAtTriangleInterface
+        
+        #############################################################################################################
+        
+        regions_to_points = npy.empty(shape = [0,2], dtype = 'int64')
+        if self.t.shape[1]>3:
             for i in range(max(self.RegionsT)):
                 indices = npy.unique(self.t[npy.argwhere(self.RegionsT == (i+1))[:,0],:])            
-                vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape,dtype = 'int64'), indices]
+                vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape, dtype = 'int64'), indices]
                 regions_to_points = npy.r_[regions_to_points, vtr]
             
         self.RegionsToPoints = regions_to_points
-        
-    class boundary:
-        def __init__(self,parent):
-            self.Region = parent._Boundary_Region
-            self.p_index = parent._Boundary_p_index
-            self.np = parent._Boundary_p_index
-            self.Edges = parent._Boundary_Edges
-            self.NoEdges = parent._Boundary_NoEdges
-            self.EdgeOrientation = parent._Boundary_EdgeOrientation
-            self.TrigEdges = parent._Lists_TrigBoundaryEdges
-            self.QuadEdges = parent._Lists_QuadBoundaryEdges
-            
-    class lists:
-        def __init__(self,parent):
-            self.InterfaceTriangleQuad = parent._Lists_InterfaceTriangleQuad
-            self.JustTrig = parent._Lists_JustTrig
-            self.JustQuad = parent._Lists_JustQuad
-            self.QuadLayerEdges = parent._Lists_QuadLayerEdges
-            self.QuadsAtTriangleInterface = parent._Lists_QuadsAtTriangleInterface
             
     def makeFemLists(self,space):
-        self.FEMLISTS = femlists.lists(self,space)
+        self.FEMLISTS = femlists.lists(self, space)
         
     def refinemesh(self):
         pn = 1/2*(self.p[self.EdgesToVertices[:,0],:]+
@@ -188,13 +157,15 @@ class mesh:
                        npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.RegionsT],
                        npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.RegionsT],
                        npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.RegionsT]].astype(npy.int64)
-        bn = self.np + self.Boundary.Edges
-        e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary.Region],
-                       npy.c_[bn,self.e[:,1],self.Boundary.Region]].astype(npy.int64)
+        bn = self.np + self.Boundary_Edges
+        e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary_Region],
+                       npy.c_[bn,self.e[:,1],self.Boundary_Region]].astype(npy.int64)
+        q_new = self.q
         
+        self.__init__(p_new,e_new,t_new,q_new)
+        self.FEMLISTS = {} # reset fem lists, cuz new mesh       
         
-        
-        return p_new,e_new,t_new
+        # return p_new,e_new,t_new
         
         
     def __ismember(self,a_vec, b_vec):
@@ -552,114 +523,35 @@ def intersect2d(X, Y):
         # dims = X.max(0)+1
         # out = np.where(np.in1d(np.ravel_multi_index(X.T,dims),\
         #                np.ravel_multi_index(Y.T,dims)))[0]
-            
-            
+        
         dims = X.max(0)+1
         X1D = npy.ravel_multi_index(X.T,dims)
         searched_valuesID = npy.ravel_multi_index(Y.T,dims)
         sidx = X1D.argsort()
-        out = sidx[npy.searchsorted(X1D,searched_valuesID,sorter=sidx)]    
+        out = sidx[npy.searchsorted(X1D,searched_valuesID,sorter=sidx)]
         return out
 
 
-
-# def bog_unique(ar, return_index=False, return_inverse=False,
-#            return_counts=False, axis=None, *, equal_nan=True):
+# def refinemesh(p,e,t):
     
-#     ar = npy.asanyarray(ar)
-#     if axis is None:
-#         ret = bog_unique1d(ar, return_index, return_inverse, return_counts, 
-#                         equal_nan=equal_nan)
-#         return npy.unpack_tuple(ret)
-
-#     # axis was specified and not None
-#     try:
-#         ar = npy.moveaxis(ar, axis, 0)
-#     except npy.AxisError:
-#         # this removes the "axis1" or "axis2" prefix from the error message
-#         raise npy.AxisError(axis, ar.ndim) from None
-
-#     # Must reshape to a contiguous 2D array for this to work...
-#     orig_shape, orig_dtype = ar.shape, ar.dtype
-#     ar = ar.reshape(orig_shape[0], npy.prod(orig_shape[1:], dtype=npy.intp))
-#     ar = npy.ascontiguousarray(ar)
-#     dtype = [('f{i}'.format(i=i), ar.dtype) for i in range(ar.shape[1])]
-
-#     # At this point, `ar` has shape `(n, m)`, and `dtype` is a structured
-#     # data type with `m` fields where each field has the data type of `ar`.
-#     # In the following, we create the array `consolidated`, which has
-#     # shape `(n,)` with data type `dtype`.
-#     try:
-#         if ar.shape[1] > 0:
-#             consolidated = ar.view(dtype)
-#         else:
-#             # If ar.shape[1] == 0, then dtype will be `np.dtype([])`, which is
-#             # a data type with itemsize 0, and the call `ar.view(dtype)` will
-#             # fail.  Instead, we'll use `np.empty` to explicitly create the
-#             # array with shape `(len(ar),)`.  Because `dtype` in this case has
-#             # itemsize 0, the total size of the result is still 0 bytes.
-#             consolidated = npy.empty(len(ar), dtype=dtype)
-#     except TypeError as e:
-#         # There's no good way to do this for object arrays, etc...
-#         msg = 'The axis argument to unique is not supported for dtype {dt}'
-#         raise TypeError(msg.format(dt=ar.dtype)) from e
-
-#     def reshape_uniq(uniq):
-#         n = len(uniq)
-#         uniq = uniq.view(orig_dtype)
-#         uniq = uniq.reshape(n, *orig_shape[1:])
-#         uniq = npy.moveaxis(uniq, 0, axis)
-#         return uniq
-
-#     output = bog_unique1d(consolidated, return_index,
-#                        return_inverse, return_counts, equal_nan=equal_nan)
-#     output = (reshape_uniq(output[0]),) + output[1:]
-#     return npy.unpack_tuple(output)
-
-# def bog_unique1d(ar, return_index=False, return_inverse=False,
-#               return_counts=False, *, equal_nan=True):
-#     """
-#     Find the unique elements of an array, ignoring shape.
-#     """
-#     ar = npy.asanyarray(ar).flatten()
-
-#     optional_indices = return_index or return_inverse
-
-#     if optional_indices:
-#         perm = ar.argsort(kind='mergesort' if return_index else 'quicksort')
-#         aux = ar[perm]
-#     else:
-#         ar.sort()
-#         aux = ar
-#     mask = npy.empty(aux.shape, dtype=npy.bool_)
-#     mask[:1] = True
-#     if (equal_nan and aux.shape[0] > 0 and aux.dtype.kind in "cfmM" and
-#             npy.isnan(aux[-1])):
-#         if aux.dtype.kind == "c":  # for complex all NaNs are considered equivalent
-#             aux_firstnan = npy.searchsorted(npy.isnan(aux), True, side='left')
-#         else:
-#             aux_firstnan = npy.searchsorted(aux, aux[-1], side='left')
-#         if aux_firstnan > 0:
-#             mask[1:aux_firstnan] = (
-#                 aux[1:aux_firstnan] != aux[:aux_firstnan - 1])
-#         mask[aux_firstnan] = True
-#         mask[aux_firstnan + 1:] = False
-#     else:
-#         mask[1:] = aux[1:] != aux[:-1]
-
-#     ret = (aux[mask],)
-#     if return_index:
-#         ret += (perm[mask],)
-#     if return_inverse:
-#         imask = npy.cumsum(mask) - 1
-#         inv_idx = npy.empty(mask.shape, dtype=npy.intp)
-#         inv_idx[perm] = imask
-#         ret += (inv_idx,)
-#     if return_counts:
-#         idx = npy.concatenate(npy.nonzero(mask) + ([mask.size],))
-#         ret += (npy.diff(idx),)
-#     return 
-
+    
+    
+#     pn = 1/2*(p[EdgesToVertices[:,0],:]+
+#               p[EdgesToVertices[:,1],:])
+#     p_new = npy.r_[p,pn]
+    
+#     tn = np + TriangleToEdges
+#     t_new = npy.r_[npy.c_[t[:,0],tn[:,2],tn[:,1],RegionsT],
+#                    npy.c_[t[:,1],tn[:,0],tn[:,2],RegionsT],
+#                    npy.c_[t[:,2],tn[:,1],tn[:,0],RegionsT],
+#                    npy.c_[    tn[:,0],tn[:,1],tn[:,2],RegionsT]].astype(npy.int64)
+#     bn = MESH.np + MESH.Boundary.Edges
+#     e_new = npy.r_[npy.c_[e[:,0],bn,Boundary.Region],
+#                    npy.c_[bn,e[:,1],Boundary.Region]].astype(npy.int64)
+    
+    
+    
+#     return p_new,e_new,t_new
 
 # DEBUGGING
 # if __name__ == "__main__":

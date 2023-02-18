@@ -97,12 +97,8 @@ for i in range(iterations):
     
     if i!=iterations-1:
         tm = time.time()
-        p,e,t = MESH.refinemesh()
+        MESH.refinemesh()
         elapsed = time.time()-tm; print('Refining mesh took {:4.8f} seconds.'.format(elapsed))
-        
-        tm = time.time()
-        MESH = pde.mesh(p,e,t,q)
-        elapsed = time.time()-tm; print('Making mesh took {:4.8f} seconds.'.format(elapsed))
         
         tm = time.time()
         MESH.makeFemLists(space = 'P2')

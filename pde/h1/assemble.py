@@ -4,23 +4,22 @@ import numpy as npy
 from .spaces import spaceInfo
 from .. import basis
 from .. import quadrature
-# import numba as nb
 
-# @nb.jit(cache=True)
+
 def assemble(MESH,space,matrix,order=-1):
     
-    INFO = spaceInfo(MESH,space)
-    BASIS = basis()
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
     
     p = MESH.p;
     t = MESH.t; nt = t.shape[0]
     
-    sizeM = INFO['sizeM']
-    spaceTrig = INFO['TRIG']['space'];
+    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
 
-    phi = BASIS[spaceTrig]['TRIG']['phi']; lphi = len(phi)
-    dphi = BASIS[spaceTrig]['TRIG']['dphi']; ldphi = len(dphi)
-    LIST_DOF = MESH.FEMLISTS[spaceTrig]['TRIG']['LIST_DOF']
+    phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
+    dphi = MESH.FEMLISTS[space]['TRIG']['dphi']; ldphi = len(dphi)
+    
+    LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     
     if order != -1:
         qp,we = quadrature.dunavant(order); nqp = len(we)
@@ -40,7 +39,8 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'M':
         if order == -1:
-            qp = INFO['TRIG']['qp_we_M'][0]; we = INFO['TRIG']['qp_we_M'][1]; nqp = len(we)
+            qp =  MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
+            we =  MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
         
@@ -60,7 +60,8 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'K':
         if order == -1:
-            qp = INFO['TRIG']['qp_we_K'][0]; we = INFO['TRIG']['qp_we_K'][1]; nqp = len(we)
+            qp =  MESH.FEMLISTS[space]['TRIG']['qp_we_K'][0]; 
+            we =  MESH.FEMLISTS[space]['TRIG']['qp_we_K'][1]; nqp = len(we)
         
         ellmatsBKx = npy.zeros((nqp*nt,ldphi))
         ellmatsBKy = npy.zeros((nqp*nt,ldphi))
@@ -81,14 +82,13 @@ def assemble(MESH,space,matrix,order=-1):
 # @nb.jit(cache=True)
 def assembleB(MESH,space,matrix,shape,order=-1):
     
-    INFO = spaceInfo(MESH,space)
-    BASIS = basis()
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
     
     p = MESH.p;
     e = MESH.e; ne = e.shape[0]
     
-    phi = BASIS[space]['B']['phi']; lphi = len(phi)
-    
+    phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
     
     if order != -1:
@@ -108,7 +108,8 @@ def assembleB(MESH,space,matrix,shape,order=-1):
 
     if matrix == 'M':
         if order == -1:
-            qp = INFO['qp_we_B'][0]; we = INFO['qp_we_B'][1]; nqp = len(we)
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0];
+            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*ne,lphi))
         

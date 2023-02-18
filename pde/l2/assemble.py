@@ -6,18 +6,17 @@ from .. import basis
 from .. import quadrature
 
 def assemble(MESH,space,matrix,order=-1):
-    
-    INFO = spaceInfo(MESH,space)
-    BASIS = basis()
+        
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
     
     p = MESH.p;
     t = MESH.t; nt = t.shape[0]
     
-    sizeM = INFO['sizeM']
-    spaceTrig = INFO['TRIG']['space'];
-
-    phi = BASIS[spaceTrig]['TRIG']['phi']; lphi = len(phi)
-    H1_LIST_DOF = MESH.FEMLISTS[spaceTrig]['TRIG']['LIST_DOF']
+    
+    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
+    phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
+    LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     
     if order != -1:
         qp,we =  quadrature.dunavant(order); nqp = len(we)
@@ -26,10 +25,10 @@ def assemble(MESH,space,matrix,order=-1):
     # Mappings
     #####################################################################################
 
-    t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
-    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]
-    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
-    detA = A00*A11-A01*A10
+    # t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
+    # A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]
+    # A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
+    # detA = A00*A11-A01*A10
     
     #####################################################################################
     # Mass matrix
@@ -37,11 +36,12 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'M':
         if order == -1:
-            qp = INFO['TRIG']['qp_we_M'][0]; we = INFO['TRIG']['qp_we_M'][1]; nqp = len(we)
+            qp = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
+            we = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
         
-        im = npy.tile(H1_LIST_DOF,(nqp,1))
+        im = npy.tile(LIST_DOF,(nqp,1))
         jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
