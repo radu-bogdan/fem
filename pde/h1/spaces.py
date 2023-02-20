@@ -33,7 +33,7 @@ def spaceInfo(MESH,space):
         LISTS['P1']['B']['phi'][1] = lambda x: x
         LISTS['P1']['B']['qp_we_B'] = quadrature.one_d(order = 2)
         
-        LISTS['P1']['TRIG']['LIST_DOF'] = MESH.t
+        LISTS['P1']['TRIG']['LIST_DOF'] = MESH.t[:,0:3]
         LISTS['P1']['B']['LIST_DOF'] = MESH.e
     ###########################################################################
     
@@ -60,7 +60,7 @@ def spaceInfo(MESH,space):
         LISTS['P2']['B']['phi'][2] = lambda x: 4*x*(1-x)
         LISTS['P2']['B']['qp_we_B'] = quadrature.one_d(order = 5) # 4 would suffice
         
-        LISTS['P2']['TRIG']['LIST_DOF'] = np.c_[MESH.t, MESH.np + MESH.TriangleToEdges]
+        LISTS['P2']['TRIG']['LIST_DOF'] = np.c_[MESH.t[:,0:3], MESH.np + MESH.TriangleToEdges]
         LISTS['P2']['B']['LIST_DOF'] = np.c_[MESH.e, MESH.np + MESH.Boundary_Edges]
         
     ###########################################################################

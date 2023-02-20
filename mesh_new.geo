@@ -45,13 +45,13 @@ Physical Line(6)= {3};
 Physical Line(7)= {2};
 Physical Line(9)= {1};
 
-Transfinite Line{1,8,-4,-7} = cons/(Mesh.MeshSizeMin*Mesh.MeshSizeMin); // LINKS
-Transfinite Surface{1};
-Recombine Surface{1};
+// Transfinite Line{1,8,-4,-7} = cons/(Mesh.MeshSizeMin*Mesh.MeshSizeMin); // LINKS
+// Transfinite Surface{1};
+// Recombine Surface{1};
 
-Transfinite Line{3,10,-6,-9} = cons/(Mesh.MeshSizeMin*Mesh.MeshSizeMin); // RECHTS
-Transfinite Surface{3};
-Recombine Surface{3};
+// Transfinite Line{3,10,-6,-9} = cons/(Mesh.MeshSizeMin*Mesh.MeshSizeMin); // RECHTS
+// Transfinite Surface{3};
+// Recombine Surface{3};
 
 // Transfinite Line{2,9,-5,-8} = cons/(Mesh.MeshSizeMin*Mesh.MeshSizeMin); // MITTE
 // Transfinite Surface{2};

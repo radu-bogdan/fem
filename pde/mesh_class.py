@@ -86,16 +86,27 @@ class mesh:
 
         self.p = p; self.np = np
         self.e = e_new; self.ne = ne
-        self.t = t[:,0:3]; self.nt = nt
-        self.q = q[:,0:4]; self.nq = nq
+        self.t = t; self.nt = nt
+        self.q = q; self.nq = nq
         self.mp = npy.r_[mp_trig,mp_quad]
         
-        if t.shape[1]>3: self.RegionsT = t[:,3]
-        if q.shape[1]>4: self.RegionsQ = q[:,4]
+        # if t.shape[1]>3: self.RegionsT = t[:,3]
+        # if q.shape[1]>4: self.RegionsQ = q[:,4]
         
         self.FEMLISTS = {}
         
     # @profile
+    def makeBEO(self):
+        gem_list = npy.r_[self.TriangleToEdges.ravel(),self.QuadToEdges.ravel()]
+        gem_dir_list = npy.r_[self.EdgeDirectionTrig.ravel(),self.EdgeDirectionQuad.ravel()]
+        
+        _,j,i = npy.intersect1d(gem_list,self.Boundary_Edges, return_indices = True)
+        
+        Boundary_EdgeOrientation = npy.zeros(shape = i.shape)
+        Boundary_EdgeOrientation[i] = gem_dir_list[j]
+        self.Boundary_EdgeOrientation = Boundary_EdgeOrientation
+        
+    
     def makeRest(self):
         #############################################################################################################
         # loc_trig,index_trig = self.__ismember(self.TriangleToEdges,self.Boundary_Edges)
@@ -106,15 +117,6 @@ class mesh:
         # b = npy.argsort(indices_boundary)
         
         # self.Boundary_EdgeOrientation = direction_boundary[b]
-        
-        gem_list = npy.r_[self.TriangleToEdges.ravel(),self.QuadToEdges.ravel()]
-        gem_dir_list = npy.r_[self.EdgeDirectionTrig.ravel(),self.EdgeDirectionQuad.ravel()]
-        
-        _,j,i = npy.intersect1d(gem_list,self.Boundary_Edges, return_indices = True)
-        
-        Boundary_EdgeOrientation = npy.zeros(shape = i.shape)
-        Boundary_EdgeOrientation[i] = gem_dir_list[j]
-        self.Boundary_EdgeOrientation = Boundary_EdgeOrientation
         
         #############################################################################################################
         
@@ -137,8 +139,8 @@ class mesh:
         
         regions_to_points = npy.empty(shape = [0,2], dtype = 'int64')
         if self.t.shape[1]>3:
-            for i in range(max(self.RegionsT)):
-                indices = npy.unique(self.t[npy.argwhere(self.RegionsT == (i+1))[:,0],:])            
+            for i in range(max(self.t[:,3])):
+                indices = npy.unique(self.t[npy.argwhere(self.t[:,3] == (i+1))[:,0],:])            
                 vtr = npy.c_[(i+1)*npy.ones(shape = indices.shape, dtype = 'int64'), indices]
                 regions_to_points = npy.r_[regions_to_points, vtr]
             
@@ -153,17 +155,17 @@ class mesh:
         p_new = npy.r_[self.p,pn]
         
         tn = self.np + self.TriangleToEdges
-        t_new = npy.r_[npy.c_[self.t[:,0],tn[:,2],tn[:,1],self.RegionsT],
-                       npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.RegionsT],
-                       npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.RegionsT],
-                       npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.RegionsT]].astype(npy.int64)
+        t_new = npy.r_[npy.c_[self.t[:,0],tn[:,2],tn[:,1],self.t[:,3]],
+                       npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.t[:,3]],
+                       npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.t[:,3]],
+                       npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.t[:,3]]].astype(npy.int64)
         bn = self.np + self.Boundary_Edges
         e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary_Region],
                        npy.c_[bn,self.e[:,1],self.Boundary_Region]].astype(npy.int64)
         q_new = self.q
         
         self.__init__(p_new,e_new,t_new,q_new)
-        self.FEMLISTS = {} # reset fem lists, cuz new mesh       
+        self.FEMLISTS = {} # reset fem lists, cuz new mesh
         
         print('Generated refined mesh with ' + str(p_new.shape[0]) + ' points, ' 
                                              + str(e_new.shape[0]) + ' boundary edges, ' 
@@ -237,12 +239,12 @@ class mesh:
         return fig
 
     def __pdemesh_trig(self,fig,info):
-
-        p = self.p; t = self.t
-
+        
+        p = self.p; t = self.t[:,0:3]
+        
         x = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0],p[t[:,0],0],npy.nan*p[t[:,0],0]].flatten().tolist()
         y = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1],p[t[:,0],1],npy.nan*p[t[:,0],1]].flatten().tolist()
-
+        
         fig.add_trace(go.Scattergl(mode='lines', 
                                     name='TrigTraces',
                                     x=x, 
@@ -255,22 +257,22 @@ class mesh:
                                     x = 1/3*(p[t[:,0],0]+p[t[:,1],0]+p[t[:,2],0]),
                                     y = 1/3*(p[t[:,0],1]+p[t[:,1],1]+p[t[:,2],1]),
                                     text = list(range(0, t.shape[0])),
-                                    marker=dict(
-                                        color='yellow',
-                                        size=25,
-                                        line=dict(
-                                            color='black',
-                                            width=1
+                                    marker = dict(
+                                        color = 'yellow',
+                                        size = 25,
+                                        line = dict(
+                                            color = 'black',
+                                            width = 1
                                         )
                                         ),
-                                    textfont=dict(color='#000000',size=13), 
+                                    textfont = dict(color = '#000000',size = 13), 
                                     fill = "none"))
         return fig
-
+        
     def __pdemesh_quad(self,fig,info):
-
+        
         p = self.p; q = self.q
-
+        
         x = npy.c_[p[q[:,0],0],p[q[:,1],0],p[q[:,2],0],p[q[:,3],0],p[q[:,0],0],npy.nan*p[q[:,0],0]].flatten().tolist()
         y = npy.c_[p[q[:,0],1],p[q[:,1],1],p[q[:,2],1],p[q[:,3],1],p[q[:,0],1],npy.nan*p[q[:,0],1]].flatten().tolist()
         
@@ -280,7 +282,7 @@ class mesh:
                                  y=y, 
                                  line=dict(color='blue', 
                                            width=2)))
-
+        
         if info == 1:
             fig.add_trace(go.Scattergl(mode='text+markers',
                                      name='Quads',
@@ -316,7 +318,7 @@ class mesh:
             fig = self.__pdesurf_quad(fig,DATAQ,u)
         
         
-        camera = dict(eye = dict(x = 0, y = -1e-5, z = 1e10))
+        camera = dict(eye = dict(x = 1e-10, y = -1e-5, z = 1e10))
         # camera = dict(eye = dict(x = -1e-10, y = -1e-10, z = 1e10))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
         fig.update_layout(scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
@@ -388,7 +390,7 @@ class mesh:
             
 
     def __pdesurf_trig(self,fig,DATAT,u):
-        nt = self.nt; p = self.p; t = self.t;
+        nt = self.nt; p = self.p; t = self.t[:,0:3];
         
         xx_trig = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0]]
         yy_trig = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1]]

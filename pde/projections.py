@@ -23,7 +23,9 @@ def evaluateP0_trig(MESH,Dict,U):
     else:
         regions = MESH.RegionsT
     
-    indices = npy.argwhere(npy.in1d(MESH.RegionsT,regions))[:,0]
+    # indices = npy.argwhere(npy.in1d(MESH.RegionsT,regions))[:,0]
+    
+    indices = npy.argwhere(npy.in1d(MESH.t[:,3],regions))[:,0]
     real_indices = npy.in1d(npy.r_[0:MESH.nt],indices)
     
     xx = 1/3*(MESH.p[MESH.t[:,0],0] + MESH.p[MESH.t[:,1],0] + MESH.p[MESH.t[:,2],0])
@@ -233,34 +235,34 @@ def assem_HDIV_b(MESH, BASIS, Dict, U):
     if 'edges' in Dict.keys():
         edges = Dict.get('edges')
     else:
-        edges = MESH.Boundary.Edges
+        edges = MESH.Boundary_Edges
     
-    indices = npy.nonzero(npy.in1d(MESH.Boundary.Edges,edges))[0]
+    indices = npy.nonzero(npy.in1d(MESH.Boundary_Edges,edges))[0]
     
     p = MESH.p; e = MESH.e;
     
     qp,we = quadrature.one_d(order)
     
     e0 = e[:,0]; e1 = e[:,1]
-    A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
+    A0 =  p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
     
     phi = {}
     if space == 'RT0':
         phi[0] = lambda x : 1 + 0*x
-        dofs = MESH.Boundary.Edges
+        dofs = MESH.Boundary_Edges
     
     if space == 'BDM1':
         phi[0] = lambda x : 1-x
         phi[1] = lambda x : x
-        dofs = npy.c_[2*MESH.Boundary.Edges,
-                      2*MESH.Boundary.Edges + 1]
+        dofs = npy.c_[2*MESH.Boundary_Edges,
+                      2*MESH.Boundary_Edges + 1]
         
     lphi = len(phi)
     
-    phii = npy.zeros((MESH.Boundary.NoEdges,lphi))
-    ellmatsT = npy.zeros((MESH.Boundary.NoEdges,lphi))
+    phii = npy.zeros((MESH.Boundary_NoEdges,lphi))
+    ellmatsT = npy.zeros((MESH.Boundary_NoEdges,lphi))
     
-    uh = npy.zeros(lphi*MESH.NoEdges);
+    uh = npy.zeros(lphi*MESH.NoEdges)
     
     for i in range(len(we)):
         qpT_i_1 = A0*qp[i] + p[e0,0]
@@ -271,7 +273,7 @@ def assem_HDIV_b(MESH, BASIS, Dict, U):
         for j in range(lphi):
             phii[:,j] = phi[j](qp[i])
         
-        ellmatsT = ellmatsT + we[i]*assem_ellmats(u_qpT_i[:,None], phii*MESH.Boundary.EdgeOrientation[:,None])
+        ellmatsT = ellmatsT + we[i]*assem_ellmats(u_qpT_i[:,None], phii*MESH.Boundary_EdgeOrientation[:,None])
     
     
     ellmatsT = ellmatsT[indices,:]
