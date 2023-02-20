@@ -165,6 +165,10 @@ class mesh:
         self.__init__(p_new,e_new,t_new,q_new)
         self.FEMLISTS = {} # reset fem lists, cuz new mesh       
         
+        print('Generated refined mesh with ' + str(p_new.shape[0]) + ' points, ' 
+                                             + str(e_new.shape[0]) + ' boundary edges, ' 
+                                             + str(t_new.shape[0]) + ' triangles, ' 
+                                             + str(q_new.shape[0]) + ' quadrilaterals.')
         # return p_new,e_new,t_new
         
         

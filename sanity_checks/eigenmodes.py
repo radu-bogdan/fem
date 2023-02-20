@@ -32,7 +32,7 @@ u = lambda x,y : np.sin(np.pi*x)*np.sin(np.pi*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists(space = 'P1')
+# MESH.makeFemLists(space = 'P1')
     
 tm = time.time()
 

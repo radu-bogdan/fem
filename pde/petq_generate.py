@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jan 12 12:48:43 2023
-
-@author: catalinradu
-"""
-
 # Code	Type	Description
 # 1	2-node line	
 # 2	3-node triangle	
@@ -44,7 +36,7 @@ Created on Thu Jan 12 12:48:43 2023
 import gmsh
 import numpy
 import numpy.matlib
-numpy.set_printoptions(edgeitems=30, linewidth = 1000000)
+numpy.set_printoptions(edgeitems = 30, linewidth = 1000000)
 
 # @profile
 def petq_generate():
@@ -57,6 +49,7 @@ def petq_generate():
     # gmsh.option.setNumber("Mesh.Algorithm", 1)
     
     # gmsh.open(filename)
+    
     gmsh.model.mesh.generate(2)
     entities = gmsh.model.getEntities()
     
@@ -79,8 +72,8 @@ def petq_generate():
     e = numpy.concatenate([e,region.T],axis = 1)
 
     # initialize as empty incase there are no triangles/quads.
-    t = numpy.empty([0,4],dtype = numpy.uint64); to = t;
-    q = numpy.empty([0,5],dtype = numpy.uint64); qo = q;
+    t = numpy.empty([0,4],dtype = numpy.uint64); # to = t;
+    q = numpy.empty([0,5],dtype = numpy.uint64); # qo = q;
     
     entities = numpy.array(gmsh.model.getEntities())
     regions_trig = entities[numpy.argwhere(entities[:,0]==2)[:,0]][:,1]
@@ -110,14 +103,6 @@ def petq_generate():
         reg_q = int(regions_trig[k])*numpy.ones(new_q.shape[0],dtype = numpy.uint64)
         q = numpy.append(q,numpy.c_[new_q,reg_q],axis = 0)
     
-            # if elemTypes[i] == 3: # 4-node quadrangle (see comment at top)
-            #     elemTypes, elemTags, elemNodeTags = gmsh.model.mesh.getElements(dim = 3,tag = regions_trig[k])
-            #     new_q = (elemNodeTags[i]-1).reshape(int(elemNodeTags[i].shape[0]/4),4,order = 'C')
-            #     reg_q = int(regions_trig[k])*numpy.ones(new_q.shape[0],dtype = numpy.uint64)
-            #     q = numpy.append(q,numpy.c_[new_q,reg_q],axis = 0)
-            
-    # gmsh.clear()
-    # gmsh.finalize()
     print('Generated mesh with ' + str(p.shape[0]) + ' points, ' 
                                  + str(e.shape[0]) + ' boundary edges, ' 
                                  + str(t.shape[0]) + ' triangles, ' 
