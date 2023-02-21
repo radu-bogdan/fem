@@ -7,13 +7,13 @@ from .lists import lists
 from pde.projections import *
 from pde.petq_generate import *
 from pde.pcg import *
-from pde.refinemesh import *
 
 # from pde.tools import *
 
 import pde.assemb.h1
 import pde.h1
 import pde.hdiv
+import pde.hcurl
 import pde.l2
 import pde.int
 import pde.hdivdiv

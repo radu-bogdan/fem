@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'..') # adds parent directory
+sys.path.insert(0,'../../') # adds parent directory
 sys.path.insert(0,'../CEM') # adds parent directory
 
 import numpy as np
@@ -23,11 +23,12 @@ np.set_printoptions(precision = 8)
 gmsh.initialize()
 gmsh.model.add("Capacitor plates")
 # geometries.unitSquare()
-gmsh.open('../mesh_new.geo')
+gmsh.open('../../unused/mesh_new.geo')
 gmsh.option.setNumber("Mesh.Algorithm", 2)
 gmsh.option.setNumber("Mesh.MeshSizeMax", 0.1)
 gmsh.option.setNumber("Mesh.MeshSizeMin", 0.1)
 p,e,t,q = pde.petq_generate()
+gmsh.finalize()
 
 # gmsh.open(filename = 'mesh_new.geo')
 

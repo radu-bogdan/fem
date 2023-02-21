@@ -1,6 +1,6 @@
 
 import sys
-sys.path.insert(0,'..') # adds parent directory
+sys.path.insert(0,'../../') # adds parent directory
 sys.path.insert(0,'../CEM') # adds parent directory
 
 import numpy as np

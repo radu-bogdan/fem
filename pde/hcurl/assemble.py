@@ -17,7 +17,7 @@ def assemble(MESH,space,matrix,order=-1):
     sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
 
     phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
-    divphi = MESH.FEMLISTS[space]['TRIG']['divphi']; ldivphi = len(divphi)
+    divphi = MESH.FEMLISTS[space]['TRIG']['curlphi']; ldivphi = len(divphi)
 
     LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     DIRECTION_DOF = MESH.FEMLISTS[space]['TRIG']['DIRECTION_DOF']
@@ -142,6 +142,51 @@ def assembleB(MESH,space,matrix,shape,order=-1):
         
         B = sparse(im,jm,ellmatsB,shape,nqp*ne)
         return B
+
+
+def interpolate_NC1(MESH, space, shape, order = 3):
+    
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH, space)
+    
+    if not hasattr(MESH, 'Boundary_EdgeOrientation'):
+        MESH.makeBEO()
+            
+    p = MESH.p;
+    
+    # phi =  MESH.FEMLISTS[space]['TRIG']['phidual']; lphi = len(phi)
+    # LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF_DUAL']
+    
+    phi = {}
+    phi[0] = lambda x :  6*x-2
+    phi[1] = lambda x : -6*x+4
+    
+    qp,we = quadrature.one_d(order); nqp = len(we)
+    
+    #####################################################################################
+    # Mappings
+    #####################################################################################
+    
+    e0 = MESH.EdgesToVertices[:,0]; e1 = MESH.EdgesToVertices[:,1]
+    A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+    detA = npy.sqrt(A0**2+A1**2)
+    
+    #####################################################################################
+    # Mass matrix (over the edge)
+    #####################################################################################
+    
+    uh1 = npy.zeros(MESH.NoEdges)
+    uh2 = npy.zeros(MESH.NoEdges)
+    
+    # im = npy.tile(LIST_DOF,(nqp,1))
+    # jm = npy.tile(npy.c_[0:ne*nqp].reshape(ne,nqp).T.flatten(),(lphi,1)).T
+    
+    for j in range(lphi): # TODO : ab hier quasi
+        for i in range(nqp):
+            ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])*MESH.Boundary_EdgeOrientation
+    
+    B = sparse(im,jm,ellmatsB,shape,nqp*ne)
+    return B
 
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

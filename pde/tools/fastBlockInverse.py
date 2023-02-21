@@ -2,8 +2,14 @@ import time
 import numpy as np
 import numba as nb
 import scipy.sparse as sps
+from sksparse.cholmod import cholesky
 
-def fastBlockInverse(N):
+def fastBlockInverse(Mh):
+    
+    cholMh = cholesky(Mh)
+    N = cholMh.L()
+    Pv = cholMh.P()
+    P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
     
     # Extracting diagonals seems to be fastest with csc
     N = N.tocsc()
@@ -59,7 +65,9 @@ def fastBlockInverse(N):
     data_iN,indices_iN,indptr_iN = createIndicesInversion(N.data,N.indices,N.indptr,block_ends)
     iN = sps.csc_matrix((data_iN, indices_iN, indptr_iN), shape = N.shape)
     elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
-    return iN
+    
+    iMh = P.T@(iN.T@iN)@P
+    return iMh
 
 
 

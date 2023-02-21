@@ -137,40 +137,42 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
     D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
     return D
 
-def reduceEssential(MESH, order, edges = npy.empty(0)):
-    
-    if edges.size == 0:
-        edges = MESH.Boundary_Region
-    
-    indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
 
-    p = MESH.p;    
-    e = MESH.e[indices,:]; ne = e.shape[0]
-    
-    #####################################################################################
-    # Mappings
-    #####################################################################################
 
-    e0 = e[:,0]; e1 = e[:,1]
-    A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+# def reduceEssential(MESH, order, edges = npy.empty(0)):
     
-    #####################################################################################
-    # Custom config matrix
-    #####################################################################################
+#     if edges.size == 0:
+#         edges = MESH.Boundary_Region
     
-    qp,we = quadrature.one_d(order); nqp = len(we)
-    ellmatsD = npy.zeros((nqp*ne))
+#     indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
+
+#     p = MESH.p;    
+#     e = MESH.e[indices,:]; ne = e.shape[0]
     
-    iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
-    iD = iD[:,indices]
+#     #####################################################################################
+#     # Mappings
+#     #####################################################################################
+
+#     e0 = e[:,0]; e1 = e[:,1]
+#     A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
     
-    for i in range(nqp):
-        qpT_i_1 = A0*qp[i] + p[e0,0]
-        qpT_i_2 = A1*qp[i] + p[e0,1]
-        ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
+#     #####################################################################################
+#     # Custom config matrix
+#     #####################################################################################
     
-    D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
-    return D
+#     qp,we = quadrature.one_d(order); nqp = len(we)
+#     ellmatsD = npy.zeros((nqp*ne))
+    
+#     iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
+#     iD = iD[:,indices]
+    
+#     for i in range(nqp):
+#         qpT_i_1 = A0*qp[i] + p[e0,0]
+#         qpT_i_2 = A1*qp[i] + p[e0,1]
+#         ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
+    
+#     D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
+#     return D
 
 
 def sparse(i, j, v, m, n):
