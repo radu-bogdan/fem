@@ -28,6 +28,8 @@ gmsh.finalize()
 
 
 MESH = pde.mesh(p,e,t,q)
+MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
@@ -95,7 +97,7 @@ D = qD@D1@qD.T
 iMh = pde.tools.fastBlockInverse(Mh)
 print(sps.linalg.norm(Mh@iMh,np.inf))
 
-
+uh_NC1 = pde.projections.interp_HDIV(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
 
 ################################################################################
 
