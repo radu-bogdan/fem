@@ -9,6 +9,9 @@ from sksparse.cholmod import cholesky
 import time
 import gmsh
 
+
+# cupyx.scipy.sparse.spmatrix
+
 import plotly.io as pio
 pio.renderers.default = 'browser'
 np.set_printoptions(precision = 8)
@@ -20,8 +23,7 @@ np.set_printoptions(precision = 8)
 # dt = 0.00125/2
 T = 1.9125
 dt = 0.12
-# timeTotal = 3060
-iterations = 7
+iterations = 8
 init_ref = 1
 
 kx = 1; ky = 1; s0 = -3
@@ -105,11 +107,15 @@ for i in range(iterations):
     D1 = qD1@D2@qD1.T
     
     iMh = pde.tools.fastBlockInverse(Mh)
-    print(sps.linalg.norm(Mh@iMh,np.inf))
+    # print(sps.linalg.norm(Mh@iMh,np.inf))
     
     iMh_Mh_sigma = iMh@Mh_sigma
     iMh_K = iMh@K
     qMb2_D2b = qMb2@D2b
+    
+    print('MegaBytes of iMh_K:',iMh_K.data.nbytes/(1024*1024),\
+          'MegaBytes of iMh:',iMh.data.nbytes/(1024*1024),\
+          'MegaBytes of iMh_Mh_sigma:',iMh_Mh_sigma.data.nbytes/(1024*1024))
     
     uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
     uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
@@ -118,15 +124,14 @@ for i in range(iterations):
     
     
     ################################################################################
+    tm = time.monotonic()
     for j in range(int(T/dt)):
         
         jdt = j*dt
         
-        # fb2 = pde.int.evaluateB(MESH, order = 1, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4]).diagonal()
-        # fb2 = qMb2@D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4]).diagonal()
-        fb2 = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
+        intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
         
-        uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@fb2 +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
+        uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@intF +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
         
         uh_NC1_oldold = uh_NC1_old
         uh_NC1_old = uh_NC1
@@ -134,6 +139,7 @@ for i in range(iterations):
         if (j*100//int(T/dt))%10 == 0:
             print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
     
+    print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
     print('\n')
     ################################################################################
             
@@ -147,11 +153,14 @@ for i in range(iterations):
     uh_x_P1d_fine = MESH.refineP1d(uh_x_P1d)
     uh_y_P1d_fine = MESH.refineP1d(uh_y_P1d)
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2))
-    fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2))
+    # fig.show()
     
     if i+1!=iterations:
         MESH.refinemesh(); dt = dt/2;
+        
+        ################################################################################
+        # Shift points to the circle
         ################################################################################
         Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:].flatten())
         PointsOnCircle = MESH.p[Indices_PointsOnCircle,:]
