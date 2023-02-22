@@ -1,32 +1,41 @@
 
 import numpy as np
+import math
 
+# @profile
 def one_d(order):
     points = lambda x : np.linspace(0,1,x)
     if order == 0:
         qp = np.r_[1/2]
-        we = np.r_[1]
+        we = np.array([1])
     if order == 1:
         qp = points(2)
-        we = 1/2*np.r_[1,1]
+        we = np.array([1/2,1/2])
     if order == 2:
-        qp = np.r_[1/2-np.sqrt(3)/6,1/2+np.sqrt(3)/6] # Gauss, second order
-        we = 1/2*np.r_[1,1]
+        qp = np.array([1/2-np.sqrt(3)/6,1/2+np.sqrt(3)/6])# Gauss, second order
+        we = np.array([1/2,1/2])
+        # qp = np.r_[1/2-np.sqrt(3)/6,1/2+np.sqrt(3)/6] 
+        # we = 1/2*np.r_[1,1]
     if order == 3:
         qp = points(3)
-        we = 1/6*np.r_[1,4,1]
+        # we = 1/6*np.r_[1,4,1]
+        we = np.array([1/6,2/3,1/6])
     if order == 3:
         qp = points(4)
-        we = 1/8*np.r_[1,3,3,1]
+        # we = 1/8*np.r_[1,3,3,1]
+        we = np.array([1/8,3/8,3/8,1/8])
     if order == 5:
         qp = points(5)
-        we = 1/90*np.r_[7,32,12,32,7]
+        # we = 1/90*np.r_[7,32,12,32,7]
+        we = np.array([7/90,32/90,12/90,32/90,7/90])
     if order == 5:
         qp = points(6)
-        we = 1/288*np.r_[19,75,50,50,75,19]
+        # we = 1/288*np.r_[19,75,50,50,75,19]
+        we = np.array([19/288,75/288,50/288,50/288,75/288,19/288])
     if order == 7:
         qp = points(7)
-        we = 1/840*np.r_[41,216,27,272,27,216,41]
+        # we = 1/840*np.r_[41,216,27,272,27,216,41]
+        we = np.array([41/840,216/840,27/840,272/840,27/840,216/840,41/840])
     return qp,we
 
 

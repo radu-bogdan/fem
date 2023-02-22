@@ -377,6 +377,44 @@ def interp_HDIV(MESH, space, order, f):
 
 
 
+###############################################################################
+def interp_HDIV(MESH, space, order, f):
+    
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH, space)
+        
+    p = MESH.p; # t = MESH.t; nt = MESH.nt;
+    
+    qp,we = quadrature.one_d(order)
+    
+    e0 = MESH.EdgesToVertices[:,1]; e1 = MESH.EdgesToVertices[:,0]
+    A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
+    
+    scaled_normal = npy.c_[-A1,A0] # scales so we don't need any determinants in the integral below, outstanding, kekw.
+    
+    phi =  MESH.FEMLISTS[space]['TRIG']['phidual']; lphi = len(phi)
+    
+    phii = npy.zeros((MESH.NoEdges,lphi))
+    ellmatsT = npy.zeros((MESH.NoEdges,lphi))
+    
+    # uh = npy.zeros((MESH.NoEdges,1))
+    
+    for i in range(len(we)):
+        qpT_i_1 = A0*qp[i] + p[e0,0]
+        qpT_i_2 = A1*qp[i] + p[e0,1]
+        
+        u_qpT_i = f(qpT_i_1,qpT_i_2)
+        
+        for j in range(lphi):
+            phii[:,j] = phi[j](qp[i])
+        ellmatsT = ellmatsT + we[i]*assem_ellmats(npy.sum(u_qpT_i*scaled_normal,axis=1)[:,None], phii)
+    
+    return ellmatsT.flatten()
+###############################################################################
+
+
+
+
 
 
 

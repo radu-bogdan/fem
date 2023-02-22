@@ -166,6 +166,11 @@ class mesh:
         
         self.__init__(p_new,e_new,t_new,q_new)
         self.FEMLISTS = {} # reset fem lists, cuz new mesh
+        # self.delattr("Boundary_EdgeOrientation")
+        
+        if hasattr(self, "Boundary_EdgeOrientation"):
+            del self.Boundary_EdgeOrientation
+
         
         print('Generated refined mesh with ' + str(p_new.shape[0]) + ' points, ' 
                                              + str(e_new.shape[0]) + ' boundary edges, ' 
@@ -173,6 +178,13 @@ class mesh:
                                              + str(q_new.shape[0]) + ' quadrilaterals.')
         # return p_new,e_new,t_new
         
+    
+    def refineP1d(self,f):
+        if f.size != 3*self.nt:
+            print('Wrong size! must be P1-discontinuous')            
+            return
+        f_new = npy.r_[f,f,f,f]
+        return f_new
         
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
