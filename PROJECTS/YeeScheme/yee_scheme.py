@@ -25,9 +25,9 @@ np.set_printoptions(precision = 8)
 ################################################################################
 # dt = 0.00125/2
 T = 1.9125
-dt = 0.12
-iterations = 8
-init_ref = 1
+dt = 0.12/2/2
+iterations = 6
+init_ref = (1*1/np.sqrt(2))**4
 
 kx = 1; ky = 1; s0 = -3
 c = np.sqrt(kx**2+ky**2)
@@ -50,20 +50,21 @@ sigma_outside = lambda x,y : 0*x+0*y+0
 gmsh.initialize()
 gmsh.open('twoDomains.geo')
 gmsh.option.setNumber("Mesh.Algorithm", 1)
-gmsh.option.setNumber("Mesh.MeshSizeMax", 1)
+gmsh.option.setNumber("Mesh.MeshSizeMax", init_ref)
 gmsh.option.setNumber("Mesh.MeshSizeMin", init_ref)
-gmsh.option.setNumber("Mesh.SaveAll", init_ref)
+gmsh.option.setNumber("Mesh.SaveAll", 1)
 # gmsh.fltk.run()
 p,e,t,q = pde.petq_generate()
-gmsh.write("twoDomains.m")
+# gmsh.write("twoDomains.m")
 gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
 ################################################################################
 
 error = np.zeros(iterations)
-uh_x_P1d_fine = 0
-uh_y_P1d_fine = 0
+dtau_uh_x_P1d_fine = 0
+dtau_uh_y_P1d_fine = 0
+mean_div_uh_NC1_P0_fine = 0
 
 for i in range(iterations):
     print('Iteration',i+1,'out of',iterations)
@@ -75,13 +76,14 @@ for i in range(iterations):
     qMx,qMy = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'M', order = 2)
     qMb2 = pde.hdiv.assembleB(MESH, space = 'BDM1', matrix = 'M', order = 2, shape = 2*MESH.NoEdges)
     
-    qK = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 2)
+    qK2 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 2)
+    qK0 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 0)
     qD1 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
     # qD0 = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 1)
     
     D2 = pde.int.assemble(MESH, order = 2)
     D1 = pde.int.assemble(MESH, order = 1)
-    # D0 = pde.int.assemble(MESH, order = 0)
+    D0 = pde.int.assemble(MESH, order = 0)
     
     D2b = pde.int.assembleB(MESH, order = 2)
     # D1b = pde.int.assembleB(MESH, order = 1)
@@ -105,7 +107,7 @@ for i in range(iterations):
     
     Mh = Mh_epsilon + dt/2*Mh_sigma
     
-    K = qK@D2@qK.T
+    K = qK2@D2@qK2.T
     # C = qD@D1@qK.T
     D1 = qD1@D2@qD1.T
     
@@ -116,93 +118,111 @@ for i in range(iterations):
     iMh_K = iMh@K
     qMb2_D2b = qMb2@D2b
     
-    print('MegaBytes of iMh_K:',iMh_K.data.nbytes/(1024*1024),\
-          'MegaBytes of iMh:',iMh.data.nbytes/(1024*1024),\
-          'MegaBytes of iMh_Mh_sigma:',iMh_Mh_sigma.data.nbytes/(1024*1024))
-    
-    uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
-    uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+    # print('MegaBytes of iMh_K:',iMh_K.data.nbytes/(1024*1024),\
+    #       'MegaBytes of iMh:',iMh.data.nbytes/(1024*1024),\
+    #       'MegaBytes of iMh_Mh_sigma:',iMh_Mh_sigma.data.nbytes/(1024*1024))
+          
+    print('K has {:4.2f} MB, iMh has {:4.2f} MB, Mh_sigma has {:4.2f} MB.'.format(\
+           K.data.nbytes/(1024**2),iMh.data.nbytes/(1024**2),Mh_sigma.data.nbytes/(1024**2)))
     ################################################################################
     
     
     
     ################################################################################
-    # tm = time.monotonic()
-    # for j in range(int(T/dt)):
-        
-    #     jdt = j*dt
-        
-    #     intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
-        
-    #     uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@intF +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
-        
-    #     uh_NC1_oldold = uh_NC1_old
-    #     uh_NC1_old = uh_NC1
-        
-    #     if (j*100//int(T/dt))%10 == 0:
-    #         print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
-    
-    # print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
-    # print('\n')
-    ################################################################################
-    
-    
-    ################################################################################
-    uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
-    uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
-  
-    
-    import cupy as cp
-    from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
-    
     tm = time.monotonic()
-    
-    tp = cp.float32
-    
-    cuda_uh_NC1_oldold = cp.array(uh_NC1_oldold, dtype=tp)
-    cuda_uh_NC1_old = cp.array(uh_NC1_old, dtype=tp)
-    
-    cuda_iMh_K = cp_csr_matrix(iMh_K, dtype=tp)
-    cuda_K = cp_csr_matrix(K, dtype=tp)
-    cuda_iMh = cp_csr_matrix(iMh, dtype=tp)
-    cuda_iMh_Mh_sigma = cp_csr_matrix(iMh_Mh_sigma, dtype=tp)
-    cuda_Mh_sigma = cp_csr_matrix(Mh_sigma, dtype=tp)
-    
+
+    uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
+    uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
     for j in range(int(T/dt)):
+        
         jdt = j*dt
         
         intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
-        cuda_intF = cp.array(intF, dtype=tp)
-                
-        # s1 = cuda_iMh.dot(cuda_K.dot(cuda_uh_NC1_old)+cuda_intF)
-        # s2 = cuda_iMh_Mh_sigma.dot((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt)
         
-        s1 = cuda_Mh_sigma.dot((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt)
-        s2 = cuda_iMh.dot(cuda_K.dot(cuda_uh_NC1_old)+cuda_intF+s1)
+        s1 = Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt)
+        s2 = iMh.dot(K.dot(uh_NC1_old)+intF+s1)
         
-        cuda_uh_NC1 = 2*cuda_uh_NC1_old-cuda_uh_NC1_oldold-(dt**2)*(s2)
+        uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(s2)
         
-        cuda_uh_NC1_oldold = cuda_uh_NC1_old
-        cuda_uh_NC1_old = cuda_uh_NC1
+        # uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@intF +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
+        
+        uh_NC1_oldold = uh_NC1_old
+        uh_NC1_old = uh_NC1
         
         if (j*100//int(T/dt))%10 == 0:
             print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
-        
-        
-    uh_NC1 = cp.ndarray.get(cuda_uh_NC1)
+    
     print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
     print('\n')
+    ################################################################################
+    
+    
+    ################################################################################
+    
+    # import cupy as cp
+    # from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+    
+    # tm = time.monotonic()
+    
+    # uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
+    # uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+    
+    # tp = cp.float32
+    
+    # cuda_uh_NC1_oldold = cp.array(uh_NC1_oldold, dtype = tp)
+    # cuda_uh_NC1_old = cp.array(uh_NC1_old, dtype = tp)
+    
+    # cuda_iMh_K = cp_csr_matrix(iMh_K, dtype = tp)
+    # cuda_K = cp_csr_matrix(K, dtype = tp)
+    # cuda_iMh = cp_csr_matrix(iMh, dtype = tp)
+    # cuda_iMh_Mh_sigma = cp_csr_matrix(iMh_Mh_sigma, dtype = tp)
+    # cuda_Mh_sigma = cp_csr_matrix(Mh_sigma, dtype = tp)
+    
+    # for j in range(int(T/dt)):
+    #     jdt = j*dt
+        
+    #     intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
+    #     cuda_intF = cp.array(intF, dtype = tp)
+        
+    #     s1 = cuda_Mh_sigma.dot((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt)
+    #     s2 = cuda_iMh.dot(cuda_K.dot(cuda_uh_NC1_old)+cuda_intF+s1)
+        
+    #     cuda_uh_NC1 = 2*cuda_uh_NC1_old-cuda_uh_NC1_oldold-(dt**2)*(s2)
+        
+    #     cuda_uh_NC1_oldold = cuda_uh_NC1_old
+    #     cuda_uh_NC1_old = cuda_uh_NC1
+        
+    #     if (j*100//int(T/dt))%10 == 0:
+    #         print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
+        
+        
+    # uh_NC1 = cp.ndarray.get(cuda_uh_NC1)
+    # print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
+    # print('\n')
     ################################################################################
             
     uh_x_P1d = qMhx.T@uh_NC1
     uh_y_P1d = qMhy.T@uh_NC1
     
-    if i>0:
-        error[i] = np.sqrt((uh_x_P1d-uh_x_P1d_fine)@D1@(uh_x_P1d-uh_x_P1d_fine)+\
-                           (uh_y_P1d-uh_y_P1d_fine)@D1@(uh_y_P1d-uh_y_P1d_fine))
+    uh_x_P1d_old = qMhx.T@uh_NC1_oldold
+    uh_y_P1d_old = qMhy.T@uh_NC1_oldold
     
-    uh_x_P1d_fine = MESH.refineP1d(uh_x_P1d)
-    uh_y_P1d_fine = MESH.refineP1d(uh_y_P1d)
+    div_uh_NC1_P0 = qK0.T@uh_NC1
+    div_uh_NC1_P0_old = qK0.T@uh_NC1_oldold
+    
+    mean_div_uh_NC1_P0 = 1/2*(div_uh_NC1_P0 + div_uh_NC1_P0_old)
+    
+    dtau_uh_x_P1d = 1/dt*(uh_x_P1d-uh_x_P1d_old)
+    dtau_uh_y_P1d = 1/dt*(uh_y_P1d-uh_y_P1d_old)
+    
+    if i>0:
+        error[i] = np.sqrt((dtau_uh_x_P1d-dtau_uh_x_P1d_fine)@D1@(dtau_uh_x_P1d-dtau_uh_x_P1d_fine)+\
+                           (dtau_uh_y_P1d-dtau_uh_y_P1d_fine)@D1@(dtau_uh_y_P1d-dtau_uh_y_P1d_fine)+\
+                           (mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine)@D0@(mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine))
+    
+    dtau_uh_x_P1d_fine = MESH.refine(dtau_uh_x_P1d)
+    dtau_uh_y_P1d_fine = MESH.refine(dtau_uh_y_P1d)
+    mean_div_uh_NC1_P0_fine = MESH.refine(mean_div_uh_NC1_P0)
     
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2))
     # fig.show()

@@ -179,12 +179,11 @@ class mesh:
         # return p_new,e_new,t_new
         
     
-    def refineP1d(self,f):
-        if f.size != 3*self.nt:
-            print('Wrong size! must be P1-discontinuous')            
-            return
-        f_new = npy.r_[f,f,f,f]
-        return f_new
+    def refine(self,f):
+        # if f.size != 3*self.nt:
+        #     print('Wrong size! must be P1-discontinuous')
+        #     return        
+        return npy.r_[f,f,f,f]
         
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
