@@ -1,7 +1,7 @@
 import numpy as np
-import scipy.sparse as sps
+import scipy.sparse as sp
 
-def makeProjectionMatrices(MESH,indices = np.empty(0)):
+def makeProjectionMatrices(MESH,indices = np.empty(0, dtype=np.int)):
     
     noDOF = MESH.NoEdges
     
@@ -18,11 +18,15 @@ def makeProjectionMatrices(MESH,indices = np.empty(0)):
     
     im = np.r_[im1,im2]
     
-    vm = 1/2*
+    vm = 1/2*np.ones((2,noDOF))
+    vm[:,indices] = 1/np.sqrt(2)
     
-    
-    return P,R,Q
+    P = sparse(im.flatten(),jm.flatten(),vm.flatten(),noDOF+indices.size,2*noDOF)
+    return P
 
+
+def sparse(i, j, v, m, n):
+    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))
 
 
 # function P = assem_RT0_to_BDM1(MESH,indices)

@@ -11,6 +11,7 @@ import scipy.sparse as sps
 from sksparse.cholmod import cholesky
 import time
 import gmsh
+import reduction_matrix
 
 
 # cupyx.scipy.sparse.spmatrix
@@ -26,7 +27,7 @@ np.set_printoptions(precision = 8)
 # dt = 0.00125/2
 T = 1.9125
 dt = 0.12/2/2
-iterations = 6
+iterations = 1
 init_ref = (1*1/np.sqrt(2))**4
 
 kx = 1; ky = 1; s0 = -3
@@ -88,7 +89,6 @@ for i in range(iterations):
     D2b = pde.int.assembleB(MESH, order = 2)
     # D1b = pde.int.assembleB(MESH, order = 1)
     # D0b = pde.int.assembleB(MESH, order = 0)
-    
     sigma_outside_eval1 = pde.int.evaluate(MESH, order = 1, coeff = sigma_outside, regions = np.r_[1])
     sigma_circle_eval1  = pde.int.evaluate(MESH, order = 1, coeff = sigma_circle, regions = np.r_[2])
     
@@ -117,6 +117,8 @@ for i in range(iterations):
     iMh_Mh_sigma = iMh@Mh_sigma
     iMh_K = iMh@K
     qMb2_D2b = qMb2@D2b
+    
+    P = reduction_matrix.makeProjectionMatrices(MESH)
     
     # print('MegaBytes of iMh_K:',iMh_K.data.nbytes/(1024*1024),\
     #       'MegaBytes of iMh:',iMh.data.nbytes/(1024*1024),\
