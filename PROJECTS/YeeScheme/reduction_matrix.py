@@ -1,28 +1,29 @@
 import numpy as np
 import scipy.sparse as sp
 
-def makeProjectionMatrices(MESH,indices = np.empty(0, dtype=np.int)):
+def makeProjectionMatrices(MESH,indices = np.empty(0, dtype=np.int32)):
     
     noDOF = MESH.NoEdges
-    
-    
-    jm = np.r_[0:2*noDOF]
-    
     vek = np.r_[0:noDOF] + indices.size
     
-    im1 = vek
-    im2 = vek
+    im1 = vek; im2 = vek
     
     im1[indices + np.r_[0:indices.size]] = False
     im2[indices + np.r_[0:indices.size]-1] = False
     
-    im = np.r_[im1,im2]
+    im = np.c_[im1,im2]    
+    jm = np.r_[0:2*noDOF]
     
-    vm = 1/2*np.ones((2,noDOF))
-    vm[:,indices] = 1/np.sqrt(2)
+    vm = np.ones((2,noDOF))
+    vm[:,indices] = 1
     
-    P = sparse(im.flatten(),jm.flatten(),vm.flatten(),noDOF+indices.size,2*noDOF)
-    return P
+    Pt = sparse(im.flatten(),jm.flatten(),vm.flatten(),noDOF+indices.size,2*noDOF)
+    
+    P = Pt.T.copy()
+    R = 1/2*P.T
+    Q = P@R
+    
+    return P,Q,R
 
 
 def sparse(i, j, v, m, n):

@@ -27,7 +27,7 @@ np.set_printoptions(precision = 8)
 # dt = 0.00125/2
 T = 1.9125
 dt = 0.12/2/2
-iterations = 1
+iterations = 8
 init_ref = (1*1/np.sqrt(2))**4
 
 kx = 1; ky = 1; s0 = -3
@@ -63,9 +63,10 @@ MESH = pde.mesh(p,e,t,q)
 ################################################################################
 
 error = np.zeros(iterations)
-dtau_uh_x_P1d_fine = 0
-dtau_uh_y_P1d_fine = 0
-mean_div_uh_NC1_P0_fine = 0
+new_error = np.zeros(iterations)
+dtau_uh_x_P1d_fine = 0; dtau_new_uh_x_P1d_fine = 0
+dtau_uh_y_P1d_fine = 0; dtau_new_uh_y_P1d_fine = 0
+mean_div_uh_NC1_P0_fine = 0; mean_new_div_uh_N0_P0_fine = 0
 
 for i in range(iterations):
     print('Iteration',i+1,'out of',iterations)
@@ -107,25 +108,27 @@ for i in range(iterations):
     
     Mh = Mh_epsilon + dt/2*Mh_sigma
     
-    K = qK2@D2@qK2.T
-    # C = qD@D1@qK.T
+    K = qK2@D2@qK2.T # C = qD@D1@qK.T
     D1 = qD1@D2@qD1.T
     
-    iMh = pde.tools.fastBlockInverse(Mh)
-    # print(sps.linalg.norm(Mh@iMh,np.inf))
+    iMh = pde.tools.fastBlockInverse(Mh) # print(sps.linalg.norm(Mh@iMh,np.inf))
     
-    iMh_Mh_sigma = iMh@Mh_sigma
-    iMh_K = iMh@K
+    # iMh_Mh_sigma = iMh@Mh_sigma
+    # iMh_K = iMh@K
     qMb2_D2b = qMb2@D2b
     
-    P = reduction_matrix.makeProjectionMatrices(MESH)
-    
-    # print('MegaBytes of iMh_K:',iMh_K.data.nbytes/(1024*1024),\
-    #       'MegaBytes of iMh:',iMh.data.nbytes/(1024*1024),\
-    #       'MegaBytes of iMh_Mh_sigma:',iMh_Mh_sigma.data.nbytes/(1024*1024))
+    P,Q,R = reduction_matrix.makeProjectionMatrices(MESH)
           
     print('K has {:4.2f} MB, iMh has {:4.2f} MB, Mh_sigma has {:4.2f} MB.'.format(\
            K.data.nbytes/(1024**2),iMh.data.nbytes/(1024**2),Mh_sigma.data.nbytes/(1024**2)))
+    ################################################################################
+    
+    
+        
+    ################################################################################
+    new_iMh = R@iMh@R.T
+    new_Mh_sigma = P.T@Mh_sigma@P
+    new_K = P.T@K@P
     ################################################################################
     
     
@@ -135,21 +138,31 @@ for i in range(iterations):
 
     uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
     uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+    
+    uh_N0_oldold = R@uh_NC1_oldold
+    uh_N0_old = R@uh_NC1_old
+    
     for j in range(int(T/dt)):
         
         jdt = j*dt
         
         intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
         
-        s1 = Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt)
-        s2 = iMh.dot(K.dot(uh_NC1_old)+intF+s1)
         
-        uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(s2)
+        s = iMh.dot(K.dot(uh_NC1_old) + Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt) + intF)
+        uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*s
+                
+        new_intF = R@iMh@intF
+        new_s = new_iMh.dot(new_K.dot(uh_N0_old) + new_Mh_sigma.dot((uh_N0_old-uh_N0_oldold)/dt)) + new_intF
+        uh_N0 = 2*uh_N0_old-uh_N0_oldold-(dt**2)*new_s
         
         # uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@intF +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
         
         uh_NC1_oldold = uh_NC1_old
         uh_NC1_old = uh_NC1
+        
+        uh_N0_oldold = uh_N0_old
+        uh_N0_old = uh_N0
         
         if (j*100//int(T/dt))%10 == 0:
             print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
@@ -202,7 +215,10 @@ for i in range(iterations):
     # print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
     # print('\n')
     ################################################################################
-            
+    
+    
+    
+    ################################################################################
     uh_x_P1d = qMhx.T@uh_NC1
     uh_y_P1d = qMhy.T@uh_NC1
     
@@ -225,8 +241,39 @@ for i in range(iterations):
     dtau_uh_x_P1d_fine = MESH.refine(dtau_uh_x_P1d)
     dtau_uh_y_P1d_fine = MESH.refine(dtau_uh_y_P1d)
     mean_div_uh_NC1_P0_fine = MESH.refine(mean_div_uh_NC1_P0)
+    ################################################################################
+    
+    
+    ################################################################################
+    new_uh_x_P1d = qMhx.T@P@uh_N0
+    new_uh_y_P1d = qMhy.T@P@uh_N0
+    
+    new_uh_x_P1d_old = qMhx.T@P@uh_N0_oldold
+    new_uh_y_P1d_old = qMhy.T@P@uh_N0_oldold
+    
+    new_div_uh_N0_P0 = qK0.T@P@uh_N0
+    new_div_uh_N0_P0_old = qK0.T@P@uh_N0_oldold
+    
+    mean_new_div_uh_N0_P0 = 1/2*(new_div_uh_N0_P0 + new_div_uh_N0_P0_old)
+    
+    dtau_new_uh_x_P1d = 1/dt*(new_uh_x_P1d-new_uh_x_P1d_old)
+    dtau_new_uh_y_P1d = 1/dt*(new_uh_y_P1d-new_uh_y_P1d_old)
+    
+    if i>0:
+        new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)+\
+                               (dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)+\
+                               (mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))
+    
+    
+    dtau_new_uh_x_P1d_fine = MESH.refine(dtau_new_uh_x_P1d)
+    dtau_new_uh_y_P1d_fine = MESH.refine(dtau_new_uh_y_P1d)
+    mean_new_div_uh_N0_P0_fine = MESH.refine(mean_new_div_uh_N0_P0)
+    
+    ################################################################################
     
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2))
+    # fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2))
     # fig.show()
     
     if i+1!=iterations:
@@ -243,5 +290,7 @@ for i in range(iterations):
     
 rate = np.log2(error[1:-1]/error[2:])
 print("Convergenge rates : ",rate)
+new_rate = np.log2(new_error[1:-1]/new_error[2:])
+print("Convergenge rates : ",new_rate)
 
 # do()
