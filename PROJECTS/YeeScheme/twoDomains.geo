@@ -19,9 +19,15 @@ SetFactory("OpenCASCADE");
 Circle(5) = {-0, 0, 0, 0.3, 0, 2*Pi};
 SetFactory("Built-in");
 //+
-Physical Curve(6) = {4, 1, 2, 3};
+Physical Curve(1) = {1};
 //+
-Physical Curve(7) = {5};
+Physical Curve(2) = {2};
+//+
+Physical Curve(3) = {3};
+//+
+Physical Curve(4) = {4};
+//+
+Physical Curve(5) = {5};
 //+
 Curve Loop(1) = {1, 2, 3, 4};
 //+

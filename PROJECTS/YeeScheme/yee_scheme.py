@@ -2,48 +2,33 @@ import sys
 sys.path.insert(0,'../../') # adds parent directory
 sys.path.insert(0,'../CEM') # adds parent directory
 
+# import line_profiler
+# profile = line_profiler.LineProfiler()
+
 import numpy as np
 import pde
 import scipy.sparse as sps
-import scipy.sparse.linalg
 from sksparse.cholmod import cholesky
 import time
 import gmsh
-import geometries
+import reduction_matrix
+
+
+# cupyx.scipy.sparse.spmatrix
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
 np.set_printoptions(precision = 8)
 
-
-gmsh.initialize()
-gmsh.open('twoDomains.geo')
-gmsh.option.setNumber("Mesh.Algorithm", 1)
-gmsh.option.setNumber("Mesh.SaveAll", 1)
-gmsh.option.setNumber("Mesh.MeshSizeMax", 0.1)
-gmsh.option.setNumber("Mesh.MeshSizeMin", 0.1)
-# gmsh.fltk.run()
-p,e,t,q = pde.petq_generate()
-gmsh.finalize()
-
-
-MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
-
-# fig = MESH.pdemesh()
-# fig.show()
-
+# @profile
+# def do():
+        
 ################################################################################
-dt = 0.00125/2;
-T = 2.2;
-time = 3060;
-iteration = 1;
-init_ref = 1;
-
+# dt = 0.00125/2
+T = 1.9125
+dt = 0.12/2/2
+iterations = 8
+init_ref = (1*1/np.sqrt(2))**4
 
 kx = 1; ky = 1; s0 = -3
 c = np.sqrt(kx**2+ky**2)
@@ -56,77 +41,256 @@ u1ex = lambda x,y,t : kx/c*pex(x,y,t)
 u2ex = lambda x,y,t : ky/c*pex(x,y,t)
 divuex = lambda x,y,t : (kx**2+ky**2)/c*gs(kx*x+ky*y-c*t)
 
-
 sigma_circle = lambda x,y : 0*x+0*y+100
-sigma_outside = lambda x,y : 0*x+0*y+1
+sigma_outside = lambda x,y : 0*x+0*y+0
 ################################################################################
 
 
 
 ################################################################################
-qMhx,qMhy = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 1)
-qMx,qMy = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 2)
-qMb = pde.hcurl.assembleB(MESH, space = 'NC1', matrix = 'M', order = 2, shape = 2*MESH.NoEdges)
+gmsh.initialize()
+gmsh.open('twoDomains.geo')
+gmsh.option.setNumber("Mesh.Algorithm", 1)
+gmsh.option.setNumber("Mesh.MeshSizeMax", init_ref)
+gmsh.option.setNumber("Mesh.MeshSizeMin", init_ref)
+gmsh.option.setNumber("Mesh.SaveAll", 1)
+# gmsh.fltk.run()
+p,e,t,q = pde.petq_generate()
+# gmsh.write("twoDomains.m")
+gmsh.finalize()
 
-qK = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'K', order = 2)
-qD = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 1)
-
-D2 = pde.int.assemble(MESH, order = 2)
-D1 = pde.int.assemble(MESH, order = 1)
-D0 = pde.int.assemble(MESH, order = 0)
-
-D2b = pde.int.assembleB(MESH, order = 2)
-D1b = pde.int.assembleB(MESH, order = 1)
-D0b = pde.int.assembleB(MESH, order = 0)
-
-sigma_outside_eval1 = pde.int.evaluate(MESH, order = 1, coeff = sigma_circle, regions = np.r_[1])
-sigma_circle_eval1  = pde.int.evaluate(MESH, order = 1, coeff = sigma_circle, regions = np.r_[2])
-
-sigma_outside_eval2 = pde.int.evaluate(MESH, order = 2, coeff = sigma_circle, regions = np.r_[1])
-sigma_circle_eval2  = pde.int.evaluate(MESH, order = 2, coeff = sigma_circle, regions = np.r_[2])
-
-M = qMx@D2@(sigma_outside_eval2 + sigma_circle_eval2)@qMx.T +\
-    qMy@D2@(sigma_outside_eval2 + sigma_circle_eval2)@qMy.T
-Mh = qMhx@D1@(sigma_outside_eval1 + sigma_circle_eval1)@qMhx.T +\
-     qMhy@D1@(sigma_outside_eval1 + sigma_circle_eval1)@qMhy.T
-     
-K = qK@D2@qK.T
-C = qD@D1@qK.T
-D = qD@D1@qD.T
-
-iMh = pde.tools.fastBlockInverse(Mh)
-print(sps.linalg.norm(Mh@iMh,np.inf))
-
-uh_NC1 = pde.projections.interp_HDIV(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
-
+MESH = pde.mesh(p,e,t,q)
 ################################################################################
 
+error = np.zeros(iterations)
+new_error = np.zeros(iterations)
+dtau_uh_x_P1d_fine = 0; dtau_new_uh_x_P1d_fine = 0
+dtau_uh_y_P1d_fine = 0; dtau_new_uh_y_P1d_fine = 0
+mean_div_uh_NC1_P0_fine = 0; mean_new_div_uh_N0_P0_fine = 0
 
+for i in range(iterations):
+    print('Iteration',i+1,'out of',iterations)
+    h_approx = 2/np.sqrt(MESH.nt/2)
+    print('h approx',h_approx,'dt chosen exactly as ',dt, 'konstante etwa:',dt/h_approx)
 
-
-
-# uh_BDM1 = 
-
-
-# cholMh = cholesky(Mh)
-# MhL = cholMh.L()
-# P = cholMh.P()
-# P = sps.csc_matrix((np.ones(P.size),(np.r_[0:P.size],P)),shape = (P.size,P.size))
-
-# print(sps.linalg.norm(P.T@(MhL@MhL.T)@P - Mh))
-# print(sps.linalg.norm(Mh@(P.T@(iMhL.T@iMhL)@P),np.inf))
-
-# A[P[:, np.newaxis], P[np.newaxis, :]]
-
-# for j in range(time):
-#     jdt = j*dt
-#     uh_BDM1 = 2*uh_BDM1_old-uh_BDM1_oldold-dt**2*(iMh*K_BDM1*uh_BDM1_old -iMh*fb2 +iMhMhr_BDM1*(uh_BDM1_old-uh_BDM1_oldold)/dt);
+    ################################################################################
+    qMhx,qMhy = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'M', order = 1)
+    qMx,qMy = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'M', order = 2)
+    qMb2 = pde.hdiv.assembleB(MESH, space = 'BDM1', matrix = 'M', order = 2, shape = 2*MESH.NoEdges)
     
+    qK2 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 2)
+    qK0 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 0)
+    qD1 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
+    # qD0 = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 1)
+    
+    D2 = pde.int.assemble(MESH, order = 2)
+    D1 = pde.int.assemble(MESH, order = 1)
+    D0 = pde.int.assemble(MESH, order = 0)
+    
+    D2b = pde.int.assembleB(MESH, order = 2)
+    # D1b = pde.int.assembleB(MESH, order = 1)
+    # D0b = pde.int.assembleB(MESH, order = 0)
+    sigma_outside_eval1 = pde.int.evaluate(MESH, order = 1, coeff = sigma_outside, regions = np.r_[1])
+    sigma_circle_eval1  = pde.int.evaluate(MESH, order = 1, coeff = sigma_circle, regions = np.r_[2])
+    
+    # sigma_outside_eval2 = pde.int.evaluate(MESH, order = 2, coeff = sigma_outside, regions = np.r_[1])
+    # sigma_circle_eval2  = pde.int.evaluate(MESH, order = 2, coeff = sigma_circle, regions = np.r_[2])
+    
+    # M = qMx@D2@(sigma_outside_eval2 + sigma_circle_eval2)@qMx.T +\
+    #     qMy@D2@(sigma_outside_eval2 + sigma_circle_eval2)@qMy.T
+    
+    Mh_sigma = qMhx@D1@(sigma_outside_eval1 + sigma_circle_eval1)@qMhx.T +\
+               qMhy@D1@(sigma_outside_eval1 + sigma_circle_eval1)@qMhy.T
+    
+    # epsilon = 1
+    Mh_epsilon = qMhx@D1@qMhx.T +\
+                 qMhy@D1@qMhy.T
+    
+    Mh = Mh_epsilon + dt/2*Mh_sigma
+    
+    K = qK2@D2@qK2.T # C = qD@D1@qK.T
+    D1 = qD1@D2@qD1.T
+    
+    iMh = pde.tools.fastBlockInverse(Mh) # print(sps.linalg.norm(Mh@iMh,np.inf))
+    
+    # iMh_Mh_sigma = iMh@Mh_sigma
+    # iMh_K = iMh@K
+    qMb2_D2b = qMb2@D2b
+    
+    P,Q,R = reduction_matrix.makeProjectionMatrices(MESH)
+          
+    print('K has {:4.2f} MB, iMh has {:4.2f} MB, Mh_sigma has {:4.2f} MB.'.format(\
+           K.data.nbytes/(1024**2),iMh.data.nbytes/(1024**2),Mh_sigma.data.nbytes/(1024**2)))
+    ################################################################################
+    
+    
+        
+    ################################################################################
+    new_iMh = R@iMh@R.T
+    new_Mh_sigma = P.T@Mh_sigma@P
+    new_K = P.T@K@P
+    ################################################################################
+    
+    
+    
+    ################################################################################
+    tm = time.monotonic()
 
-################################################################################
+    uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
+    uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+    
+    uh_N0_oldold = R@uh_NC1_oldold
+    uh_N0_old = R@uh_NC1_old
+    
+    for j in range(int(T/dt)):
+        
+        jdt = j*dt
+        
+        intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
+        
+        
+        s = iMh.dot(K.dot(uh_NC1_old) + Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt) + intF)
+        uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*s
+                
+        new_intF = R@iMh@intF
+        new_s = new_iMh.dot(new_K.dot(uh_N0_old) + new_Mh_sigma.dot((uh_N0_old-uh_N0_oldold)/dt)) + new_intF
+        uh_N0 = 2*uh_N0_old-uh_N0_oldold-(dt**2)*new_s
+        
+        # uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@intF +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
+        
+        uh_NC1_oldold = uh_NC1_old
+        uh_NC1_old = uh_NC1
+        
+        uh_N0_oldold = uh_N0_old
+        uh_N0_old = uh_N0
+        
+        if (j*100//int(T/dt))%10 == 0:
+            print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
+    
+    print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
+    print('\n')
+    ################################################################################
+    
+    
+    ################################################################################
+    
+    # import cupy as cp
+    # from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+    
+    # tm = time.monotonic()
+    
+    # uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
+    # uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+    
+    # tp = cp.float32
+    
+    # cuda_uh_NC1_oldold = cp.array(uh_NC1_oldold, dtype = tp)
+    # cuda_uh_NC1_old = cp.array(uh_NC1_old, dtype = tp)
+    
+    # cuda_iMh_K = cp_csr_matrix(iMh_K, dtype = tp)
+    # cuda_K = cp_csr_matrix(K, dtype = tp)
+    # cuda_iMh = cp_csr_matrix(iMh, dtype = tp)
+    # cuda_iMh_Mh_sigma = cp_csr_matrix(iMh_Mh_sigma, dtype = tp)
+    # cuda_Mh_sigma = cp_csr_matrix(Mh_sigma, dtype = tp)
+    
+    # for j in range(int(T/dt)):
+    #     jdt = j*dt
+        
+    #     intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
+    #     cuda_intF = cp.array(intF, dtype = tp)
+        
+    #     s1 = cuda_Mh_sigma.dot((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt)
+    #     s2 = cuda_iMh.dot(cuda_K.dot(cuda_uh_NC1_old)+cuda_intF+s1)
+        
+    #     cuda_uh_NC1 = 2*cuda_uh_NC1_old-cuda_uh_NC1_oldold-(dt**2)*(s2)
+        
+    #     cuda_uh_NC1_oldold = cuda_uh_NC1_old
+    #     cuda_uh_NC1_old = cuda_uh_NC1
+        
+    #     if (j*100//int(T/dt))%10 == 0:
+    #         print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
+        
+        
+    # uh_NC1 = cp.ndarray.get(cuda_uh_NC1)
+    # print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
+    # print('\n')
+    ################################################################################
+    
+    
+    
+    ################################################################################
+    uh_x_P1d = qMhx.T@uh_NC1
+    uh_y_P1d = qMhy.T@uh_NC1
+    
+    uh_x_P1d_old = qMhx.T@uh_NC1_oldold
+    uh_y_P1d_old = qMhy.T@uh_NC1_oldold
+    
+    div_uh_NC1_P0 = qK0.T@uh_NC1
+    div_uh_NC1_P0_old = qK0.T@uh_NC1_oldold
+    
+    mean_div_uh_NC1_P0 = 1/2*(div_uh_NC1_P0 + div_uh_NC1_P0_old)
+    
+    dtau_uh_x_P1d = 1/dt*(uh_x_P1d-uh_x_P1d_old)
+    dtau_uh_y_P1d = 1/dt*(uh_y_P1d-uh_y_P1d_old)
+    
+    if i>0:
+        error[i] = np.sqrt((dtau_uh_x_P1d-dtau_uh_x_P1d_fine)@D1@(dtau_uh_x_P1d-dtau_uh_x_P1d_fine)+\
+                           (dtau_uh_y_P1d-dtau_uh_y_P1d_fine)@D1@(dtau_uh_y_P1d-dtau_uh_y_P1d_fine)+\
+                           (mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine)@D0@(mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine))
+    
+    dtau_uh_x_P1d_fine = MESH.refine(dtau_uh_x_P1d)
+    dtau_uh_y_P1d_fine = MESH.refine(dtau_uh_y_P1d)
+    mean_div_uh_NC1_P0_fine = MESH.refine(mean_div_uh_NC1_P0)
+    ################################################################################
+    
+    
+    ################################################################################
+    new_uh_x_P1d = qMhx.T@P@uh_N0
+    new_uh_y_P1d = qMhy.T@P@uh_N0
+    
+    new_uh_x_P1d_old = qMhx.T@P@uh_N0_oldold
+    new_uh_y_P1d_old = qMhy.T@P@uh_N0_oldold
+    
+    new_div_uh_N0_P0 = qK0.T@P@uh_N0
+    new_div_uh_N0_P0_old = qK0.T@P@uh_N0_oldold
+    
+    mean_new_div_uh_N0_P0 = 1/2*(new_div_uh_N0_P0 + new_div_uh_N0_P0_old)
+    
+    dtau_new_uh_x_P1d = 1/dt*(new_uh_x_P1d-new_uh_x_P1d_old)
+    dtau_new_uh_y_P1d = 1/dt*(new_uh_y_P1d-new_uh_y_P1d_old)
+    
+    if i>0:
+        new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)+\
+                               (dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)+\
+                               (mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))
+    
+    
+    dtau_new_uh_x_P1d_fine = MESH.refine(dtau_new_uh_x_P1d)
+    dtau_new_uh_y_P1d_fine = MESH.refine(dtau_new_uh_y_P1d)
+    mean_new_div_uh_N0_P0_fine = MESH.refine(mean_new_div_uh_N0_P0)
+    
+    ################################################################################
+    
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2))
+    # fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2))
+    # fig.show()
+    
+    if i+1!=iterations:
+        MESH.refinemesh(); dt = dt/2;
+        
+        ################################################################################
+        # Shift points to the circle
+        ################################################################################
+        Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:].flatten())
+        PointsOnCircle = MESH.p[Indices_PointsOnCircle,:]
+        MESH.p[Indices_PointsOnCircle,:] = 0.3*1/np.sqrt(PointsOnCircle[:,0]**2+PointsOnCircle[:,1]**2)[:,None]*PointsOnCircle
+        ################################################################################
+    
+    
+rate = np.log2(error[1:-1]/error[2:])
+print("Convergenge rates : ",rate)
+new_rate = np.log2(new_error[1:-1]/new_error[2:])
+print("Convergenge rates : ",new_rate)
 
-
-from matplotlib.pyplot import spy
-# spy(Mh, markersize=1)
-cholMh = cholesky(Mh)
-spy(cholMh.L(), markersize=1)
+# do()

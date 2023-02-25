@@ -100,8 +100,8 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
-
-def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
+# @profile
+def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), like = 0):
     
     if edges.size == 0:
         edges = MESH.Boundary_Region
@@ -129,13 +129,22 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
     iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
     iD = iD[:,indices]
     
+    # print(iD)
+    
     for i in range(nqp):
         qpT_i_1 = A0*qp[i] + p[e0,0]
         qpT_i_2 = A1*qp[i] + p[e0,1]
         ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
     
-    D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
-    return D
+    # D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
+    d = npy.zeros(nqp*MESH.ne)
+    d[iD.flatten()] = ellmatsD
+    
+    if like == 0:
+        return sp.diags(d)
+    
+    if like == 1:
+        return d
 
 
 
@@ -176,4 +185,4 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0)):
 
 
 def sparse(i, j, v, m, n):
-    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))
+    return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

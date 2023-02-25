@@ -40,6 +40,7 @@ def spaceInfo(MESH,space):
         LISTS['P1d']['B'] = {}
         LISTS['P1d']['B']['qp_we_B'] = quadrature.one_d(order = 2)
         
+        LISTS['P1d']['TRIG']['phi'] = {}
         LISTS['P1d']['TRIG']['phi'][0] = lambda x,y: 1-x-y
         LISTS['P1d']['TRIG']['phi'][1] = lambda x,y: x
         LISTS['P1d']['TRIG']['phi'][2] = lambda x,y: y
