@@ -153,7 +153,7 @@ def lists(MESH,space):
         #############################################################################################################
 
     
-    if space == 'SP1':
+    if space == 'SP1': # Schoebl/Pechstein
         
         LISTS['SP1'] = {}
         
@@ -206,7 +206,6 @@ def lists(MESH,space):
         LISTS['P1d']['QUAD'] = {}
         LISTS['P1d']['QUAD']['LIST_DOF'] =  np.r_[0:3*MESH.nq].reshape(MESH.nq,3)
 
-
     if space == 'P2':
         
         LISTS['P2'] = {}
@@ -220,12 +219,10 @@ def lists(MESH,space):
         LISTS['P2']['B'] = {}
         LISTS['P2']['B']['LIST_DOF'] = np.c_[MESH.e,MESH.np+MESH.Boundary_Edges].astype(np.uint64)
 
-
     if space == 'Q0':
         
         LISTS['Q0']['QUAD'] = {}
-        LISTS['Q0']['QUAD']['LIST_DOF'] = np.r_[0:MESH.nq]
-    
+        LISTS['Q0']['QUAD']['LIST_DOF'] = np.r_[0:MESH.nq]    
     
     if space == 'Q1':
         

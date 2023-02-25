@@ -12,7 +12,7 @@ from scipy.interpolate import griddata
 from . import lists as femlists
 import numba as jit
 # from .tools import *
-from .tools import unique_rows
+# from .tools import unique_rows
 
 # import plotly.figure_factory as ff
 
