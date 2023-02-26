@@ -3,13 +3,21 @@ import scipy.sparse as sp
 
 def makeProjectionMatrices(MESH, indices = np.empty(0, dtype=np.int32)):
     
+    indices = np.sort(indices)
+    
     noDOF = MESH.NoEdges
-    vek = np.r_[0:noDOF] + indices.size
+    vek = np.r_[0:noDOF + indices.size] 
     
     im1 = vek; im2 = vek
     
-    im1[indices + np.r_[0:indices.size]] = False
-    im2[indices + np.r_[0:indices.size]-1] = False
+    im1 = np.delete(im1,indices + np.r_[0:indices.size])
+    im2 = np.delete(im2,indices + np.r_[0:indices.size]-1)
+    
+    # im1 = np.delete(im1,indices)
+    # im2 = np.delete(im2,indices)
+    
+    # im1[indices + np.r_[0:indices.size]] = False
+    # im2[indices + np.r_[0:indices.size]-1] = False
     
     im = np.c_[im1,im2]    
     jm = np.r_[0:2*noDOF]
@@ -17,12 +25,26 @@ def makeProjectionMatrices(MESH, indices = np.empty(0, dtype=np.int32)):
     vm = np.ones((2,noDOF))
     vm[:,indices] = 1
     
+    # print(indices)
+    # print(np.r_[0:indices.size])
+    
+    # print(indices + np.r_[0:indices.size])
+    # print(indices + np.r_[0:indices.size]-1)
+    # print(im1.shape,im2.shape,vek.shape,(indices + np.r_[0:indices.size]).shape,(indices + np.r_[0:indices.size]-1).shape,\
+    #       im.flatten().size,jm.flatten().size,vm.flatten().size)
+    
     Pt = sparse(im.flatten(),jm.flatten(),vm.flatten(),noDOF+indices.size,2*noDOF)
     
     P = Pt.T.copy()
     
+    # print(jm)
+    
     # 1/2 ist falsch... TODO morgen
-    R = 1/2*P.T
+    
+    inv_PtP = sp.dia_matrix((1/(P.T@P).diagonal(),0),shape=(P.shape[1],P.shape[1])).tocsc()
+    
+    R = inv_PtP@P.T
+    
     Q = P@R
     
     return P,Q,R
