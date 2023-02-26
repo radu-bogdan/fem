@@ -33,6 +33,7 @@ def assemble(MESH,order):
     D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
     return D
 
+
 def assembleB(MESH,order):
     
     p = MESH.p;
@@ -129,7 +130,7 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), l
     iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
     iD = iD[:,indices]
     
-    # print(iD)
+    d = npy.zeros(nqp*MESH.ne)
     
     for i in range(nqp):
         qpT_i_1 = A0*qp[i] + p[e0,0]
@@ -137,7 +138,6 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), l
         ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
     
     # D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
-    d = npy.zeros(nqp*MESH.ne)
     d[iD.flatten()] = ellmatsD
     
     if like == 0:

@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 
-def makeProjectionMatrices(MESH,indices = np.empty(0, dtype=np.int32)):
+def makeProjectionMatrices(MESH, indices = np.empty(0, dtype=np.int32)):
     
     noDOF = MESH.NoEdges
     vek = np.r_[0:noDOF] + indices.size
@@ -20,6 +20,8 @@ def makeProjectionMatrices(MESH,indices = np.empty(0, dtype=np.int32)):
     Pt = sparse(im.flatten(),jm.flatten(),vm.flatten(),noDOF+indices.size,2*noDOF)
     
     P = Pt.T.copy()
+    
+    # 1/2 ist falsch... TODO morgen
     R = 1/2*P.T
     Q = P@R
     

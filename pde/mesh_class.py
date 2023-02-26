@@ -95,8 +95,11 @@ class mesh:
         
         self.FEMLISTS = {}
         
+    def __repr__(self):
+        return f"np:{self.np}, nt:{self.nt}, nq:{self.nq}, ne:{self.ne}, ne_all:{self.NoEdges}"
+    
     # @profile
-    def makeBEO(self):
+    def makeBEO(self): # Boundary Edge Orientations
         gem_list = npy.r_[self.TriangleToEdges.ravel(),self.QuadToEdges.ravel()]
         gem_dir_list = npy.r_[self.EdgeDirectionTrig.ravel(),self.EdgeDirectionQuad.ravel()]
         
@@ -184,6 +187,9 @@ class mesh:
         #     print('Wrong size! must be P1-discontinuous')
         #     return        
         return npy.r_[f,f,f,f]
+    
+    def trianglesFromPoints(self, points):
+        return npy.unique(npy.where(npy.in1d(self.t[:,0:3].flatten(),points))[0]//3)
         
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
