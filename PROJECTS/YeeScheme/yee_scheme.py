@@ -25,13 +25,20 @@ np.set_printoptions(precision = 8)
         
 ################################################################################
 # dt = 0.00125/2
-T = 1.9125
-dt = (0.12/2/2)
-iterations = 8
-init_ref = (1*1/np.sqrt(2))**4
+# T = 1.9125
+# dt = (0.12/2/2)
+# iterations = 1
+# init_ref = 0.25
+# use_GPU = False
+
+T = 1
+dt = 0.03/2*4
+iterations = 10
+init_ref = 0.25*4
 use_GPU = True
 
-kx = 1; ky = 1; s0 = -3
+
+kx = 1; ky = 1; s0 = -1.4
 c = np.sqrt(kx**2+ky**2)
 
 g = lambda s : 2*np.exp(-10*(s-s0)**2)
@@ -44,7 +51,7 @@ divuex = lambda x,y,t : (kx**2+ky**2)/c*gs(kx*x+ky*y-c*t)
 
 sigma_circle = lambda x,y : 0*x+0*y+100
 sigma_outside = lambda x,y : 0*x+0*y+0
-################################################################################
+################################################################################    
 
 
 
@@ -66,9 +73,11 @@ MESH = pde.mesh(p,e,t,q)
 error = np.zeros(iterations)
 new_error = np.zeros(iterations)
 error2 = np.zeros(iterations)
-dtau_uh_x_P1d_fine = np.empty(0); dtau_new_uh_x_P1d_fine = np.empty(0)
-dtau_uh_y_P1d_fine = np.empty(0); dtau_new_uh_y_P1d_fine = np.empty(0)
-mean_div_uh_NC1_P0_fine = np.empty(0); mean_new_div_uh_N0_P0_fine = np.empty(0)
+error3 = np.zeros(iterations)
+
+dtau_uh_x_P1d_fine = np.empty(0); dtau_new_uh_x_P1d_fine = np.empty(0); dtau_new_uh0_x_P1d_fine = np.empty(0)
+dtau_uh_y_P1d_fine = np.empty(0); dtau_new_uh_y_P1d_fine = np.empty(0); dtau_new_uh0_y_P1d_fine = np.empty(0)
+mean_div_uh_NC1_P0_fine = np.empty(0); mean_new_div_uh_N0_P0_fine = np.empty(0); mean_new_div_uh_N00_P0_fine = np.empty(0)
 
 for i in range(iterations):
     print('Iteration',i+1,'out of',iterations)
@@ -109,6 +118,8 @@ for i in range(iterations):
     
     Mh_sigma = qMhx@D1@(sigma_outside_eval1 + sigma_circle_eval1)@qMhx.T +\
                qMhy@D1@(sigma_outside_eval1 + sigma_circle_eval1)@qMhy.T
+               
+    Mh2_sigma = Mh_sigma.copy()
     
     # epsilon = 1
     Mh_epsilon = qMhx@D1@qMhx.T +\
@@ -126,22 +137,30 @@ for i in range(iterations):
     qMb2_D2b = qMb2@D2b
     
     
-       
-    P,Q,R = reduction_matrix.makeProjectionMatrices(MESH)
     
-    # circ_DOFS = MESH.Boundary_Edges[MESH.Boundary_Region==5]
-    # P,Q,R = reduction_matrix.makeProjectionMatrices(MESH, indices = np.sort(circ_DOFS))
+    P0,Q0,R0 = reduction_matrix.makeProjectionMatrices(MESH)
+    
+    circ_DOFS = MESH.Boundary_Edges[MESH.Boundary_Region==5]
+    P,Q,R = reduction_matrix.makeProjectionMatrices(MESH, indices = np.sort(circ_DOFS))
+    
+    # P = P0.copy()
+    # Q = Q0.copy()
+    # R = R0.copy()
           
     print('K has {:4.2f} MB, iMh has {:4.2f} MB, Mh_sigma has {:4.2f} MB.'.format(\
            K.data.nbytes/(1024**2),iMh.data.nbytes/(1024**2),Mh_sigma.data.nbytes/(1024**2)))
     ################################################################################
     
     
-        
+    
     ################################################################################
     new_iMh = R@iMh@R.T
     new_Mh_sigma = P.T@Mh2_sigma@P
     new_K = P.T@K@P
+    
+    new_iMh0 = R0@iMh@R0.T
+    new_Mh0_sigma = P0.T@Mh2_sigma@P0
+    new_K0 = P0.T@K@P0
     ################################################################################
     
     
@@ -149,28 +168,39 @@ for i in range(iterations):
     ################################################################################
     if not use_GPU:
         tm = time.monotonic()
-    
+        
         uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
         uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+        
+        
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), qMhx.T@uh_NC1_oldold)
+        # fig.show()
+        
         
         uh_N0_oldold = R@uh_NC1_oldold
         uh_N0_old = R@uh_NC1_old
         
+        uh_N00_oldold = R0@uh_NC1_oldold
+        uh_N00_old = R0@uh_NC1_old
+        
         for j in range(int(T/dt)):
             
-            jdt = j*dt
+            jdt = (j+1)*dt
             
             intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
             
             
             s = iMh.dot(K.dot(uh_NC1_old) + Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt) + intF)
             uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*s
-                    
+            
             new_intF = R@iMh@intF
             new_s = new_iMh.dot(new_K.dot(uh_N0_old) + new_Mh_sigma.dot((uh_N0_old-uh_N0_oldold)/dt)) + new_intF
             uh_N0 = 2*uh_N0_old-uh_N0_oldold-(dt**2)*new_s
             
-            # uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*(iMh_K@uh_NC1_old +iMh@intF +iMh_Mh_sigma@(uh_NC1_old-uh_NC1_oldold)/dt)
+            new_intF0 = R0@iMh@intF
+            new_s0 = new_iMh0.dot(new_K0.dot(uh_N00_old) + new_Mh0_sigma.dot((uh_N00_old-uh_N00_oldold)/dt)) + new_intF0
+            uh_N00 = 2*uh_N00_old-uh_N00_oldold-(dt**2)*new_s0
+            
             
             uh_NC1_oldold = uh_NC1_old
             uh_NC1_old = uh_NC1
@@ -178,8 +208,13 @@ for i in range(iterations):
             uh_N0_oldold = uh_N0_old
             uh_N0_old = uh_N0
             
+            uh_N00_oldold = uh_N00_old
+            uh_N00_old = uh_N00
+            
             if (j*100//int(T/dt))%10 == 0:
                 print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
+                # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), qMhx.T@uh_NC1_oldold)
+                # fig.show()
         
         print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
         print('\n')
@@ -192,20 +227,26 @@ for i in range(iterations):
         from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
         
         tm = time.monotonic()
-    
+        
         uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
         uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
         
         uh_N0_oldold = R@uh_NC1_oldold
         uh_N0_old = R@uh_NC1_old
         
-        tp = cp.float32
+        uh_N00_oldold = R0@uh_NC1_oldold
+        uh_N00_old = R0@uh_NC1_old
+        
+        tp = cp.float64
         
         cuda_uh_NC1_oldold = cp.array(uh_NC1_oldold, dtype = tp)
         cuda_uh_NC1_old = cp.array(uh_NC1_old, dtype = tp)
         
         cuda_uh_N0_oldold = cp.array(uh_N0_oldold, dtype = tp)
         cuda_uh_N0_old = cp.array(uh_N0_old, dtype = tp)
+        
+        cuda_uh_N00_oldold = cp.array(uh_N00_oldold, dtype = tp)
+        cuda_uh_N00_old = cp.array(uh_N00_old, dtype = tp)
         
         cuda_K = cp_csr_matrix(K, dtype = tp)
         cuda_iMh = cp_csr_matrix(iMh, dtype = tp)
@@ -215,7 +256,12 @@ for i in range(iterations):
         cuda_new_Mh_sigma = cp_csr_matrix(new_Mh_sigma, dtype = tp)
         cuda_new_K = cp_csr_matrix(new_K, dtype = tp)
         
+        cuda_new_iMh0 = cp_csr_matrix(new_iMh0, dtype = tp)
+        cuda_new_Mh0_sigma = cp_csr_matrix(new_Mh0_sigma, dtype = tp)
+        cuda_new_K0 = cp_csr_matrix(new_K0, dtype = tp)
+        
         cuda_R = cp_csr_matrix(R, dtype = tp)
+        cuda_R0 = cp_csr_matrix(R0, dtype = tp)
         
         for j in range(int(T/dt)):
             jdt = j*dt
@@ -231,11 +277,18 @@ for i in range(iterations):
             cuda_new_s = cuda_new_iMh.dot(cuda_new_K.dot(cuda_uh_N0_old) + cuda_new_Mh_sigma.dot((cuda_uh_N0_old-cuda_uh_N0_oldold)/dt)) + cuda_new_intF
             cuda_uh_N0 = 2*cuda_uh_N0_old-cuda_uh_N0_oldold-(dt**2)*cuda_new_s
             
+            cuda_new_intF0 = cuda_R0@cuda_iMh@cuda_intF
+            cuda_new_s0 = cuda_new_iMh0.dot(cuda_new_K0.dot(cuda_uh_N00_old) + cuda_new_Mh0_sigma.dot((cuda_uh_N00_old-cuda_uh_N00_oldold)/dt)) + cuda_new_intF0
+            cuda_uh_N00 = 2*cuda_uh_N00_old-cuda_uh_N00_oldold-(dt**2)*cuda_new_s0
+            
             cuda_uh_NC1_oldold = cuda_uh_NC1_old
             cuda_uh_NC1_old = cuda_uh_NC1
             
             cuda_uh_N0_oldold = cuda_uh_N0_old
             cuda_uh_N0_old = cuda_uh_N0
+            
+            cuda_uh_N00_oldold = cuda_uh_N00_old
+            cuda_uh_N00_old = cuda_uh_N00
             
             if (j*100//int(T/dt))%10 == 0:
                 print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
@@ -243,11 +296,14 @@ for i in range(iterations):
             
         uh_NC1 = cp.ndarray.get(cuda_uh_NC1)
         uh_N0 = cp.ndarray.get(cuda_uh_N0)
+        uh_N00 = cp.ndarray.get(cuda_uh_N00)
         
-        print(np.linalg.norm(uh_N0))
+        # print(np.linalg.norm(uh_N0))
         
         uh_NC1_oldold = cp.ndarray.get(cuda_uh_NC1_oldold)
         uh_N0_oldold = cp.ndarray.get(cuda_uh_N0_oldold)
+        uh_N00_oldold = cp.ndarray.get(cuda_uh_N00_oldold)
+        
         print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
         print('\n')
     ################################################################################
@@ -259,7 +315,7 @@ for i in range(iterations):
     uh_y_P1d = qMhy.T@uh_NC1
     
     uh_x_P1d_old = qMhx.T@uh_NC1_oldold
-    uh_y_P1d_old = qMhy.T@uh_NC1_oldold
+    uh_y_P1d_old = qMhy.T@uh_NC1_oldold    
     
     div_uh_NC1_P0 = qK0.T@uh_NC1
     div_uh_NC1_P0_old = qK0.T@uh_NC1_oldold
@@ -277,12 +333,6 @@ for i in range(iterations):
     
     
     ################################################################################
-    
-    # uh_N0_circ = 0*uh_N0.copy()
-    # uh_N0_circ[circ_DOFS] = uh_N0[circ_DOFS]
-    
-    # uh_N0_oldold_circ = 0*uh_N0_oldold.copy()
-    # uh_N0_oldold_circ[circ_DOFS] = uh_N0_oldold[circ_DOFS]
     
     
     prol_uh_N0 = P@uh_N0
@@ -303,40 +353,72 @@ for i in range(iterations):
     dtau_new_uh_y_P1d = 1/dt*(new_uh_y_P1d-new_uh_y_P1d_old)
     
     
+    
+    prol_uh_N00 = P0@uh_N00
+    prol_uh_N00_oldold = P0@uh_N00_oldold
+    
+    new_uh0_x_P1d = qMhx.T@prol_uh_N00
+    new_uh0_y_P1d = qMhy.T@prol_uh_N00
+    
+    new_uh0_x_P1d_old = qMhx.T@prol_uh_N00_oldold
+    new_uh0_y_P1d_old = qMhy.T@prol_uh_N00_oldold
+    
+    new_div_uh_N00_P0 = qK0.T@prol_uh_N00
+    new_div_uh_N00_P0_old = qK0.T@prol_uh_N00_oldold
+    
+    mean_new_div_uh_N00_P0 = 1/2*(new_div_uh_N00_P0 + new_div_uh_N00_P0_old)
+    
+    dtau_new_uh0_x_P1d = 1/dt*(new_uh0_x_P1d-new_uh0_x_P1d_old)
+    dtau_new_uh0_y_P1d = 1/dt*(new_uh0_y_P1d-new_uh0_y_P1d_old)
+    
+    
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), uh_x_P1d)
+    # fig.show()
+    
     if i>0:
     
         #############################################################################################################
         
-        Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:].flatten())
-        t_circ = MESH.trianglesFromPoints(Indices_PointsOnCircle)
+        # Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:].flatten())
+        # t_circ = MESH.trianglesFromPoints(Indices_PointsOnCircle)
         
-        dtau_new_uh_x_P1d_circ = dtau_new_uh_x_P1d.copy(); dtau_new_uh_x_P1d = 0*dtau_new_uh_x_P1d
-        dtau_new_uh_y_P1d_circ = dtau_new_uh_y_P1d.copy(); dtau_new_uh_y_P1d = 0*dtau_new_uh_y_P1d
-        mean_new_div_uh_N0_P0_circ = mean_new_div_uh_N0_P0.copy(); mean_new_div_uh_N0_P0 = 0*mean_new_div_uh_N0_P0
+        # dtau_new_uh_x_P1d_circ = dtau_new_uh_x_P1d.copy(); dtau_new_uh_x_P1d = 0*dtau_new_uh_x_P1d
+        # dtau_new_uh_y_P1d_circ = dtau_new_uh_y_P1d.copy(); dtau_new_uh_y_P1d = 0*dtau_new_uh_y_P1d
+        # mean_new_div_uh_N0_P0_circ = mean_new_div_uh_N0_P0.copy(); mean_new_div_uh_N0_P0 = 0*mean_new_div_uh_N0_P0
         
-        dtau_new_uh_x_P1d[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_x_P1d_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        dtau_new_uh_y_P1d[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_y_P1d_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        mean_new_div_uh_N0_P0[np.r_[t_circ]] = mean_new_div_uh_N0_P0_circ[np.r_[t_circ]]
+        # dtau_new_uh_x_P1d[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_x_P1d_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # dtau_new_uh_y_P1d[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_y_P1d_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # mean_new_div_uh_N0_P0[np.r_[t_circ]] = mean_new_div_uh_N0_P0_circ[np.r_[t_circ]]
+        
+        
+        
+        # dtau_new_uh_x_P1d_fine_circ = dtau_new_uh_x_P1d_fine.copy(); dtau_new_uh_x_P1d_fine = 0*dtau_new_uh_x_P1d_fine
+        # dtau_new_uh_y_P1d_fine_circ = dtau_new_uh_y_P1d_fine.copy(); dtau_new_uh_y_P1d_fine = 0*dtau_new_uh_y_P1d_fine
+        # mean_new_div_uh_N0_P0_fine_circ = mean_new_div_uh_N0_P0_fine.copy(); mean_new_div_uh_N0_P0_fine = 0*mean_new_div_uh_N0_P0_fine
+        
+        # dtau_new_uh_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # dtau_new_uh_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # mean_new_div_uh_N0_P0_fine[np.r_[t_circ]] = mean_new_div_uh_N0_P0_fine_circ[np.r_[t_circ]]
+        
+
+        
+        # dtau_new_uh0_x_P1d_fine_circ = dtau_new_uh0_x_P1d_fine.copy(); dtau_new_uh0_x_P1d_fine = 0*dtau_new_uh0_x_P1d_fine
+        # dtau_new_uh0_y_P1d_fine_circ = dtau_new_uh0_y_P1d_fine.copy(); dtau_new_uh0_y_P1d_fine = 0*dtau_new_uh0_y_P1d_fine
+        # mean_new_div_uh_N00_P0_fine_circ = mean_new_div_uh_N00_P0_fine.copy(); mean_new_div_uh_N00_P0_fine = 0*mean_new_div_uh_N00_P0_fine
+        
+        # dtau_new_uh0_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh0_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # dtau_new_uh0_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh0_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # mean_new_div_uh_N00_P0_fine[np.r_[t_circ]] = mean_new_div_uh_N00_P0_fine_circ[np.r_[t_circ]]
         
         
                 
-        dtau_new_uh_x_P1d_fine_circ = dtau_new_uh_x_P1d_fine.copy(); dtau_new_uh_x_P1d_fine = 0*dtau_new_uh_x_P1d_fine
-        dtau_new_uh_y_P1d_fine_circ = dtau_new_uh_y_P1d_fine.copy(); dtau_new_uh_y_P1d_fine = 0*dtau_new_uh_y_P1d_fine
-        mean_new_div_uh_N0_P0_fine_circ = mean_new_div_uh_N0_P0_fine.copy(); mean_new_div_uh_N0_P0_fine = 0*mean_new_div_uh_N0_P0_fine
+        # dtau_uh_x_P1d_fine_circ = dtau_uh_x_P1d_fine.copy(); dtau_uh_x_P1d_fine = 0*dtau_uh_x_P1d_fine
+        # dtau_uh_y_P1d_fine_circ = dtau_uh_y_P1d_fine.copy(); dtau_uh_y_P1d_fine = 0*dtau_uh_y_P1d_fine
+        # mean_div_uh_NC1_P0_fine_circ = mean_div_uh_NC1_P0_fine.copy(); mean_div_uh_NC1_P0_fine = 0*mean_div_uh_NC1_P0_fine
         
-        dtau_new_uh_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        dtau_new_uh_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        mean_new_div_uh_N0_P0_fine[np.r_[t_circ]] = mean_new_div_uh_N0_P0_fine_circ[np.r_[t_circ]]
-        
-        
-                
-        dtau_uh_x_P1d_fine_circ = dtau_uh_x_P1d_fine.copy(); dtau_uh_x_P1d_fine = 0*dtau_uh_x_P1d_fine
-        dtau_uh_y_P1d_fine_circ = dtau_uh_y_P1d_fine.copy(); dtau_uh_y_P1d_fine = 0*dtau_uh_y_P1d_fine
-        mean_div_uh_NC1_P0_fine_circ = mean_div_uh_NC1_P0_fine.copy(); mean_div_uh_NC1_P0_fine = 0*mean_div_uh_NC1_P0_fine
-        
-        dtau_uh_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_uh_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        dtau_uh_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_uh_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        mean_div_uh_NC1_P0_fine[np.r_[t_circ]] = mean_div_uh_NC1_P0_fine_circ[np.r_[t_circ]]
+        # dtau_uh_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_uh_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # dtau_uh_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_uh_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
+        # mean_div_uh_NC1_P0_fine[np.r_[t_circ]] = mean_div_uh_NC1_P0_fine_circ[np.r_[t_circ]]
         
         #############################################################################################################
         
@@ -345,12 +427,23 @@ for i in range(iterations):
                                (mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))
     
     
-        error2[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_uh_x_P1d_fine)+\
-                            (dtau_new_uh_y_P1d-dtau_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_uh_y_P1d_fine)+\
-                            (mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0_fine))
+        error2[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh_x_P1d-dtau_uh_x_P1d)+\
+                            (dtau_new_uh_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh_y_P1d-dtau_uh_y_P1d)+\
+                            (mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0))
         
         
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)**2 + (dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)**2)
+        error3[i] = np.sqrt((dtau_new_uh0_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh0_x_P1d-dtau_uh_x_P1d)+\
+                            (dtau_new_uh0_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh0_y_P1d-dtau_uh_y_P1d)+\
+                            (mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0))
+        
+        # error3[i] = np.sqrt((new_uh0_x_P1d-new_uh_x_P1d)@D1@(new_uh0_x_P1d-new_uh_x_P1d)+\
+        #                     (new_uh0_y_P1d-new_uh_y_P1d)@D1@(new_uh0_y_P1d-new_uh_y_P1d))
+        
+        # v = (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2
+        # print('max value is:',np.max(v))
+        
+        
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2)
         # fig.show()
     ################################################################################
 
@@ -361,6 +454,10 @@ for i in range(iterations):
     dtau_new_uh_x_P1d_fine = MESH.refine(dtau_new_uh_x_P1d)
     dtau_new_uh_y_P1d_fine = MESH.refine(dtau_new_uh_y_P1d)
     mean_new_div_uh_N0_P0_fine = MESH.refine(mean_new_div_uh_N0_P0)
+    
+    dtau_new_uh0_x_P1d_fine = MESH.refine(dtau_new_uh0_x_P1d)
+    dtau_new_uh0_y_P1d_fine = MESH.refine(dtau_new_uh0_y_P1d)
+    mean_new_div_uh_N00_P0_fine = MESH.refine(mean_new_div_uh_N00_P0)
     
     ################################################################################
     
@@ -392,5 +489,9 @@ for i in range(iterations):
     rate2 = np.log2(error2[1:-1]/error2[2:])
     print("Convergenge rates : ",rate2)
     print("Errors: ",error2)
+    
+    rate3 = np.log2(error3[1:-1]/error3[2:])
+    print("Convergenge rates : ",rate3)
+    print("Errors: ",error3)
 
 # do()

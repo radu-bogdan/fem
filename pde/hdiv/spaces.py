@@ -178,20 +178,37 @@ def spaceInfo(MESH,space):
         LISTS['RT1']['TRIG']['divphi'] = {}
         LISTS['RT1']['TRIG']['divphi'][6] = lambda x,y: 3*y-1
         LISTS['RT1']['TRIG']['divphi'][7] = lambda x,y: 3*x-1
+        
+        
+        # LISTS['RT1']['TRIG']['phi'] = {}
+        # LISTS['RT1']['TRIG']['phi'][0] = lambda x,y: np.r_[x,0*y]
+        # LISTS['RT1']['TRIG']['phi'][1] = lambda x,y: np.r_[0*x,y]
+        # LISTS['RT1']['TRIG']['phi'][2] = lambda x,y: np.r_[-y,y]
+        # LISTS['RT1']['TRIG']['phi'][3] = lambda x,y: np.r_[x+y-1,0*y]
+        # LISTS['RT1']['TRIG']['phi'][4] = lambda x,y: np.r_[0*x,x+y-1]
+        # LISTS['RT1']['TRIG']['phi'][5] = lambda x,y: np.r_[x,-x]
+        
+        # LISTS['RT1']['TRIG']['divphi'] = {}
+        # LISTS['RT1']['TRIG']['divphi'][0] = lambda x,y: 1+0*x
+        # LISTS['RT1']['TRIG']['divphi'][1] = lambda x,y: 1+0*x
+        # LISTS['RT1']['TRIG']['divphi'][2] = lambda x,y: 1+0*x
+        # LISTS['RT1']['TRIG']['divphi'][3] = lambda x,y: 1+0*x
+        # LISTS['RT1']['TRIG']['divphi'][4] = lambda x,y: 1+0*x
+        # LISTS['RT1']['TRIG']['divphi'][5] = lambda x,y: 1+0*x
 
-        LISTS['RT1']['TRIG']['phi'][0] = lambda x,y: LISTS['RT1']['TRIG']['phi'][0](x,y) +1*LISTS['RT1']['TRIG']['phi'][6](x,y) +2*LISTS['RT1']['TRIG']['phi'][7](x,y)
-        LISTS['RT1']['TRIG']['phi'][1] = lambda x,y: LISTS['RT1']['TRIG']['phi'][1](x,y) +2*LISTS['RT1']['TRIG']['phi'][6](x,y) +1*LISTS['RT1']['TRIG']['phi'][7](x,y)
-        LISTS['RT1']['TRIG']['phi'][2] = lambda x,y: LISTS['RT1']['TRIG']['phi'][2](x,y) +1*LISTS['RT1']['TRIG']['phi'][6](x,y) -1*LISTS['RT1']['TRIG']['phi'][7](x,y)
-        LISTS['RT1']['TRIG']['phi'][3] = lambda x,y: LISTS['RT1']['TRIG']['phi'][3](x,y) -1*LISTS['RT1']['TRIG']['phi'][6](x,y) -2*LISTS['RT1']['TRIG']['phi'][7](x,y)
-        LISTS['RT1']['TRIG']['phi'][4] = lambda x,y: LISTS['RT1']['TRIG']['phi'][4](x,y) -2*LISTS['RT1']['TRIG']['phi'][6](x,y) -1*LISTS['RT1']['TRIG']['phi'][7](x,y)
-        LISTS['RT1']['TRIG']['phi'][5] = lambda x,y: LISTS['RT1']['TRIG']['phi'][5](x,y) -1*LISTS['RT1']['TRIG']['phi'][6](x,y) +1*LISTS['RT1']['TRIG']['phi'][7](x,y)
+        LISTS['RT1']['TRIG']['phi'][0] = lambda x,y: np.r_[x,0*y] +1*LISTS['RT1']['TRIG']['phi'][6](x,y) +2*LISTS['RT1']['TRIG']['phi'][7](x,y)
+        LISTS['RT1']['TRIG']['phi'][1] = lambda x,y: np.r_[0*x,y] +2*LISTS['RT1']['TRIG']['phi'][6](x,y) +1*LISTS['RT1']['TRIG']['phi'][7](x,y)
+        LISTS['RT1']['TRIG']['phi'][2] = lambda x,y: np.r_[-y,y] +1*LISTS['RT1']['TRIG']['phi'][6](x,y) -1*LISTS['RT1']['TRIG']['phi'][7](x,y)
+        LISTS['RT1']['TRIG']['phi'][3] = lambda x,y: np.r_[x+y-1,0*y] -1*LISTS['RT1']['TRIG']['phi'][6](x,y) -2*LISTS['RT1']['TRIG']['phi'][7](x,y)
+        LISTS['RT1']['TRIG']['phi'][4] = lambda x,y: np.r_[0*x,x+y-1] -2*LISTS['RT1']['TRIG']['phi'][6](x,y) -1*LISTS['RT1']['TRIG']['phi'][7](x,y)
+        LISTS['RT1']['TRIG']['phi'][5] = lambda x,y: np.r_[x,-x] -1*LISTS['RT1']['TRIG']['phi'][6](x,y) +1*LISTS['RT1']['TRIG']['phi'][7](x,y)
 
-        LISTS['RT1']['TRIG']['divphi'][0] = lambda x,y: LISTS['RT1']['TRIG']['divphi'][0](x,y) +1*LISTS['RT1']['TRIG']['divphi'][6](x,y) +2*LISTS['RT1']['TRIG']['divphi'][7](x,y)
-        LISTS['RT1']['TRIG']['divphi'][1] = lambda x,y: LISTS['RT1']['TRIG']['divphi'][1](x,y) +2*LISTS['RT1']['TRIG']['divphi'][6](x,y) +1*LISTS['RT1']['TRIG']['divphi'][7](x,y)
-        LISTS['RT1']['TRIG']['divphi'][2] = lambda x,y: LISTS['RT1']['TRIG']['divphi'][2](x,y) +1*LISTS['RT1']['TRIG']['divphi'][6](x,y) -1*LISTS['RT1']['TRIG']['divphi'][7](x,y)
-        LISTS['RT1']['TRIG']['divphi'][3] = lambda x,y: LISTS['RT1']['TRIG']['divphi'][3](x,y) -1*LISTS['RT1']['TRIG']['divphi'][6](x,y) -2*LISTS['RT1']['TRIG']['divphi'][7](x,y)
-        LISTS['RT1']['TRIG']['divphi'][4] = lambda x,y: LISTS['RT1']['TRIG']['divphi'][4](x,y) -2*LISTS['RT1']['TRIG']['divphi'][6](x,y) -1*LISTS['RT1']['TRIG']['divphi'][7](x,y)
-        LISTS['RT1']['TRIG']['divphi'][5] = lambda x,y: LISTS['RT1']['TRIG']['divphi'][5](x,y) -1*LISTS['RT1']['TRIG']['divphi'][6](x,y) +1*LISTS['RT1']['TRIG']['divphi'][7](x,y)        
+        LISTS['RT1']['TRIG']['divphi'][0] = lambda x,y: 1 +1*LISTS['RT1']['TRIG']['divphi'][6](x,y) +2*LISTS['RT1']['TRIG']['divphi'][7](x,y)
+        LISTS['RT1']['TRIG']['divphi'][1] = lambda x,y: 1 +2*LISTS['RT1']['TRIG']['divphi'][6](x,y) +1*LISTS['RT1']['TRIG']['divphi'][7](x,y)
+        LISTS['RT1']['TRIG']['divphi'][2] = lambda x,y: 1 +1*LISTS['RT1']['TRIG']['divphi'][6](x,y) -1*LISTS['RT1']['TRIG']['divphi'][7](x,y)
+        LISTS['RT1']['TRIG']['divphi'][3] = lambda x,y: 1 -1*LISTS['RT1']['TRIG']['divphi'][6](x,y) -2*LISTS['RT1']['TRIG']['divphi'][7](x,y)
+        LISTS['RT1']['TRIG']['divphi'][4] = lambda x,y: 1 -2*LISTS['RT1']['TRIG']['divphi'][6](x,y) -1*LISTS['RT1']['TRIG']['divphi'][7](x,y)
+        LISTS['RT1']['TRIG']['divphi'][5] = lambda x,y: 1 -1*LISTS['RT1']['TRIG']['divphi'][6](x,y) +1*LISTS['RT1']['TRIG']['divphi'][7](x,y)        
         
         LISTS['RT1']['TRIG']['LIST_DOF'] = np.c_[2*MESH.TriangleToEdges[:,0]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
                                                  2*MESH.TriangleToEdges[:,0]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),

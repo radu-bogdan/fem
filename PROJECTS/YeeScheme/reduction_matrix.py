@@ -10,17 +10,13 @@ def makeProjectionMatrices(MESH, indices = np.empty(0, dtype=np.int32)):
     
     im1 = vek; im2 = vek
     
-    im1 = np.delete(im1,indices + np.r_[0:indices.size])
-    im2 = np.delete(im2,indices + np.r_[0:indices.size]-1)
-    
-    # im1 = np.delete(im1,indices)
-    # im2 = np.delete(im2,indices)
-    
-    # im1[indices + np.r_[0:indices.size]] = False
-    # im2[indices + np.r_[0:indices.size]-1] = False
+    im1 = np.delete(im1,indices + np.r_[0:indices.size]+1)
+    im2 = np.delete(im2,indices + np.r_[0:indices.size])
     
     im = np.c_[im1,im2]    
     jm = np.r_[0:2*noDOF]
+    
+    # print(im)
     
     vm = np.ones((2,noDOF))
     vm[:,indices] = 1
