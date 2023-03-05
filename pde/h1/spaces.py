@@ -39,6 +39,40 @@ def spaceInfo(MESH,space):
     
     
     ###########################################################################
+    if space == 'P1+':
+        
+        LISTS['P1+'] = {}
+        LISTS['P1+']['TRIG'] = {}
+        
+        LISTS['P1+']['TRIG']['sizeM'] = MESH.np + MESH.nt
+        LISTS['P1+']['TRIG']['qp_we_M'] = quadrature.dunavant(order = 4)
+        LISTS['P1+']['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = '2l')
+        LISTS['P1+']['TRIG']['qp_we_K'] = quadrature.dunavant(order = 2)
+        
+        LISTS['P1+']['TRIG']['phi'] = {}
+        LISTS['P1+']['TRIG']['phi'][3] = lambda x,y: x*y*(1-x-y)
+        LISTS['P1+']['TRIG']['phi'][0] = lambda x,y: 1-x-y-9*LISTS['P1+']['TRIG']['phi'][3](x,y)
+        LISTS['P1+']['TRIG']['phi'][1] = lambda x,y: x-9*LISTS['P1+']['TRIG']['phi'][3](x,y)
+        LISTS['P1+']['TRIG']['phi'][2] = lambda x,y: y-9*LISTS['P1+']['TRIG']['phi'][3](x,y)
+        
+        LISTS['P1+']['TRIG']['dphi'] = {}
+        LISTS['P1+']['TRIG']['dphi'][3] = lambda x,y: np.r_[ -y*(2*x+y-1), -x*(x+2*y-1)]
+        LISTS['P1+']['TRIG']['dphi'][0] = lambda x,y: np.r_[-1,-1]-9*LISTS['P1+']['TRIG']['dphi'][3]
+        LISTS['P1+']['TRIG']['dphi'][1] = lambda x,y: np.r_[ 1, 0]-9*LISTS['P1+']['TRIG']['dphi'][3]
+        LISTS['P1+']['TRIG']['dphi'][2] = lambda x,y: np.r_[ 0, 1]-9*LISTS['P1+']['TRIG']['dphi'][3]
+        
+        LISTS['P1+']['B'] = {}
+        LISTS['P1+']['B']['phi'] = {}
+        LISTS['P1+']['B']['phi'][0] = lambda x: 1-x
+        LISTS['P1+']['B']['phi'][1] = lambda x: x
+        LISTS['P1+']['B']['qp_we_B'] = quadrature.one_d(order = 2)
+        
+        LISTS['P1+']['TRIG']['LIST_DOF'] = np.c_[MESH.t[:,0:3],MESH.np:MESH.nt+MESH.np].astype(int)
+        LISTS['P1+']['B']['LIST_DOF'] = MESH.e
+    ###########################################################################
+    
+    
+    ###########################################################################
     if space == 'P2':
         
         LISTS['P2'] = {}

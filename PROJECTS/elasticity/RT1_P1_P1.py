@@ -69,45 +69,48 @@ error_s1 = np.zeros(iterations);
 error_s2 = np.zeros(iterations);
 
 lump = '2l'
-lump2 = 1
+lump2 = '2l'
 
 for k in range(iterations):
-    qMhx,qMhy = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = lump)
-    qMx,qMy = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = 4)
-    qK = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'K', order = 2)
-        
-    qD4 = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = lump2)
+    phix_RT1_1, phiy_RT1_1 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = 1)
+    phix_RT1_2, phiy_RT1_2 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = 2)
+    phix_RT1_lump,  phiy_RT1_lump = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = lump)
+    phix_RT1_lump2, phiy_RT1_lump2 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = lump2)
+    divphi_RT1 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'K', order = 2)
     
-    # qD4 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 4)
-    qD2 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
-    qD2l = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = lump2)
+    phi_H1_lump2 = pde.h1.assemble(MESH, space = 'P1+', matrix = 'M', order = lump2)
+    
+    phi_L2 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
+    phix_NED1, phiy_NED1 = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 2)
+    phix_NED1_1, phiy_NED1_1 = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 1)
+    
     
     divsigma1_eval = pde.int.evaluate(MESH, order = 2, coeff = divsigma1)
     divsigma2_eval = pde.int.evaluate(MESH, order = 2, coeff = divsigma2)
     
-    D2l = pde.int.assemble(MESH, order = lump)
+    D2_lump = pde.int.assemble(MESH, order = lump)
+    D2_lump2 = pde.int.assemble(MESH, order = lump2)
     D4 = pde.int.assemble(MESH, order = 4)
     D2 = pde.int.assemble(MESH, order = 2)
     D1 = pde.int.assemble(MESH, order = 1)
     D0 = pde.int.assemble(MESH, order = 0)
     
-    rhs1 = qD2@D2@divsigma1_eval.diagonal()
-    rhs2 = qD2@D2@divsigma2_eval.diagonal()
+    rhs1 = phix_NED1@D2@divsigma1_eval.diagonal()
+    rhs2 = phiy_NED1@D2@divsigma2_eval.diagonal()
     
-    Mh_x = qMhx@D2l@qMhx.T
-    Mh_y = qMhy@D2l@qMhy.T
+    Mh_x = phix_RT1_lump@D2_lump@phix_RT1_lump.T
+    Mh_y = phiy_RT1_lump@D2_lump@phiy_RT1_lump.T
     
     Mh = Mh_x + Mh_y
-    C = qK@D2@qD2.T
-    D = qD2@D2@qD2.T
+    C = divphi_RT1@D2@phi_L2.T
+    C1_new = divphi_RT1@D2@phix_NED1.T
+    C2_new = divphi_RT1@D2@phiy_NED1.T
+    D = phi_L2@D2@phi_L2.T
     
-    D_H1 = qD4@D2l@qD4.T
+    D_H1 = phi_H1_lump2@D2_lump2@phi_H1_lump2.T
     
-    # AS1 = qMhy@D2l@qD2l.T
-    # AS2 = qMhx@D2l@qD2l.T
-    
-    AS1 = qMhy@D2l@qD4.T
-    AS2 = qMhx@D2l@qD4.T
+    AS1 = phiy_RT1_lump2@D2_lump2@phi_H1_lump2.T
+    AS2 = phix_RT1_lump2@D2_lump2@phi_H1_lump2.T
     
     from scipy.sparse import hstack as sph
     from scipy.sparse import vstack as spv
@@ -121,16 +124,15 @@ for k in range(iterations):
     
     M = 1/(2*mu)*(M-lam/(2*mu+2*lam)*T)
     AS = spv([AS1,-AS2])
-    C = spv([sph([C,0*C]),
-             sph([0*C,C])])
     
+    C = spv([C1_new,
+             C2_new])
     
     ndofs = 3*MESH.nt
-    ndofs2 = MESH.np
     
-    Zc = csc_matrix((2*ndofs,2*ndofs))
-    Zs = csc_matrix((ndofs2,ndofs2))
-    Zt = csc_matrix((2*ndofs,ndofs2))
+    Zc = csc_matrix((C.shape[1],C.shape[1]))
+    Zt = csc_matrix((C.shape[1],AS.shape[1]))
+    Zs = csc_matrix((AS.shape[1],AS.shape[1]))
     
     
     SYS = spv([sph([M,C,AS]),
@@ -138,8 +140,7 @@ for k in range(iterations):
                sph([AS.T,Zt.T,Zs])]).tocsc()
     
     rhs = np.r_[np.zeros(M.shape[1]),
-                rhs1,
-                rhs2,
+                rhs1+rhs2,
                 np.zeros(AS.shape[1])]
     
     from scipy.sparse.linalg import spsolve
@@ -149,31 +150,41 @@ for k in range(iterations):
     uh = res[M.shape[1]:M.shape[1]+C.shape[1]]
     ph = res[M.shape[1]+C.shape[1]:]
     
-    uh1 = uh[0:ndofs]
-    uh2 = uh[ndofs:]
-    
     sh1 = sh[0:2*MESH.NoEdges+2*MESH.nt]
     sh2 = sh[2*MESH.NoEdges+2*MESH.nt:]
     
-    # ph_P1d = pde.int.evaluate(MESH, order = 1, coeff = p_test).diagonal()
-    ph_P1d = p_test(MESH.p[:,0],MESH.p[:,1])
+    sh11 = phix_RT1_2.T@sh1
+    sh12 = phiy_RT1_2.T@sh1
+    sh21 = phix_RT1_2.T@sh2
+    sh22 = phiy_RT1_2.T@sh2
+    
+    ph_P1d = np.r_[p_test(MESH.p[:,0],MESH.p[:,1]),27*p_test(MESH.mp[:,0],MESH.mp[:,1])]
+    # ph_P1d = np.r_[p_test(MESH.p[:,0],MESH.p[:,1])]
+    
     uh1_P1d = pde.int.evaluate(MESH, order = 1, coeff = u1_test).diagonal()
     uh2_P1d = pde.int.evaluate(MESH, order = 1, coeff = u2_test).diagonal()
     
-    # sh1_BDM1 = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[sigma11(x,y),sigma12(x,y)])
-    # sh2_BDM1 = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[sigma21(x,y),sigma22(x,y)])
+    uh1 = phix_NED1_1.T@uh
+    uh2 = phiy_NED1_1.T@uh
+    
+    sh11_P1d = pde.int.evaluate(MESH, order = 2, coeff = sigma11).diagonal()
+    sh12_P1d = pde.int.evaluate(MESH, order = 2, coeff = sigma12).diagonal()
+    sh21_P1d = pde.int.evaluate(MESH, order = 2, coeff = sigma21).diagonal()
+    sh22_P1d = pde.int.evaluate(MESH, order = 2, coeff = sigma22).diagonal()
     
     error_p[k] = np.sqrt((ph-ph_P1d)@D_H1@(ph-ph_P1d))
+    
     error_u1[k] = np.sqrt((uh1-uh1_P1d)@D1@(uh1-uh1_P1d))
     error_u2[k] = np.sqrt((uh2-uh2_P1d)@D1@(uh2-uh2_P1d))
     
     
+    error_s1[k] = np.sqrt((sh11-sh11_P1d)@D2@(sh11-sh11_P1d)) + np.sqrt((sh12-sh12_P1d)@D2@(sh12-sh12_P1d))
+    error_s2[k] = np.sqrt((sh21-sh21_P1d)@D2@(sh21-sh21_P1d)) + np.sqrt((sh22-sh22_P1d)@D2@(sh22-sh22_P1d))
     
-    # error_s1[k] = np.sqrt((sh1-sh1_BDM1)@Mh@(sh1-sh1_BDM1))
-    # error_s2[k] = np.sqrt((sh2-sh2_BDM1)@Mh@(sh2-sh2_BDM1))
+    from scipy.linalg import interpolative
+    from scipy.sparse.linalg import LinearOperator
     
-    # from scipy.linalg import interpolative
-    # from scipy.sparse.linalg import LinearOperator
+    
     # linSYS = LinearOperator(SYS.shape,matvec = lambda x: SYS@x, rmatvec = lambda x : SYS@x)
     # print(interpolative.estimate_rank(linSYS,eps = 1e-2),SYS.shape)
     
