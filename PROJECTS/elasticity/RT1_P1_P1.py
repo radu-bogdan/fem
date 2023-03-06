@@ -82,11 +82,12 @@ for k in range(iterations):
     
     phi_L2 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
     phix_NED1, phiy_NED1 = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 2)
+    phix_NED1_4, phiy_NED1_4 = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 4)
     phix_NED1_1, phiy_NED1_1 = pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'M', order = 1)
     
     
-    divsigma1_eval = pde.int.evaluate(MESH, order = 2, coeff = divsigma1)
-    divsigma2_eval = pde.int.evaluate(MESH, order = 2, coeff = divsigma2)
+    divsigma1_eval = pde.int.evaluate(MESH, order = 4, coeff = divsigma1)
+    divsigma2_eval = pde.int.evaluate(MESH, order = 4, coeff = divsigma2)
     
     D2_lump = pde.int.assemble(MESH, order = lump)
     D2_lump2 = pde.int.assemble(MESH, order = lump2)
@@ -95,8 +96,8 @@ for k in range(iterations):
     D1 = pde.int.assemble(MESH, order = 1)
     D0 = pde.int.assemble(MESH, order = 0)
     
-    rhs1 = phix_NED1@D2@divsigma1_eval.diagonal()
-    rhs2 = phiy_NED1@D2@divsigma2_eval.diagonal()
+    rhs1 = phix_NED1_4@D4@divsigma1_eval.diagonal()
+    rhs2 = phiy_NED1_4@D4@divsigma2_eval.diagonal()
     
     Mh_x = phix_RT1_lump@D2_lump@phix_RT1_lump.T
     Mh_y = phiy_RT1_lump@D2_lump@phiy_RT1_lump.T
