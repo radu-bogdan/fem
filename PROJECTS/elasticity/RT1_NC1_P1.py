@@ -6,8 +6,6 @@ import gmsh
 import pde
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
-import time
-
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
@@ -64,51 +62,53 @@ MESH = pde.mesh(p,e,t,q)
 
 ################################################################################
 
-error_p = np.zeros(iterations);
-error_u1 = np.zeros(iterations);
-error_u2 = np.zeros(iterations);
-error_s1 = np.zeros(iterations);
-error_s2 = np.zeros(iterations);
+error_p = np.zeros(iterations)
+error_u1 = np.zeros(iterations)
+error_u2 = np.zeros(iterations)
+error_s1 = np.zeros(iterations)
+error_s2 = np.zeros(iterations)
 
-lump = '2l'
-lump2 = '2l'
+lump = 4
+lump2 = 4
 
 for k in range(iterations):
     phix_RT1_1, phiy_RT1_1 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = 1)
     phix_RT1_2, phiy_RT1_2 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = 2)
     phix_RT1_lump,  phiy_RT1_lump  = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = lump)
     phix_RT1_lump2, phiy_RT1_lump2 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'M', order = lump2)
+    
     divphi_RT1 = pde.hdiv.assemble(MESH, space = 'RT1', matrix = 'K', order = 2)
     
     phi_H1_lump2 = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = lump2)
     phi_H1_2 = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
+    
     phi_L2 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
     
-    phi_P1d = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
-    phi_P1d_4 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 4)
-    phi_P1d_1 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 1)
-    
+    phix_NED1,   phiy_NED1   = pde.hcurl.assemble(MESH, space = 'N1', matrix = 'M', order = 2)
+    phix_NED1_1, phiy_NED1_1 = pde.hcurl.assemble(MESH, space = 'N1', matrix = 'M', order = 1)
+    phix_NED1_4, phiy_NED1_4 = pde.hcurl.assemble(MESH, space = 'N1', matrix = 'M', order = 4)
     
     divsigma1_eval = pde.int.evaluate(MESH, order = 4, coeff = divsigma1)
     divsigma2_eval = pde.int.evaluate(MESH, order = 4, coeff = divsigma2)
     
-    D2_lump = pde.int.assemble(MESH, order = lump)
+    D2_lump  = pde.int.assemble(MESH, order = lump)
     D2_lump2 = pde.int.assemble(MESH, order = lump2)
+    
     D4 = pde.int.assemble(MESH, order = 4)
     D2 = pde.int.assemble(MESH, order = 2)
     D1 = pde.int.assemble(MESH, order = 1)
     D0 = pde.int.assemble(MESH, order = 0)
     
-    rhs1 = phi_P1d_4@D4@divsigma1_eval.diagonal()
-    rhs2 = phi_P1d_4@D4@divsigma2_eval.diagonal()
+    rhs1 = phix_NED1_4@D4@divsigma1_eval.diagonal()
+    rhs2 = phiy_NED1_4@D4@divsigma2_eval.diagonal()
     
     Mh_x = phix_RT1_lump@D2_lump@phix_RT1_lump.T
     Mh_y = phiy_RT1_lump@D2_lump@phiy_RT1_lump.T
     
     Mh = Mh_x + Mh_y
-    C = divphi_RT1@D2@phi_L2.T
-    C1_new = divphi_RT1@D2@phi_P1d.T
-    C2_new = divphi_RT1@D2@phi_P1d.T
+    
+    C1_new = divphi_RT1@D2@phix_NED1.T
+    C2_new = divphi_RT1@D2@phiy_NED1.T
     D = phi_L2@D2@phi_L2.T
     
     D_H1 = phi_H1_lump2@D2_lump2@phi_H1_lump2.T
@@ -116,9 +116,7 @@ for k in range(iterations):
     AS1 = phiy_RT1_lump2@D2_lump2@phi_H1_lump2.T
     AS2 = phix_RT1_lump2@D2_lump2@phi_H1_lump2.T
     
-    from scipy.sparse import hstack as sph
-    from scipy.sparse import vstack as spv
-    from scipy.sparse import csc_matrix
+    from scipy.sparse import csc_matrix, hstack as sph, vstack as spv
     
     M = spv([sph([Mh,0*Mh]),
              sph([0*Mh,Mh])])
@@ -129,8 +127,10 @@ for k in range(iterations):
     M = 1/(2*mu)*(M-lam/(2*mu+2*lam)*T)
     AS = spv([AS1,-AS2])
     
-    C = spv([sph([C1_new,0*C1_new]),
-             sph([0*C2_new,C2_new])])
+    C = spv([C1_new,
+             C2_new])
+    
+    ndofs = 3*MESH.nt
     
     Zc = csc_matrix((C.shape[1],C.shape[1]))
     Zt = csc_matrix((C.shape[1],AS.shape[1]))
@@ -142,14 +142,13 @@ for k in range(iterations):
                sph([AS.T,Zt.T,Zs])]).tocsc()
     
     rhs = np.r_[np.zeros(M.shape[1]),
-                rhs1,
-                rhs2,
+                rhs1+rhs2,
                 np.zeros(AS.shape[1])]
     
     from scipy.sparse.linalg import spsolve
     res = spsolve(SYS, rhs)
     
-    sh = res[:M.shape[1]]
+    sh = res[0:M.shape[1]]
     uh = res[M.shape[1]:M.shape[1]+C.shape[1]]
     ph = res[M.shape[1]+C.shape[1]:]
     
@@ -161,17 +160,17 @@ for k in range(iterations):
     sh21 = phix_RT1_2.T@sh2
     sh22 = phiy_RT1_2.T@sh2
     
-    # ph_P1d = np.r_[p_test(MESH.p[:,0],MESH.p[:,1]),27*p_test(MESH.mp[:,0],MESH.mp[:,1])]
-    # ph_P1d = np.r_[p_test(MESH.p[:,0],MESH.p[:,1])]
-    
     ph1_o2 = pde.int.evaluate(MESH, order = 2, coeff = p_test).diagonal()
     ph1 = phi_H1_2.T@ph
+    
+    ph_P1d = np.r_[p_test(MESH.p[:,0],MESH.p[:,1]),27*p_test(MESH.mp[:,0],MESH.mp[:,1])]
+    # ph_P1d = np.r_[p_test(MESH.p[:,0],MESH.p[:,1])]
     
     uh1_P1d = pde.int.evaluate(MESH, order = 1, coeff = u1_test).diagonal()
     uh2_P1d = pde.int.evaluate(MESH, order = 1, coeff = u2_test).diagonal()
     
-    uh1 = uh[0:3*MESH.nt]
-    uh2 = uh[3*MESH.nt:]
+    uh1 = phix_NED1_1.T@uh
+    uh2 = phiy_NED1_1.T@uh
     
     sh11_P1d = pde.int.evaluate(MESH, order = 2, coeff = sigma11).diagonal()
     sh12_P1d = pde.int.evaluate(MESH, order = 2, coeff = sigma12).diagonal()
@@ -192,17 +191,10 @@ for k in range(iterations):
     # linSYS = LinearOperator(SYS.shape,matvec = lambda x: SYS@x, rmatvec = lambda x : SYS@x)
     # print(interpolative.estimate_rank(linSYS,eps = 1e-2),SYS.shape)
     
-    
-    # from scipy.sparse.linalg import onenormest, splu, aslinearoperator, LinearOperator
-    
-    # luSYS = splu(SYS)
-    # A = LinearOperator(luSYS.shape, matvec = lambda x : luSYS.solve(x), rmatvec = lambda x : luSYS.solve(x))
-    # condestSYS = onenormest(A)
-    
-    print("{:.2f}".format(pde.tools.condest(SYS)),SYS.shape)
-    
     # import numpy.linalg
     # print(numpy.linalg.matrix_rank(SYS.todense()),SYS.shape,numpy.linalg.cond(SYS.todense()))
+    
+    print("{:.2f}".format(pde.tools.condest(SYS)),SYS.shape)
     
     MESH.refinemesh()
     

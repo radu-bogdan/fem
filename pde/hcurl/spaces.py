@@ -180,19 +180,19 @@ def spaceInfo(MESH,space):
         LISTS['N1']['TRIG']['curlphi'][6] = lambda x,y: 3*y-1
         LISTS['N1']['TRIG']['curlphi'][7] = lambda x,y: 3*x-1
 
-        LISTS['N1']['TRIG']['phi'][0] = lambda x,y: LISTS['N1']['TRIG']['phi'][0](x,y) +1*LISTS['N1']['TRIG']['phi'][6](x,y) +2*LISTS['N1']['TRIG']['phi'][7](x,y)
-        LISTS['N1']['TRIG']['phi'][1] = lambda x,y: LISTS['N1']['TRIG']['phi'][1](x,y) +2*LISTS['N1']['TRIG']['phi'][6](x,y) +1*LISTS['N1']['TRIG']['phi'][7](x,y)
-        LISTS['N1']['TRIG']['phi'][2] = lambda x,y: LISTS['N1']['TRIG']['phi'][2](x,y) +1*LISTS['N1']['TRIG']['phi'][6](x,y) -1*LISTS['N1']['TRIG']['phi'][7](x,y)
-        LISTS['N1']['TRIG']['phi'][3] = lambda x,y: LISTS['N1']['TRIG']['phi'][3](x,y) -1*LISTS['N1']['TRIG']['phi'][6](x,y) -2*LISTS['N1']['TRIG']['phi'][7](x,y)
-        LISTS['N1']['TRIG']['phi'][4] = lambda x,y: LISTS['N1']['TRIG']['phi'][4](x,y) -2*LISTS['N1']['TRIG']['phi'][6](x,y) -1*LISTS['N1']['TRIG']['phi'][7](x,y)
-        LISTS['N1']['TRIG']['phi'][5] = lambda x,y: LISTS['N1']['TRIG']['phi'][5](x,y) -1*LISTS['N1']['TRIG']['phi'][6](x,y) +1*LISTS['N1']['TRIG']['phi'][7](x,y)
+        LISTS['N1']['TRIG']['phi'][0] = lambda x,y: np.r_[0*x,x] +1*LISTS['N1']['TRIG']['phi'][6](x,y) +2*LISTS['N1']['TRIG']['phi'][7](x,y)
+        LISTS['N1']['TRIG']['phi'][1] = lambda x,y: np.r_[-y,0*x] +2*LISTS['N1']['TRIG']['phi'][6](x,y) +1*LISTS['N1']['TRIG']['phi'][7](x,y)
+        LISTS['N1']['TRIG']['phi'][2] = lambda x,y: np.r_[-y,-y] +1*LISTS['N1']['TRIG']['phi'][6](x,y) -1*LISTS['N1']['TRIG']['phi'][7](x,y)
+        LISTS['N1']['TRIG']['phi'][3] = lambda x,y: np.r_[0*x,x+y-1] -1*LISTS['N1']['TRIG']['phi'][6](x,y) -2*LISTS['N1']['TRIG']['phi'][7](x,y)
+        LISTS['N1']['TRIG']['phi'][4] = lambda x,y: np.r_[-x-y+1,0*y] -2*LISTS['N1']['TRIG']['phi'][6](x,y) -1*LISTS['N1']['TRIG']['phi'][7](x,y)
+        LISTS['N1']['TRIG']['phi'][5] = lambda x,y: np.r_[x,x] -1*LISTS['N1']['TRIG']['phi'][6](x,y) +1*LISTS['N1']['TRIG']['phi'][7](x,y)
 
-        LISTS['N1']['TRIG']['curlphi'][0] = lambda x,y: LISTS['N1']['TRIG']['curlphi'][0](x,y) +1*LISTS['N1']['TRIG']['curlphi'][6](x,y) +2*LISTS['N1']['TRIG']['curlphi'][7](x,y)
-        LISTS['N1']['TRIG']['curlphi'][1] = lambda x,y: LISTS['N1']['TRIG']['curlphi'][1](x,y) +2*LISTS['N1']['TRIG']['curlphi'][6](x,y) +1*LISTS['N1']['TRIG']['curlphi'][7](x,y)
-        LISTS['N1']['TRIG']['curlphi'][2] = lambda x,y: LISTS['N1']['TRIG']['curlphi'][2](x,y) +1*LISTS['N1']['TRIG']['curlphi'][6](x,y) -1*LISTS['N1']['TRIG']['curlphi'][7](x,y)
-        LISTS['N1']['TRIG']['curlphi'][3] = lambda x,y: LISTS['N1']['TRIG']['curlphi'][3](x,y) -1*LISTS['N1']['TRIG']['curlphi'][6](x,y) -2*LISTS['N1']['TRIG']['curlphi'][7](x,y)
-        LISTS['N1']['TRIG']['curlphi'][4] = lambda x,y: LISTS['N1']['TRIG']['curlphi'][4](x,y) -2*LISTS['N1']['TRIG']['curlphi'][6](x,y) -1*LISTS['N1']['TRIG']['curlphi'][7](x,y)
-        LISTS['N1']['TRIG']['curlphi'][5] = lambda x,y: LISTS['N1']['TRIG']['curlphi'][5](x,y) -1*LISTS['N1']['TRIG']['curlphi'][6](x,y) +1*LISTS['N1']['TRIG']['curlphi'][7](x,y)        
+        LISTS['N1']['TRIG']['curlphi'][0] = lambda x,y: 1 +1*LISTS['N1']['TRIG']['curlphi'][6](x,y) +2*LISTS['N1']['TRIG']['curlphi'][7](x,y)
+        LISTS['N1']['TRIG']['curlphi'][1] = lambda x,y: 1 +2*LISTS['N1']['TRIG']['curlphi'][6](x,y) +1*LISTS['N1']['TRIG']['curlphi'][7](x,y)
+        LISTS['N1']['TRIG']['curlphi'][2] = lambda x,y: 1 +1*LISTS['N1']['TRIG']['curlphi'][6](x,y) -1*LISTS['N1']['TRIG']['curlphi'][7](x,y)
+        LISTS['N1']['TRIG']['curlphi'][3] = lambda x,y: 1 -1*LISTS['N1']['TRIG']['curlphi'][6](x,y) -2*LISTS['N1']['TRIG']['curlphi'][7](x,y)
+        LISTS['N1']['TRIG']['curlphi'][4] = lambda x,y: 1 -2*LISTS['N1']['TRIG']['curlphi'][6](x,y) -1*LISTS['N1']['TRIG']['curlphi'][7](x,y)
+        LISTS['N1']['TRIG']['curlphi'][5] = lambda x,y: 1 -1*LISTS['N1']['TRIG']['curlphi'][6](x,y) +1*LISTS['N1']['TRIG']['curlphi'][7](x,y)        
         
         LISTS['N1']['TRIG']['LIST_DOF'] = np.c_[2*MESH.TriangleToEdges[:,0]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
                                                 2*MESH.TriangleToEdges[:,0]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),
