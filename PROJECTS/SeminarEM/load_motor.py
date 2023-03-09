@@ -9,4 +9,3 @@ regions_2d = motor_npz['regions_2d']
 regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']
 j3 = motor_npz['j3']
-

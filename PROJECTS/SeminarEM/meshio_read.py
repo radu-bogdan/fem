@@ -167,8 +167,8 @@ vek = np.zeros(MESH.nt)
 vek[trig_air_all] = 1
 vek[trig_magnet] = 2
 vek[trig_coil] = 3
-vek[trig_shaft] = 3.6
 vek[trig_stator_rotor] = 4
+vek[trig_shaft] = 3.6
 
 # fig = MESH.pdemesh()
 fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek, u_height=0)
