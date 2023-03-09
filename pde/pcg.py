@@ -9,7 +9,7 @@ Created on Fri Jan 13 11:33:29 2023
 import gmsh
 import numpy as npy
 from scipy import sparse as sp
-npy.set_printoptions(edgeitems=30, linewidth = 1000000)
+# npy.set_printoptions(edgeitems=30, linewidth = 1000000)
 
 def pcg(Afuns,f,tol=1e-5,maxit=100,pfuns=1):
     

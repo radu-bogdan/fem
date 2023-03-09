@@ -1,8 +1,8 @@
 
 import numpy as npy # npy becauswe np is number of points... dont judge me :)
-npy.set_printoptions(edgeitems=30, linewidth = 1000000)
-npy.set_printoptions(threshold = npy.inf)
-npy.set_printoptions(linewidth = npy.inf)
+npy.set_printoptions(edgeitems=10, linewidth = 1000000)
+# npy.set_printoptions(threshold = npy.inf)
+# npy.set_printoptions(linewidth = npy.inf)
 npy.set_printoptions(precision=2)
 
 # import pandas as pd
@@ -20,6 +20,12 @@ import numba as jit
 # import matplotlib.pyplot as plt
 # import plotly.express as px
 # import pandas as pd
+
+# from plotly_resampler import register_plotly_resampler
+
+# Call the register function once and all Figures/FigureWidgets will be wrapped
+# according to the register_plotly_resampler its `mode` argument
+# register_plotly_resampler(mode='auto')
 
 class mesh:
     # @profile
@@ -259,29 +265,41 @@ class mesh:
         
         p = self.p; t = self.t[:,0:3]
         
-        x = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0],p[t[:,0],0],npy.nan*p[t[:,0],0]].flatten().tolist()
-        y = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1],p[t[:,0],1],npy.nan*p[t[:,0],1]].flatten().tolist()
+        x = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0],p[t[:,0],0],npy.nan*p[t[:,0],0]].flatten()#.tolist()
+        y = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1],p[t[:,0],1],npy.nan*p[t[:,0],1]].flatten()#.tolist()
+                        
+        xx_trig = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0]]
+        yy_trig = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1]]
         
-        fig.add_trace(go.Scattergl(mode='lines', 
-                                    name='TrigTraces',
-                                    x=x, 
-                                    y=y, 
-                                    line=dict(color='blue', 
-                                                width=2)))
+        xxx_trig = npy.c_[xx_trig,xx_trig[:,0],npy.nan*xx_trig[:,0]]
+        yyy_trig = npy.c_[yy_trig,yy_trig[:,0],npy.nan*yy_trig[:,0]]
+        
+        # ind = npy.argsort(x)
+        # print(ind.shape,ind.dtype)
+        # print(ind.shape)
+        
+        fig.add_trace(go.Scatter(mode='lines', 
+                                   name='TrigTraces',
+                                   # x=x,
+                                   # y=y,
+                                   x=xxx_trig.flatten(),
+                                   y=yyy_trig.flatten(),
+                                   line=dict(color='blue', 
+                                             width=2)))
         if info == 1:
             fig.add_trace(go.Scattergl(mode='text+markers',
-                                    name='Triangles',
-                                    x = 1/3*(p[t[:,0],0]+p[t[:,1],0]+p[t[:,2],0]),
-                                    y = 1/3*(p[t[:,0],1]+p[t[:,1],1]+p[t[:,2],1]),
-                                    text = list(range(0, t.shape[0])),
-                                    marker = dict(
-                                        color = 'yellow',
-                                        size = 25,
-                                        line = dict(
-                                            color = 'black',
-                                            width = 1
-                                        )
-                                        ),
+                                       name='Triangles',
+                                       x = 1/3*(p[t[:,0],0]+p[t[:,1],0]+p[t[:,2],0]),
+                                       y = 1/3*(p[t[:,0],1]+p[t[:,1],1]+p[t[:,2],1]),
+                                       text = list(range(0, t.shape[0])),
+                                       marker = dict(
+                                           color = 'yellow',
+                                           size = 25,
+                                           line = dict(
+                                               color = 'black',
+                                               width = 1
+                                               )
+                                           ),
                                     textfont = dict(color = '#000000',size = 13), 
                                     fill = "none"))
         return fig
@@ -291,7 +309,7 @@ class mesh:
         p = self.p; q = self.q
         
         x = npy.c_[p[q[:,0],0],p[q[:,1],0],p[q[:,2],0],p[q[:,3],0],p[q[:,0],0],npy.nan*p[q[:,0],0]].flatten().tolist()
-        y = npy.c_[p[q[:,0],1],p[q[:,1],1],p[q[:,2],1],p[q[:,3],1],p[q[:,0],1],npy.nan*p[q[:,0],1]].flatten().tolist()
+        y = npy.c_[p[q[:,0],1],p[q[:,1],1],p[q[:,2],1],p[q[:,3],1],p[q[:,0],1],npy.nan*p[q[:,0],1]].flatten().tolist()                
         
         fig.add_trace(go.Scattergl(mode='lines', 
                                  name='QuadTraces',
@@ -320,7 +338,7 @@ class mesh:
     
     
     
-    def pdesurf_hybrid(self,TrigQuadDict,u):
+    def pdesurf_hybrid(self,TrigQuadDict,u,u_height=1):
         
         DATAT = TrigQuadDict.get('trig')
         DATAQ = TrigQuadDict.get('quad')
@@ -329,30 +347,38 @@ class mesh:
         fig = go.Figure()
         
         if self.t.shape[0]!=0:
-            fig = self.__pdesurf_trig(fig,DATAT,u)
+            fig = self.__pdesurf_trig(fig,DATAT,u,u_height)
         
         if self.q.shape[0]!=0:
-            fig = self.__pdesurf_quad(fig,DATAQ,u)
+            fig = self.__pdesurf_quad(fig,DATAQ,u,u_height)
         
         
-        camera = dict(eye = dict(x = 1e-10, y = -1e-5, z = 1e10))
+        camera = dict(eye = dict(x = 0, y = 0, z = 1))
         # camera = dict(eye = dict(x = -1e-10, y = -1e-10, z = 1e10))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
-        fig.update_layout(scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
-                                        xaxis = dict(showspikes = False),
-                                        yaxis = dict(showspikes = False),
-                                        zaxis = dict(showspikes = False)),
+        fig.update_layout(
+                          scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
+                                             xaxis = dict(showspikes = False, visible=False),
+                                             yaxis = dict(showspikes = False, visible=False),
+                                             zaxis = dict(showspikes = False, visible=False)),
                           scene_camera = camera,
+                          # hovermode = "x",
+                          # autosize = True,
+                          # dragmode = 'select',
+                          margin_l=0,
+                          margin_t=0,
+                          margin_r=0,
+                          margin_b=0,
                           legend = dict(yanchor = "top",
-                                        y = 1,
-                                        xanchor = "left",
-                                        x = -0.2,
-                                        bgcolor = "LightSteelBlue",
-                                        bordercolor = "Black",
-                                        borderwidth = 2),
+                                          y = 1,
+                                          xanchor = "left",
+                                          x = 0,
+                                          bgcolor = "LightSteelBlue",
+                                          bordercolor = "Black",
+                                          borderwidth = 2),
                           )
         
-        fig.layout.scene.camera.projection.type = "orthographic"
+        # fig.layout.scene.camera.projection.type = "orthographic"
         # fig.layout.paper_bgcolor = "#7f7f7f"
         # fig.layout.plot_bgcolor = "#c7c7c7"
         fig.update_traces(showlegend = True)
@@ -376,9 +402,9 @@ class mesh:
                     direction = "down",
                     # pad={"r": 10, "t": 10},
                     showactive = True,
-                    x = 0,
-                    xanchor = "right",
-                    y = 1.2,
+                    # x = 0,
+                    xanchor = "left",
+                    # y = 0,
                     yanchor = "top"),
                 dict(
                     buttons = list([
@@ -397,16 +423,20 @@ class mesh:
                     direction="down",
                     # pad={"r": 10, "t": 10},
                     showactive=True,
-                    x=0.2,
-                    xanchor="right",
-                    y=1.2,
-                    yanchor="top")])
+                    # x=0.2,
+                    xanchor="left",
+                    # y=0,
+                    yanchor="bottom")],
+                          margin_l=0,
+                          margin_t=0,
+                          margin_r=0,
+                          margin_b=0,)
         
         
         return fig
             
 
-    def __pdesurf_trig(self,fig,DATAT,u):
+    def __pdesurf_trig(self,fig,DATAT,u,u_height):
         nt = self.nt; p = self.p; t = self.t[:,0:3];
         
         xx_trig = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0]]
@@ -423,7 +453,7 @@ class mesh:
         ii, jj, kk = npy.r_[:3*nt].reshape((nt, 3)).T
         fig.add_trace(go.Mesh3d(
             name = 'Trig values',
-            x = xx_trig.flatten(), y = yy_trig.flatten(), z = zz.flatten(),
+            x = xx_trig.flatten(), y = yy_trig.flatten(), z = u_height*zz.flatten(),
             i = ii, j = jj, k = kk, intensity = zz.flatten(), 
             colorscale = 'Rainbow',
             cmin = npy.min(u),
@@ -452,7 +482,7 @@ class mesh:
                                     mode = 'lines',
                                     x = xxx_trig.flatten(),
                                     y = yyy_trig.flatten(),
-                                    z = zzz_trig.flatten(),
+                                    z = u_height*zzz_trig.flatten(),
                                     line = go.scatter3d.Line(color = 'black', 
                                                             width = 1.5),
                                     showlegend = False))
@@ -467,7 +497,7 @@ class mesh:
             fig.add_trace(go.Surface(name = 'Isolines',
                                       x = xr[0],
                                       y = yr[:,0],
-                                      z = Z, hidesurface = True,
+                                      z = u_height*Z, hidesurface = True,
                                       showlegend = None,
                                       showscale = False,
                                       contours_z = dict(show = True,
@@ -490,7 +520,7 @@ class mesh:
         
         
         
-    def __pdesurf_quad(self,fig,DATAT,u):
+    def __pdesurf_quad(self,fig,DATAT,u,u_height):
         nq = self.nq; p = self.p; q = self.q;
         
         xx_quad_1 = npy.c_[p[q[:,0],0],p[q[:,1],0],p[q[:,2],0]]
@@ -515,7 +545,7 @@ class mesh:
         ii, jj, kk = npy.r_[:3*nq+3*nq].reshape((nq+nq, 3)).T
         fig.add_trace(go.Mesh3d(
             name = 'Quad values',
-            x = xx_quad.flatten(), y = yy_quad.flatten(), z = zz_quad.flatten(),
+            x = xx_quad.flatten(), y = yy_quad.flatten(), z = u_height*zz_quad.flatten(),
             i = ii, j = jj, k = kk, intensity = zz_quad.flatten(), 
             colorscale = 'Rainbow',
             cmin = npy.min(u),
@@ -533,7 +563,7 @@ class mesh:
                                    mode = 'lines',
                                    x = xxx_quad.flatten(),
                                    y = yyy_quad.flatten(),
-                                   z = zzz_quad.flatten(),
+                                   z = u_height*zzz_quad.flatten(),
                                    line = go.scatter3d.Line(color = 'black', width = 1.5),
                                    showlegend = False))
         return fig

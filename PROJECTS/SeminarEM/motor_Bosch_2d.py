@@ -315,7 +315,7 @@ if (buildMotor==True):
     air_gap_rotor = sliding_inner - rotor_outer
 
     stator_iron = stator_outer - stator_inner
-
+    
     string_coils = ""
     domain_name_coil = {0: "coil1", 1: "coil2", 2: "coil3", 3:"coil4", 4:"coil5",
                         5:"coil6", 6:"coil7", 7:"coil8", 8: "coil9", 9: "coil10", 10: "coil11", 11:"coil12",
@@ -436,7 +436,9 @@ else:
     #outer radius stator
     r8 = 116*10**(-3)
 
-#input("Meshing complete. Press Enter to continue")
+# print(mesh.GetMaterials())
+
+# input("Meshing complete. Press Enter to continue")
 #mesh.Refine()
 
 from ngsolve.internal import *
@@ -531,11 +533,25 @@ phase_shift_I1 = 0.0
 phase_shift_I2 = 2/3*pi#4/3*pi
 phase_shift_I3 = 4/3*pi#2/3*pi
 
-I1 = CoefficientFunction (I0peak * sin(phi0 + phase_shift_I1))          #U+
-I2 = CoefficientFunction ( (-1)* I0peak * sin(phi0 + phase_shift_I2))   #V-
-I3 = CoefficientFunction (I0peak * sin(phi0 + phase_shift_I3))          #W+
+I1c = I0peak * sin(phi0 + phase_shift_I1)
+I2c = (-1)* I0peak * sin(phi0 + phase_shift_I2)
+I3c = I0peak * sin(phi0 + phase_shift_I3)
 
 areaOfOneCoil = (Integrate(1, mesh, order = 10, definedon=mesh.Materials('coil1'))) * 2
+
+print("UPlus" ,  I1c* 2.75 / areaOfOneCoil)
+print("VMinus", -I2c* 2.75 / areaOfOneCoil)
+
+print("WPlus",   I3c* 2.75 / areaOfOneCoil)
+print("UMinus", -I1c* 2.75 / areaOfOneCoil)
+
+print("VPlus",   I2c* 2.75 / areaOfOneCoil)
+print("WMinus", -I3c* 2.75 / areaOfOneCoil)
+
+I1 = CoefficientFunction (I1c)   #U+
+I2 = CoefficientFunction (I2c)   #V-
+I3 = CoefficientFunction (I3c)   #W+
+
 cfJi = mesh.MaterialCF({area_coils_UPlus: I1* 2.75 / areaOfOneCoil, area_coils_VMinus: I2* 2.75 / areaOfOneCoil, area_coils_WPlus: I3* 2.75 / areaOfOneCoil, area_coils_UMinus: (-1)*I1* 2.75 / areaOfOneCoil, area_coils_VPlus: (-1)*I2* 2.75 / areaOfOneCoil, area_coils_WMinus: (-1)*I3* 2.75 / areaOfOneCoil}, default = 0)
 Draw(cfJi, mesh, 'cfJi')
 
@@ -602,8 +618,8 @@ gfp = GridFunction(fesAdj)
 
 Q = CoefficientFunction((x*y/sqrt(x*x+y*y), (y*y-x*x)/(2*sqrt(x*x+y*y)),(y*y-x*x)/(2*sqrt(x*x+y*y)),-x*y/sqrt(x*x+y*y)), dims=(2,2))
 
-solveStateEquation()
-Jnew1 = Integrate(Cost_vol(gfu),mesh)
-Jold1 = Jnew1
-Draw(gfu,mesh,"gfu")
-print("Jnew1", Jnew1)
+# solveStateEquation()
+# Jnew1 = Integrate(Cost_vol(gfu),mesh)
+# Jold1 = Jnew1
+# Draw(gfu,mesh,"gfu")
+# print("Jnew1", Jnew1)

@@ -36,7 +36,7 @@
 import gmsh
 import numpy
 import numpy.matlib
-numpy.set_printoptions(edgeitems=30, linewidth = 1000000)
+# numpy.set_printoptions(edgeitems=30, linewidth = 1000000)
 
 def petq_from_gmsh(filename,hmax=1):
     
