@@ -63,7 +63,7 @@ def assembleB(MESH,order):
 
 
 
-def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):        
+def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
     
     if regions.size == 0:
         # regions = MESH.RegionsT

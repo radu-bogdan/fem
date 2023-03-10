@@ -135,7 +135,7 @@ u = 1+np.zeros(shape = Kxx.shape[0])
 #     print(np.linalg.norm(rhs))
 #     u = u_new
 
-u,flag=nonlinear_Algorithms.NewtonSparse(fem_objective,femg,femH,u)
+u,flag = nonlinear_Algorithms.NewtonSparse(fem_objective,femg,femH,u)
 
 
 # tm = time.time()

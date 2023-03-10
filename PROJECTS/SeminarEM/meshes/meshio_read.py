@@ -154,7 +154,6 @@ ind_air_all = np.flatnonzero(np.core.defchararray.find(regions_2d,'air')!=-1)
 ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(regions_2d,'iron')!=-1)
 ind_magnet = np.flatnonzero(np.core.defchararray.find(regions_2d,'magnet')!=-1)
 ind_coil = np.flatnonzero(np.core.defchararray.find(regions_2d,'coil')!=-1)
-
 ind_shaft = np.flatnonzero(np.core.defchararray.find(regions_2d,'shaft')!=-1)
 
 trig_air_all = np.where(np.isin(t[:,3],ind_air_all))

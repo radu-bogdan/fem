@@ -7,8 +7,7 @@ import pde
 import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
-import geometries
-
+from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 
@@ -16,7 +15,7 @@ pio.renderers.default = 'browser'
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('meshes/motor.npz', allow_pickle=True)
+motor_npz = np.load('meshes/motor.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -27,6 +26,11 @@ regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']
 j3 = motor_npz['j3']
 
+#KORREKTUR !
+# BR = 0
+m = m*(10**7/(4*np.pi))
+
+
 MESH = pde.mesh(p,e,t,q)
 ##########################################################################################
 
@@ -35,19 +39,44 @@ MESH = pde.mesh(p,e,t,q)
 ##########################################################################################
 # Extract indices
 ##########################################################################################
-ind_air_all = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'air')!=-1)
-ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'iron')!=-1)
-ind_magnet = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'magnet')!=-1)
-ind_coil = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'coil')!=-1)
 
-ind_shaft = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'shaft')!=-1)
+def getIndices(liste,name,exact = 0,return_index=False):
+    if exact == 0:
+        ind = np.flatnonzero(np.core.defchararray.find(list(liste),name)!=-1)
+    else:
+        ind = [i for i, x in enumerate(list(liste)) if x == name][0]
+    elem = np.where(np.isin(t[:,3],ind))[0]
+    mask = np.zeros(MESH.nt); mask[elem] = 1
+    if return_index:
+        return ind, elem, mask
+    else:
+        return elem,mask
 
-trig_air_all = np.where(np.isin(t[:,3],ind_air_all))[0]
-trig_stator_rotor_and_shaft = np.where(np.isin(t[:,3],ind_stator_rotor))[0]
-trig_magnet = np.where(np.isin(t[:,3],ind_magnet))[0]
-trig_coil = np.where(np.isin(t[:,3],ind_coil))[0]
-trig_shaft = np.where(np.isin(t[:,3],ind_shaft))[0]
+trig_air_all, mask_air_all = getIndices(regions_2d,'air')
+trig_stator_rotor_and_shaft, mask_stator_rotor_and_shaft = getIndices(regions_2d,'iron')
+trig_magnet, mask_magnet = getIndices(regions_2d,'magnet')
+trig_coil, mask_coil = getIndices(regions_2d,'coil')
+trig_shaft, mask_shaft = getIndices(regions_2d,'shaft')
+
 trig_stator_rotor = np.setdiff1d(trig_stator_rotor_and_shaft,trig_shaft)
+mask_stator_rotor = np.zeros(MESH.nt); mask_stator_rotor[trig_stator_rotor]=1
+
+mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
+mask_nonlinear = mask_stator_rotor
+
+
+ind_stator_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'stator_outer')!=-1)
+edges_stator_outer = np.where(np.isin(e[:,2],ind_stator_outer))[0]
+
+ind_trig_coils = {}
+for i in range(48):
+    ind_trig_coils[i] = getIndices(regions_2d, 'coil' + str(i+1), exact = 1, return_index=True)[0]
+
+ind_trig_magnets = {}
+for i in range(16):
+    ind_trig_magnets[i] = getIndices(regions_2d, 'magnet' + str(i+1), exact = 1, return_index=True)[0]
+
+
 ##########################################################################################
 
 
@@ -79,51 +108,58 @@ fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
 fyy_linear = lambda x,y : nu0(x,y)
 
-def f(ux,uy):
-    f_linear_eval  = f_linear(ux,uy); f_linear_eval[trig_stator_rotor] = 0  
-    f_iron_eval = f_iron(ux,uy); f_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return f_linear_eval + f_iron_eval
-
-def fx(ux,uy):
-    fx_linear_eval  = fx_linear(ux,uy); fx_linear_eval[trig_stator_rotor] = 0  
-    fx_iron_eval = fx_iron(ux,uy); fx_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return fx_linear_eval + fx_iron_eval
-
-def fy(ux,uy):
-    fy_linear_eval  = fy_linear(ux,uy); fy_linear_eval[trig_stator_rotor] = 0  
-    fy_iron_eval = fy_iron(ux,uy); fy_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return fy_linear_eval + fy_iron_eval
-
-def fxx(ux,uy):
-    fxx_linear_eval  = fxx_linear(ux,uy); fxx_linear_eval[trig_stator_rotor] = 0  
-    fxx_iron_eval = fxx_iron(ux,uy); fxx_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return fxx_linear_eval + fxx_iron_eval
-
-def fyy(ux,uy):
-    fyy_linear_eval  = fyy_linear(ux,uy); fyy_linear_eval[trig_stator_rotor] = 0  
-    fyy_iron_eval = fyy_iron(ux,uy); fyy_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return fyy_linear_eval + fyy_iron_eval
-
-def fxy(ux,uy):
-    fxy_linear_eval  = fxy_linear(ux,uy); fxy_linear_eval[trig_stator_rotor] = 0  
-    fxy_iron_eval = fxy_iron(ux,uy); fxy_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return fxy_linear_eval + fxy_iron_eval
-
-def fyx(ux,uy):
-    fyx_linear_eval  = fyx_linear(ux,uy); fyx_linear_eval[trig_stator_rotor] = 0  
-    fyx_iron_eval = fyx_iron(ux,uy); fyx_iron_eval[np.r_[trig_air_all,trig_magnet,trig_shaft]] = 0
-    return fyx_linear_eval + fyx_iron_eval
+f   = lambda ux,uy :   f_linear(ux,uy)*mask_linear +   f_iron(ux,uy)*mask_nonlinear
+fx  = lambda ux,uy :  fx_linear(ux,uy)*mask_linear +  fx_iron(ux,uy)*mask_nonlinear
+fy  = lambda ux,uy :  fy_linear(ux,uy)*mask_linear +  fy_iron(ux,uy)*mask_nonlinear
+fxx = lambda ux,uy : fxx_linear(ux,uy)*mask_linear + fxx_iron(ux,uy)*mask_nonlinear
+fxy = lambda ux,uy : fxy_linear(ux,uy)*mask_linear + fxy_iron(ux,uy)*mask_nonlinear
+fyx = lambda ux,uy : fyx_linear(ux,uy)*mask_linear + fyx_iron(ux,uy)*mask_nonlinear
+fyy = lambda ux,uy : fyy_linear(ux,uy)*mask_linear + fyy_iron(ux,uy)*mask_nonlinear
 ##########################################################################################
 
+
+
+
+##########################################################################################
+# Assembling stuff
+##########################################################################################
+phi_H1  = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
 dphix_H1,dphiy_H1 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
+dphix_H1_o2,dphiy_H1_o2 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 2)
+phi_H1b = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = phi_H1.shape, order = 2)
+phi_L2 = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 0)
+
 D0 = pde.int.assemble(MESH, order = 0)
 D1 = pde.int.assemble(MESH, order = 1)
+D2 = pde.int.assemble(MESH, order = 2)
+D2b = pde.int.assembleB(MESH, order = 2)
 
-Kxx = dphix_H1 @ D0 @ dphix_H1.T; Kyy = dphiy_H1 @ D0 @ dphiy_H1.T
-
-phi_L2 = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 0)
+Kxx = dphix_H1 @ D0 @ dphix_H1.T 
+Kyy = dphiy_H1 @ D0 @ dphiy_H1.T
 Cx = phi_L2 @ D0 @ dphix_H1.T
 Cy = phi_L2 @ D0 @ dphiy_H1.T
+
+D_stator_outer = pde.int.evaluateB(MESH, order = 2, edges = ind_stator_outer)
+B_stator_outer = phi_H1b@D2b@D_stator_outer @ phi_H1b.T
+
+penalty = 1e10
+
+J = 0
+for i in range(48):
+    J += pde.int.evaluate(MESH, order = 2, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+
+M0 = 0; M1 = 0
+for i in range(16):
+    M0 += pde.int.evaluate(MESH, order = 2, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+    M1 += pde.int.evaluate(MESH, order = 2, coeff = lambda x,y : m[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+
+aJ = phi_H1@D2@J
+aM = dphix_H1_o2@D2@(-M1) + dphiy_H1_o2@D2@M0
+
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), M1, u_height=0)
+# fig.show()
+
+# J = BM@D2@(CoF1.diagonal()+CoF2.diagonal())
 
 
 def update_left(ux,uy):
@@ -131,11 +167,18 @@ def update_left(ux,uy):
     fyy_grad_u_Kyy = dphiy_H1 @ D0 @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
     fxy_grad_u_Kxy = dphiy_H1 @ D0 @ sps.diags(fxy(ux,uy))@ dphix_H1.T
     fyx_grad_u_Kyx = dphix_H1 @ D0 @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
-
+    
+    return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
 
 
 def update_right(u,ux,uy):
     
-    return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_walls@u + penalty*B_g
+    return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u
 
 
+K = Kxx + Kyy + penalty*B_stator_outer
+sol = chol(K).solve_A(aJ+aM)
+
+
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), sol, u_height=0)
+fig.show()

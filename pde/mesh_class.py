@@ -488,12 +488,13 @@ class mesh:
                                     showlegend = False))
         
         
-        if DATAT == 'P1':
+        if DATAT == 'P1/n':
             x = p[:,0]; y = p[:,1]; z = u;
             xr = npy.linspace(x.min(), x.max(), 200); yr = npy.linspace(y.min(), y.max(), 100)
             xr, yr = npy.meshgrid(xr, yr)
             Z = griddata((x, y), z, (xr, yr) , method='cubic')
-
+            
+            print(xr,yr,z)
             fig.add_trace(go.Surface(name = 'Isolines',
                                       x = xr[0],
                                       y = yr[:,0],
@@ -503,7 +504,7 @@ class mesh:
                                       contours_z = dict(show = True,
                                                         start = Z.min(),
                                                         end = Z.max(),
-                                                        size = (Z.max()-Z.min())/30,
+                                                        size = int((Z.max()-Z.min())/30),
                                                         width = 1,
                                                         # usecolormap = True,
                                                         # project_z = True,
