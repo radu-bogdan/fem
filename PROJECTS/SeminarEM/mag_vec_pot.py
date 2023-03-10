@@ -167,7 +167,6 @@ def update_left(ux,uy):
     fyy_grad_u_Kyy = dphiy_H1 @ D0 @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
     fxy_grad_u_Kxy = dphiy_H1 @ D0 @ sps.diags(fxy(ux,uy))@ dphix_H1.T
     fyx_grad_u_Kyx = dphix_H1 @ D0 @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
-    
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
 
 
