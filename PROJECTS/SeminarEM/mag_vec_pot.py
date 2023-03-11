@@ -103,10 +103,10 @@ nu0 = 10**7/(4*np.pi)
 f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
 fx_linear = lambda x,y : nu0*x
 fy_linear = lambda x,y : nu0*y
-fxx_linear = lambda x,y : nu0(x,y)
+fxx_linear = lambda x,y : nu0
 fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
-fyy_linear = lambda x,y : nu0(x,y)
+fyy_linear = lambda x,y : nu0
 
 f   = lambda ux,uy :   f_linear(ux,uy)*mask_linear +   f_iron(ux,uy)*mask_nonlinear
 fx  = lambda ux,uy :  fx_linear(ux,uy)*mask_linear +  fx_iron(ux,uy)*mask_nonlinear
@@ -154,7 +154,9 @@ for i in range(16):
     M1 += pde.int.evaluate(MESH, order = 2, coeff = lambda x,y : m[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
 
 aJ = phi_H1@D2@J
-aM = dphix_H1_o2@D2@(-M1) + dphiy_H1_o2@D2@M0
+
+aM = dphix_H1_o2@D2@(-M1) +\
+     dphiy_H1_o2@D2@(+M0)
 
 # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), M1, u_height=0)
 # fig.show()
@@ -169,15 +171,29 @@ def update_left(ux,uy):
     fyx_grad_u_Kyx = dphix_H1 @ D0 @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
 
+def update_right(u,ux,uy):    
+    return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
 
-def update_right(u,ux,uy):
+
+
+
+
+u = 1+np.zeros(shape = Kxx.shape[0])
+
+for i in range(100):
+    ux = Cx@u
+    uy = Cy@u
     
-    return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u
+    Au = update_left(ux,uy)
+    rhs = update_right(u,ux,uy)
+    
+    w = chol(Au).solve_A(rhs)
+    u = u + w
+    print(np.linalg.norm(w))
+
+# K = Kxx + Kyy + penalty*B_stator_outer
+# sol = chol(K).solve_A(aJ-aM)
 
 
-K = Kxx + Kyy + penalty*B_stator_outer
-sol = chol(K).solve_A(aJ+aM)
-
-
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), sol, u_height=0)
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u, u_height=0)
 fig.show()
