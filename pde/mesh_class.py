@@ -353,14 +353,15 @@ class mesh:
             fig = self.__pdesurf_quad(fig,DATAQ,u,u_height)
         
         
-        camera = dict(eye = dict(x = 0, y = 0, z = 1))
-        # camera = dict(eye = dict(x = -1e-10, y = -1e-10, z = 1e10))
+        camera = dict(eye = dict(x = 0, y = -0.1, z = 1))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
+        scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
+                           xaxis = dict(showspikes = False, visible=False),
+                           yaxis = dict(showspikes = False, visible=False),
+                           zaxis = dict(showspikes = False, visible=False))
+        # camera = dict(eye = dict(x = -1e-10, y = -1e-10, z = 1e10))
         fig.update_layout(
-                          scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
-                                             xaxis = dict(showspikes = False, visible=False),
-                                             yaxis = dict(showspikes = False, visible=False),
-                                             zaxis = dict(showspikes = False, visible=False)),
+                          # scene = scene,
                           scene_camera = camera,
                           # hovermode = "x",
                           # autosize = True,
@@ -488,34 +489,47 @@ class mesh:
                                     showlegend = False))
         
         
-        if DATAT == 'P1/n':
+        if DATAT == 'P1':
             x = p[:,0]; y = p[:,1]; z = u;
             xr = npy.linspace(x.min(), x.max(), 200); yr = npy.linspace(y.min(), y.max(), 100)
             xr, yr = npy.meshgrid(xr, yr)
-            Z = griddata((x, y), z, (xr, yr) , method='cubic')
-            
-            print(xr,yr,z)
+            Z = griddata((x, y), z, (xr, yr) , method='cubic', fill_value=0)
+            # print(u_height)
+            # print(xr,yr,z)
             fig.add_trace(go.Surface(name = 'Isolines',
                                       x = xr[0],
                                       y = yr[:,0],
-                                      z = u_height*Z, hidesurface = True,
+                                      z = Z, hidesurface = True,
                                       showlegend = None,
                                       showscale = False,
                                       contours_z = dict(show = True,
                                                         start = Z.min(),
                                                         end = Z.max(),
-                                                        size = int((Z.max()-Z.min())/30),
-                                                        width = 1,
+                                                        size = (Z.max()-Z.min())/30,
+                                                        width = 2,
                                                         # usecolormap = True,
-                                                        # project_z = True,
+                                                        project_z = True,
                                                         highlightcolor = "#FFFFFF",
                                                         usecolormap = False,
                                                         # highlightwidth = 16,
-                                                        color = "white"
+                                                        color = "black"
                                                         )
                                       ))
-        
-        fig.update_traces()
+            # x = p[:,0]; y = p[:,1]; z = u;
+            
+            # print(x.shape,y.shape,z.shape)
+            
+            # fig.add_trace(go.Surface(name = 'whatever',
+            #                           x = x,
+            #                           y = y,
+            #                           z = npy.c_[z,z],
+            #                           hidesurface = False
+            #                           )
+            #               )
+            # fig.add_contour(z=z)
+            
+            
+        # fig.update_traces()
         
         return fig
         

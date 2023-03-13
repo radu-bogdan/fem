@@ -1,23 +1,85 @@
-import plotly.graph_objects as go
-import pandas as pd
+# import plotly.graph_objects as go
+# import pandas as pd
 
-# Read data from a csv
-z_data = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/api_docs/mt_bruno_elevation.csv')
+# # Read data from a csv
+# z_data = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/api_docs/mt_bruno_elevation.csv')
 
-fig = go.Figure(data=go.Surface(z=z_data, showscale=False))
-fig.update_layout(
-    title='Mt Bruno Elevation',
-    width=400, height=400,
-    margin=dict(t=40, r=0, l=20, b=20)
-)
+# fig = go.Figure(data=go.Surface(z=z_data, showscale=False))
+# fig.update_layout(
+#     title='Mt Bruno Elevation',
+#     width=400, height=400,
+#     margin=dict(t=40, r=0, l=20, b=20)
+# )
 
-name = 'default'
-# Default parameters which are used when `layout.scene.camera` is not provided
-camera = dict(
-    up=dict(x=0, y=0, z=1),
-    center=dict(x=0, y=0, z=0),
-    eye=dict(x=1.25, y=1.25, z=1.25)
-)
+# name = 'default'
+# # Default parameters which are used when `layout.scene.camera` is not provided
+# camera = dict(
+#     up=dict(x=0, y=0, z=1),
+#     center=dict(x=0, y=0, z=0),
+#     eye=dict(x=1.25, y=1.25, z=1.25)
+# )
 
-fig.update_layout(scene_camera=camera, title=name)
-fig.show()
+# fig.update_layout(scene_camera=camera, title=name)
+# fig.show()
+
+
+import matplotlib.pyplot as plt
+import matplotlib.tri as tri
+import numpy as np
+
+np.random.seed(19680801)
+npts = 200
+ngridx = 100
+ngridy = 200
+x = np.random.uniform(-2, 2, npts)
+y = np.random.uniform(-2, 2, npts)
+z = x * np.exp(-x**2 - y**2)
+
+fig, (ax1, ax2) = plt.subplots(nrows=2)
+
+# -----------------------
+# Interpolation on a grid
+# -----------------------
+# A contour plot of irregularly spaced data coordinates
+# via interpolation on a grid.
+
+# Create grid values first.
+xi = np.linspace(-2.1, 2.1, ngridx)
+yi = np.linspace(-2.1, 2.1, ngridy)
+
+# Linearly interpolate the data (x, y) on a grid defined by (xi, yi).
+triang = tri.Triangulation(x, y)
+interpolator = tri.LinearTriInterpolator(triang, z)
+Xi, Yi = np.meshgrid(xi, yi)
+zi = interpolator(Xi, Yi)
+
+# Note that scipy.interpolate provides means to interpolate data on a grid
+# as well. The following would be an alternative to the four lines above:
+# from scipy.interpolate import griddata
+# zi = griddata((x, y), z, (xi[None, :], yi[:, None]), method='linear')
+
+ax1.contour(xi, yi, zi, levels=14, linewidths=0.5, colors='k')
+cntr1 = ax1.contourf(xi, yi, zi, levels=14, cmap="RdBu_r")
+
+fig.colorbar(cntr1, ax=ax1)
+ax1.plot(x, y, 'ko', ms=3)
+ax1.set(xlim=(-2, 2), ylim=(-2, 2))
+ax1.set_title('grid and contour (%d points, %d grid points)' %
+              (npts, ngridx * ngridy))
+
+# ----------
+# Tricontour
+# ----------
+# Directly supply the unordered, irregularly spaced coordinates
+# to tricontour.
+
+ax2.tricontour(x, y, z, levels=14, linewidths=0.5, colors='k')
+cntr2 = ax2.tricontourf(x, y, z, levels=14, cmap="RdBu_r")
+
+fig.colorbar(cntr2, ax=ax2)
+ax2.plot(x, y, 'ko', ms=3)
+ax2.set(xlim=(-2, 2), ylim=(-2, 2))
+ax2.set_title('tricontour (%d points)' % npts)
+
+plt.subplots_adjust(hspace=0.5)
+plt.show()

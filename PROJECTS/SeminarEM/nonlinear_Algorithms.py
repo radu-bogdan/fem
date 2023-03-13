@@ -62,12 +62,12 @@ def AmijoBacktracking(F,dF,factor=1/2,mu=0.00001):
     return alpha;
 
 def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=1e-8,printoption=1,use_chol=0):#performs maxIterSteps of Newton or until |df|<eps
-
+    
     if use_chol == 0:
         solve_ddJ = lambda x,y : sps.linalg.spsolve(ddJ(x),y)
     if use_chol == 1:
         solve_ddJ = lambda x,y : chol(ddJ(x)).solve_A(y)
-
+        
     epsangle=1e-5;
     x=x0
     flag=0
@@ -87,7 +87,7 @@ def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=1e-8,printoption=1,use_chol=0):#per
         #dF = lambda alpha: np.dot(dJ(x+alpha*sx),sx)
         dJsx= lambda alpha: dJ(x+alpha*sx)
         #alpha=WolfePowell(F,dF)
-        #alpha=AmijoBacktracking(F, dF)
+        # alpha=AmijoBacktracking(F, dF)
         alpha=ResidualLinesearch(dJsx)
         x=x+alpha*sx
         if printoption:

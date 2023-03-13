@@ -238,7 +238,8 @@ def solveStateEquation():
         a += Equation3(u, v)
         a.Assemble()
         #nlstwo.NewtonGMRES(a, c, gfu, freedofs = fes.FreeDofs(), printing = True, dampfactor = myDampFac, maxerr = 1e-7)
-        Newton(a, gfu, freedofs = fes.FreeDofs(), printing = False, dampfactor = myDampFac, maxerr = 1e-10, inverse='pardiso')
+        Newton(a, gfu, freedofs = fes.FreeDofs(), printing = False, dampfactor = myDampFac, maxerr = 1e-10)
+        # Newton(a, gfu, freedofs = fes.FreeDofs(), printing = False, dampfactor = myDampFac, maxerr = 1e-10, inverse='pardiso')
 
 if (buildMotor==True):
     orign = (0,0);
@@ -552,7 +553,12 @@ I1 = CoefficientFunction (I1c)   #U+
 I2 = CoefficientFunction (I2c)   #V-
 I3 = CoefficientFunction (I3c)   #W+
 
-cfJi = mesh.MaterialCF({area_coils_UPlus: I1* 2.75 / areaOfOneCoil, area_coils_VMinus: I2* 2.75 / areaOfOneCoil, area_coils_WPlus: I3* 2.75 / areaOfOneCoil, area_coils_UMinus: (-1)*I1* 2.75 / areaOfOneCoil, area_coils_VPlus: (-1)*I2* 2.75 / areaOfOneCoil, area_coils_WMinus: (-1)*I3* 2.75 / areaOfOneCoil}, default = 0)
+cfJi = mesh.MaterialCF({area_coils_UPlus: I1* 2.75 / areaOfOneCoil, 
+                        area_coils_VMinus: I2* 2.75 / areaOfOneCoil, 
+                        area_coils_WPlus: I3* 2.75 / areaOfOneCoil, 
+                        area_coils_UMinus: (-1)*I1* 2.75 / areaOfOneCoil, 
+                        area_coils_VPlus: (-1)*I2* 2.75 / areaOfOneCoil, 
+                        area_coils_WMinus: (-1)*I3* 2.75 / areaOfOneCoil}, default = 0)
 Draw(cfJi, mesh, 'cfJi')
 
 Mperp_mag1 = CoefficientFunction( (-0.507223091788922, 0.861814791678634) )
@@ -585,11 +591,13 @@ Draw(cfDesign,mesh,"cfDesign")
 Draw(cfNu,mesh,"cfNu")
 #Draw(Ji,mesh,"Ji")
 
-fes = H1(mesh=mesh, order=1, dirichlet='stator_outer')
-fesAdj = H1(mesh=mesh, order=1, dirichlet='stator_outer')
+myorder = 2
+
+fes = H1(mesh=mesh, order=myorder, dirichlet='stator_outer')
+fesAdj = H1(mesh=mesh, order=myorder, dirichlet='stator_outer')
 u,v = fes.TnT()
 
-VEC = VectorH1(mesh, order=1, definedon = mesh.Materials("rotor_iron|rotor_air"), dirichlet="rotor_outer|rotor_inner|magnets_interface")
+VEC = VectorH1(mesh, order=myorder, definedon = mesh.Materials("rotor_iron|rotor_air"), dirichlet="rotor_outer|rotor_inner|magnets_interface")
 V,W = VEC.TnT()
 
 gfW2 = GridFunction(VEC)
@@ -618,8 +626,8 @@ gfp = GridFunction(fesAdj)
 
 Q = CoefficientFunction((x*y/sqrt(x*x+y*y), (y*y-x*x)/(2*sqrt(x*x+y*y)),(y*y-x*x)/(2*sqrt(x*x+y*y)),-x*y/sqrt(x*x+y*y)), dims=(2,2))
 
-# solveStateEquation()
-# Jnew1 = Integrate(Cost_vol(gfu),mesh)
-# Jold1 = Jnew1
-# Draw(gfu,mesh,"gfu")
-# print("Jnew1", Jnew1)
+solveStateEquation()
+Jnew1 = Integrate(Cost_vol(gfu),mesh)
+Jold1 = Jnew1
+Draw(gfu,mesh,"gfu")
+print("Jnew1", Jnew1)

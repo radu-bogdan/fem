@@ -103,12 +103,12 @@ I3c = I0peak * np.sin(phi0 + phase_shift_I3)
 areaOfOneCoil = 0.00018053718538758062
 
 UPlus  =  I1c* 2.75 / areaOfOneCoil
-VMinus = -I2c* 2.75 / areaOfOneCoil
+VMinus =  I2c* 2.75 / areaOfOneCoil
 
 WPlus  =  I3c* 2.75 / areaOfOneCoil
 UMinus = -I1c* 2.75 / areaOfOneCoil
 
-VPlus  =  I2c* 2.75 / areaOfOneCoil
+VPlus  = -I2c* 2.75 / areaOfOneCoil
 WMinus = -I3c* 2.75 / areaOfOneCoil
     
 j3 = np.zeros(48)
@@ -136,7 +136,8 @@ scipy.io.savemat('motor.mat', {"t" : t.T+1,
                                "regions_2d" : regions_2d_np,
                                "regions_1d" : regions_1d_np,
                                "m" : m,
-                               "j3" : j3},do_compression=True)
+                               "j3" : j3},
+                 do_compression=True)
 #####################################################################################################################
 
 

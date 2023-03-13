@@ -31,14 +31,14 @@ np.set_printoptions(precision = 8)
 # init_ref = 0.25
 # use_GPU = False
 
-T = 1
+T = 2
 dt = 0.03/2*4
-iterations = 10
+iterations = 7
 init_ref = 0.25*4
-use_GPU = True
+use_GPU = False
 
 
-kx = 1; ky = 1; s0 = -1.4
+kx = 1; ky = 1; s0 = -3
 c = np.sqrt(kx**2+ky**2)
 
 g = lambda s : 2*np.exp(-10*(s-s0)**2)
