@@ -70,11 +70,11 @@ edges_stator_outer = np.where(np.isin(e[:,2],ind_stator_outer))[0]
 
 ind_trig_coils = {}
 for i in range(48):
-    ind_trig_coils[i] = getIndices(regions_2d, 'coil' + str(i+1), exact = 1, return_index=True)[0]
+    ind_trig_coils[i] = getIndices(regions_2d, 'coil' + str(i+1), exact = 1, return_index = True)[0]
 
 ind_trig_magnets = {}
 for i in range(16):
-    ind_trig_magnets[i] = getIndices(regions_2d, 'magnet' + str(i+1), exact = 1, return_index=True)[0]
+    ind_trig_magnets[i] = getIndices(regions_2d, 'magnet' + str(i+1), exact = 1, return_index = True)[0]
 
 
 ##########################################################################################
@@ -103,10 +103,10 @@ nu0 = 10**7/(4*np.pi)
 f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
 fx_linear = lambda x,y : nu0*x
 fy_linear = lambda x,y : nu0*y
-fxx_linear = lambda x,y : nu0
+fxx_linear = lambda x,y : nu0 + 0*x
 fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
-fyy_linear = lambda x,y : nu0
+fyy_linear = lambda x,y : nu0 + 0*y
 
 f   = lambda ux,uy :   f_linear(ux,uy)*mask_linear +   f_iron(ux,uy)*mask_nonlinear
 fx  = lambda ux,uy :  fx_linear(ux,uy)*mask_linear +  fx_iron(ux,uy)*mask_nonlinear
@@ -134,7 +134,7 @@ D1 = pde.int.assemble(MESH, order = 1)
 D2 = pde.int.assemble(MESH, order = 2)
 D2b = pde.int.assembleB(MESH, order = 2)
 
-Kxx = dphix_H1 @ D0 @ dphix_H1.T 
+Kxx = dphix_H1 @ D0 @ dphix_H1.T
 Kyy = dphiy_H1 @ D0 @ dphiy_H1.T
 Cx = phi_L2 @ D0 @ dphix_H1.T
 Cy = phi_L2 @ D0 @ dphiy_H1.T
@@ -161,28 +161,23 @@ aM = dphix_H1_o2@D2@(-M1) +\
 # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), M1, u_height=0)
 # fig.show()
 
-# J = BM@D2@(CoF1.diagonal()+CoF2.diagonal())
-
-
 def update_left(ux,uy):
     fxx_grad_u_Kxx = dphix_H1 @ D0 @ sps.diags(fxx(ux,uy))@ dphix_H1.T
     fyy_grad_u_Kyy = dphiy_H1 @ D0 @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
     fxy_grad_u_Kxy = dphiy_H1 @ D0 @ sps.diags(fxy(ux,uy))@ dphix_H1.T
     fyx_grad_u_Kyx = dphix_H1 @ D0 @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
-
+    
 def update_right(u,ux,uy):    
     return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
 
 
 
+u = 0+np.zeros(shape = Kxx.shape[0])
 
-
-u = 1+np.zeros(shape = Kxx.shape[0])
-
-for i in range(100):
-    ux = Cx@u
-    uy = Cy@u
+for i in range(10):
+    ux = dphix_H1.T@u
+    uy = dphiy_H1.T@u
     
     Au = update_left(ux,uy)
     rhs = update_right(u,ux,uy)
