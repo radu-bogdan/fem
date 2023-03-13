@@ -1,5 +1,6 @@
 import sys
 sys.path.insert(0,'../../') # adds parent directory
+# sys.path.insert(0,'../CEM') # adds parent directory
 
 import numpy as np
 import gmsh
@@ -10,6 +11,7 @@ import time
 from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
+import nonlinear_Algorithms
 
 
 ##########################################################################################
@@ -173,18 +175,34 @@ def update_right(u,ux,uy):
 
 
 
-u = 0+np.zeros(shape = Kxx.shape[0])
-
-for i in range(10):
+def g(u):
     ux = dphix_H1.T@u
     uy = dphiy_H1.T@u
+    return -update_right(u,ux,uy)
+
+def h(u):
+    ux = dphix_H1.T@u
+    uy = dphiy_H1.T@u
+    return update_left(ux, uy)
+
+def f(u):
+    return 0
     
-    Au = update_left(ux,uy)
-    rhs = update_right(u,ux,uy)
+
+u = 0+np.zeros(shape = Kxx.shape[0])
+
+u = nonlinear_Algorithms.NewtonSparse(f,g,h,x0=u,use_chol=1)[0]
+
+# for i in range(1000):
+#     ux = dphix_H1.T@u
+#     uy = dphiy_H1.T@u
     
-    w = chol(Au).solve_A(rhs)
-    u = u + w
-    print(np.linalg.norm(w))
+#     Au = update_left(ux,uy)
+#     rhs = update_right(u,ux,uy)
+    
+#     w = chol(Au).solve_A(rhs)
+#     u = u + 0.1*w
+#     print(np.linalg.norm(w))
 
 # K = Kxx + Kyy + penalty*B_stator_outer
 # sol = chol(K).solve_A(aJ-aM)
