@@ -29,22 +29,22 @@ def spaceInfo(MESH,space):
     
     
     ###########################################################################
-    if space == 'P1d':
+    if space == 'P1':
         
-        LISTS['P1d'] = {}
-        LISTS['P1d']['TRIG'] = {}
+        LISTS['P1'] = {}
+        LISTS['P1']['TRIG'] = {}
         
-        LISTS['P1d']['TRIG']['sizeM'] = 3*MESH.nt
-        LISTS['P1d']['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
+        LISTS['P1']['TRIG']['sizeM'] = 3*MESH.nt
+        LISTS['P1']['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
         
-        LISTS['P1d']['B'] = {}
-        LISTS['P1d']['B']['qp_we_B'] = quadrature.one_d(order = 2)
+        LISTS['P1']['B'] = {}
+        LISTS['P1']['B']['qp_we_B'] = quadrature.one_d(order = 2)
         
-        LISTS['P1d']['TRIG']['phi'] = {}
-        LISTS['P1d']['TRIG']['phi'][0] = lambda x,y: 1-x-y
-        LISTS['P1d']['TRIG']['phi'][1] = lambda x,y: x
-        LISTS['P1d']['TRIG']['phi'][2] = lambda x,y: y
+        LISTS['P1']['TRIG']['phi'] = {}
+        LISTS['P1']['TRIG']['phi'][0] = lambda x,y: 1-x-y
+        LISTS['P1']['TRIG']['phi'][1] = lambda x,y: x
+        LISTS['P1']['TRIG']['phi'][2] = lambda x,y: y
         
-        LISTS['P1d']['TRIG']['LIST_DOF'] = np.r_[0:3*MESH.nt].reshape(MESH.nt,3)
+        LISTS['P1']['TRIG']['LIST_DOF'] = np.r_[0:3*MESH.nt].reshape(MESH.nt,3)
     ###########################################################################
     

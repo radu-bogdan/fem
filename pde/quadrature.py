@@ -24,7 +24,7 @@ def one_d(order):
         qp = points(4)
         # we = 1/8*np.r_[1,3,3,1]
         we = np.array([1/8,3/8,3/8,1/8])
-    if order == 5:
+    if (order == 5) or (order == 4):
         qp = points(5)
         # we = 1/90*np.r_[7,32,12,32,7]
         we = np.array([7/90,32/90,12/90,32/90,7/90])

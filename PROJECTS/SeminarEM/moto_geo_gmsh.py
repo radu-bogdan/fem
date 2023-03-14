@@ -216,7 +216,7 @@ sliding_outer  = gmsh.model.occ.addCircle(0,0,0,r6)
 stator_inner = gmsh.model.occ.addCircle(0,0,0,r7)
 stator_outer = gmsh.model.occ.addCircle(0,0,0,r8)
 
-gmsh.model.occ.add
+# gmsh.model.occ.add
 
 for i in range(8):
     drawMagnet1(i)

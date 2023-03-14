@@ -1,6 +1,6 @@
 import numpy as np
 
-motor_npz = np.load('motor.npz', allow_pickle=True)
+motor_npz = np.load('motor.npz', allow_pickle = True)
 
 p = motor_npz['p']
 e = motor_npz['e']

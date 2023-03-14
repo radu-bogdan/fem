@@ -390,36 +390,36 @@ if (buildMotor==True):
         domains.append(air_magnet1_2)
         domains.append(air_magnet2_1)
         domains.append(air_magnet2_2)
-
+        
     stator_iron.faces.name = "stator_iron"
     stator_iron.faces.maxh = h_stator_iron
-
+    
     air_gap_stator.faces.maxh = h_air_gap
     air_gap_stator.faces.name = "air_gap_stator"
-
+    
     air_gap.faces.maxh = h_air_gap
     air_gap.faces.name = "air_gap"
-
+    
     air_gap_rotor.faces.maxh = h_air_gap
     air_gap_rotor.faces.name = "air_gap_rotor"
-
+    
     rotor_iron.faces.name = "rotor_iron"
     rotor_iron.faces.maxh = h_rotor_iron
-
+    
     shaft_iron = rotor_inner
     shaft_iron.faces.name = "shaft_iron"
     shaft_iron.faces.maxh = h_shaft_iron
-
+    
     domains.append(shaft_iron)
     domains.append(rotor_iron)
     domains.append(air_gap_stator)
     domains.append(air_gap)
     domains.append(air_gap_rotor)
     domains.append(stator_iron)
-
+    
     geo = Glue(domains)
     geoOCC = OCCGeometry(geo, dim=2)
-
+    
     mesh = ngsolve.Mesh(geoOCC.GenerateMesh())
     mesh.ngmesh.Save("Motor_Bosch_2d.vol")
 else:
