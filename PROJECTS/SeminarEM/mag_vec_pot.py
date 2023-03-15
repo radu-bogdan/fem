@@ -31,10 +31,22 @@ j3 = motor_npz['j3']
 
 #KORREKTUR !
 # BR = 0
-m = m*(10**7/(4*np.pi))*1.158095238095238
+##########################################################################################
+
+
+
+##########################################################################################
+# Parameters
+##########################################################################################
+
+ORDER = 1
+
+nu0 = 10**7/(4*np.pi)
+m = m*nu0*1.158095238095238
 
 
 MESH = pde.mesh(p,e,t,q)
+MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
 
@@ -87,25 +99,51 @@ for i in range(16):
 
 
 
+##########################################################################################
+# Order configuration
+##########################################################################################
+if ORDER == 1:
+    poly = 'P1'
+    dxpoly = 'P0'
+    order_phiphi = 2
+    order_dphidphi = 0
+    new_mask_linear = mask_linear
+    new_mask_nonlinear = mask_nonlinear
+    
+if ORDER == 2:
+    poly = 'P2'
+    dxpoly = 'P1'
+    order_phiphi = 4
+    order_dphidphi = 2
+    new_mask_linear = np.tile(mask_linear,(3,1)).T.flatten()
+    new_mask_nonlinear = np.tile(mask_nonlinear,(3,1)).T.flatten()
+##########################################################################################
+
+
 
 ##########################################################################################
 # Brauer/Nonlinear laws ... ?
 ##########################################################################################
+
 k1 = 49.4; k2 = 1.46; k3 = 520.6
 
 f_iron = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
 
+# c = 6.63
+# nu = lambda x,y : ((x**2+y**2)<c)*(k1*np.exp(k2*(x**2+y**2))+k3) + nu0*((x**2+y**2)>c)
+# nux = lambda x,y : ((x**2+y**2)<c)*(2*x*k1*k2*np.exp(k2*(x**2+y**2))) + 0*((x**2+y**2)>c)
+# nuy = lambda x,y : ((x**2+y**2)<c)*(2*y*k1*k2*np.exp(k2*(x**2+y**2))) + 0*((x**2+y**2)>c)
+
 nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
 nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
 nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
+
 fx_iron = lambda x,y : nu(x,y)*x
 fy_iron = lambda x,y : nu(x,y)*y
 fxx_iron = lambda x,y : nu(x,y) + x*nux(x,y)
 fxy_iron = lambda x,y : x*nuy(x,y)
 fyx_iron = lambda x,y : y*nux(x,y)
 fyy_iron = lambda x,y : nu(x,y) + y*nuy(x,y)
-
-nu0 = 10**7/(4*np.pi)
 
 f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
 fx_linear = lambda x,y : nu0*x
@@ -115,11 +153,6 @@ fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
 fyy_linear = lambda x,y : nu0 + 0*y
 
-# new_mask_linear = mask_linear
-# new_mask_nonlinear = mask_nonlinear
-
-new_mask_linear = np.tile(mask_linear,(3,1)).flatten()
-new_mask_nonlinear = np.tile(mask_nonlinear,(3,1)).flatten()
 
 f   = lambda ux,uy :   f_linear(ux,uy)*new_mask_linear +   f_iron(ux,uy)*new_mask_nonlinear
 fx  = lambda ux,uy :  fx_linear(ux,uy)*new_mask_linear +  fx_iron(ux,uy)*new_mask_nonlinear
@@ -128,68 +161,7 @@ fxx = lambda ux,uy : fxx_linear(ux,uy)*new_mask_linear + fxx_iron(ux,uy)*new_mas
 fxy = lambda ux,uy : fxy_linear(ux,uy)*new_mask_linear + fxy_iron(ux,uy)*new_mask_nonlinear
 fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mask_nonlinear
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
-
-
-
-# @nb.njit()
-# def fx(ux,uy):
-    
-#     nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
-#     fx_iron = lambda x,y : nu(x,y)*x
-#     fx_linear = lambda x,y : nu0*x
-    
-#     fuxuy = np.zeros_like(ux)
-#     for k in range(fuxuy.size):
-#         if k in trig_linear: fuxuy[k] = fx_linear(ux[k],uy[k])
-#         else: fuxuy[k] = fx_iron(ux[k],uy[k])
-#     return fuxuy
-
-# # @nb.jit
-# def fy(ux,uy):
-#     fuxuy = np.zeros_like(ux)
-#     for k in range(fuxuy.size):
-#         if k in trig_linear: fuxuy[k] = fy_linear(ux[k],uy[k])
-#         else: fuxuy[k] = fy_iron(ux[k],uy[k])
-#     return fuxuy
-
-# # @nb.jit
-# def fxx(ux,uy):
-#     fuxuy = np.zeros_like(ux)
-#     for k in range(fuxuy.size):
-#         if k in trig_linear: fuxuy[k] = fxx_linear(ux[k],uy[k])
-#         else: fuxuy[k] = fxx_iron(ux[k],uy[k])
-#     return fuxuy
-
-# # @nb.jit
-# def fxy(ux,uy):
-#     fuxuy = np.zeros_like(ux)
-#     for k in range(fuxuy.size):
-#         if k in trig_linear: fuxuy[k] = fxy_linear(ux[k],uy[k])
-#         else: fuxuy[k] = fxy_iron(ux[k],uy[k])
-#     return fuxuy
-
-# # @nb.jit
-# def fyx(ux,uy):
-#     fuxuy = np.zeros_like(ux)
-#     for k in range(fuxuy.size):
-#         if k in trig_linear: fuxuy[k] = fyx_linear(ux[k],uy[k])
-#         else: fuxuy[k] = fyx_iron(ux[k],uy[k])
-#     return fuxuy
-
-# # @nb.jit
-# def fyy(ux,uy):
-#     fuxuy = np.zeros_like(ux)
-#     for k in range(fuxuy.size):
-#         if k in trig_linear: fuxuy[k] = fyy_linear(ux[k],uy[k])
-#         else: fuxuy[k] = fyy_iron(ux[k],uy[k])
-#     return fuxuy
-            
-    
-    
-
-
 ##########################################################################################
-
 
 
 
@@ -197,43 +169,13 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 # Assembling stuff
 ##########################################################################################
 
-# phi_H1  = pde.h1.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
-# dphix_H1,dphiy_H1 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
-# dphix_H1_o2,dphiy_H1_o2 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 2)
-# phi_H1b = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = phi_H1.shape, order = 2)
-# phi_L2 = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 0)
-
-# D0 = pde.int.assemble(MESH, order = 0)
-# D1 = pde.int.assemble(MESH, order = 1)
-# D2 = pde.int.assemble(MESH, order = 2)
-# D2b = pde.int.assembleB(MESH, order = 2)
-
-# Kxx = dphix_H1 @ D0 @ dphix_H1.T
-# Kyy = dphiy_H1 @ D0 @ dphiy_H1.T
-# Cx = phi_L2 @ D0 @ dphix_H1.T
-# Cy = phi_L2 @ D0 @ dphiy_H1.T
-
-# D_stator_outer = pde.int.evaluateB(MESH, order = 2, edges = ind_stator_outer)
-# B_stator_outer = phi_H1b@D2b@D_stator_outer @ phi_H1b.T
-
-
-# poly = 'P1'
-# dxpoly = 'P0'
-# order_phiphi = 2
-# order_dphidphi = 0
-
-poly = 'P2'
-dxpoly = 'P1'
-order_phiphi = 4
-order_dphidphi = 2
-
-
-
 tm = time.monotonic()
 
 phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
-dphix_H1,dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
-dphix_H1_o2,dphiy_H1_o2 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_phiphi)
+dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
+dphix_H1_o0, dphiy_H1_o0 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
+dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 1)
+dphix_H1_order_phiphi, dphiy_H1_order_phiphi = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_phiphi)
 phi_H1b = pde.h1.assembleB(MESH, space = poly, matrix = 'M', shape = phi_H1.shape, order = order_phiphi)
 phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
 
@@ -249,10 +191,7 @@ Cx = phi_L2 @ D_order_dphidphi @ dphix_H1.T
 Cy = phi_L2 @ D_order_dphidphi @ dphiy_H1.T
 
 D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
-B_stator_outer = phi_H1b@ D_order_phiphi_b @D_stator_outer @ phi_H1b.T
-
-
-
+B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
 penalty = 1e10
 
@@ -261,17 +200,21 @@ for i in range(48):
     J += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
     J0+= pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
 
-M0 = 0; M1 = 0
+M0 = 0; M1 = 0; M00 = 0
 for i in range(16):
     M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+    
+    M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
 
-aJ = 0*phi_H1@D_order_phiphi@J
+aJ = 0*phi_H1@ D_order_phiphi @J
 
-aM = dphix_H1_o2@D_order_phiphi@(-M1) +\
-     dphiy_H1_o2@D_order_phiphi@(+M0)
+aM = dphix_H1_order_phiphi@ D_order_phiphi @(-M1) +\
+     dphiy_H1_order_phiphi@ D_order_phiphi @(+M0)
 
-# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), J0, u_height=0)
+aMnew = aM
+
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), M00, u_height=0)
 # fig.show()
 
 def update_left(ux,uy):
@@ -281,8 +224,9 @@ def update_left(ux,uy):
     fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
     
-def update_right(u,ux,uy):    
-    return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
+def update_right(u,ux,uy):
+    # return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
+    return -dphix_H1 @ D_order_dphidphi @ fx(ux,uy) -dphiy_H1 @ D_order_dphidphi @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
 
 
 def g(u):
@@ -299,22 +243,25 @@ def f(u):
     return 0#f(ux,uy)
 
 print('Assembling + stuff ', time.monotonic()-tm)
-
-u = 1+np.zeros(shape = Kxx.shape[0])
-ux = dphix_H1.T@u
-uy = dphiy_H1.T@u
+##########################################################################################
 
 
 
-# tm = time.monotonic()
-# np.seterr(all='ignore')
-# u = nonlinear_Algorithms.NewtonSparse(f,g,h,x0=u,use_chol=1,maxIter=100,printoption=1)[0]
-# np.seterr(all='warn')
-# print('Solving took ', time.monotonic()-tm)
+##########################################################################################
+# Solving with Newton
+##########################################################################################
 
+u = 0+np.zeros(shape = Kxx.shape[0])
 
+# u = u_now
 
-# for i in range(1000):
+tm = time.monotonic()
+np.seterr(all='ignore')
+u = nonlinear_Algorithms.NewtonSparse(f,g,h,x0=u,use_chol=1,maxIter=100,printoption=1)[0]
+np.seterr(all='warn')
+print('Solving took ', time.monotonic()-tm, 'seconds')
+
+# for i in range(100):
 #     ux = dphix_H1.T@u
 #     uy = dphiy_H1.T@u
     
@@ -322,19 +269,46 @@ uy = dphiy_H1.T@u
 #     rhs = update_right(u,ux,uy)
     
 #     w = chol(Au).solve_A(rhs)
-#     u = u + 0.1*w
-#     print(np.linalg.norm(w))
+    
+#     u = u + 0.5*w
+    
+#     print(np.linalg.norm(w),
+#           np.linalg.norm(ux),
+#           np.linalg.norm(uy))
+    
+#     if i%10==0:
+#         fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 0)
+#         fig.layout.scene.camera.projection.type = "orthographic"
+#         fig.show()
 
 
-K = Kxx + Kyy + penalty*B_stator_outer
-u = chol(K).solve_A(aJ-aM)
 
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[0:MESH.np], u_height = 0)
+# K = Kxx + Kyy + penalty*B_stator_outer
+# u = chol(K).solve_A(aJ-aM)
+
+if dxpoly == 'P1':
+    ux = dphix_H1_o1.T@u
+    uy = dphiy_H1_o1.T@u
+    norm_ux = np.sqrt(ux**2+uy**2)
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 0)
+    
+if dxpoly == 'P0':
+    ux = dphix_H1_o0.T@u
+    uy = dphiy_H1_o0.T@u
+    norm_ux = np.sqrt(ux**2+uy**2)
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
+    
+# print(norm_ux.max(),norm_ux.min())    
 fig.show()
+##########################################################################################
 
-ux = dphix_H1.T@u
-uy = dphiy_H1.T@u
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), np.sqrt(ux**2+uy**2), u_height = 0)
-fig.show()
+
+
+
+
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 1)
+# fig.layout.scene.camera.projection.type = "orthographic"
+# fig.show()
+

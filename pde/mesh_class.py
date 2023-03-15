@@ -353,7 +353,7 @@ class mesh:
             fig = self.__pdesurf_quad(fig,DATAQ,u,u_height)
         
         
-        camera = dict(eye = dict(x = 0, y = -0.1, z = 1))
+        camera = dict(eye = dict(x = 0, y = -0.0001, z = 1))
         ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
         scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
                            xaxis = dict(showspikes = False, visible=False),

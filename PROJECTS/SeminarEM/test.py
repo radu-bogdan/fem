@@ -18,15 +18,17 @@ gmsh.initialize(sys.argv)
 # surfaces:
     
     
-gmsh.model.occ.addRectangle(0, 0, 0, 1, 2)
-gmsh.model.occ.addCircle(0,0,0,1)
-# gmsh.model.occ.fuse([(2, sq)], [(2, rotor_inner)])
+# gmsh.model.occ.addRectangle(0, 0, 0, 1, 2)
+# gmsh.model.occ.addDisk(0,0,0,1,1)
+# gmsh.model.occ.cut([(2, 1)], [(2, 2)])
+# gmsh.model.occ.addDisk(0,0,0,1,1)
+# gmsh.model.occ.fragment([(3, 1)], [(2, 7)])
 
+# gmsh.model.occ.healShapes()
 
+# gmsh.model.occ.synchronize()
 
-gmsh.model.occ.synchronize()
-
-gmsh.model.mesh.generate(2)
+# gmsh.model.mesh.generate(2)
 gmsh.fltk.run()
 
 gmsh.finalize()
