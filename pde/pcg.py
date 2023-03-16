@@ -13,7 +13,7 @@ from scipy import sparse as sp
 from pde.tools import condest
 
 # @profile
-def pcg(Afuns, f, tol = 1e-5, maxit = 100, pfuns = 1):     
+def pcg(Afuns, f, tol = 1e-5, maxit = 100, pfuns = 1, output = False):     
     
     maxit = int(maxit)
     
@@ -35,7 +35,7 @@ def pcg(Afuns, f, tol = 1e-5, maxit = 100, pfuns = 1):
         d = f.squeeze()
         
     # print('Cond about',condest(pfuns@Afuns))
-        
+    
     w = pfun(d)
     rho = w@d
     err0 = npy.sqrt(rho)
@@ -56,7 +56,8 @@ def pcg(Afuns, f, tol = 1e-5, maxit = 100, pfuns = 1):
             break
         beta = rho/rho1
         s = w + beta*s
-    print('pcg stopped after ' + str(it) + ' iterations with relres ' + str(err/err0))
+    if output:
+        print('pcg stopped after ' + str(it) + ' iterations with relres ' + str(err/err0))
     return u#,it,d
         
     

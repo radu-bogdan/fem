@@ -46,7 +46,10 @@ Mperp_mag16 = (-1)*np.array([0.507216833690415, 0.861818474866413])
 
 Mperp_mag = np.c_[Mperp_mag1,Mperp_mag2, Mperp_mag3, Mperp_mag4, Mperp_mag5, Mperp_mag6, Mperp_mag7, Mperp_mag8,
                   Mperp_mag9,Mperp_mag10,Mperp_mag11,Mperp_mag12,Mperp_mag13,Mperp_mag14,Mperp_mag15,Mperp_mag16]
+
 m = np.c_[Mperp_mag[1,:],-Mperp_mag[0,:]].T
+nu0 = 10**7/(4*np.pi)
+m = m*nu0*1.158095238095238
 #####################################################################################################################
 
 
