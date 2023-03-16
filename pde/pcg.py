@@ -10,32 +10,38 @@ import gmsh
 import numpy as npy
 from scipy import sparse as sp
 # npy.set_printoptions(edgeitems=30, linewidth = 1000000)
+from pde.tools import condest
 
-def pcg(Afuns,f,tol=1e-5,maxit=100,pfuns=1):
+# @profile
+def pcg(Afuns, f, tol = 1e-5, maxit = 100, pfuns = 1):     
+    
+    maxit = int(maxit)
     
     if not callable(pfuns):
-        pfun = lambda x : sp.linalg.spsolve(pfuns,x)
-    if pfuns == 1:
-        pfun = lambda x : sp.linalg.spsolve(sp.identity(f.shape[0]),x)
+        pfun = lambda x : pfuns@x
+        # splu_pfun = sp.linalg.splu(pfuns,permc_spec='COLAMD')
+        # pfun = lambda x : splu_pfun.solve(x)
+    else:
+        pfun = pfuns
     
     if not callable(Afuns):
         Afun = lambda x : Afuns@x
     else:
-        Afun = Afuns            
-    
-    maxit = int(maxit)
+        Afun = Afuns
     
     if not isinstance(f,npy.ndarray):
         d = f.A.squeeze()
     else:
         d = f.squeeze()
         
+    # print('Cond about',condest(pfuns@Afuns))
+        
     w = pfun(d)
     rho = w@d
     err0 = npy.sqrt(rho)
     
     s = w
-    u = 0*d
+    u = 0*d.copy()
     
     for it in range(maxit):
         As = Afun(s)

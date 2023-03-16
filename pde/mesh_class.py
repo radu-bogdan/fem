@@ -378,7 +378,6 @@ class mesh:
                                           bordercolor = "Black",
                                           borderwidth = 2),
                           )
-        
         # fig.layout.scene.camera.projection.type = "orthographic"
         # fig.layout.paper_bgcolor = "#7f7f7f"
         # fig.layout.plot_bgcolor = "#c7c7c7"
@@ -402,7 +401,7 @@ class mesh:
                     # type = "buttons",
                     direction = "down",
                     # pad={"r": 10, "t": 10},
-                    showactive = True,
+                    showactive = False,
                     # x = 0,
                     xanchor = "left",
                     # y = 0,

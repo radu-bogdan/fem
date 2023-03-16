@@ -46,7 +46,7 @@ m = m*nu0*1.158095238095238
 
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
 
@@ -193,7 +193,7 @@ Cy = phi_L2 @ D_order_dphidphi @ dphiy_H1.T
 D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
 B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
-penalty = 1e10
+penalty = 1
 
 J = 0; J0 = 0
 for i in range(48):
@@ -223,7 +223,7 @@ def update_left(ux,uy):
     fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy(ux,uy))@ dphix_H1.T
     fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
-    
+  
 def update_right(u,ux,uy):
     # return -Cx.T @ fx(ux,uy) -Cy.T @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
     return -dphix_H1 @ D_order_dphidphi @ fx(ux,uy) -dphiy_H1 @ D_order_dphidphi @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
@@ -242,6 +242,8 @@ def h(u):
 def f(u):
     return 0#f(ux,uy)
 
+# Solving h(un)w = g(un), un = un + w
+
 print('Assembling + stuff ', time.monotonic()-tm)
 ##########################################################################################
 
@@ -251,35 +253,103 @@ print('Assembling + stuff ', time.monotonic()-tm)
 # Solving with Newton
 ##########################################################################################
 
+def ResidualLineSearch(dJsx,factor=1/2,mu=0.01):
+    alpha = 1
+    for i in range(1000):
+        if np.linalg.norm(dJsx(alpha))<=np.linalg.norm(dJsx(0)):
+            return alpha
+        else:
+            alpha=alpha*factor
+    return alpha
+
 u = 0+np.zeros(shape = Kxx.shape[0])
 
-# u = u_now
+# tm = time.monotonic()
+# np.seterr(all='ignore')
+# u = nonlinear_Algorithms.NewtonSparse(f, g, h, x0 = u, use_chol = 2, maxIter = 100, printoption = 1)[0]
+# np.seterr(all='warn')
+# print('Solving took ', time.monotonic()-tm, 'seconds')
+
+maxIter = 100
+epsangle = 1e-5;
+u = np.zeros(shape = Kxx.shape[0])
+angleCondition = np.zeros(5)
+eps = 1e-8
+
+
+def fss(u):
+    ux = dphix_H1.T@u
+    uy = dphiy_H1.T@u
+    return update_left(ux, uy)
+
+def fs(u):
+    ux = dphix_H1.T@u
+    uy = dphiy_H1.T@u
+    return update_right(u,ux,uy)
+
+def f(u):
+    return 0
 
 tm = time.monotonic()
-np.seterr(all='ignore')
-u = nonlinear_Algorithms.NewtonSparse(f,g,h,x0=u,use_chol=1,maxIter=100,printoption=1)[0]
-np.seterr(all='warn')
+for i in range(maxIter):
+    fsu = fs(u)
+    w = chol(fss(u)).solve_A(fsu)
+    
+    norm_w = np.linalg.norm(w)
+    norm_fsu = np.linalg.norm(fsu)
+    
+    if ((w@fsu)/(norm_w*norm_fsu)<epsangle):
+        angleCondition[i%5] = 1
+        if np.product(angleCondition)>0:
+            w = fsu
+            print("STEP IN NEGATIVE GRADIENT DIRECTION")
+    else:
+        angleCondition[i%5]=0
+    
+    fsw = lambda alpha: fs(u+alpha*w)
+    alpha = ResidualLineSearch(fsw)
+    u = u + alpha*w
+    print ("NEWTON: Iteration: %2d" %(i+1)+"||obj: %2e" % (f(u))+"|| ||grad||: %2e" % (np.linalg.norm(fs(u)))+"||alpha: %2e" % (alpha))
+    
+    if(np.linalg.norm(np.linalg.norm(fs(u)))<eps):
+        break
+    
 print('Solving took ', time.monotonic()-tm, 'seconds')
-
-# for i in range(100):
-#     ux = dphix_H1.T@u
-#     uy = dphiy_H1.T@u
     
-#     Au = update_left(ux,uy)
-#     rhs = update_right(u,ux,uy)
     
-#     w = chol(Au).solve_A(rhs)
+    # dJx=dJ(x)
+    # sx=solve_ddJ(x,-dJx)
+    # # sx = sps.linalg.spsolve(ddJ(´x),-dJx)
+    # if (np.dot(sx,-dJx)/np.linalg.norm(sx)/np.linalg.norm(dJx)<epsangle):
+    #     angleCondition[i%5]=1      
+    #     if np.product(angleCondition)>0:
+    #         sx=-dJx
+    #         print("STEP IN NEGATIVE GRADIENT DIRECTION")
+    # else:
+    #     angleCondition[i%5]=0
+    # #F = lambda alpha:J(x+alpha*sx)
+    # #dF = lambda alpha: np.dot(dJ(x+alpha*sx),sx)
+    # dJsx= lambda alpha: dJ(x+alpha*sx)
+    # #alpha=WolfePowell(F,dF)
+    # # alpha=AmijoBacktracking(F, dF)
+    # alpha=ResidualLinesearch(dJsx)
+    # x=x+alpha*sx
+    # if printoption:
+    #     print ("NEWTON: Iteration: %2d" %(i+1)+"||obj: %2e" % (J(x))+"|| ||grad||: %2e" % (np.linalg.norm(dJ(x)))+"||alpha: %2e" % (alpha))
+    # if(np.linalg.norm(np.linalg.norm(dJ(x)))<eps):
+    #     flag=1
+    #     return x,flag
     
-#     u = u + 0.5*w
     
-#     print(np.linalg.norm(w),
-#           np.linalg.norm(ux),
-#           np.linalg.norm(uy))
     
-#     if i%10==0:
-#         fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 0)
-#         fig.layout.scene.camera.projection.type = "orthographic"
-#         fig.show()
+    # print(np.linalg.norm(w),
+    #       np.linalg.norm(ux),
+    #       np.linalg.norm(uy))
+    
+    # if i%10==0:
+    #     fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 0)
+    #     fig.layout.scene.camera.projection.type = "orthographic"
+    #     fig.show()
 
 
 
@@ -292,12 +362,14 @@ if dxpoly == 'P1':
     uy = dphiy_H1_o1.T@u
     norm_ux = np.sqrt(ux**2+uy**2)
     fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 0)
+    fig.data[0].colorscale='Jet'
     
 if dxpoly == 'P0':
     ux = dphix_H1_o0.T@u
     uy = dphiy_H1_o0.T@u
     norm_ux = np.sqrt(ux**2+uy**2)
     fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
+    fig.data[0].colorscale='Jet'
     
 # print(norm_ux.max(),norm_ux.min())    
 fig.show()

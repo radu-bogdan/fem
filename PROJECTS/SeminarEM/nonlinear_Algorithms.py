@@ -7,6 +7,7 @@ Created on Tue Jan 24 17:25:50 2023
 import numpy as np
 import scipy.sparse as sps
 from sksparse.cholmod import cholesky as chol
+import pde
 
 def GradientDescent(J,dJ,x0,maxIter=1000,eps=0.0000001, printoption=1):  
     x=x0
@@ -39,7 +40,7 @@ def Newton(J,dJ,ddJ,x0,maxIter=1000,eps=0.0000001, printoption=1):#performs maxI
                 print("STEP IN NEGATIVE GRADIENT DIRECTION")
         else:
             angleCondition[i%5]=0
-        F = lambda alpha:J(x+alpha*sx)
+        F  = lambda alpha:J(x+alpha*sx)
         dF = lambda alpha: np.dot(dJ(x+alpha*sx),sx)
         alpha=AmijoBacktracking(F,dF)
         x=x+alpha*sx
@@ -61,21 +62,28 @@ def AmijoBacktracking(F,dF,factor=1/2,mu=0.00001):
             alpha=alpha*factor
     return alpha;
 
+# NewtonSparse(f, g, h, x0 = u, use_chol = 2, maxIter = 100, printoption = 1)[0]
 def NewtonSparse(J,dJ,ddJ,x0,maxIter=100,eps=1e-8,printoption=1,use_chol=0):#performs maxIterSteps of Newton or until |df|<eps
     
     if use_chol == 0:
         solve_ddJ = lambda x,y : sps.linalg.spsolve(ddJ(x),y)
     if use_chol == 1:
         solve_ddJ = lambda x,y : chol(ddJ(x)).solve_A(y)
+    if use_chol == 2:
+        # solve_ddJ = lambda x,y : pde.pcg(ddJ(x), y, tol = 1e-5, maxit = 10000, pfuns = lambda z : sps.diags(1/(ddJ(x)).diagonal())@z)
+        # solve_ddJ = lambda x,y : pde.pcg(ddJ(x), y, tol = 1e-5, maxit = 10000, pfuns = sps.diags(1/(ddJ(x)).diagonal()))
+        solve_ddJ = lambda x,y : pde.pcg(ddJ(x), y, tol = 1e-5, maxit = 10000, pfuns = sps.diags(1/(10**7*ddJ(x)).diagonal()))
+        # solve_ddJ = lambda x,y : pde.pcg(ddJ(x), y, tol = 1e-5, maxit = 10000, pfuns = sps.tril(ddJ(x), format='csc'))
         
-    epsangle=1e-5;
-    x=x0
-    flag=0
-    angleCondition=np.zeros(5);
+    epsangle = 1e-5;
+    x = x0
+    flag = 0
+    angleCondition = np.zeros(5)
+    
     for i in range(int(maxIter)):
         dJx=dJ(x)
         sx=solve_ddJ(x,-dJx)
-        # sx = sps.linalg.spsolve(ddJ(x),-dJx)
+        # sx = sps.linalg.spsolve(ddJ(´x),-dJx)
         if (np.dot(sx,-dJx)/np.linalg.norm(sx)/np.linalg.norm(dJx)<epsangle):
             angleCondition[i%5]=1      
             if np.product(angleCondition)>0:
