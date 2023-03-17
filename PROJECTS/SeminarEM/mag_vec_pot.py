@@ -40,12 +40,12 @@ j3 = motor_npz['j3']
 ##########################################################################################
 
 ORDER = 1
-total = 2
+total = 1
 
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
@@ -57,7 +57,7 @@ for z in range(total):
     # Extract indices
     ##########################################################################################
     
-    def getIndices(liste,name,exact = 0,return_index=False):
+    def getIndices(liste,name,exact = 0,return_index = False):
         if exact == 0:
             ind = np.flatnonzero(np.core.defchararray.find(list(liste),name)!=-1)
         else:
@@ -277,7 +277,8 @@ for z in range(total):
         # precon = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle='V')
         # precon = sps.diags(1/(fss(u).diagonal()), format = 'csc')
         
-        precon = pyamg.smoothed_aggregation_solver(fss(u)).aspreconditioner(cycle = 'V')
+        precon = pyamg.smoothed_aggregation_solver(fss(u),strength=('symmetric',{'theta' : 0.1 })).aspreconditioner(cycle = 'V')
+        # precon = pyamg.smoothed_aggregation_solver(fss(u)).aspreconditioner(cycle = 'V')
         w = pde.pcg(fss(u), fsu, tol = 1e-1, maxit = 10000, pfuns = precon, output = True)
         
         norm_w = np.linalg.norm(w)

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<models>
+	<model>
+		<title>Permanent magnet synchronous machine</title>
+		<summary>Eight-pole surface mounted PMSM</summary>
+		<file type="geo">pmsm.geo</file>
+		<preview type="png">infos_pmsm.png</preview>
+		<url>https://gitlab.onelab.info/doc/models/wikis/Electric-machines</url>
+	</model>
+	<model>
+		<title>Wound field synchronous machine</title>
+		<summary>Four-pole WFSM</summary>
+		<file type="geo">wfsm_4p.geo</file>
+		<preview type="png">infos_wfsm_4p.png</preview>
+		<url>https://gitlab.onelab.info/doc/models/wikis/Electric-machines</url>
+	</model>
+	<model>
+		<title>Induction machine</title>
+		<summary>3kW Four-pole induction machine</summary>
+		<file type="pro">im_3kW.pro</file>
+		<preview type="png">infos_im_3kW.png</preview>
+		<url>https://gitlab.onelab.info/doc/models/wikis/Electric-machines</url>
+	</model>
+	<model>
+		<title>Switched reluctance machine</title>
+		<summary>Simple SRM</summary>
+		<file type="pro">srm.pro</file>
+		<preview type="png">infos_srm.png</preview>
+		<url>https://gitlab.onelab.info/doc/models/wikis/Electric-machines</url>
+	</model>
+</models>
