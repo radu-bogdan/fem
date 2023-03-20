@@ -504,7 +504,7 @@ class mesh:
                                       contours_z = dict(show = True,
                                                         start = Z.min(),
                                                         end = Z.max(),
-                                                        size = (Z.max()-Z.min())/30,
+                                                        size = (Z.max()-Z.min())/50,
                                                         width = 2,
                                                         # usecolormap = True,
                                                         project_z = True,

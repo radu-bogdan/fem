@@ -39,13 +39,13 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
@@ -126,8 +126,8 @@ for z in range(total):
     # Brauer/Nonlinear laws ... ?
     ##########################################################################################
     
-    # k1 = 49.4; k2 = 1.46; k3 = 520.6
-    k1 = 3.8; k2 = 2.17; k3 = 396.2
+    k1 = 49.4; k2 = 1.46; k3 = 520.6
+    # k1 = 3.8; k2 = 2.17; k3 = 396.2
     
     f_iron = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
     
@@ -196,6 +196,7 @@ for z in range(total):
     for i in range(48):
         J += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
         # J0+= pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+    J = 0*J
     
     M0 = 0; M1 = 0; # M00 = 0
     for i in range(16):
@@ -211,9 +212,17 @@ for z in range(total):
     
     aMnew = aM
     
+    # Cast all to 'csr' for the preconditioner...
+    dphix_H1 = dphix_H1.tocsr()
+    dphiy_H1 = dphiy_H1.tocsr()
+    D_order_dphidphi = D_order_dphidphi.tocsr()
+    
+    
+    
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), M00, u_height=0)
     # fig.show()
     
+    # @profile
     def update_left(ux,uy):
         fxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(fxx(ux,uy))@ dphix_H1.T
         fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
@@ -273,13 +282,52 @@ for z in range(total):
         # w = chol(fss(u)).solve_A(fsu)
         
         # mytol = max(min(0.1,np.linalg.norm(fsu)),1e-6)
-        # precon = pyamg.ruge_stuben_solver(fss(u)).aspreconditioner(cycle='V')
-        # precon = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle='V')
-        # precon = sps.diags(1/(fss(u).diagonal()), format = 'csc')
         
-        precon = pyamg.smoothed_aggregation_solver(fss(u),strength=('symmetric',{'theta' : 0.1 })).aspreconditioner(cycle = 'V')
-        # precon = pyamg.smoothed_aggregation_solver(fss(u)).aspreconditioner(cycle = 'V')
-        w = pde.pcg(fss(u), fsu, tol = 1e-1, maxit = 10000, pfuns = precon, output = True)
+        # manual construction of a two-level AMG hierarchy
+        # from pyamg.multilevel import MultilevelSolver
+        # from pyamg.strength import classical_strength_of_connection, symmetric_strength_of_connection
+        # from pyamg.classical.interpolate import direct_interpolation
+        # from pyamg.classical.split import RS,PMIS
+        
+        # # compute necessary operators
+        # A = fss(u).tocsr()
+        # # C = classical_strength_of_connection(A)
+        # C = symmetric_strength_of_connection(A)
+        # splitting = RS(A)
+        # P = direct_interpolation(A, C, splitting)
+        # R = P.T
+        
+        # # store first level data
+        # levels = []
+        # levels.append(MultilevelSolver.Level())
+        # levels.append(MultilevelSolver.Level())
+        # levels[0].A = A
+        # levels[0].C = C
+        # levels[0].splitting = splitting
+        # levels[0].P = P
+        # levels[0].R = R
+        # levels[0].presmoother  = pyamg.relaxation.smoothing.setup_gauss_seidel(0)
+        # levels[0].postsmoother = pyamg.relaxation.smoothing.setup_gauss_seidel(0)
+        
+        # # store second level data
+        # levels[1].A = R @ A @ P                      # coarse-level matrix
+        
+        # # create MultilevelSolver
+        # ml = MultilevelSolver(levels, coarse_solver = 'splu')
+        # precon_V = ml.aspreconditioner('V')
+        
+        fssu = fss(u)
+        # c = lambda A,b : chol(A).solve_A(b)
+        precon_V = pyamg.smoothed_aggregation_solver(fssu).aspreconditioner(cycle = 'V')
+        
+        # precon_V = pyamg.smoothed_aggregation_solver(fss(u),coarse_solver='splu').aspreconditioner(cycle = 'V')
+        # precon_V = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle = 'V')
+        
+        # ifssu = sps.diags(1/(fss(u).diagonal()), format = 'csc') #Jacobi preconditioner
+        # precon = lambda x : ifssu@precon_V(x)
+        
+        # precon = lambda x : x
+        w = pde.pcg(fssu, fsu, tol = 1e-1, maxit = 100, pfuns = precon_V, output = True)
         
         norm_w = np.linalg.norm(w)
         norm_fsu = np.linalg.norm(fsu)
@@ -320,10 +368,10 @@ for z in range(total):
     
     
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 1)
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 1)
     fig.layout.scene.camera.projection.type = "orthographic"
-    
-    # fig.show()
+    fig.data[0].colorscale='Jet'
+    fig.show()
     
     if dxpoly == 'P1':
         ux = dphix_H1_o1.T@u
@@ -339,7 +387,7 @@ for z in range(total):
         fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
         fig.data[0].colorscale='Jet'
         
-    # print(norm_ux.max(),norm_ux.min())
+    print(norm_ux.max(),norm_ux.min())
     fig.show()
     ##########################################################################################
     
@@ -347,8 +395,8 @@ for z in range(total):
     Ru = np.r_[u,1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])]
     print("This lvl is done \n\n")
     
-    MESH.refinemesh()
-    
+    # MESH.refinemesh()
+        
     
 # do()
 

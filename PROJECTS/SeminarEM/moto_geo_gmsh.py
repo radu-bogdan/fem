@@ -84,6 +84,11 @@ def drawMagnet1(k):
     seg4 = gmsh.model.occ.addLine(m4new, m1new)
     
     magnet1 = gmsh.model.occ.addCurveLoop([seg1,seg2,seg3,seg4])
+    magnet1_surface = gmsh.model.occ.addPlaneSurface([magnet1])
+    
+    phd = gmsh.model.addPhysicalGroup(dim = 2, tags = [magnet1], name = 'magnet' + str(k))
+    gmsh.model.setPhysicalName(dim = 2, tag = phd, name = 'magnet' + str(k))
+
     
     air_seg1 = gmsh.model.occ.addLine(m1new,a5new)
     air_seg2 = gmsh.model.occ.addLine(a5new,a6new)
@@ -91,6 +96,7 @@ def drawMagnet1(k):
     air_seg4 = gmsh.model.occ.addLine(m2new,m1new)
     
     air_magnet1_1 = gmsh.model.occ.addCurveLoop([air_seg1,air_seg2,air_seg3,air_seg4])
+    air_magnet1_1_surface = gmsh.model.occ.addPlaneSurface([air_magnet1_1])
     
     air_seg5 = gmsh.model.occ.addLine(m4new,m3new)
     air_seg6 = gmsh.model.occ.addLine(m3new,a7new)
@@ -98,12 +104,13 @@ def drawMagnet1(k):
     air_seg8 = gmsh.model.occ.addLine(a8new,m4new)
     
     air_magnet1_2 = gmsh.model.occ.addCurveLoop([air_seg5,air_seg6,air_seg7,air_seg8])
+    air_magnet1_2_surface = gmsh.model.occ.addPlaneSurface([air_magnet1_2])
     
     
 def drawMagnet2(k):
     m5xnew = m5[0]*np.cos(k*np.pi/4) -m5[1]*np.sin(k*np.pi/4)
     m5ynew = m5[0]*np.sin(k*np.pi/4) +m5[1]*np.cos(k*np.pi/4)
-    m5new = gmsh.model.occ.addPoint(m5xnew,m5ynew,0)
+    m5new = gmsh.model.occ.addPoint(m5xnew ,m5ynew ,0 ,meshSize = 0)
 
     m6xnew = m6[0]*np.cos(k*np.pi/4) -m6[1]*np.sin(k*np.pi/4)
     m6ynew = m6[0]*np.sin(k*np.pi/4) +m6[1]*np.cos(k*np.pi/4)
@@ -139,6 +146,7 @@ def drawMagnet2(k):
     seg4 = gmsh.model.occ.addLine(m8new, m5new)
     
     magnet2 = gmsh.model.occ.addCurveLoop([seg1,seg2,seg3,seg4])
+    magnet2_surface = gmsh.model.occ.addPlaneSurface([magnet2])
     
     air_seg1 = gmsh.model.occ.addLine(m5new,a3new)
     air_seg2 = gmsh.model.occ.addLine(a3new,a4new)
@@ -146,6 +154,7 @@ def drawMagnet2(k):
     air_seg4 = gmsh.model.occ.addLine(m6new,m5new)
     
     air_magnet2_1 = gmsh.model.occ.addCurveLoop([air_seg1,air_seg2,air_seg3,air_seg4])
+    # air_magnet2_1_surface = gmsh.model.occ.addPlaneSurface([air_magnet2_1])
     
     air_seg5 = gmsh.model.occ.addLine(m8new,m7new)
     air_seg6 = gmsh.model.occ.addLine(m7new,a2new)
@@ -153,6 +162,8 @@ def drawMagnet2(k):
     air_seg8 = gmsh.model.occ.addLine(a1new,m8new)
     
     air_magnet2_2 = gmsh.model.occ.addCurveLoop([air_seg5,air_seg6,air_seg7,air_seg8])
+    
+    air_magnet2_1_surface = gmsh.model.occ.addPlaneSurface([air_magnet2_2,air_magnet2_1])
         
 def drawStatorNut(k):
     s1xnew = s1[0]*np.cos(k*np.pi/24) -s1[1]*np.sin(k*np.pi/24)
@@ -230,7 +241,7 @@ air_gap_stator = stator_inner - sliding_outer
 # gmsh.model.geo.synchronize()
 
 gmsh.model.occ.synchronize()
-gmsh.model.occ.healShapes()
+# gmsh.model.occ.healShapes()
 
 # gmsh.write("whateva.msh")
 
@@ -240,65 +251,4 @@ gmsh.finalize()
 
 
 # gmsh.model.occ.fuse
-
-
-# def capacitorPlates(a,b,c,d,l):
-#     p1 = gmsh.model.geo.addPoint(-a/2, -b/2, 0)
-#     p2 = gmsh.model.geo.addPoint( a/2, -b/2, 0)
-#     p3 = gmsh.model.geo.addPoint( a/2,  b/2, 0)
-#     p4 = gmsh.model.geo.addPoint(-a/2,  b/2, 0)
-    
-#     p5 = gmsh.model.geo.addPoint(-c-d/2, -l/2, 0)
-#     p6 = gmsh.model.geo.addPoint(  -d/2, -l/2, 0)
-#     p7 = gmsh.model.geo.addPoint(  -d/2,  l/2, 0)
-#     p8 = gmsh.model.geo.addPoint(-c-d/2,  l/2, 0)
-    
-#     p9 = gmsh.model.geo.addPoint(   d/2, -l/2, 0)
-#     p10= gmsh.model.geo.addPoint( c+d/2, -l/2, 0)
-#     p11= gmsh.model.geo.addPoint( c+d/2,  l/2, 0)
-#     p12= gmsh.model.geo.addPoint(   d/2,  l/2, 0)
-    
-    # l1 = gmsh.model.geo.addLine(p1, p2)
-    # l2 = gmsh.model.geo.addLine(p2, p3)
-    # l3 = gmsh.model.geo.addLine(p3, p4)
-    # l4 = gmsh.model.geo.addLine(p4, p1)
-    
-    # l5 = gmsh.model.geo.addLine(p5, p6)
-    # l6 = gmsh.model.geo.addLine(p6, p7)
-    # l7 = gmsh.model.geo.addLine(p7, p8)
-    # l8 = gmsh.model.geo.addLine(p8, p5)
-    
-    # l9 = gmsh.model.geo.addLine(p9, p10)
-    # l10= gmsh.model.geo.addLine(p10, p11)
-    # l11= gmsh.model.geo.addLine(p11, p12)
-    # l12= gmsh.model.geo.addLine(p12, p9)
-    
-    # l13= gmsh.model.geo.addLine(p6, p9)
-    # l14= gmsh.model.geo.addLine(p7, p12)
-    
-    # c1 = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
-    # c2 = gmsh.model.geo.addCurveLoop([l5, l6, l7, l8])
-    # c3 = gmsh.model.geo.addCurveLoop([l9, l10, l11, l12])
-    # c4 = gmsh.model.geo.addCurveLoop([l13, -l12, -l14, -l6])
-    
-    # gmsh.model.geo.addPlaneSurface([c1,c2,c3,c4])
-    # gmsh.model.geo.addPlaneSurface([c4])
-    # # gmsh.model.geo.addPlaneSurface([c1,c4])
-    
-    # gmsh.model.geo.synchronize()
-    
-    # gmsh.model.addPhysicalGroup(1, [l1])
-    # gmsh.model.addPhysicalGroup(1, [l2])
-    # gmsh.model.addPhysicalGroup(1, [l3])
-    # gmsh.model.addPhysicalGroup(1, [l4])
-    
-    # gmsh.model.addPhysicalGroup(1, [l5])
-    # gmsh.model.addPhysicalGroup(1, [l6])
-    # gmsh.model.addPhysicalGroup(1, [l7])
-    # gmsh.model.addPhysicalGroup(1, [l8])
-    
-    # gmsh.model.addPhysicalGroup(1, [l9])
-    # gmsh.model.addPhysicalGroup(1, [l10])
-    # gmsh.model.addPhysicalGroup(1, [l11])
-    # gmsh.model.addPhysicalGroup(1, [l12])
     

@@ -1,34 +1,14 @@
-# -----------------------------------------------------------------------------
-#
-#  Gmsh Python extended tutorial 5
-#
-#  Additional geometrical data: parametrizations, normals, curvatures
-#
-# -----------------------------------------------------------------------------
+from math import pi, cos
+import pygmsh
 
-import gmsh
-import sys
-import math
+with pygmsh.occ.Geometry() as geom:
+    geom.characteristic_length_max = 0.1
+    r = 0.5
+    disks = [
+        geom.add_disk([-0.5 * cos(7 / 6 * pi), -0.25], 1.0),
+        geom.add_disk([+0.5 * cos(7 / 6 * pi), -0.25], 1.0),
+        geom.add_disk([0.0, 0.5], 1.0),
+    ]
+    geom.boolean_intersection(disks)
 
-gmsh.initialize(sys.argv)
-
-# The API provides access to geometrical data in a CAD kernel agnostic manner.
-
-# Let's create a simple CAD model by fusing a sphere and a cube, then mesh the
-# surfaces:
-    
-    
-# gmsh.model.occ.addRectangle(0, 0, 0, 1, 2)
-# gmsh.model.occ.addDisk(0,0,0,1,1)
-# gmsh.model.occ.cut([(2, 1)], [(2, 2)])
-# gmsh.model.occ.addDisk(0,0,0,1,1)
-# gmsh.model.occ.fragment([(3, 1)], [(2, 7)])
-
-# gmsh.model.occ.healShapes()
-
-# gmsh.model.occ.synchronize()
-
-# gmsh.model.mesh.generate(2)
-gmsh.fltk.run()
-
-gmsh.finalize()
+    mesh = geom.generate_mesh()
