@@ -39,7 +39,7 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -213,9 +213,9 @@ for z in range(total):
     aMnew = aM
     
     # Cast all to 'csr' for the preconditioner...
-    dphix_H1 = dphix_H1.tocsr()
-    dphiy_H1 = dphiy_H1.tocsr()
-    D_order_dphidphi = D_order_dphidphi.tocsr()
+    # dphix_H1 = dphix_H1.tocsr()
+    # dphiy_H1 = dphiy_H1.tocsr()
+    # D_order_dphidphi = D_order_dphidphi.tocsr()
     
     
     
@@ -279,7 +279,7 @@ for z in range(total):
     for i in range(maxIter):
         fsu = fs(u)
         
-        # w = chol(fss(u)).solve_A(fsu)
+        w = chol(fss(u)).solve_A(fsu)
         
         # mytol = max(min(0.1,np.linalg.norm(fsu)),1e-6)
         
@@ -289,45 +289,18 @@ for z in range(total):
         # from pyamg.classical.interpolate import direct_interpolation
         # from pyamg.classical.split import RS,PMIS
         
-        # # compute necessary operators
-        # A = fss(u).tocsr()
-        # # C = classical_strength_of_connection(A)
-        # C = symmetric_strength_of_connection(A)
-        # splitting = RS(A)
-        # P = direct_interpolation(A, C, splitting)
-        # R = P.T
+        # fssu = fss(u)
+        # # c = lambda A,b : chol(A).solve_A(b)
+        # precon_V = pyamg.smoothed_aggregation_solver(fssu).aspreconditioner(cycle = 'V')
         
-        # # store first level data
-        # levels = []
-        # levels.append(MultilevelSolver.Level())
-        # levels.append(MultilevelSolver.Level())
-        # levels[0].A = A
-        # levels[0].C = C
-        # levels[0].splitting = splitting
-        # levels[0].P = P
-        # levels[0].R = R
-        # levels[0].presmoother  = pyamg.relaxation.smoothing.setup_gauss_seidel(0)
-        # levels[0].postsmoother = pyamg.relaxation.smoothing.setup_gauss_seidel(0)
+        # # precon_V = pyamg.smoothed_aggregation_solver(fss(u),coarse_solver='splu').aspreconditioner(cycle = 'V')
+        # # precon_V = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle = 'V')
         
-        # # store second level data
-        # levels[1].A = R @ A @ P                      # coarse-level matrix
+        # # ifssu = sps.diags(1/(fss(u).diagonal()), format = 'csc') #Jacobi preconditioner
+        # # precon = lambda x : ifssu@precon_V(x)
         
-        # # create MultilevelSolver
-        # ml = MultilevelSolver(levels, coarse_solver = 'splu')
-        # precon_V = ml.aspreconditioner('V')
-        
-        fssu = fss(u)
-        # c = lambda A,b : chol(A).solve_A(b)
-        precon_V = pyamg.smoothed_aggregation_solver(fssu).aspreconditioner(cycle = 'V')
-        
-        # precon_V = pyamg.smoothed_aggregation_solver(fss(u),coarse_solver='splu').aspreconditioner(cycle = 'V')
-        # precon_V = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle = 'V')
-        
-        # ifssu = sps.diags(1/(fss(u).diagonal()), format = 'csc') #Jacobi preconditioner
-        # precon = lambda x : ifssu@precon_V(x)
-        
-        # precon = lambda x : x
-        w = pde.pcg(fssu, fsu, tol = 1e-1, maxit = 100, pfuns = precon_V, output = True)
+        # # precon = lambda x : x
+        # w = pde.pcg(fssu, fsu, tol = 1e-1, maxit = 100, pfuns = precon_V, output = True)
         
         norm_w = np.linalg.norm(w)
         norm_fsu = np.linalg.norm(fsu)
@@ -377,14 +350,14 @@ for z in range(total):
         ux = dphix_H1_o1.T@u
         uy = dphiy_H1_o1.T@u
         norm_ux = np.sqrt(ux**2+uy**2)
-        fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 0)
+        fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 1)
         fig.data[0].colorscale='Jet'
         
     if dxpoly == 'P0':
         ux = dphix_H1_o0.T@u
         uy = dphiy_H1_o0.T@u
         norm_ux = np.sqrt(ux**2+uy**2)
-        fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
+        fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 1)
         fig.data[0].colorscale='Jet'
         
     print(norm_ux.max(),norm_ux.min())
