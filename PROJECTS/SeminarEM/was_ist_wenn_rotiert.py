@@ -78,21 +78,24 @@ ind_iron_rotor, mask_iron_rotor = getIndices(regions_2d, 'rotor_iron', exact = 1
 ind_rotor_air, mask_rotor_air = getIndices(regions_2d, 'rotor_air', exact = 1, return_index = True)
 ind_air_gap_rotor, mask_air_gap_rotor = getIndices(regions_2d, 'air_gap_rotor', exact = 1, return_index = True)
 
-mask_air_all = getIndices(regions_2d, 'air')
-mask_stator_rotor_and_shaft = getIndices(regions_2d, 'iron')
+# mask_air_all = getIndices(regions_2d, 'air')
+# mask_stator_rotor_and_shaft = getIndices(regions_2d, 'iron')
 ind_magnet, mask_magnet = getIndices(regions_2d, 'magnet', return_index = True)
-mask_coil = getIndices(regions_2d, 'coil')
+# mask_coil = getIndices(regions_2d, 'coil')
 mask_shaft = getIndices(regions_2d, 'shaft')
 
-mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
-mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
+# mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
+# mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
 
 mask_rotor  = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
 trig_rotor = t[np.where(mask_rotor)[0],0:3]
 trig_air_gap_rotor = t[np.where(mask_air_gap_rotor)[0],0:3]
 points_rotor = np.unique(trig_rotor)
+
 trig_air_gap_rotor_old = trig_air_gap_rotor.copy()
 trig_air_gap_rotor_new = trig_air_gap_rotor.copy()
+
+
 
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
@@ -123,19 +126,6 @@ def ismember(a_vec, b_vec):
 
 MESH = pde.mesh(p,e,t,q)
 
-
-# for i in range(100):
-# for k in range(points_rotor.shape[0]):
-#     p[points_rotor[k],:] = R(a1*rt)@p[points_rotor[k],:]
-
-# trig_air_gap_rotor_new = dojit(t, edges_rotor_outer, trig_air_gap_rotor, shifted_coeff)
-
-# for k in range(edges_rotor_outer.shape[0]):
-#     a = np.where(trig_air_gap_rotor == edges_rotor_outer[k,0])
-#     for j in range(a[0].shape[0]):
-#         trig_air_gap_rotor_new[a[0][j],a[1][j]] = shifted_coeff[k]
-
-
 tm = time.monotonic()
 
 shifted_coeff = np.roll(edges_rotor_outer[:,0],rt)
@@ -151,13 +141,6 @@ t_new[np.where(mask_air_gap_rotor)[0],0:3] = trig_air_gap_rotor_new
 print('Solving took ', time.monotonic()-tm, 'seconds')
 
 MESH2 = pde.mesh(p_new,e,t_new,q)
-
-# do()
-# for k in range(edges_rotor_outer.shape[0]):
-# p[np.roll(edges_rotor_outer[:,0],rt),:] = p[edges_rotor_outer[:,0],:]
-    
-
-
 
 # aa = np.zeros(MESH.np)
 # aa[points_rotor] = 1
