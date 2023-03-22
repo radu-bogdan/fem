@@ -57,7 +57,7 @@ for z in range(total):
     # Extract indices
     ##########################################################################################
     
-    def getIndices(liste,name,exact = 0,return_index = False):
+    def getIndices(liste, name, exact = 0, return_index = False):
         if exact == 0:
             ind = np.flatnonzero(np.core.defchararray.find(list(liste),name)!=-1)
         else:
@@ -65,24 +65,18 @@ for z in range(total):
         elem = np.where(np.isin(MESH.t[:,3],ind))[0]
         mask = np.zeros(MESH.nt); mask[elem] = 1
         if return_index:
-            return ind, elem, mask
+            return ind, mask
         else:
-            return elem, mask
+            return mask
     
-    trig_air_all, mask_air_all = getIndices(regions_2d,'air')
-    trig_stator_rotor_and_shaft, mask_stator_rotor_and_shaft = getIndices(regions_2d,'iron')
-    trig_magnet, mask_magnet = getIndices(regions_2d,'magnet')
-    trig_coil, mask_coil = getIndices(regions_2d,'coil')
-    trig_shaft, mask_shaft = getIndices(regions_2d,'shaft')
-    
-    trig_stator_rotor = np.setdiff1d(trig_stator_rotor_and_shaft,trig_shaft)
-    mask_stator_rotor = np.zeros(MESH.nt); mask_stator_rotor[trig_stator_rotor]=1
+    mask_air_all = getIndices(regions_2d, 'air')
+    mask_stator_rotor_and_shaft = getIndices(regions_2d, 'iron')
+    mask_magnet = getIndices(regions_2d, 'magnet')
+    mask_coil = getIndices(regions_2d, 'coil')
+    mask_shaft = getIndices(regions_2d, 'shaft')
     
     mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
-    mask_nonlinear = mask_stator_rotor
-    
-    trig_linear = np.r_[trig_air_all,trig_magnet,trig_shaft,trig_coil]
-    trig_nonlinear = trig_stator_rotor
+    mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
     
     ind_stator_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'stator_outer')!=-1)
     edges_stator_outer = np.where(np.isin(e[:,2],ind_stator_outer))[0]
@@ -196,7 +190,7 @@ for z in range(total):
     for i in range(48):
         J += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
         # J0+= pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
-    J = 0*J
+    J = J
     
     M0 = 0; M1 = 0; # M00 = 0
     for i in range(16):
@@ -223,18 +217,6 @@ for z in range(total):
     # fig.show()
     
     # @profile
-    def update_left(ux,uy):
-        fxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(fxx(ux,uy))@ dphix_H1.T
-        fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
-        fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy(ux,uy))@ dphix_H1.T
-        fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
-        return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
-      
-    def update_right(u,ux,uy):
-        return -dphix_H1 @ D_order_dphidphi @ fx(ux,uy) -dphiy_H1 @ D_order_dphidphi @ fy(ux,uy) -penalty*B_stator_outer@u + aJ - aM
-    
-    def fem_objective(u,ux,uy):
-        return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @f(ux,uy) -(aJ-aM)@u + 1/2*penalty*u@B_stator_outer@u
     
     print('Assembling + stuff ', time.monotonic()-tm)
     ##########################################################################################
@@ -258,28 +240,32 @@ for z in range(total):
     mu = 0.0001
     
     
-    def fss(u):
+    def gss(u):
         ux = dphix_H1.T@u
         uy = dphiy_H1.T@u
-        return update_left(ux, uy)
+        fxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(fxx(ux,uy))@ dphix_H1.T
+        fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
+        fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy(ux,uy))@ dphix_H1.T
+        fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx(ux,uy))@ dphiy_H1.T
+        return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
     
-    def fs(u):    
+    def gs(u):    
         ux = dphix_H1.T@u
         uy = dphiy_H1.T@u
-        return update_right(u, ux, uy)
+        return dphix_H1 @ D_order_dphidphi @ fx(ux,uy) + dphiy_H1 @ D_order_dphidphi @ fy(ux,uy) + penalty*B_stator_outer@u - aJ + aM
     
     def J(u):
         ux = dphix_H1.T@u
         uy = dphiy_H1.T@u
-        return fem_objective(u, ux, uy)
+        return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @f(ux,uy) -(aJ-aM)@u + 1/2*penalty*u@B_stator_outer@u
     
     
     
     tm = time.monotonic()
     for i in range(maxIter):
-        fsu = fs(u)
+        gsu = gs(u)
         
-        w = chol(fss(u)).solve_A(fsu)
+        w = chol(gss(u)).solve_A(-gsu)
         
         # mytol = max(min(0.1,np.linalg.norm(fsu)),1e-6)
         
@@ -294,7 +280,7 @@ for z in range(total):
         # precon_V = pyamg.smoothed_aggregation_solver(fssu).aspreconditioner(cycle = 'V')
         
         # # precon_V = pyamg.smoothed_aggregation_solver(fss(u),coarse_solver='splu').aspreconditioner(cycle = 'V')
-        # # precon_V = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle = 'V')
+        # precon_V = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle = 'V')
         
         # # ifssu = sps.diags(1/(fss(u).diagonal()), format = 'csc') #Jacobi preconditioner
         # # precon = lambda x : ifssu@precon_V(x)
@@ -303,12 +289,12 @@ for z in range(total):
         # w = pde.pcg(fssu, fsu, tol = 1e-1, maxit = 100, pfuns = precon_V, output = True)
         
         norm_w = np.linalg.norm(w)
-        norm_fsu = np.linalg.norm(fsu)
+        norm_gsu = np.linalg.norm(gsu)
         
-        if ((w@fsu)/(norm_w*norm_fsu)<epsangle):
+        if (-(w@gsu)/(norm_w*norm_gsu)<epsangle):
             angleCondition[i%5] = 1
             if np.product(angleCondition)>0:
-                w = fsu
+                w = -gsu
                 print("STEP IN NEGATIVE GRADIENT DIRECTION")
         else: angleCondition[i%5]=0
         
@@ -316,20 +302,20 @@ for z in range(total):
         
         # ResidualLineSearch
         # for k in range(1000):
-        #     if np.linalg.norm(fs(u+alpha*w)) <= np.linalg.norm(fs(u)): break
+        #     if np.linalg.norm(gs(u+alpha*w)) <= np.linalg.norm(gs(u)): break
         #     else: alpha = alpha*factor_residual
         
         # AmijoBacktracking
         float_eps = np.finfo(float).eps
         for k in range(1000):
-            if J(u+alpha*w)-J(u) <= alpha*mu*(fs(u)@w) + np.abs(J(u))*float_eps: break
+            if J(u+alpha*w)-J(u) <= alpha*mu*(gs(u)@w) + np.abs(J(u))*float_eps: break
             else: alpha = alpha*factor_residual
             
         u = u + alpha*w
         
-        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(fs(u))+"||alpha: %2e" % (alpha))
+        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(gs(u))+"||alpha: %2e" % (alpha))
         
-        if(np.linalg.norm(fs(u)) < eps_newton): break
+        if(np.linalg.norm(gs(u)) < eps_newton): break
     
     elapsed = time.monotonic()-tm
     print('Solving took ', elapsed, 'seconds')
