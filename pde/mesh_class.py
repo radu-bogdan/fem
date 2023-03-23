@@ -488,7 +488,7 @@ class mesh:
                                     showlegend = False))
         
         
-        if DATAT == 'P1d':
+        if DATAT == 'P1ds':
             x = p[:,0]; y = p[:,1]; z = u;
             xr = npy.linspace(x.min(), x.max(), 200); yr = npy.linspace(y.min(), y.max(), 100)
             xr, yr = npy.meshgrid(xr, yr)

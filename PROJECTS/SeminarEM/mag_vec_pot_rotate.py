@@ -40,7 +40,7 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -136,6 +136,7 @@ if ORDER == 1:
     order_dphidphi = 0
     new_mask_linear = mask_linear
     new_mask_nonlinear = mask_nonlinear
+    u = np.zeros(MESH.np)
     
 if ORDER == 2:
     poly = 'P2'
@@ -144,6 +145,7 @@ if ORDER == 2:
     order_dphidphi = 2
     new_mask_linear = np.tile(mask_linear,(3,1)).T.flatten()
     new_mask_nonlinear = np.tile(mask_nonlinear,(3,1)).T.flatten()
+    u = np.zeros(MESH.np + MESH.NoEdges)
 ##########################################################################################
 
 
@@ -155,15 +157,43 @@ if ORDER == 2:
 k1 = 49.4; k2 = 1.46; k3 = 520.6
 # k1 = 3.8; k2 = 2.17; k3 = 396.2
 
-f_iron = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
+# f_iron = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
 
-# nu = lambda x,y : ((x**2+y**2)<6)*(k1*np.exp(k2*(x**2+y**2))+k3) + nu0*((x**2+y**2)>6)
-# nux = lambda x,y : ((x**2+y**2)<6)*(2*x*k1*k2*np.exp(k2*(x**2+y**2))) + 1*((x**2+y**2)>6)
-# nuy = lambda x,y : ((x**2+y**2)<6)*(2*y*k1*k2*np.exp(k2*(x**2+y**2))) + 1*((x**2+y**2)>6)
+# nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
+# nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
+# nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
 
-nu = lambda x,y : (k1*np.exp(k2*(x**2+y**2))+k3)
-nux = lambda x,y : (2*x*k1*k2*np.exp(k2*(x**2+y**2)))
-nuy = lambda x,y : (2*y*k1*k2*np.exp(k2*(x**2+y**2)))
+def f_iron(x,y):
+    r = k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
+    if np.isinf(r).any():
+        x = 15; y = 15;
+        # print(max(x**2+y**2))
+        return k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
+    else: return r
+
+def nu(x,y):
+    r = k1*np.exp(k2*(x**2+y**2))+k3
+    if np.isinf(r).any(): 
+        return nu0
+    else: return r
+    
+def nux(x,y):
+    r = 2*x*k1*k2*np.exp(k2*(x**2+y**2))
+    if np.isinf(r).any():
+        return 1
+    else: return r
+    
+def nuy(x,y):
+    r = 2*y*k1*k2*np.exp(k2*(x**2+y**2))
+    if np.isinf(r).any():
+        return 1
+    else: return r
+        
+
+
+# nu = lambda x,y : (k1*np.exp(k2*(x**2+y**2))+k3)
+# nux = lambda x,y : (2*x*k1*k2*np.exp(k2*(x**2+y**2)))
+# nuy = lambda x,y : (2*y*k1*k2*np.exp(k2*(x**2+y**2)))
 
 fx_iron = lambda x,y : nu(x,y)*x
 fy_iron = lambda x,y : nu(x,y)*y
@@ -190,10 +220,9 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 10; rt = 0
+rot_speed = 1; rt = 0
 
 for k in range(10):
-    u = np.zeros(MESH.np)
     
     ##########################################################################################
     # Assembling stuff
@@ -275,10 +304,13 @@ for k in range(10):
     factor_residual = 1/2
     mu = 0.0001
     
+    # ux = dphix_H1.T@u
+    # uy = dphiy_H1.T@u
+    # print(max(fxx(ux,uy)),max(fxy(ux,uy)),max(fyx(ux,uy)),max(fyy(ux,uy)))
     
     def gss(u):
-        ux = dphix_H1.T@u
-        uy = dphiy_H1.T@u
+        ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+        
         fxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(fxx(ux,uy))@ dphix_H1.T
         fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy(ux,uy))@ dphiy_H1.T
         fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy(ux,uy))@ dphix_H1.T
@@ -286,41 +318,18 @@ for k in range(10):
         return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
     
     def gs(u):    
-        ux = dphix_H1.T@u
-        uy = dphiy_H1.T@u
+        ux = dphix_H1.T@u; uy = dphiy_H1.T@u
         return dphix_H1 @ D_order_dphidphi @ fx(ux,uy) + dphiy_H1 @ D_order_dphidphi @ fy(ux,uy) + penalty*B_stator_outer@u - aJ + aM
     
     def J(u):
-        ux = dphix_H1.T@u
-        uy = dphiy_H1.T@u
+        ux = dphix_H1.T@u; uy = dphiy_H1.T@u
         return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @f(ux,uy) -(aJ-aM)@u + 1/2*penalty*u@B_stator_outer@u
     
     tm = time.monotonic()
     for i in range(maxIter):
         gsu = gs(u)
-        
-        w = chol(gss(u)).solve_A(-gsu)
-        
-        # mytol = max(min(0.1,np.linalg.norm(fsu)),1e-6)
-        
-        # manual construction of a two-level AMG hierarchy
-        # from pyamg.multilevel import MultilevelSolver
-        # from pyamg.strength import classical_strength_of_connection, symmetric_strength_of_connection
-        # from pyamg.classical.interpolate import direct_interpolation
-        # from pyamg.classical.split import RS,PMIS
-        
-        # fssu = fss(u)
-        # # c = lambda A,b : chol(A).solve_A(b)
-        # precon_V = pyamg.smoothed_aggregation_solver(fssu).aspreconditioner(cycle = 'V')
-        
-        # # precon_V = pyamg.smoothed_aggregation_solver(fss(u),coarse_solver='splu').aspreconditioner(cycle = 'V')
-        # precon_V = pyamg.rootnode_solver(fss(u)).aspreconditioner(cycle = 'V')
-        
-        # # ifssu = sps.diags(1/(fss(u).diagonal()), format = 'csc') #Jacobi preconditioner
-        # # precon = lambda x : ifssu@precon_V(x)
-        
-        # # precon = lambda x : x
-        # w = pde.pcg(fssu, fsu, tol = 1e-1, maxit = 100, pfuns = precon_V, output = True)
+        gssu = gss(u)
+        w = chol(gssu).solve_A(-gsu)
         
         norm_w = np.linalg.norm(w)
         norm_gsu = np.linalg.norm(gsu)
@@ -354,6 +363,10 @@ for k in range(10):
     elapsed = time.monotonic()-tm
     print('Solving took ', elapsed, 'seconds')
     
+    ux = dphix_H1.T@u
+    uy = dphiy_H1.T@u
+    print(np.linalg.norm(u),np.linalg.norm(ux),np.linalg.norm(uy), max(ux**2+uy**2))
+    
     # O(n^3/2) complexity for sparse cholesky, done #newton times
     # n = fss(u).shape[0]
     # flops = (n**(3/2)*i)/elapsed
@@ -362,15 +375,15 @@ for k in range(10):
     
     # if k > 6:
         
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    # # fig.layout.scene.camera.projection.type = "orthographic"
-    # fig.data[0].colorscale='Jet'
-    # fig.show()
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # fig.layout.scene.camera.projection.type = "orthographic"
+    fig.data[0].colorscale='Jet'
+    fig.show()
     
     if dxpoly == 'P1':
         ux = dphix_H1_o1.T@u
         uy = dphiy_H1_o1.T@u
-        norm_ux = np.sqrt(ux**2+uy**2)
+        norm_ux = ux**2+uy**2
         fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 0)
         fig.data[0].colorscale='Jet'
         fig.data[0].cmax = 2.5
@@ -379,14 +392,19 @@ for k in range(10):
     if dxpoly == 'P0':
         ux = dphix_H1_o0.T@u
         uy = dphiy_H1_o0.T@u
-        norm_ux = np.sqrt(ux**2+uy**2)
+        norm_ux = ux**2+uy**2
         fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
         fig.data[0].colorscale='Jet'
         fig.data[0].cmax = 2.5
         fig.data[0].cmin = 0
         
-    # print(norm_ux.max(),norm_ux.min())
     fig.show()
+
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 1)
+    fig.layout.scene.camera.projection.type = "orthographic"
+    fig.show()
+    
+    list1 = MESH.EdgesToVertices
     
     ##########################################################################################
     
@@ -402,13 +420,29 @@ for k in range(10):
     t_new[np.where(mask_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
 
     MESH = pde.mesh(p_new,e,t_new,q)
+    
+    u = np.r_[u[:MESH.np],1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])].copy()
+    
+    
+    ##########################################################################################
+    
+    lz = 1
+    nuAir = nu0
+    rTorqueOuter = 2
+    rTorqueInner = 1
+    
+    # Q = CoefficientFunction((x*y/sqrt(x*x+y*y), (y*y-x*x)/(2*sqrt(x*x+y*y)),(y*y-x*x)/(2*sqrt(x*x+y*y)),-x*y/sqrt(x*x+y*y)), dims=(2,2))
+    # def Cost_vol(u):
+    #     return  (lz*nuAir / (rTorqueOuter-rTorqueInner) *( Q[0]*grad(u)[0]*grad(u)[0] + 
+    #                                                        Q[1]*grad(u)[1]*grad(u)[0] + 
+    #                                                        Q[2]*grad(u)[1]*grad(u)[0] + 
+    #                                                        Q[3]*grad(u)[1]*grad(u)[1]) ) * dx(definedon = mesh.Materials("air_gap|air_gap_rotor|air_gap_stator"))
+
+    
 
 # MESH.refinemesh()
         
     
 # do()
 
-# fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 1)
-# fig.layout.scene.camera.projection.type = "orthographic"
-# fig.show()
 

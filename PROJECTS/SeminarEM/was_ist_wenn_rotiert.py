@@ -132,10 +132,8 @@ shifted_coeff = np.roll(edges_rotor_outer[:,0],rt)
 kk, jj = MESH._mesh__ismember(trig_air_gap_rotor_new,edges_rotor_outer[:,0])
 trig_air_gap_rotor_new[kk] = shifted_coeff[jj]
 
-p_new = p.copy()
+p_new = p.copy(); t_new = t.copy()
 p_new[points_rotor,:] = (R(a1*rt)@p[points_rotor,:].T).T
-
-t_new = t.copy()
 t_new[np.where(mask_air_gap_rotor)[0],0:3] = trig_air_gap_rotor_new
 
 print('Solving took ', time.monotonic()-tm, 'seconds')
