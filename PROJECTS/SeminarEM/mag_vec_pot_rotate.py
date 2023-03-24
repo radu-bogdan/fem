@@ -220,8 +220,8 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 1; rt = 0
-rots = 1
+rot_speed = 100; rt = 0
+rots = 2
 tor = np.zeros(rots)
 
 for k in range(rots):
@@ -264,12 +264,12 @@ for k in range(rots):
         # J0+= pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
     J = 0*J
     
-    M0 = 0; M1 = 0; # M00 = 0
+    M0 = 0; M1 = 0; M00 = 0
     for i in range(16):
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
-        # M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @J
     
@@ -279,8 +279,8 @@ for k in range(rots):
     aMnew = aM
     
     
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), M00, u_height=0)
-    # fig.show()
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), M00, u_height=0)
+    fig.show()
     
     # print('Assembling + stuff ', time.monotonic()-tm)
     ##########################################################################################
@@ -385,7 +385,7 @@ for k in range(rots):
         fig.data[0].colorscale='Jet'
         fig.data[0].cmax = +0.016
         fig.data[0].cmin = -0.016
-        fig.show()
+        # fig.show()
     
     ##########################################################################################
     
@@ -440,9 +440,9 @@ for k in range(rots):
     p_new[points_rotor,:] = (R(a1*rt)@p[points_rotor,:].T).T
     t_new[np.where(mask_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
     
-    MESH.pdemesh(info=1).show()
+    # MESH.pdemesh(info=1).show()
     MESH = pde.mesh(p_new,e,t_new,q)
-    MESH.pdemesh(info=1).show()
+    # MESH.pdemesh(info=1).show()
     
     # u = np.r_[u[:MESH.np],1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])].copy()
     
