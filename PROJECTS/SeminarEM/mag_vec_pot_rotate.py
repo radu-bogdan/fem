@@ -29,7 +29,7 @@ t = motor_npz['t'].T
 q = np.empty(0)
 regions_2d = motor_npz['regions_2d']
 regions_1d = motor_npz['regions_1d']
-m = motor_npz['m']
+m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 ##########################################################################################
@@ -40,7 +40,7 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -220,14 +220,14 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 313; rt = 0
-rots = 3
+rot_speed = 1; rt = 0
+rots = 200
 tor = np.zeros(rots)
 
 for k in range(rots):
     
     # u = np.zeros(MESH.np)
-    u = np.zeros(MESH.np + MESH.NoEdges)
+    # u = np.zeros(MESH.np + MESH.NoEdges)
     
     ##########################################################################################
     # Assembling stuff
@@ -267,10 +267,10 @@ for k in range(rots):
     
     M0 = 0; M1 = 0; M00 = 0
     for i in range(16):
-        M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-        M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
-        M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @J
     
@@ -398,33 +398,33 @@ for k in range(rots):
     
     # if k > 6:
         
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    # fig.layout.scene.camera.projection.type = "orthographic"
-    fig.data[0].colorscale='Jet'
-    fig.show()
-    
-    if dxpoly == 'P1':
-        ux = dphix_H1_o1.T@u
-        uy = dphiy_H1_o1.T@u
-        norm_ux = ux**2+uy**2
-        fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 0)
-        fig.data[0].colorscale='Jet'
-        fig.data[0].cmax = 2.5
-        fig.data[0].cmin = 0
-        
-    if dxpoly == 'P0':
-        ux = dphix_H1_o0.T@u
-        uy = dphiy_H1_o0.T@u
-        norm_ux = ux**2+uy**2
-        fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
-        fig.data[0].colorscale='Jet'
-        fig.data[0].cmax = 2.5
-        fig.data[0].cmin = 0
-        
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # # fig.layout.scene.camera.projection.type = "orthographic"
+    # fig.data[0].colorscale='Jet'
     # fig.show()
+    
+    # if dxpoly == 'P1':
+    #     ux = dphix_H1_o1.T@u
+    #     uy = dphiy_H1_o1.T@u
+    #     norm_ux = ux**2+uy**2
+    #     fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', quad = 'Q1d', controls = 1), norm_ux, u_height = 0)
+    #     fig.data[0].colorscale='Jet'
+    #     fig.data[0].cmax = 2.5
+    #     fig.data[0].cmin = 0
+        
+    # if dxpoly == 'P0':
+    #     ux = dphix_H1_o0.T@u
+    #     uy = dphiy_H1_o0.T@u
+    #     norm_ux = ux**2+uy**2
+    #     fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0', controls = 1), norm_ux, u_height = 0)
+    #     fig.data[0].colorscale='Jet'
+    #     fig.data[0].cmax = 2.5
+    #     fig.data[0].cmin = 0
+        
+    # # fig.show()
 
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    fig.data[0].colorscale='Jet'
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # fig.data[0].colorscale='Jet'
     # fig.layout.scene.camera.projection.type = "orthographic"
     # fig.show()
     
@@ -440,10 +440,9 @@ for k in range(rots):
     p_new = p.copy(); t_new = t.copy()
     p_new[points_rotor,:] = (R(a1*rt)@p[points_rotor,:].T).T
     t_new[np.where(mask_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
+    m_new = R(a1*rt)@m
     
-    # MESH.pdemesh(info=1).show()
     MESH = pde.mesh(p_new,e,t_new,q)
-    # MESH.pdemesh(info=1).show()
     
     # ind_air_all = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'air')!=-1)
     # ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'iron')!=-1)
