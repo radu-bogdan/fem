@@ -220,8 +220,8 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 1; rt = 0
-rots = 200
+rot_speed = 5; rt = 0
+rots = 90
 tor = np.zeros(rots)
 
 for k in range(rots):
@@ -398,10 +398,10 @@ for k in range(rots):
     
     # if k > 6:
         
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    # # fig.layout.scene.camera.projection.type = "orthographic"
-    # fig.data[0].colorscale='Jet'
-    # fig.show()
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # fig.layout.scene.camera.projection.type = "orthographic"
+    fig.data[0].colorscale='Jet'
+    fig.show()
     
     # if dxpoly == 'P1':
     #     ux = dphix_H1_o1.T@u
