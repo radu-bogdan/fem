@@ -57,7 +57,7 @@ MESH = pde.mesh(p,e,t,q)
 # Extract indices
 ##########################################################################################
 
-def getIndices(liste, name, exact = 0, return_index = False):
+def getIndices2d(liste, name, exact = 0, return_index = False):
     if exact == 0:
         ind = np.flatnonzero(np.core.defchararray.find(list(liste),name)!=-1)
     else:
@@ -69,39 +69,36 @@ def getIndices(liste, name, exact = 0, return_index = False):
     else:
         return mask
 
-mask_air_all = getIndices(regions_2d, 'air')
-mask_stator_rotor_and_shaft = getIndices(regions_2d, 'iron')
-mask_magnet = getIndices(regions_2d, 'magnet')
-mask_coil = getIndices(regions_2d, 'coil')
-mask_shaft = getIndices(regions_2d, 'shaft')
+mask_air_all = getIndices2d(regions_2d, 'air')
+mask_stator_rotor_and_shaft = getIndices2d(regions_2d, 'iron')
+mask_magnet = getIndices2d(regions_2d, 'magnet')
+mask_coil = getIndices2d(regions_2d, 'coil')
+mask_shaft = getIndices2d(regions_2d, 'shaft')
+mask_iron_rotor = getIndices2d(regions_2d, 'rotor_iron', exact = 1)
+mask_rotor_air = getIndices2d(regions_2d, 'rotor_air', exact = 1)
+mask_air_gap_rotor = getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
 
-ind_iron_rotor, mask_iron_rotor = getIndices(regions_2d, 'rotor_iron', exact = 1, return_index = True)
-ind_rotor_air, mask_rotor_air = getIndices(regions_2d, 'rotor_air', exact = 1, return_index = True)
-ind_air_gap_rotor, mask_air_gap_rotor = getIndices(regions_2d, 'air_gap_rotor', exact = 1, return_index = True)
-ind_magnet, mask_magnet = getIndices(regions_2d, 'magnet', return_index = True)
-mask_rotor  = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
+mask_rotor     = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
+mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
+mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
 
 trig_rotor = t[np.where(mask_rotor)[0],0:3]
 trig_air_gap_rotor = t[np.where(mask_air_gap_rotor)[0],0:3]
 points_rotor = np.unique(trig_rotor)
 
-mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
-mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
 
 ind_stator_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'stator_outer')!=-1)
-edges_stator_outer = np.where(np.isin(e[:,2],ind_stator_outer))[0]
-
 ind_rotor_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'rotor_outer')!=-1)
 ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
 ind_trig_coils = {}
 for i in range(48):
-    ind_trig_coils[i] = getIndices(regions_2d, 'coil' + str(i+1), exact = 1, return_index = True)[0]
+    ind_trig_coils[i] = getIndices2d(regions_2d, 'coil' + str(i+1), exact = 1, return_index = True)[0]
 
 ind_trig_magnets = {}
 for i in range(16):
-    ind_trig_magnets[i] = getIndices(regions_2d, 'magnet' + str(i+1), exact = 1, return_index = True)[0]
+    ind_trig_magnets[i] = getIndices2d(regions_2d, 'magnet' + str(i+1), exact = 1, return_index = True)[0]
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                         [np.sin(x), np.cos(x)]])
@@ -162,38 +159,6 @@ f_iron = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) 
 nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
 nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
 nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
-
-# def f_iron(x,y):
-#     r = k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
-#     if np.isinf(r).any():
-#         x = 15; y = 15;
-#         # print(max(x**2+y**2))
-#         return k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
-#     else: return r
-
-# def nu(x,y):
-#     r = k1*np.exp(k2*(x**2+y**2))+k3
-#     if np.isinf(r).any(): 
-#         return nu0
-#     else: return r
-    
-# def nux(x,y):
-#     r = 2*x*k1*k2*np.exp(k2*(x**2+y**2))
-#     if np.isinf(r).any():
-#         return 1
-#     else: return r
-    
-# def nuy(x,y):
-#     r = 2*y*k1*k2*np.exp(k2*(x**2+y**2))
-#     if np.isinf(r).any():
-#         return 1
-#     else: return r
-        
-
-
-# nu = lambda x,y : (k1*np.exp(k2*(x**2+y**2))+k3)
-# nux = lambda x,y : (2*x*k1*k2*np.exp(k2*(x**2+y**2)))
-# nuy = lambda x,y : (2*y*k1*k2*np.exp(k2*(x**2+y**2)))
 
 fx_iron = lambda x,y : nu(x,y)*x
 fy_iron = lambda x,y : nu(x,y)*y
@@ -365,12 +330,12 @@ for k in range(rots):
     rTorqueOuter = 79.242*10**(-3)
     rTorqueInner = 78.63225*10**(-3)
     
-    ind_air_gaps = getIndices(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
+    ind_air_gaps = getIndices2d(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
     
-    Q0 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
+    Q0 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
     Q1 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
     Q2 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
-    Q3 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
+    Q3 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
     T = lz*nuAir/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux + 
@@ -381,12 +346,12 @@ for k in range(rots):
     
     tor[k] = T
     
-    if k%10 == 50:    
-        fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q0', controls = 1), u, u_height = 0)
-        fig.data[0].colorscale='Jet'
-        fig.data[0].cmax = +0.016
-        fig.data[0].cmin = -0.016
-        # fig.show()
+    # if k%10 == 50:    
+    #     fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q0', controls = 1), u, u_height = 0)
+    #     fig.data[0].colorscale='Jet'
+    #     fig.data[0].cmax = +0.016
+    #     fig.data[0].cmin = -0.016
+    #     # fig.show()
     
     ##########################################################################################
     
@@ -398,10 +363,10 @@ for k in range(rots):
     
     # if k > 6:
         
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    # fig.layout.scene.camera.projection.type = "orthographic"
-    fig.data[0].colorscale='Jet'
-    fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # # fig.layout.scene.camera.projection.type = "orthographic"
+    # fig.data[0].colorscale='Jet'
+    # fig.show()
     
     # if dxpoly == 'P1':
     #     ux = dphix_H1_o1.T@u
