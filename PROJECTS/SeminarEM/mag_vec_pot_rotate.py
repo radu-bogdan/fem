@@ -92,13 +92,16 @@ ind_rotor_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'rot
 ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
-ind_trig_coils = {}
-for i in range(48):
-    ind_trig_coils[i] = getIndices2d(regions_2d, 'coil' + str(i+1), exact = 1, return_index = True)[0]
+ind_trig_coils   = getIndices2d(regions_2d, 'coil', return_index = True)[0]
+ind_trig_magnets = getIndices2d(regions_2d, 'magnet', return_index = True)[0]
 
-ind_trig_magnets = {}
-for i in range(16):
-    ind_trig_magnets[i] = getIndices2d(regions_2d, 'magnet' + str(i+1), exact = 1, return_index = True)[0]
+# ind_trig_coils = {}
+# for i in range(48):
+#     ind_trig_coils[i] = getIndices2d(regions_2d, 'coil' + str(i+1), exact = 1, return_index = True)[0]
+
+# ind_trig_magnets = {}
+# for i in range(16):
+#     ind_trig_magnets[i] = getIndices2d(regions_2d, 'magnet' + str(i+1), exact = 1, return_index = True)[0]
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                         [np.sin(x), np.cos(x)]])
@@ -185,7 +188,7 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 5; rt = 0
+rot_speed = 1; rt = 0
 rots = 90
 tor = np.zeros(rots)
 
@@ -235,7 +238,7 @@ for k in range(rots):
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
-        M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        # M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @J
     
@@ -325,8 +328,7 @@ for k in range(rots):
     # Torque computation
     ##########################################################################################
     
-    lz = 0.1795
-    nuAir = nu0
+    lz = 0.1795 # where does this come from?
     rTorqueOuter = 79.242*10**(-3)
     rTorqueInner = 78.63225*10**(-3)
     
@@ -338,10 +340,10 @@ for k in range(rots):
     Q3 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
-    T = lz*nuAir/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux + 
-                                                (Q1*uy)@D_order_dphidphi@ux + 
-                                                (Q2*ux)@D_order_dphidphi@uy + 
-                                                (Q3*uy)@D_order_dphidphi@uy)
+    T = lz*nu0/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux + 
+                                              (Q1*uy)@D_order_dphidphi@ux + 
+                                              (Q2*ux)@D_order_dphidphi@uy + 
+                                              (Q3*uy)@D_order_dphidphi@uy)
     print(k,'Torque:', T)
     
     tor[k] = T
