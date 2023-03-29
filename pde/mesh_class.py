@@ -206,6 +206,18 @@ class mesh:
         common_ind = b_ind[npy.isin(b_unique, common_unique, assume_unique=True)]
         return bool_ind, common_ind[common_inv]
     
+    def getIndices2d(self, liste, name, exact = 0, return_index = False):
+        if exact == 0:
+            ind = npy.flatnonzero(npy.core.defchararray.find(list(liste),name)!=-1)
+        else:
+            ind = [i for i, x in enumerate(list(liste)) if x == name]
+        elem = npy.where(npy.isin(self.t[:,3],ind))[0]
+        mask = npy.zeros(self.nt); mask[elem] = 1
+        if return_index:
+            return ind, mask
+        else:
+            return mask
+    
     def pdemesh(self,dpi=500,info=0,border=0):
 
         p = self.p; t = self.t; q = self.q

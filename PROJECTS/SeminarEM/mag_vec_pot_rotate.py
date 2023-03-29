@@ -57,26 +57,14 @@ MESH = pde.mesh(p,e,t,q)
 # Extract indices
 ##########################################################################################
 
-def getIndices2d(liste, name, exact = 0, return_index = False):
-    if exact == 0:
-        ind = np.flatnonzero(np.core.defchararray.find(list(liste),name)!=-1)
-    else:
-        ind = [i for i, x in enumerate(list(liste)) if x == name]
-    elem = np.where(np.isin(MESH.t[:,3],ind))[0]
-    mask = np.zeros(MESH.nt); mask[elem] = 1
-    if return_index:
-        return ind, mask
-    else:
-        return mask
-
-mask_air_all = getIndices2d(regions_2d, 'air')
-mask_stator_rotor_and_shaft = getIndices2d(regions_2d, 'iron')
-mask_magnet = getIndices2d(regions_2d, 'magnet')
-mask_coil = getIndices2d(regions_2d, 'coil')
-mask_shaft = getIndices2d(regions_2d, 'shaft')
-mask_iron_rotor = getIndices2d(regions_2d, 'rotor_iron', exact = 1)
-mask_rotor_air = getIndices2d(regions_2d, 'rotor_air', exact = 1)
-mask_air_gap_rotor = getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
+mask_air_all = MESH.getIndices2d(regions_2d, 'air')
+mask_stator_rotor_and_shaft = MESH.getIndices2d(regions_2d, 'iron')
+mask_magnet = MESH.getIndices2d(regions_2d, 'magnet')
+mask_coil = MESH.getIndices2d(regions_2d, 'coil')
+mask_shaft = MESH.getIndices2d(regions_2d, 'shaft')
+mask_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', exact = 1)
+mask_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', exact = 1)
+mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
 
 mask_rotor     = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
 mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
@@ -92,8 +80,8 @@ ind_rotor_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'rot
 ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
-ind_trig_coils   = getIndices2d(regions_2d, 'coil', return_index = True)[0]
-ind_trig_magnets = getIndices2d(regions_2d, 'magnet', return_index = True)[0]
+ind_trig_coils   = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
+ind_trig_magnets = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
 
 # ind_trig_coils = {}
 # for i in range(48):
@@ -113,15 +101,6 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 # for k in range(edges_rotor_outer.shape[0]):
 #     p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k-1))
 #     p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k-1))
-    
-def ismember(a_vec, b_vec):
-    """ MATLAB equivalent ismember function """
-    bool_ind = np.isin(a_vec,b_vec)
-    common = a_vec[bool_ind]
-    common_unique, common_inv  = np.unique(common, return_inverse=True)     # common = common_unique[common_inv]
-    b_unique, b_ind = np.unique(b_vec, return_index=True)  # b_unique = b_vec[b_ind]
-    common_ind = b_ind[np.isin(b_unique, common_unique, assume_unique=True)]
-    return bool_ind, common_ind[common_inv]
 ##########################################################################################
 
 
@@ -189,13 +168,10 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 ###########################################################################################
 
 rot_speed = 1; rt = 0
-rots = 90
+rots = 100
 tor = np.zeros(rots)
 
 for k in range(rots):
-    
-    # u = np.zeros(MESH.np)
-    # u = np.zeros(MESH.np + MESH.NoEdges)
     
     ##########################################################################################
     # Assembling stuff
@@ -332,7 +308,7 @@ for k in range(rots):
     rTorqueOuter = 79.242*10**(-3)
     rTorqueInner = 78.63225*10**(-3)
     
-    ind_air_gaps = getIndices2d(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
+    ind_air_gaps = MESH.getIndices2d(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
     
     Q0 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
     Q1 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
@@ -340,9 +316,9 @@ for k in range(rots):
     Q3 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
-    T = lz*nu0/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux + 
-                                              (Q1*uy)@D_order_dphidphi@ux + 
-                                              (Q2*ux)@D_order_dphidphi@uy + 
+    T = lz*nu0/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux +
+                                              (Q1*uy)@D_order_dphidphi@ux +
+                                              (Q2*ux)@D_order_dphidphi@uy +
                                               (Q3*uy)@D_order_dphidphi@uy)
     print(k,'Torque:', T)
     
@@ -365,10 +341,10 @@ for k in range(rots):
     
     # if k > 6:
         
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    # # fig.layout.scene.camera.projection.type = "orthographic"
-    # fig.data[0].colorscale='Jet'
-    # fig.show()
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # fig.layout.scene.camera.projection.type = "orthographic"
+    fig.data[0].colorscale = 'Jet'
+    fig.show()
     
     # if dxpoly == 'P1':
     #     ux = dphix_H1_o1.T@u
@@ -410,43 +386,11 @@ for k in range(rots):
     m_new = R(a1*rt)@m
     
     MESH = pde.mesh(p_new,e,t_new,q)
-    
-    # ind_air_all = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'air')!=-1)
-    # ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'iron')!=-1)
-    # ind_magnet = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'magnet')!=-1)
-    # ind_coil = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'coil')!=-1)
-    # ind_shaft = np.flatnonzero(np.core.defchararray.find(list(regions_2d),'shaft')!=-1)
-
-    # trig_air_all = np.where(np.isin(MESH.t[:,3],ind_air_all))
-    # trig_stator_rotor = np.where(np.isin(MESH.t[:,3],ind_stator_rotor))
-    # trig_magnet = np.where(np.isin(MESH.t[:,3],ind_magnet))
-    # trig_coil = np.where(np.isin(MESH.t[:,3],ind_coil))
-    # trig_shaft = np.where(np.isin(MESH.t[:,3],ind_shaft))
-
-    # vek = np.zeros(MESH.nt)
-    # vek[trig_air_all] = 1
-    # vek[trig_magnet] = 2
-    # vek[trig_coil] = 3
-    # vek[trig_stator_rotor] = 4
-    # vek[trig_shaft] = 3.6
 
     # fig = MESH.pdemesh()
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), f(1,1)+0*vek, u_height=0)
     # fig.show()
     
     # u = np.r_[u[:MESH.np],1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])].copy()
-    
-    # Q0 = (x*y/sqrt(x*x+y*y)
-    
-    # T = (lz*nuAir / (rTorqueOuter-rTorqueInner) *
-    
-    # Q = CoefficientFunction((x*y/sqrt(x*x+y*y), (y*y-x*x)/(2*sqrt(x*x+y*y)),(y*y-x*x)/(2*sqrt(x*x+y*y)),-x*y/sqrt(x*x+y*y)), dims=(2,2))
-    # def Cost_vol(u):
-    #     return  (lz*nuAir / (rTorqueOuter-rTorqueInner) *( Q[0]*grad(u)[0]*grad(u)[0] + 
-    #                                                        Q[1]*grad(u)[1]*grad(u)[0] + 
-    #                                                        Q[2]*grad(u)[1]*grad(u)[0] + 
-    #                                                        Q[3]*grad(u)[1]*grad(u)[1]) ) * dx(definedon = mesh.Materials("air_gap|air_gap_rotor|air_gap_stator"))
-
-    
 
 
