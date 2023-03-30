@@ -17,7 +17,7 @@ import numba as jit
 # import plotly.figure_factory as ff
 
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # import plotly.express as px
 # import pandas as pd
 
@@ -26,6 +26,8 @@ import numba as jit
 # Call the register function once and all Figures/FigureWidgets will be wrapped
 # according to the register_plotly_resampler its `mode` argument
 # register_plotly_resampler(mode='auto')
+
+
 
 class mesh:
     # @profile
@@ -217,6 +219,34 @@ class mesh:
             return ind, mask
         else:
             return mask
+        
+    def pdemesh2(self,**kwargs):
+        if "ax" not in kwargs:
+            # create new figure
+            fig = plt.figure(**{k: v for k, v in kwargs.items() if k in ['figsize']})
+            ax = fig.add_subplot(111)
+            aspect = kwargs["aspect"] if "aspect" in kwargs else 1.0
+            ax.set_aspect(aspect)
+            # ax.set_axis_off()
+        else:
+            ax = kwargs["ax"]
+            ax.clear()
+            
+        xx_trig = npy.c_[self.p[self.t[:,0],0],self.p[self.t[:,1],0],self.p[self.t[:,2],0]]
+        yy_trig = npy.c_[self.p[self.t[:,0],1],self.p[self.t[:,1],1],self.p[self.t[:,2],1]]
+        
+        xxx_trig = npy.c_[xx_trig,xx_trig[:,0],npy.nan*xx_trig[:,0]]
+        yyy_trig = npy.c_[yy_trig,yy_trig[:,0],npy.nan*yy_trig[:,0]]
+            
+        ax.plot(
+            xxx_trig.flatten(), 
+            yyy_trig.flatten(),
+            kwargs['color'] if 'color' in kwargs else 'k',
+            linewidth=kwargs['linewidth'] if 'linewidth' in kwargs else .5,
+        )
+        # ax.set_axis_off()
+        ax.show = lambda: plt.show()
+        return ax
     
     def pdemesh(self,dpi=500,info=0,border=0):
 

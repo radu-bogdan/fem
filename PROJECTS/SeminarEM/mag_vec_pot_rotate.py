@@ -15,6 +15,13 @@ import nonlinear_Algorithms
 import numba as nb
 import pyamg
 
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.set_aspect(aspect = 'equal')
+
 # @profile
 # def do():
     
@@ -167,8 +174,8 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 1; rt = 0
-rots = 100
+rot_speed = 20; rt = 0
+rots = 50
 tor = np.zeros(rots)
 
 for k in range(rots):
@@ -176,6 +183,8 @@ for k in range(rots):
     ##########################################################################################
     # Assembling stuff
     ##########################################################################################
+    
+    u = np.zeros(MESH.np)
     
     tm = time.monotonic()
     
@@ -341,10 +350,10 @@ for k in range(rots):
     
     # if k > 6:
         
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
-    # fig.layout.scene.camera.projection.type = "orthographic"
-    fig.data[0].colorscale = 'Jet'
-    fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 0), u[:MESH.np], u_height = 0)
+    # # fig.layout.scene.camera.projection.type = "orthographic"
+    # fig.data[0].colorscale = 'Jet'
+    # fig.show()
     
     # if dxpoly == 'P1':
     #     ux = dphix_H1_o1.T@u
@@ -393,4 +402,7 @@ for k in range(rots):
     
     # u = np.r_[u[:MESH.np],1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])].copy()
 
-
+    
+    MESH.pdemesh2(ax = ax)
+    fig.canvas.draw()
+    fig.canvas.flush_events()

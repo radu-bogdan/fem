@@ -7,8 +7,8 @@ sys.path.insert(0,'../CEM') # adds parent directory
 
 import numpy as np
 import pde
-import scipy.sparse as sps
-from sksparse.cholmod import cholesky
+# import scipy.sparse as sps
+# from sksparse.cholmod import cholesky
 import time
 import gmsh
 import reduction_matrix
@@ -80,7 +80,7 @@ dtau_uh_y_P1d_fine = np.empty(0); dtau_new_uh_y_P1d_fine = np.empty(0); dtau_new
 mean_div_uh_NC1_P0_fine = np.empty(0); mean_new_div_uh_N0_P0_fine = np.empty(0); mean_new_div_uh_N00_P0_fine = np.empty(0)
 
 for i in range(iterations):
-    print('Iteration',i+1,'out of',iterations)
+    print('Iteration', i+1, 'out of', iterations)
     h_approx = 2/np.sqrt(MESH.nt/2)
     print('h approx',h_approx,'dt chosen exactly as ',dt, 'konstante etwa:',dt/h_approx)
 
@@ -91,7 +91,7 @@ for i in range(iterations):
     
     qK2 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 2)
     qK0 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 0)
-    qD1 = pde.l2.assemble(MESH, space = 'P1d', matrix = 'M', order = 2)
+    qD1 = pde.l2.assemble(MESH, space = 'P1', matrix = 'M', order = 2)
     # qD0 = pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = 1)
     
     D2 = pde.int.assemble(MESH, order = 2)
@@ -461,10 +461,13 @@ for i in range(iterations):
     
     ################################################################################
     
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2))
-    # fig.show()
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2))
-    # fig.show()
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
+    fig.data[0].colorscale='Jet'
+    fig.show()
+    
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2), u_height=0)
+    fig.data[0].colorscale='Jet'
+    fig.show()
     
     if i+1!=iterations:
         MESH.refinemesh(); dt = dt/2;
@@ -480,18 +483,18 @@ for i in range(iterations):
     
     rate = np.log2(error[1:-1]/error[2:])
     print("Convergenge rates : ",rate)
-    print("Errors: ",error)
+    # print("Errors: ",error)
     
     new_rate = np.log2(new_error[1:-1]/new_error[2:])
     print("Convergenge rates : ",new_rate)
-    print("Errors: ",new_error)
+    # print("Errors: ",new_error)
     
     rate2 = np.log2(error2[1:-1]/error2[2:])
     print("Convergenge rates : ",rate2)
-    print("Errors: ",error2)
+    # print("Errors: ",error2)
     
     rate3 = np.log2(error3[1:-1]/error3[2:])
     print("Convergenge rates : ",rate3)
-    print("Errors: ",error3)
+    # print("Errors: ",error3)
 
 # do()
