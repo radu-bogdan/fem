@@ -33,7 +33,7 @@ np.set_printoptions(precision = 8)
 
 T = 2
 dt = 0.03/2*4
-iterations = 7
+iterations = 6
 init_ref = 0.25*4
 use_GPU = False
 
@@ -65,9 +65,10 @@ gmsh.option.setNumber("Mesh.SaveAll", 1)
 # gmsh.fltk.run()
 p,e,t,q = pde.petq_generate()
 # gmsh.write("twoDomains.m")
-gmsh.finalize()
+# gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
+MESH.refinemesh()
 ################################################################################
 
 error = np.zeros(iterations)
@@ -376,51 +377,6 @@ for i in range(iterations):
     # fig.show()
     
     if i>0:
-    
-        #############################################################################################################
-        
-        # Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:].flatten())
-        # t_circ = MESH.trianglesFromPoints(Indices_PointsOnCircle)
-        
-        # dtau_new_uh_x_P1d_circ = dtau_new_uh_x_P1d.copy(); dtau_new_uh_x_P1d = 0*dtau_new_uh_x_P1d
-        # dtau_new_uh_y_P1d_circ = dtau_new_uh_y_P1d.copy(); dtau_new_uh_y_P1d = 0*dtau_new_uh_y_P1d
-        # mean_new_div_uh_N0_P0_circ = mean_new_div_uh_N0_P0.copy(); mean_new_div_uh_N0_P0 = 0*mean_new_div_uh_N0_P0
-        
-        # dtau_new_uh_x_P1d[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_x_P1d_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # dtau_new_uh_y_P1d[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_y_P1d_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # mean_new_div_uh_N0_P0[np.r_[t_circ]] = mean_new_div_uh_N0_P0_circ[np.r_[t_circ]]
-        
-        
-        
-        # dtau_new_uh_x_P1d_fine_circ = dtau_new_uh_x_P1d_fine.copy(); dtau_new_uh_x_P1d_fine = 0*dtau_new_uh_x_P1d_fine
-        # dtau_new_uh_y_P1d_fine_circ = dtau_new_uh_y_P1d_fine.copy(); dtau_new_uh_y_P1d_fine = 0*dtau_new_uh_y_P1d_fine
-        # mean_new_div_uh_N0_P0_fine_circ = mean_new_div_uh_N0_P0_fine.copy(); mean_new_div_uh_N0_P0_fine = 0*mean_new_div_uh_N0_P0_fine
-        
-        # dtau_new_uh_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # dtau_new_uh_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # mean_new_div_uh_N0_P0_fine[np.r_[t_circ]] = mean_new_div_uh_N0_P0_fine_circ[np.r_[t_circ]]
-        
-
-        
-        # dtau_new_uh0_x_P1d_fine_circ = dtau_new_uh0_x_P1d_fine.copy(); dtau_new_uh0_x_P1d_fine = 0*dtau_new_uh0_x_P1d_fine
-        # dtau_new_uh0_y_P1d_fine_circ = dtau_new_uh0_y_P1d_fine.copy(); dtau_new_uh0_y_P1d_fine = 0*dtau_new_uh0_y_P1d_fine
-        # mean_new_div_uh_N00_P0_fine_circ = mean_new_div_uh_N00_P0_fine.copy(); mean_new_div_uh_N00_P0_fine = 0*mean_new_div_uh_N00_P0_fine
-        
-        # dtau_new_uh0_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh0_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # dtau_new_uh0_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_new_uh0_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # mean_new_div_uh_N00_P0_fine[np.r_[t_circ]] = mean_new_div_uh_N00_P0_fine_circ[np.r_[t_circ]]
-        
-        
-                
-        # dtau_uh_x_P1d_fine_circ = dtau_uh_x_P1d_fine.copy(); dtau_uh_x_P1d_fine = 0*dtau_uh_x_P1d_fine
-        # dtau_uh_y_P1d_fine_circ = dtau_uh_y_P1d_fine.copy(); dtau_uh_y_P1d_fine = 0*dtau_uh_y_P1d_fine
-        # mean_div_uh_NC1_P0_fine_circ = mean_div_uh_NC1_P0_fine.copy(); mean_div_uh_NC1_P0_fine = 0*mean_div_uh_NC1_P0_fine
-        
-        # dtau_uh_x_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_uh_x_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # dtau_uh_y_P1d_fine[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]] = dtau_uh_y_P1d_fine_circ[np.r_[3*t_circ,3*t_circ+1,3*t_circ+2]]
-        # mean_div_uh_NC1_P0_fine[np.r_[t_circ]] = mean_div_uh_NC1_P0_fine_circ[np.r_[t_circ]]
-        
-        #############################################################################################################
         
         new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)+\
                                (dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)+\
@@ -461,16 +417,22 @@ for i in range(iterations):
     
     ################################################################################
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
-    fig.data[0].colorscale='Jet'
-    fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
+    # fig.data[0].colorscale='Jet'
+    # fig.show()
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2), u_height=0)
-    fig.data[0].colorscale='Jet'
-    fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2), u_height=0)
+    # fig.data[0].colorscale='Jet'
+    # fig.show()
     
     if i+1!=iterations:
         MESH.refinemesh(); dt = dt/2;
+        
+        # init_ref = init_ref/(np.sqrt(2)/2); dt = dt/2
+        # gmsh.option.setNumber("Mesh.MeshSizeMax", init_ref)
+        # gmsh.option.setNumber("Mesh.MeshSizeMin", init_ref)
+        # p,e,t,q = pde.petq_generate()
+        # MESH = pde.mesh(p,e,t,q)
         
         ################################################################################
         # Shift points to the circle
@@ -496,5 +458,6 @@ for i in range(iterations):
     rate3 = np.log2(error3[1:-1]/error3[2:])
     print("Convergenge rates : ",rate3)
     # print("Errors: ",error3)
-
+    
+gmsh.finalize()
 # do()
