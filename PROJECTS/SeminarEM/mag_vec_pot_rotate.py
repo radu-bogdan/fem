@@ -17,10 +17,20 @@ import pyamg
 
 
 import matplotlib.pyplot as plt
+import matplotlib.colors
+import matplotlib.animation as animation
+cmap = matplotlib.colors.ListedColormap("limegreen")
+cmap = plt.cm.jet
 
+plt.ion()
 fig = plt.figure()
+fig.show()
+
+
 ax = fig.add_subplot()
-ax.set_aspect(aspect = 'equal')
+tpc = ax.set_aspect(aspect = 'equal')
+# fig.colorbar(tpc)
+
 
 # @profile
 # def do():
@@ -174,8 +184,8 @@ fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mas
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
-rot_speed = 20; rt = 0
-rots = 50
+rot_speed = 1; rt = 0
+rots = 1000
 tor = np.zeros(rots)
 
 for k in range(rots):
@@ -184,7 +194,7 @@ for k in range(rots):
     # Assembling stuff
     ##########################################################################################
     
-    u = np.zeros(MESH.np)
+    # u = np.zeros(MESH.np)
     
     tm = time.monotonic()
     
@@ -275,7 +285,8 @@ for k in range(rots):
     for i in range(maxIter):
         gsu = gs(u)
         gssu = gss(u)
-        w = chol(gssu).solve_A(-gsu)
+        # w = chol(gssu).solve_A(-gsu)
+        w = sps.linalg.spsolve(gssu,-gsu)
         
         norm_w = np.linalg.norm(w)
         norm_gsu = np.linalg.norm(gsu)
@@ -332,6 +343,18 @@ for k in range(rots):
     print(k,'Torque:', T)
     
     tor[k] = T
+    
+    
+    
+    ax.tricontour(MESH.p[:,0], MESH.p[:,1], u, levels = 15, colors='k', linewidths = 0.5)
+    ax.tripcolor(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3], u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
+    # ax1.contour(MESH.p[:,0], MESH.p[:,1], u, levels=14, linewidths=0.5, colors='k')
+    # fig.canvas.draw()
+    # fig.canvas.flush_events()
+    # time.sleep(0.1)
+    plt.pause(0.01)
+    plt.draw()
+    plt.cla()
     
     # if k%10 == 50:    
     #     fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q0', controls = 1), u, u_height = 0)
@@ -403,6 +426,6 @@ for k in range(rots):
     # u = np.r_[u[:MESH.np],1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])].copy()
 
     
-    MESH.pdemesh2(ax = ax)
-    fig.canvas.draw()
-    fig.canvas.flush_events()
+    # MESH.pdemesh2(ax = ax)
+    # fig.canvas.draw()
+    # fig.canvas.flush_events()

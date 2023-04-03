@@ -32,7 +32,7 @@ np.set_printoptions(precision = 8)
 # use_GPU = False
 
 T = 2
-dt = 0.03/2*4
+dt = 0.03/2*2
 iterations = 6
 init_ref = 0.25*4
 use_GPU = False
@@ -212,10 +212,19 @@ for i in range(iterations):
             uh_N00_oldold = uh_N00_old
             uh_N00_old = uh_N00
             
-            if (j*100//int(T/dt))%10 == 0:
-                print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
-                # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), qMhx.T@uh_NC1_oldold)
-                # fig.show()
+            # if (j*100//int(T/dt))%10 == 0:
+            if (i==5):
+                if (np.abs(j*dt-1.99)<dt) or (np.abs(j*dt-1)<dt) or (np.abs(j*dt-1.5)<dt):
+                    print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
+                    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), qMhx.T@uh_NC1_oldold)
+                    # fig.show()
+                    uh_x_P1d = qMhx.T@uh_NC1
+                    uh_y_P1d = qMhy.T@uh_NC1
+                    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
+                    fig.data[0].colorscale='Jet'
+                    fig.data[0].cmax = 2.5
+                    fig.data[0].cmin = 0
+                    fig.show()
         
         print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
         print('\n')
@@ -461,3 +470,6 @@ for i in range(iterations):
     
 gmsh.finalize()
 # do()
+
+
+
