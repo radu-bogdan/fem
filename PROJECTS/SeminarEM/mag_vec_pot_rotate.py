@@ -19,18 +19,21 @@ import pyamg
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib.animation as animation
+from matplotlib.animation import FFMpegWriter
 cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
 
-plt.ion()
+
+metadata = dict(title = 'Movie Test', artist = 'Matplotlib', comment = 'Movie support!')
+writer = FFMpegWriter(fps = 10, metadata = metadata)
+
+# plt.ion()
 fig = plt.figure()
 fig.show()
-
-
 ax = fig.add_subplot()
 tpc = ax.set_aspect(aspect = 'equal')
-# fig.colorbar(tpc)
 
+writer.setup(fig, "writer_test.mp4", 500)
 
 # @profile
 # def do():
@@ -185,7 +188,7 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 ###########################################################################################
 
 rot_speed = 1; rt = 0
-rots = 1000
+rots = 200
 tor = np.zeros(rots)
 
 for k in range(rots):
@@ -346,15 +349,33 @@ for k in range(rots):
     
     
     
-    ax.tricontour(MESH.p[:,0], MESH.p[:,1], u, levels = 15, colors='k', linewidths = 0.5)
+    
+    plt.cla()
+    xs = []
+    ys = []
+    for ss, tt, uu, vv in zip(MESH.p[MESH.e[:,0],0],
+                          MESH.p[MESH.e[:,0],1],
+                          MESH.p[MESH.e[:,1],0],
+                          MESH.p[MESH.e[:,1],1]):
+        xs.append(ss)
+        xs.append(uu)
+        xs.append(None)
+        ys.append(tt)
+        ys.append(vv)
+        ys.append(None)
+        
+    ax.plot(xs,ys, linewidth = 1, color = 'red')
     ax.tripcolor(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3], u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
+    ax.tricontour(MESH.p[:,0], MESH.p[:,1], u, levels = 25, colors='k', linewidths = 0.5, linestyles = 'solid')
     # ax1.contour(MESH.p[:,0], MESH.p[:,1], u, levels=14, linewidths=0.5, colors='k')
     # fig.canvas.draw()
     # fig.canvas.flush_events()
     # time.sleep(0.1)
-    plt.pause(0.01)
-    plt.draw()
-    plt.cla()
+    # plt.pause(0.01)
+    # plt.draw()
+    # with writer.saving(fig, "writer_test.mp4", 100):
+    writer.grab_frame()
+    # print('dsa')
     
     # if k%10 == 50:    
     #     fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q0', controls = 1), u, u_height = 0)
@@ -429,3 +450,5 @@ for k in range(rots):
     # MESH.pdemesh2(ax = ax)
     # fig.canvas.draw()
     # fig.canvas.flush_events()
+ 
+writer.finish()
