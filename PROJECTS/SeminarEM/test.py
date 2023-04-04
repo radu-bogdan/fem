@@ -1,29 +1,31 @@
-import numpy as np
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.animation import FFMpegWriter
+import matplotlib.tri as tri
+import numpy as np
 
-# Fixing random state for reproducibility
-np.random.seed(19680801)
+# First create the x and y coordinates of the points.
+n_angles = 36
+n_radii = 8
+min_radius = 0.25
+radii = np.linspace(min_radius, 0.95, n_radii)
 
+angles = np.linspace(0, 2 * np.pi, n_angles, endpoint=False)
+angles = np.repeat(angles[..., np.newaxis], n_radii, axis=1)
+angles[:, 1::2] += np.pi / n_angles
 
-metadata = dict(title='Movie Test', artist='Matplotlib',
-                comment='Movie support!')
-writer = FFMpegWriter(fps=15, metadata=metadata)
+x = (radii * np.cos(angles)).flatten()
+y = (radii * np.sin(angles)).flatten()
+z = (np.cos(radii) * np.cos(3 * angles)).flatten()
 
-fig = plt.figure()
-l, = plt.plot([], [], 'k-o')
+# Create the Triangulation; no triangles so Delaunay triangulation created.
+triang = tri.Triangulation(x, y)
 
-plt.xlim(-5, 5)
-plt.ylim(-5, 5)
+# Mask off unwanted triangles.
+triang.set_mask(np.hypot(x[triang.triangles].mean(axis=1),
+                         y[triang.triangles].mean(axis=1))
+                < min_radius)
 
-x0, y0 = 0, 0
-
-writer.setup(fig, "writer_test.mp4", 100)
-
-for i in range(100):
-    x0 += 0.1 * np.random.randn()
-    y0 += 0.1 * np.random.randn()
-    l.set_data(x0, y0)
-    writer.grab_frame()
+fig1, ax1 = plt.subplots()
+ax1.set_aspect('equal')
+tpc = ax1.tripcolor(triang, z, shading='flat')
+fig1.colorbar(tpc)
+ax1.set_title('tripcolor of Delaunay triangulation, flat shading')
