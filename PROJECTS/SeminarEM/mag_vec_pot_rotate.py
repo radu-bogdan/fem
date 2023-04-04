@@ -120,9 +120,9 @@ r1 = p[edges_rotor_outer[0,0],0]
 a1 = 2*np.pi/edges_rotor_outer.shape[0]
 
 # Adjust points on the outer rotor to be equally spaced.
-# for k in range(edges_rotor_outer.shape[0]):
-#     p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k-1))
-#     p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k-1))
+for k in range(edges_rotor_outer.shape[0]):
+    p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
+    p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
 
 
