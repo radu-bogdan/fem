@@ -190,7 +190,7 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 ###########################################################################################
 
 rot_speed = 1; rt = 0
-rots = 20
+rots = 300
 tor = np.zeros(rots)
 
 for k in range(rots):
@@ -290,8 +290,8 @@ for k in range(rots):
     for i in range(maxIter):
         gsu = gs(u)
         gssu = gss(u)
-        # w = chol(gssu).solve_A(-gsu)
-        w = sps.linalg.spsolve(gssu,-gsu)
+        w = chol(gssu).solve_A(-gsu)
+        # w = sps.linalg.spsolve(gssu,-gsu)
         
         norm_w = np.linalg.norm(w)
         norm_gsu = np.linalg.norm(gsu)
@@ -323,7 +323,7 @@ for k in range(rots):
         if(np.linalg.norm(gs(u)) < eps_newton): break
     
     elapsed = time.monotonic()-tm
-    # print('Solving took ', elapsed, 'seconds')
+    print('Solving took ', elapsed, 'seconds')
     
     ##########################################################################################
     # Torque computation
@@ -364,16 +364,34 @@ for k in range(rots):
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     ax.plot(xs,ys, linewidth = 0.7, color = 'red')
     # ax.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
-    # ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), cmap = cmap, shading = 'flat', edgecolor = 'k', lw = 0.1)
-    chip = ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), cmap = cmap, shading = 'flat', lw = 0.1, vmin = 0, vmax = 2.3)
-    ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    # ax.tripcolor(Triang, np.sqrt(ux**2+uy**2)*0+1, shading = 'flat', edgecolor = 'k', lw = 0.1)
     
-    if k == 0:
-        cbar = plt.colorbar(chip)
-    else:
-        cbar.update_normal(chip)
+    xx_trig = np.c_[MESH.p[MESH.t[:,0],0],MESH.p[MESH.t[:,1],0],MESH.p[MESH.t[:,2],0]]
+    yy_trig = np.c_[MESH.p[MESH.t[:,0],1],MESH.p[MESH.t[:,1],1],MESH.p[MESH.t[:,2],1]]
     
-    plt.pause(0.01)
+    xxx_trig = np.c_[xx_trig,xx_trig[:,0],np.nan*xx_trig[:,0]]
+    yyy_trig = np.c_[yy_trig,yy_trig[:,0],np.nan*yy_trig[:,0]]
+        
+    ax.plot(
+        xxx_trig.flatten(), 
+        yyy_trig.flatten(),
+        color = 'k',
+        linewidth = 0.1
+    )
+    
+    
+    ax.set_xlim(left=-0.081, right=-0.065)
+    ax.set_ylim(bottom=0.0015, top=0.006)
+    # chip = ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), cmap = cmap, shading = 'flat', lw = 0.1, vmin = 0, vmax = 2.3)
+    # ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    
+    plt.pause(0.00001)
+    # if k == 0:
+    #     cbar = plt.colorbar(chip)
+    # else:
+    #     cbar.update_normal(chip)
+    
+    # plt.pause(0.01)
     writer.grab_frame()
     
     # if k%10 == 50:    
@@ -451,3 +469,4 @@ for k in range(rots):
     # fig.canvas.flush_events()
  
 writer.finish()
+# do()
