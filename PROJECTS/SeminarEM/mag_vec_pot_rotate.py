@@ -15,16 +15,16 @@ import nonlinear_Algorithms
 import numba as nb
 import pyamg
 
-
+import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.colors
+import matplotlib.colors as colors
 import matplotlib.animation as animation
 from matplotlib.animation import FFMpegWriter
 cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
 
 
-metadata = dict(title = 'Movie Test', artist = 'Matplotlib', comment = 'Movie support!')
+metadata = dict(title = 'Motor')
 writer = FFMpegWriter(fps = 10, metadata = metadata)
 
 # plt.ion()
@@ -233,12 +233,13 @@ for k in range(rots):
         # J0+= pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
     J = 0*J
     
-    M0 = 0; M1 = 0; M00 = 0
+    M0 = 0; M1 = 0; M00 = 0; M10 = 0
     for i in range(16):
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
-        # M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @J
     
@@ -352,12 +353,12 @@ for k in range(rots):
     
     
     plt.cla()
-    MESH.pdegeom(ax = ax)
+    # MESH.pdegeom(ax = ax)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
-    ax.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
+    # ax.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
     
-    # ax.tripcolor(Triang, np.sqrt(ux**2+uy**2)*0+1, shading = 'flat', edgecolor = 'k', lw = 0.1)
+    # ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), shading = 'flat', edgecolor = 'k', lw = 0.1)
     
     # xx_trig = np.c_[MESH.p[MESH.t[:,0],0],MESH.p[MESH.t[:,1],0],MESH.p[MESH.t[:,2],0]]
     # yy_trig = np.c_[MESH.p[MESH.t[:,0],1],MESH.p[MESH.t[:,1],1],MESH.p[MESH.t[:,2],1]]
@@ -378,14 +379,17 @@ for k in range(rots):
     # ax.set_ylim(bottom = 0.0015, top = 0.006)
     
     # chip = ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), cmap = cmap, shading = 'flat', lw = 0.1, vmin = 0, vmax = 2.3)
+    nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
+    # chip = ax.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
+    chip = ax.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
     ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
     
     plt.pause(0.00001)
     
-    # if k == 0:
-    #     cbar = plt.colorbar(chip)
-    # else:
-    #     cbar.update_normal(chip)
+    if k == 0:
+        cbar = plt.colorbar(chip)
+    else:
+        cbar.update_normal(chip)
     
     # plt.pause(0.01)
     writer.grab_frame()
