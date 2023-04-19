@@ -30,10 +30,12 @@ writer = FFMpegWriter(fps = 10, metadata = metadata)
 # plt.ion()
 fig = plt.figure()
 fig.show()
-ax = fig.add_subplot()
-tpc = ax.set_aspect(aspect = 'equal')
-# cbar = plt.colorbar(ax)
+ax1 = fig.add_subplot(121)
+ax2 = fig.add_subplot(122)
+ax1.set_aspect(aspect = 'equal')
+# ax2.set_aspect(aspect = 'equal')
 
+# cbar = plt.colorbar(ax)
 
 writer.setup(fig, "writer_test.mp4", 500)
 
@@ -53,7 +55,6 @@ regions_2d = motor_npz['regions_2d']
 regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
-
 ##########################################################################################
 
 
@@ -104,14 +105,6 @@ edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
 ind_trig_coils   = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
 ind_trig_magnets = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
-
-# ind_trig_coils = {}
-# for i in range(48):
-#     ind_trig_coils[i] = getIndices2d(regions_2d, 'coil' + str(i+1), exact = 1, return_index = True)[0]
-
-# ind_trig_magnets = {}
-# for i in range(16):
-#     ind_trig_magnets[i] = getIndices2d(regions_2d, 'magnet' + str(i+1), exact = 1, return_index = True)[0]
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                         [np.sin(x), np.cos(x)]])
@@ -227,11 +220,12 @@ for k in range(rots):
     
     penalty = 1e10
     
-    J = 0; # J0 = 0
+    Ja = 0; J0 = 0
     for i in range(48):
-        J += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
-        # J0+= pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
-    J = 0*J
+        Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+        J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+    Ja = 0*Ja
+    J0 = 0*J0
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0
     for i in range(16):
@@ -241,7 +235,7 @@ for k in range(rots):
         M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
-    aJ = phi_H1@ D_order_phiphi @J
+    aJ = phi_H1@ D_order_phiphi @Ja
     
     aM = dphix_H1_order_phiphi@ D_order_phiphi @(-M1) +\
          dphiy_H1_order_phiphi@ D_order_phiphi @(+M0)
@@ -352,8 +346,9 @@ for k in range(rots):
     
     
     
-    plt.cla()
-    # MESH.pdegeom(ax = ax)
+    ax1.cla()
+    ax2.cla()
+    MESH.pdegeom(ax = ax1)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     # ax.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
@@ -378,18 +373,27 @@ for k in range(rots):
     # ax.set_xlim(left = -0.081, right = -0.065)
     # ax.set_ylim(bottom = 0.0015, top = 0.006)
     
-    # chip = ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), cmap = cmap, shading = 'flat', lw = 0.1, vmin = 0, vmax = 2.3)
-    nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
-    # chip = ax.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
-    chip = ax.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
-    ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    # chip = ax1.tripcolor(Triang, np.sqrt(ux**2+uy**2), cmap = cmap, shading = 'flat', lw = 0.1, vmin = 0, vmax = 2.3)
     
+    # nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
+    
+    # ux = dphix_H1_o0.T@u
+    # uy = dphix_H1_o0.T@u
+    # u_P0 = 1/3*(u[MESH.t[:,0]]+u[MESH.t[:,1]]+u[MESH.t[:,2]])
+    # eu = f(ux,uy)-J0*u_P0 - M00*uy + M10*ux
+    
+    
+    chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
+    ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    ax2.plot(tor)
     plt.pause(0.00001)
     
-    if k == 0:
-        cbar = plt.colorbar(chip)
-    else:
-        cbar.update_normal(chip)
+    # if k == 0:
+    #     cbar = plt.colorbar(chip)
+    # else:
+    #     cbar.update_normal(chip)
     
     # plt.pause(0.01)
     writer.grab_frame()
@@ -407,6 +411,8 @@ for k in range(rots):
     # n = fss(u).shape[0]
     # flops = (n**(3/2)*i)/elapsed
     # print('Approx GFLOP/S',flops*10**(-9))
+    
+    
     
     
     # if k > 6:
