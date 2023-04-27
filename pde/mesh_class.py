@@ -78,7 +78,6 @@ class mesh:
         NoEdges = EdgesToVertices.shape[0]
         TriangleToEdges = je[0:3*nt].reshape(nt,3, order = 'F').astype(npy.int64)
         QuadToEdges = je[3*nt:].reshape(nq,4, order = 'F')
-        
         BoundaryEdges = intersect2d(EdgesToVertices,e_new)
         #############################################################################################################
         

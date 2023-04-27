@@ -37,8 +37,8 @@ gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
 
-f1 = lambda x,y : -1+0*x
-f2 = lambda x,y :  1+0*x
+f1 = lambda x,y : -1000+0*x
+f2 = lambda x,y :  1000+0*x
 
 nu1 = lambda x,y : 1/1000 + 0*x +0*y
 nu2 = lambda x,y : 1 + 0*x +0*y
@@ -79,9 +79,15 @@ Cy = BD @ D0 @ BKy.T
 penalty = 10**10
 A = Kxx + Kyy + penalty*B
 b = M_f
-
-g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0, b = 1)
-
+eins=lambda x,y :1.+ 0*x +0*y
+supportIron = pde.int.evaluate(MESH, order = 0, coeff = eins, regions = np.r_[2,3])
+supportAir= pde.int.evaluate(MESH, order = 0, coeff = eins, regions = np.r_[1,4,5,6,7,8])
+# g,dg,ddg = MaterialLaws.HerbertsMaterialG(a = 0, b = 1, nu0 = 1, n = 1)
+gA,dgA,ddgA= MaterialLaws.LinMaterialG(nuAir)
+gI,dgI,ddgI= MaterialLaws.LinMaterialG(ironsmall)
+g=lambda x,y:gA(x,y)*supportAir.diagonal(0)+gI(x,y)*supportIron.diagonal(0)
+dg=lambda x,y: dgA(x,y)*supportAir.diagonal(0)+dgI(x,y)*supportIron.diagonal(0)
+ddg=lambda x,y:ddgA(x,y)*supportAir.diagonal(0)+ddgI(x,y)*supportIron.diagonal(0)
 
 penalty = 10**7
 
@@ -90,10 +96,10 @@ def update_left(u):
     ux = BKx.T@u
     uy = BKy.T@u
     
-    fxx_grad_u_Kxx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,0,:])@ BKx.T
-    fyy_grad_u_Kyy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,1,:])@ BKy.T
-    fxy_grad_u_Kxy = BKy @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[1,0,:])@ BKx.T
-    fyx_grad_u_Kyx = BKx @ D0 @ sps.diags(ddg(ux,uy,nu_aus)[0,1,:])@ BKy.T
+    fxx_grad_u_Kxx = BKx @ D0 @ sps.diags(ddg(ux,uy)[0,0,:])@ BKx.T
+    fyy_grad_u_Kyy = BKy @ D0 @ sps.diags(ddg(ux,uy)[1,1,:])@ BKy.T
+    fxy_grad_u_Kxy = BKy @ D0 @ sps.diags(ddg(ux,uy)[1,0,:])@ BKx.T
+    fyx_grad_u_Kyx = BKx @ D0 @ sps.diags(ddg(ux,uy)[0,1,:])@ BKy.T
     
     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B
 
@@ -102,14 +108,15 @@ def update_right(u):
     ux = BKx.T@u
     uy = BKy.T@u
     
-    return (-Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u)
+    #return (-Cx.T @ dg(ux,uy,nu_aus)[0,:] -Cy.T @ dg(ux,uy,nu_aus)[1,:] + M_f -penalty*B@u)
+    return (-BKx@ D0 @ dg(ux,uy)[0,:] -BKy@ D0 @ dg(ux,uy)[1,:] + M_f -penalty*B@u)
 
 def fem_objective(u):
     
     ux = BKx.T@u
     uy = BKy.T@u
     
-    return np.ones(MESH.nt)@D@g(ux,uy,nu_aus)-u@M_f + 1/2*penalty*u@B@u
+    return np.ones(MESH.nt)@D@g(ux,uy)-u@M_f + 1/2*penalty*u@B@u
 
 def femg(u):
     return -update_right(u)
@@ -118,7 +125,7 @@ def femg(u):
 def femH(u):
     return update_left(u)
 
-u = 1+np.zeros(shape = Kxx.shape[0])
+u = 0+np.zeros(shape = Kxx.shape[0])
 
 # for i in range(40):
     
