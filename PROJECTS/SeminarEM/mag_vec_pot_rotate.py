@@ -96,6 +96,7 @@ mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
 trig_rotor = t[np.where(mask_rotor)[0],0:3]
 trig_air_gap_rotor = t[np.where(mask_air_gap_rotor)[0],0:3]
 points_rotor = np.unique(trig_rotor)
+points_rotor_and_airgaprotor = np.unique(np.r_[trig_rotor,trig_air_gap_rotor])
 
 
 ind_stator_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'stator_outer')!=-1)
@@ -172,7 +173,6 @@ fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
 fyy_linear = lambda x,y : nu0 + 0*y
 
-
 f   = lambda ux,uy :   f_linear(ux,uy)*new_mask_linear +   f_iron(ux,uy)*new_mask_nonlinear
 fx  = lambda ux,uy :  fx_linear(ux,uy)*new_mask_linear +  fx_iron(ux,uy)*new_mask_nonlinear
 fy  = lambda ux,uy :  fy_linear(ux,uy)*new_mask_linear +  fy_iron(ux,uy)*new_mask_nonlinear
@@ -193,6 +193,8 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 rot_speed = 1; rt = 0
 rots = 300
 tor = np.zeros(rots)
+tor_vw = np.zeros(rots)
+energy = np.zeros(rots)
 
 for k in range(rots):
     
@@ -329,7 +331,7 @@ for k in range(rots):
     print('Solving took ', elapsed, 'seconds')
     
     ##########################################################################################
-    # Torque computation
+    # Arkkio torque computation
     ##########################################################################################
     
     lz = 0.1795 # where does this come from?
@@ -352,6 +354,65 @@ for k in range(rots):
     
     tor[k] = T
     
+    ##########################################################################################
+    # Magnetic energy
+    ##########################################################################################
+    
+    energy[k] = J(u)
+    
+    ##########################################################################################
+    # Virtual work principle
+    ##########################################################################################
+    
+    # first: assemble for each triangle a matrix R_T which encodes the virtual rotations.
+    mask_rotor_and_airgap = mask_air_gap_rotor + mask_rotor
+    p_new = MESH.p.copy(); p_new2= MESH.p.copy()
+    p_new [points_rotor_and_airgaprotor,:] = (R(a1*0)@MESH.p[points_rotor_and_airgaprotor,:].T).T
+    p_new2[points_rotor_and_airgaprotor,:] = (R(a1*(0+rot_speed))@MESH.p[points_rotor_and_airgaprotor,:].T).T
+    r = p_new2-p_new
+    
+    t0 = MESH.t[:,0]; t1 = MESH.t[:,1]; t2 = MESH.t[:,2]
+    R00 = r[t1,0]-r[t0,0]; R01 = r[t2,0]-r[t0,0]
+    R10 = r[t1,1]-r[t0,1]; R11 = r[t2,1]-r[t0,1]
+    
+    B00 = MESH.p[t1,0]-MESH.p[t0,0]; B01 = MESH.p[t2,0]-MESH.p[t0,0]
+    B10 = MESH.p[t1,1]-MESH.p[t0,1]; B11 = MESH.p[t2,1]-MESH.p[t0,1]
+    
+    detB = B00*B11-B01*B10
+    zT = B00*R11+B11*R00-B01*R10-B10*R01
+    
+    ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+    
+    ux_mod = 1/detB*(( B11*R00-B10*R10)*ux +( B11*R01-B10*R11)*uy)
+    uy_mod = 1/detB*((-B10*R00+B00*R10)*ux +(-B10*R01+B00*R11)*uy)
+    
+    resize = 1/detB*zT
+    resize3 = np.tile(resize,(3,1)).T.flatten().T
+    
+    stiffness_part = fx(ux,uy) @ D_order_dphidphi @ ux_mod \
+                   + fy(ux,uy) @ D_order_dphidphi @ uy_mod
+    
+    # aJ = phi_H1@ D_order_phiphi @Ja
+    
+    # aM = dphix_H1_order_phiphi@ D_order_phiphi @(-M1) +\
+    #      dphiy_H1_order_phiphi@ D_order_phiphi @(+M0)
+    
+    energy_part = np.ones(D_order_dphidphi.size) @ D_order_dphidphi @ (f(ux,uy)*resize) \
+                - u @ phi_H1 @ D_order_phiphi @ (Ja*resize3)  \
+                + u @ dphix_H1_order_phiphi @ D_order_phiphi @ (-M1*resize3) \
+                + u @ dphiy_H1_order_phiphi @ D_order_phiphi @ (+M0*resize3)
+    
+    tor_vw[k] = -stiffness_part + energy_part
+    
+    print(k,'Torque:', tor_vw[k])
+    
+    # stiffness_part2 = gs(u)@u
+    
+    # print("loale: ",stiffness_part2-stiffness_part)
+    
+    
+    
+    
     
     
     ax1.cla()
@@ -359,6 +420,22 @@ for k in range(rots):
     MESH.pdegeom(ax = ax1)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    
+    chip = ax1.tripcolor(Triang, r[:,1], cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
+    ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    ax2.plot(tor)
+    
+    fig.show()
+    
+    plt.pause(0.01)
+    # writer.grab_frame()
+    
+    
+    
+    
     # ax.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', edgecolor = 'k', lw = 0.1)
     
     # ax.tripcolor(Triang, np.sqrt(ux**2+uy**2), shading = 'flat', edgecolor = 'k', lw = 0.1)
@@ -390,21 +467,12 @@ for k in range(rots):
     # u_P0 = 1/3*(u[MESH.t[:,0]]+u[MESH.t[:,1]]+u[MESH.t[:,2]])
     # eu = f(ux,uy)-J0*u_P0 - M00*uy + M10*ux
     
-    
-    chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'flat', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
-    ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
-    ax2.plot(tor)
-    plt.pause(0.00001)
+    # plt.pause(0.00001)
     
     # if k == 0:
     #     cbar = plt.colorbar(chip)
     # else:
     #     cbar.update_normal(chip)
-    
-    # plt.pause(0.01)
-    writer.grab_frame()
     
     # if k%10 == 50:    
     #     fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q0', controls = 1), u, u_height = 0)

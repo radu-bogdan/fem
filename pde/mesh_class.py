@@ -102,6 +102,12 @@ class mesh:
         
         self.FEMLISTS = {}
         
+        
+        t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
+        A00 = self.p[t1,0]-self.p[t0,0]; A01 = self.p[t2,0]-self.p[t0,0]
+        A10 = self.p[t1,1]-self.p[t0,1]; A11 = self.p[t2,1]-self.p[t0,1]
+        self.detA = A00*A11-A01*A10
+        
     def __repr__(self):
         return f"np:{self.np}, nt:{self.nt}, nq:{self.nq}, ne:{self.ne}, ne_all:{self.NoEdges}"
     
