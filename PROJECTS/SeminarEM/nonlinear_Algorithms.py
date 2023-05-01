@@ -6,7 +6,7 @@ Created on Tue Jan 24 17:25:50 2023
 """
 import numpy as np
 import scipy.sparse as sps
-from sksparse.cholmod import cholesky as chol
+# from sksparse.cholmod import cholesky as chol
 import pde
 
 def GradientDescent(J,dJ,x0,maxIter=1000,eps=0.0000001, printoption=1):  

@@ -8,7 +8,7 @@ import pde
 import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
-from sksparse.cholmod import cholesky as chol
+# from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 import nonlinear_Algorithms
@@ -295,8 +295,8 @@ for k in range(rots):
     for i in range(maxIter):
         gsu = gs(u)
         gssu = gss(u)
-        w = chol(gssu).solve_A(-gsu)
-        # w = sps.linalg.spsolve(gssu,-gsu)
+        # w = chol(gssu).solve_A(-gsu)
+        w = sps.linalg.spsolve(gssu,-gsu)
         
         norm_w = np.linalg.norm(w)
         norm_gsu = np.linalg.norm(gsu)
