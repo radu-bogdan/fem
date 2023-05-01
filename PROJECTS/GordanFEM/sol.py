@@ -30,6 +30,7 @@ l = 10
 gmsh.initialize()
 gmsh.model.add("Capacitor plates")
 # geometries.capacitorPlates(a = 20,b = 20,c = 0.5,d = d,l = l)
+# gmsh.open("2_conductors_x_Gordan.msh")
 gmsh.open("2_conductors_x.msh")
 gmsh.option.setNumber("Mesh.Algorithm", 2)
 gmsh.option.setNumber("Mesh.MeshSizeMax", 1)
@@ -40,23 +41,18 @@ tm = time.time()
 p,e,t,q = pde.petq_generate()
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
 
 print('Generating mesh and refining took {:4.8f} seconds.'.format(time.time()-tm))
 # MESH.makeRest()
 
-# TODO:  MESH = pde.refinemesh(p,e,t,q)
 # BASIS = pde.basis()
 # LISTS = pde.lists(MESH)
 
-f = lambda x,y : 0*np.sin(np.pi*x)*np.sin(np.pi*y)
-g1 = lambda x,y : -1+0*x
-g2 = lambda x,y :  1+0*x
+f1 = lambda x,y : 0*x+10**3/(0.1**2*np.pi)
+f2 = lambda x,y : 0*x-10**3/(0.1**2*np.pi)
+f3 = lambda x,y : 0*x
+
+from scipy.constants import mu_0
 
 ###############################################################################
 tm = time.time()

@@ -56,3 +56,7 @@ Background Field = 1;
 //+
 //+
 
+Physical Curve(1) = {1};
+Physical Curve(2) = {5};
+Physical Curve(3) = {6};
+
