@@ -193,7 +193,32 @@ class mesh:
                                              + str(t_new.shape[0]) + ' triangles, ' 
                                              + str(q_new.shape[0]) + ' quadrilaterals.')
         # return p_new,e_new,t_new
+    
+    def rho(self):
+        x = self.p[self.t[:,1],:]-self.p[self.t[:,2],:]
+        y = self.p[self.t[:,2],:]-self.p[self.t[:,0],:]
+        z = self.p[self.t[:,0],:]-self.p[self.t[:,1],:]
         
+        len_x = npy.sqrt(x[:,0]**2 + x[:,1]**2)
+        len_y = npy.sqrt(y[:,0]**2 + y[:,1]**2)
+        len_z = npy.sqrt(z[:,0]**2 + z[:,1]**2)
+        
+        return npy.sqrt(len_x*len_y*len_z/(len_x+len_y+len_z))
+        # return len_x
+    
+    def h(self):
+        x = self.p[self.t[:,1],:]-self.p[self.t[:,2],:]
+        y = self.p[self.t[:,2],:]-self.p[self.t[:,0],:]
+        z = self.p[self.t[:,0],:]-self.p[self.t[:,1],:]
+        
+        len_x = npy.sqrt(x[:,0]**2 + x[:,1]**2)
+        len_y = npy.sqrt(y[:,0]**2 + y[:,1]**2)
+        len_z = npy.sqrt(z[:,0]**2 + z[:,1]**2)
+        
+        len_mat = npy.c_[len_x,len_y,len_z]
+        
+        return npy.max(len_mat, axis=1)
+        # return len_mat
     
     def refine(self,f):
         # if f.size != 3*self.nt:

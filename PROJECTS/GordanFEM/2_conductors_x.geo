@@ -20,8 +20,6 @@ Curve Loop(3) = {6};
 //+
 Plane Surface(3) = {3};
 
-Coherence;
-
 // 2d 2 - i1
 // 2d 3 - i2
 // 2d 4 - air
@@ -29,11 +27,9 @@ Coherence;
 // 1d 1, 2, 3, 4 - 0 DC boundary
 
 // 1d 6 - displacement boundary
-
-
-
 //+
-Transfinite Curve {5} = 50 Using Progression 1;
+// Transfinite Curve {5} = 50 Using Progression 1;
+
 //+
 //Transfinite Curve {6} = 200 Using Bump 1;
 
@@ -60,3 +56,5 @@ Physical Curve(1) = {1};
 Physical Curve(2) = {5};
 Physical Curve(3) = {6};
 
+
+Coherence;

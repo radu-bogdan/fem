@@ -13,6 +13,16 @@ import time
 import gmsh
 import reduction_matrix
 
+# import torch
+# import os
+# local_rank = int(os.environ["LOCAL_RANK"])
+# model = torch.nn.parallel.DistributedDataParallel(
+#     model,
+#     device_ids=[local_rank],
+#     output_device=local_rank,
+# )
+# import torch.distributed as dist
+# dist.init_process_group(backend="gloo")
 
 # cupyx.scipy.sparse.spmatrix
 
@@ -32,10 +42,28 @@ np.set_printoptions(precision = 8)
 # use_GPU = False
 
 T = 2
-dt = 0.03/2*2
-iterations = 6
-init_ref = 0.25*4
-use_GPU = False
+dt = 0.03/2*2*1.8
+iterations = 9
+init_ref = 0.25
+use_GPU = True
+
+def to_torch_csr(X):
+    coo = X.tocoo()
+    row = torch.from_numpy(coo.row.astype(np.int64)).to(torch.long)
+    col = torch.from_numpy(coo.col.astype(np.int64)).to(torch.long)
+    edge_index = torch.stack([row, col], dim=0)
+    val = torch.from_numpy(coo.data.astype(np.float64))
+    return torch.sparse.FloatTensor(edge_index, val, torch.Size(coo.shape)).to_sparse_csr().cuda()
+    # return X
+
+def torch_from_numpy(X):
+    return torch.from_numpy(X).cuda()
+    # return X
+
+def numpy_from_torch(X):
+    return X.cpu().numpy()
+    # return X
+
 
 
 kx = 1; ky = 1; s0 = -3
@@ -68,7 +96,7 @@ p,e,t,q = pde.petq_generate()
 # gmsh.finalize()
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 ################################################################################
 
 error = np.zeros(iterations)
@@ -83,12 +111,14 @@ mean_div_uh_NC1_P0_fine = np.empty(0); mean_new_div_uh_N0_P0_fine = np.empty(0);
 for i in range(iterations):
     print('Iteration', i+1, 'out of', iterations)
     h_approx = 2/np.sqrt(MESH.nt/2)
-    print('h approx',h_approx,'dt chosen exactly as ',dt, 'konstante etwa:',dt/h_approx)
+    h_richtig = MESH.h().min()
+    print('h approx',h_approx,'h richtig',h_richtig,'dt chosen exactly as ',dt, 'konstante etwa:',dt/h_richtig)
 
     ################################################################################
     qMhx,qMhy = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'M', order = 1)
     qMx,qMy = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'M', order = 2)
     qMb2 = pde.hdiv.assembleB(MESH, space = 'BDM1', matrix = 'M', order = 2, shape = 2*MESH.NoEdges)
+    qMb2_RT0 = pde.hdiv.assembleB(MESH, space = 'RT0', matrix = 'M', order = 2, shape = MESH.NoEdges)
     
     qK2 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 2)
     qK0 = pde.hdiv.assemble(MESH, space = 'BDM1', matrix = 'K', order = 0)
@@ -136,7 +166,7 @@ for i in range(iterations):
     # iMh_Mh_sigma = iMh@Mh_sigma
     # iMh_K = iMh@K
     qMb2_D2b = qMb2@D2b
-    
+    qMb2_RT0_D2b = qMb2_RT0@D2b
     
     
     P0,Q0,R0 = reduction_matrix.makeProjectionMatrices(MESH)
@@ -164,44 +194,38 @@ for i in range(iterations):
     new_K0 = P0.T@K@P0
     ################################################################################
     
+    uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
+    uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
     
+    uh_N0_oldold = R@uh_NC1_oldold
+    uh_N0_old = R@uh_NC1_old
+    
+    uh_N00_oldold = R0@uh_NC1_oldold
+    uh_N00_old = R0@uh_NC1_old
     
     ################################################################################
     if not use_GPU:
         tm = time.monotonic()
-        
-        uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
-        uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
-        
-        
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), qMhx.T@uh_NC1_oldold)
-        # fig.show()
-        
-        
-        uh_N0_oldold = R@uh_NC1_oldold
-        uh_N0_old = R@uh_NC1_old
-        
-        uh_N00_oldold = R0@uh_NC1_oldold
-        uh_N00_old = R0@uh_NC1_old
         
         for j in range(int(T/dt)):
             
             jdt = (j+1)*dt
             
             intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
-            
+            # intF_RT0 = qMb2_RT0_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
             
             s = iMh.dot(K.dot(uh_NC1_old) + Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt) + intF)
             uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*s
             
+            # new_intF = R@iMh@R0.T@intF_RT0
             new_intF = R@iMh@intF
             new_s = new_iMh.dot(new_K.dot(uh_N0_old) + new_Mh_sigma.dot((uh_N0_old-uh_N0_oldold)/dt)) + new_intF
             uh_N0 = 2*uh_N0_old-uh_N0_oldold-(dt**2)*new_s
             
+            # new_intF0 = R0@iMh@R0.T@intF_RT0
             new_intF0 = R0@iMh@intF
             new_s0 = new_iMh0.dot(new_K0.dot(uh_N00_old) + new_Mh0_sigma.dot((uh_N00_old-uh_N00_oldold)/dt)) + new_intF0
             uh_N00 = 2*uh_N00_old-uh_N00_oldold-(dt**2)*new_s0
-            
             
             uh_NC1_oldold = uh_NC1_old
             uh_NC1_old = uh_NC1
@@ -218,13 +242,13 @@ for i in range(iterations):
                     print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
                     # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), qMhx.T@uh_NC1_oldold)
                     # fig.show()
-                    uh_x_P1d = qMhx.T@uh_NC1
-                    uh_y_P1d = qMhy.T@uh_NC1
-                    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
-                    fig.data[0].colorscale='Jet'
-                    fig.data[0].cmax = 2.5
-                    fig.data[0].cmin = 0
-                    fig.show()
+                    # uh_x_P1d = qMhx.T@uh_NC1
+                    # uh_y_P1d = qMhy.T@uh_NC1
+                    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
+                    # fig.data[0].colorscale='Jet'
+                    # fig.data[0].cmax = 2.5
+                    # fig.data[0].cmin = 0
+                    # fig.show()
         
         print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
         print('\n')
@@ -233,62 +257,56 @@ for i in range(iterations):
     
     ################################################################################    
     if use_GPU:
-        import cupy as cp
-        from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+        # import cupy as cp
+        # from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+        import torch
+        
+        torch.cuda.set_device(1)
         
         tm = time.monotonic()
         
-        uh_NC1_oldold = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,0),u2ex(x,y,0)])
-        uh_NC1_old = pde.hdiv.interp(MESH, space = 'BDM1', order = 5, f = lambda x,y : np.c_[u1ex(x,y,dt),u2ex(x,y,dt)])
+        # to_torch_csr(X)
         
-        uh_N0_oldold = R@uh_NC1_oldold
-        uh_N0_old = R@uh_NC1_old
+        cuda_uh_NC1_oldold = torch_from_numpy(uh_NC1_oldold)
+        cuda_uh_NC1_old = torch_from_numpy(uh_NC1_old)
         
-        uh_N00_oldold = R0@uh_NC1_oldold
-        uh_N00_old = R0@uh_NC1_old
+        cuda_uh_N0_oldold = torch_from_numpy(uh_N0_oldold)
+        cuda_uh_N0_old = torch_from_numpy(uh_N0_old)
         
-        tp = cp.float64
+        cuda_uh_N00_oldold = torch_from_numpy(uh_N00_oldold)
+        cuda_uh_N00_old = torch_from_numpy(uh_N00_old)
         
-        cuda_uh_NC1_oldold = cp.array(uh_NC1_oldold, dtype = tp)
-        cuda_uh_NC1_old = cp.array(uh_NC1_old, dtype = tp)
+        cuda_K = to_torch_csr(K)
+        cuda_iMh = to_torch_csr(iMh)
+        cuda_Mh_sigma = to_torch_csr(Mh_sigma)
         
-        cuda_uh_N0_oldold = cp.array(uh_N0_oldold, dtype = tp)
-        cuda_uh_N0_old = cp.array(uh_N0_old, dtype = tp)
+        cuda_new_iMh = to_torch_csr(new_iMh)
+        cuda_new_Mh_sigma = to_torch_csr(new_Mh_sigma)
+        cuda_new_K = to_torch_csr(new_K)
         
-        cuda_uh_N00_oldold = cp.array(uh_N00_oldold, dtype = tp)
-        cuda_uh_N00_old = cp.array(uh_N00_old, dtype = tp)
+        cuda_new_iMh0 = to_torch_csr(new_iMh0)
+        cuda_new_Mh0_sigma = to_torch_csr(new_Mh0_sigma)
+        cuda_new_K0 = to_torch_csr(new_K0)
         
-        cuda_K = cp_csr_matrix(K, dtype = tp)
-        cuda_iMh = cp_csr_matrix(iMh, dtype = tp)
-        cuda_Mh_sigma = cp_csr_matrix(Mh2_sigma, dtype = tp)
-        
-        cuda_new_iMh = cp_csr_matrix(new_iMh, dtype = tp)
-        cuda_new_Mh_sigma = cp_csr_matrix(new_Mh_sigma, dtype = tp)
-        cuda_new_K = cp_csr_matrix(new_K, dtype = tp)
-        
-        cuda_new_iMh0 = cp_csr_matrix(new_iMh0, dtype = tp)
-        cuda_new_Mh0_sigma = cp_csr_matrix(new_Mh0_sigma, dtype = tp)
-        cuda_new_K0 = cp_csr_matrix(new_K0, dtype = tp)
-        
-        cuda_R = cp_csr_matrix(R, dtype = tp)
-        cuda_R0 = cp_csr_matrix(R0, dtype = tp)
+        cuda_R = to_torch_csr(R)
+        cuda_R0 = to_torch_csr(R0)
         
         for j in range(int(T/dt)):
-            jdt = j*dt
+            jdt = (j+1)*dt
             
             intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
                     
-            cuda_intF = cp.array(intF, dtype = tp)
+            cuda_intF = torch_from_numpy(intF)
             
-            s = cuda_iMh.dot(cuda_K.dot(cuda_uh_NC1_old) + cuda_Mh_sigma.dot((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt) + cuda_intF)
+            s = cuda_iMh@(cuda_K@(cuda_uh_NC1_old) + cuda_Mh_sigma@((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt) + cuda_intF)
             cuda_uh_NC1 = 2*cuda_uh_NC1_old-cuda_uh_NC1_oldold-(dt**2)*s
                     
             cuda_new_intF = cuda_R@cuda_iMh@cuda_intF
-            cuda_new_s = cuda_new_iMh.dot(cuda_new_K.dot(cuda_uh_N0_old) + cuda_new_Mh_sigma.dot((cuda_uh_N0_old-cuda_uh_N0_oldold)/dt)) + cuda_new_intF
+            cuda_new_s = cuda_new_iMh@(cuda_new_K@(cuda_uh_N0_old) + cuda_new_Mh_sigma@((cuda_uh_N0_old-cuda_uh_N0_oldold)/dt)) + cuda_new_intF
             cuda_uh_N0 = 2*cuda_uh_N0_old-cuda_uh_N0_oldold-(dt**2)*cuda_new_s
             
             cuda_new_intF0 = cuda_R0@cuda_iMh@cuda_intF
-            cuda_new_s0 = cuda_new_iMh0.dot(cuda_new_K0.dot(cuda_uh_N00_old) + cuda_new_Mh0_sigma.dot((cuda_uh_N00_old-cuda_uh_N00_oldold)/dt)) + cuda_new_intF0
+            cuda_new_s0 = cuda_new_iMh0@(cuda_new_K0@(cuda_uh_N00_old) + cuda_new_Mh0_sigma@((cuda_uh_N00_old-cuda_uh_N00_oldold)/dt)) + cuda_new_intF0
             cuda_uh_N00 = 2*cuda_uh_N00_old-cuda_uh_N00_oldold-(dt**2)*cuda_new_s0
             
             cuda_uh_NC1_oldold = cuda_uh_NC1_old
@@ -300,19 +318,20 @@ for i in range(iterations):
             cuda_uh_N00_oldold = cuda_uh_N00_old
             cuda_uh_N00_old = cuda_uh_N00
             
+            
             if (j*100//int(T/dt))%10 == 0:
                 print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
             
             
-        uh_NC1 = cp.ndarray.get(cuda_uh_NC1)
-        uh_N0 = cp.ndarray.get(cuda_uh_N0)
-        uh_N00 = cp.ndarray.get(cuda_uh_N00)
+        uh_NC1 = numpy_from_torch(cuda_uh_NC1)
+        uh_N0 = numpy_from_torch(cuda_uh_N0)
+        uh_N00 = numpy_from_torch(cuda_uh_N00)
         
-        # print(np.linalg.norm(uh_N0))
+        print('ACHTUNG: ', cuda_uh_NC1.dtype,'\n')
         
-        uh_NC1_oldold = cp.ndarray.get(cuda_uh_NC1_oldold)
-        uh_N0_oldold = cp.ndarray.get(cuda_uh_N0_oldold)
-        uh_N00_oldold = cp.ndarray.get(cuda_uh_N00_oldold)
+        uh_NC1_oldold = numpy_from_torch(cuda_uh_NC1_oldold)
+        uh_N0_oldold = numpy_from_torch(cuda_uh_N0_oldold)
+        uh_N00_oldold = numpy_from_torch(cuda_uh_N00_oldold)
         
         print('Time stepping took a total of {:4.8f} seconds.'.format(time.monotonic()-tm))
         print('\n')
@@ -335,10 +354,6 @@ for i in range(iterations):
     dtau_uh_x_P1d = 1/dt*(uh_x_P1d-uh_x_P1d_old)
     dtau_uh_y_P1d = 1/dt*(uh_y_P1d-uh_y_P1d_old)
     
-    if i>0:
-        error[i] = np.sqrt((dtau_uh_x_P1d-dtau_uh_x_P1d_fine)@D1@(dtau_uh_x_P1d-dtau_uh_x_P1d_fine)+\
-                           (dtau_uh_y_P1d-dtau_uh_y_P1d_fine)@D1@(dtau_uh_y_P1d-dtau_uh_y_P1d_fine)+\
-                           (mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine)@D0@(mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine))
     ################################################################################
     
     
@@ -387,19 +402,24 @@ for i in range(iterations):
     
     if i>0:
         
-        new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)+\
-                               (dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)+\
-                               (mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))
-    
-    
-        error2[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh_x_P1d-dtau_uh_x_P1d)+\
-                            (dtau_new_uh_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh_y_P1d-dtau_uh_y_P1d)+\
-                            (mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0))
+        error[i] = np.sqrt((dtau_uh_x_P1d-dtau_uh_x_P1d_fine)@D1@(dtau_uh_x_P1d-dtau_uh_x_P1d_fine))/np.sqrt((dtau_uh_x_P1d)@D1@(dtau_uh_x_P1d))+\
+                   np.sqrt((dtau_uh_y_P1d-dtau_uh_y_P1d_fine)@D1@(dtau_uh_y_P1d-dtau_uh_y_P1d_fine))/np.sqrt((dtau_uh_y_P1d)@D1@(dtau_uh_y_P1d))+\
+                   np.sqrt((mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine)@D0@(mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine))/np.sqrt((mean_div_uh_NC1_P0)@D0@(mean_div_uh_NC1_P0))
         
+        # reduziert nur auf circle net
+        new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine))/np.sqrt((dtau_new_uh_x_P1d)@D1@(dtau_new_uh_x_P1d))+\
+                       np.sqrt((dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine))/np.sqrt((dtau_new_uh_y_P1d)@D1@(dtau_new_uh_y_P1d))+\
+                       np.sqrt((mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))/np.sqrt((mean_new_div_uh_N0_P0)@D0@(mean_new_div_uh_N0_P0))
+    
+        # 0 - reduce everywhere except the circle
+        error2[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh_x_P1d-dtau_uh_x_P1d))/np.sqrt((dtau_uh_x_P1d)@D1@(dtau_uh_x_P1d))+\
+                    np.sqrt((dtau_new_uh_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh_y_P1d-dtau_uh_y_P1d))/np.sqrt((dtau_uh_y_P1d)@D1@(dtau_uh_y_P1d))+\
+                    np.sqrt((mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N0_P0-mean_div_uh_NC1_P0))/np.sqrt((mean_div_uh_NC1_P0)@D0@(mean_div_uh_NC1_P0))
         
-        error3[i] = np.sqrt((dtau_new_uh0_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh0_x_P1d-dtau_uh_x_P1d)+\
-                            (dtau_new_uh0_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh0_y_P1d-dtau_uh_y_P1d)+\
-                            (mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0))
+        # 00 - reduce everywhere
+        error3[i] = np.sqrt((dtau_new_uh0_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh0_x_P1d-dtau_uh_x_P1d))/np.sqrt((dtau_uh_x_P1d)@D1@(dtau_uh_x_P1d))+\
+                    np.sqrt((dtau_new_uh0_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh0_y_P1d-dtau_uh_y_P1d))/np.sqrt((dtau_uh_y_P1d)@D1@(dtau_uh_y_P1d))+\
+                    np.sqrt((mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0))/np.sqrt((mean_div_uh_NC1_P0)@D0@(mean_div_uh_NC1_P0))
         
         # error3[i] = np.sqrt((new_uh0_x_P1d-new_uh_x_P1d)@D1@(new_uh0_x_P1d-new_uh_x_P1d)+\
         #                     (new_uh0_y_P1d-new_uh_y_P1d)@D1@(new_uh0_y_P1d-new_uh_y_P1d))
@@ -408,7 +428,10 @@ for i in range(iterations):
         # print('max value is:',np.max(v))
         
         
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2)
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(dtau_new_uh_x_P1d-dtau_new_uh0_x_P1d), u_height = 0) # da passiert was
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(    dtau_uh_x_P1d-dtau_new_uh0_x_P1d), u_height = 0)
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(    dtau_uh_x_P1d-dtau_new_uh_x_P1d), u_height = 0)
+        # # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2)
         # fig.show()
     ################################################################################
 
@@ -454,22 +477,19 @@ for i in range(iterations):
     
     rate = np.log2(error[1:-1]/error[2:])
     print("Convergenge rates : ",rate)
-    # print("Errors: ",error)
+    print("Errors: ",error)
     
     new_rate = np.log2(new_error[1:-1]/new_error[2:])
     print("Convergenge rates : ",new_rate)
-    # print("Errors: ",new_error)
+    print("Errors: ",new_error)
     
     rate2 = np.log2(error2[1:-1]/error2[2:])
     print("Convergenge rates : ",rate2)
-    # print("Errors: ",error2)
+    print("Errors: ",error2)
     
     rate3 = np.log2(error3[1:-1]/error3[2:])
     print("Convergenge rates : ",rate3)
-    # print("Errors: ",error3)
+    print("Errors: ",error3)
     
 gmsh.finalize()
 # do()
-
-
-

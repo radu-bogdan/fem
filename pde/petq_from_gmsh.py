@@ -45,10 +45,12 @@ def petq_from_gmsh(filename,hmax=1):
     gmsh.option.setNumber("Mesh.MeshSizeFactor", hmax)
     gmsh.option.setNumber("Mesh.MeshSizeMin", hmax)
     gmsh.option.setNumber("Mesh.MeshSizeMax", hmax)
-    gmsh.option.setNumber("Mesh.Algorithm", 1)
+    gmsh.option.setNumber("Mesh.Algorithm", 2)
+    gmsh.option.setNumber("Mesh.SaveAll", 1)
     
     gmsh.open(filename)
     gmsh.model.mesh.generate(2)
+    
     entities = gmsh.model.getEntities()
 
     nodeTags, nodeCoords, nodeParams = gmsh.model.mesh.getNodes(dim=-1,tag=-1)

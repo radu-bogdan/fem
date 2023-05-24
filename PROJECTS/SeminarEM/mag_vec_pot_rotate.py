@@ -191,7 +191,7 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 ###########################################################################################
 
 rot_speed = 1; rt = 0
-rots = 300
+rots = 10
 tor = np.zeros(rots)
 tor_vw = np.zeros(rots)
 energy = np.zeros(rots)
@@ -207,6 +207,7 @@ for k in range(rots):
     tm = time.monotonic()
     
     phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
+    phi_H1_o0  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = 0)
     dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
     dphix_H1_o0, dphiy_H1_o0 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
     dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 1)
@@ -340,10 +341,10 @@ for k in range(rots):
     
     ind_air_gaps = MESH.getIndices2d(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
     
-    Q0 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
-    Q1 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
-    Q2 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
-    Q3 =  pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
+    Q0 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
+    Q1 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
+    Q2 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
+    Q3 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
     T = lz*nu0/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux +
@@ -386,25 +387,18 @@ for k in range(rots):
     ux_mod = 1/detB*(( B11*R00-B10*R10)*ux +( B11*R01-B10*R11)*uy)
     uy_mod = 1/detB*((-B10*R00+B00*R10)*ux +(-B10*R01+B00*R11)*uy)
     
-    resize = 1/detB*zT
-    resize3 = np.tile(resize,(3,1)).T.flatten().T
+    resize = (1/detB)*zT
+                   
+    stiffness_part_local = (fx(ux,uy) @ D_order_dphidphi) * ux_mod \
+                         + (fy(ux,uy) @ D_order_dphidphi) * uy_mod
+ 
+    energy_part_local = D_order_dphidphi @ (f(ux,uy)*resize) \
+                 - (u @ phi_H1_o0) * (D_order_dphidphi @ (J0*resize))  \
+                 + (u @ dphix_H1) * (D_order_dphidphi @ (-M10*resize)) \
+                 + (u @ dphiy_H1) * (D_order_dphidphi @ (+M00*resize))
     
-    stiffness_part = fx(ux,uy) @ D_order_dphidphi @ ux_mod \
-                   + fy(ux,uy) @ D_order_dphidphi @ uy_mod
     
-    # aJ = phi_H1@ D_order_phiphi @Ja
     
-    # aM = dphix_H1_order_phiphi@ D_order_phiphi @(-M1) +\
-    #      dphiy_H1_order_phiphi@ D_order_phiphi @(+M0)
-    
-    energy_part = np.ones(D_order_dphidphi.size) @ D_order_dphidphi @ (f(ux,uy)*resize) \
-                - u @ phi_H1 @ D_order_phiphi @ (Ja*resize3)  \
-                + u @ dphix_H1_order_phiphi @ D_order_phiphi @ (-M1*resize3) \
-                + u @ dphiy_H1_order_phiphi @ D_order_phiphi @ (+M0*resize3)
-    
-    tor_vw[k] = -stiffness_part + energy_part
-    
-    print(k,'Torque:', tor_vw[k])
     
     # stiffness_part2 = gs(u)@u
     
@@ -421,7 +415,8 @@ for k in range(rots):
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
-    chip = ax1.tripcolor(Triang, r[:,1], cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, -stiffness_part_local + energy_part_local, cmap = cmap, shading = 'flat', lw = 0.1)
+    chip = ax1.tripcolor(Triang, zT, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
