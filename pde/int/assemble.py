@@ -63,14 +63,15 @@ def assembleB(MESH,order):
 
 
 
-def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0)):
+def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0), indices = npy.empty(0)):
     
-    if regions.size == 0:
-        # regions = MESH.RegionsT
-        regions = MESH.t[:,3]
+    if indices.size == 0:
+        if regions.size == 0:
+            # regions = MESH.RegionsT
+            regions = MESH.t[:,3]
+        indices = npy.in1d(MESH.t[:,3],regions)
     
     # indices = npy.argwhere(npy.in1d(MESH.t[:,3],regions))[:,0]
-    indices = npy.in1d(MESH.t[:,3],regions)
     
     p = MESH.p;
     t = MESH.t[indices,:]; nt = t.shape[0]

@@ -5,7 +5,9 @@ sys.path.insert(0,'../CEM') # adds parent directory
 # import line_profiler
 # profile = line_profiler.LineProfiler()
 
+from sparse_dot_mkl import dot_product_mkl as mult
 import numpy as np
+import gc
 import pde
 # import scipy.sparse as sps
 # from sksparse.cholmod import cholesky
@@ -42,27 +44,28 @@ np.set_printoptions(precision = 8)
 # use_GPU = False
 
 T = 2
-dt = 0.03/2*2*1.8
-iterations = 9
-init_ref = 0.25
+dt = 0.03/2*2*1.8/2
+iterations = 5#6
+init_ref = 0.125#0.25
 use_GPU = True
 
 def to_torch_csr(X):
-    coo = X.tocoo()
-    row = torch.from_numpy(coo.row.astype(np.int64)).to(torch.long)
-    col = torch.from_numpy(coo.col.astype(np.int64)).to(torch.long)
-    edge_index = torch.stack([row, col], dim=0)
-    val = torch.from_numpy(coo.data.astype(np.float64))
-    return torch.sparse.FloatTensor(edge_index, val, torch.Size(coo.shape)).to_sparse_csr().cuda()
-    # return X
+    # coo = X.tocoo()
+    # row = torch.from_numpy(coo.row.astype(np.int64)).to(torch.long)
+    # col = torch.from_numpy(coo.col.astype(np.int64)).to(torch.long)
+    # edge_index = torch.stack([row, col], dim=0)
+    # val = torch.from_numpy(coo.data.astype(np.float64))
+    # return torch.sparse.FloatTensor(edge_index, val, torch.Size(coo.shape)).to_sparse_csr()#.cuda()
+    return X
 
 def torch_from_numpy(X):
-    return torch.from_numpy(X).cuda()
-    # return X
+    # return torch.from_numpy(X)#.cuda()
+    return X
 
 def numpy_from_torch(X):
-    return X.cpu().numpy()
-    # return X
+    # return X.cpu().numpy()
+    # return X.numpy()
+    return X
 
 
 
@@ -101,6 +104,7 @@ MESH = pde.mesh(p,e,t,q)
 
 error = np.zeros(iterations)
 new_error = np.zeros(iterations)
+new_error2 = np.zeros(iterations)
 error2 = np.zeros(iterations)
 error3 = np.zeros(iterations)
 
@@ -212,7 +216,7 @@ for i in range(iterations):
             jdt = (j+1)*dt
             
             intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
-            # intF_RT0 = qMb2_RT0_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
+            intF_RT0 = qMb2_RT0_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
             
             s = iMh.dot(K.dot(uh_NC1_old) + Mh_sigma.dot((uh_NC1_old-uh_NC1_oldold)/dt) + intF)
             uh_NC1 = 2*uh_NC1_old-uh_NC1_oldold-(dt**2)*s
@@ -259,9 +263,11 @@ for i in range(iterations):
     if use_GPU:
         # import cupy as cp
         # from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
-        import torch
+        # import torch
+        # torch.set_num_threads(1)
+        # torch.no_grad()
         
-        torch.cuda.set_device(1)
+        # torch.cuda.set_device(1)
         
         tm = time.monotonic()
         
@@ -269,12 +275,15 @@ for i in range(iterations):
         
         cuda_uh_NC1_oldold = torch_from_numpy(uh_NC1_oldold)
         cuda_uh_NC1_old = torch_from_numpy(uh_NC1_old)
+        cuda_uh_NC1 = torch_from_numpy(uh_NC1_old)
         
         cuda_uh_N0_oldold = torch_from_numpy(uh_N0_oldold)
         cuda_uh_N0_old = torch_from_numpy(uh_N0_old)
+        cuda_uh_N0 = torch_from_numpy(uh_N0_old)
         
         cuda_uh_N00_oldold = torch_from_numpy(uh_N00_oldold)
         cuda_uh_N00_old = torch_from_numpy(uh_N00_old)
+        cuda_uh_N00 = torch_from_numpy(uh_N00_old)
         
         cuda_K = to_torch_csr(K)
         cuda_iMh = to_torch_csr(iMh)
@@ -291,38 +300,76 @@ for i in range(iterations):
         cuda_R = to_torch_csr(R)
         cuda_R0 = to_torch_csr(R0)
         
+        
         for j in range(int(T/dt)):
             jdt = (j+1)*dt
             
-            intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
-                    
+            del cuda_uh_NC1
+            del cuda_uh_N0
+            del cuda_uh_N00
+            
+            intF = qMb2_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)            
+            intF_RT0 = qMb2_RT0_D2b@ pde.int.evaluateB(MESH, order = 2, coeff = lambda x,y : divuex(x,y,jdt), edges = np.r_[1,2,3,4], like = 1)
+            
             cuda_intF = torch_from_numpy(intF)
+            cuda_intF_RT0 = torch_from_numpy(intF_RT0)
             
-            s = cuda_iMh@(cuda_K@(cuda_uh_NC1_old) + cuda_Mh_sigma@((cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt) + cuda_intF)
-            cuda_uh_NC1 = 2*cuda_uh_NC1_old-cuda_uh_NC1_oldold-(dt**2)*s
+            s = mult(cuda_iMh,mult(cuda_K,cuda_uh_NC1_old) + mult(cuda_Mh_sigma,(cuda_uh_NC1_old-cuda_uh_NC1_oldold)/dt) + cuda_intF)
+            cuda_uh_NC1 = (2*cuda_uh_NC1_old-cuda_uh_NC1_oldold-(dt**2)*s)
                     
-            cuda_new_intF = cuda_R@cuda_iMh@cuda_intF
-            cuda_new_s = cuda_new_iMh@(cuda_new_K@(cuda_uh_N0_old) + cuda_new_Mh_sigma@((cuda_uh_N0_old-cuda_uh_N0_oldold)/dt)) + cuda_new_intF
-            cuda_uh_N0 = 2*cuda_uh_N0_old-cuda_uh_N0_oldold-(dt**2)*cuda_new_s
+            # cuda_new_intF = mult(cuda_R,mult(cuda_iMh,mult(cuda_R.T,cuda_intF_RT0)))
+            cuda_new_intF = mult(cuda_R,mult(cuda_iMh,cuda_intF))
+            cuda_new_s = mult(cuda_new_iMh,mult(cuda_new_K,cuda_uh_N0_old) + mult(cuda_new_Mh_sigma,(cuda_uh_N0_old-cuda_uh_N0_oldold)/dt)) + cuda_new_intF
+            cuda_uh_N0 = (2*cuda_uh_N0_old-cuda_uh_N0_oldold-(dt**2)*cuda_new_s)
             
-            cuda_new_intF0 = cuda_R0@cuda_iMh@cuda_intF
-            cuda_new_s0 = cuda_new_iMh0@(cuda_new_K0@(cuda_uh_N00_old) + cuda_new_Mh0_sigma@((cuda_uh_N00_old-cuda_uh_N00_oldold)/dt)) + cuda_new_intF0
-            cuda_uh_N00 = 2*cuda_uh_N00_old-cuda_uh_N00_oldold-(dt**2)*cuda_new_s0
             
+            # cuda_new_intF0 = mult(cuda_R0,mult(cuda_iMh,mult(cuda_R0.T,cuda_intF_RT0)))
+            cuda_new_intF0 = mult(cuda_R0,mult(cuda_iMh,cuda_intF))
+            cuda_new_s0 = mult(cuda_new_iMh0,mult(cuda_new_K0,cuda_uh_N00_old) + mult(cuda_new_Mh0_sigma,(cuda_uh_N00_old-cuda_uh_N00_oldold)/dt)) + cuda_new_intF0
+            cuda_uh_N00 = (2*cuda_uh_N00_old-cuda_uh_N00_oldold-(dt**2)*cuda_new_s0)
+            
+            # del cuda_intF
+            # del cuda_new_intF
+            # del cuda_new_intF0
+            
+            # del cuda_uh_NC1_oldold
             cuda_uh_NC1_oldold = cuda_uh_NC1_old
+            # del cuda_uh_NC1_old
             cuda_uh_NC1_old = cuda_uh_NC1
             
+            # del cuda_uh_N0_oldold
             cuda_uh_N0_oldold = cuda_uh_N0_old
+            # del cuda_uh_N0_old
             cuda_uh_N0_old = cuda_uh_N0
             
+            # del cuda_uh_N00_oldold
             cuda_uh_N00_oldold = cuda_uh_N00_old
+            # del cuda_uh_N00_old
             cuda_uh_N00_old = cuda_uh_N00
+            
+            # del cuda_new_s
+            # del cuda_new_s0
             
             
             if (j*100//int(T/dt))%10 == 0:
                 print("\rTimestepping : ",j*100//int(T/dt),'%', end = " ")
+                
             
-            
+        # del cuda_K
+        # del cuda_iMh
+        # del cuda_Mh_sigma
+        
+        # del cuda_new_iMh
+        # del cuda_new_Mh_sigma
+        # del cuda_new_K
+        
+        # del cuda_new_iMh0
+        # del cuda_new_Mh0_sigma
+        # del cuda_new_K0
+        
+        # del cuda_R
+        # del cuda_R0
+        
         uh_NC1 = numpy_from_torch(cuda_uh_NC1)
         uh_N0 = numpy_from_torch(cuda_uh_N0)
         uh_N00 = numpy_from_torch(cuda_uh_N00)
@@ -396,20 +443,31 @@ for i in range(iterations):
     dtau_new_uh0_x_P1d = 1/dt*(new_uh0_x_P1d-new_uh0_x_P1d_old)
     dtau_new_uh0_y_P1d = 1/dt*(new_uh0_y_P1d-new_uh0_y_P1d_old)
     
+    # torch.cuda.empty_cache()
     
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), uh_x_P1d)
     # fig.show()
     
     if i>0:
+    
+        loc,_ = MESH._mesh__ismember(MESH.TriangleToEdges,MESH.Boundary_Edges[MESH.Boundary_Region==5])
+        trig_edge = np.argwhere(loc)[:,0]
+        C1 = pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : 1+0*x*y, indices = trig_edge)
+        C0 = pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : 1+0*x*y, indices = trig_edge)
         
         error[i] = np.sqrt((dtau_uh_x_P1d-dtau_uh_x_P1d_fine)@D1@(dtau_uh_x_P1d-dtau_uh_x_P1d_fine))/np.sqrt((dtau_uh_x_P1d)@D1@(dtau_uh_x_P1d))+\
                    np.sqrt((dtau_uh_y_P1d-dtau_uh_y_P1d_fine)@D1@(dtau_uh_y_P1d-dtau_uh_y_P1d_fine))/np.sqrt((dtau_uh_y_P1d)@D1@(dtau_uh_y_P1d))+\
                    np.sqrt((mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine)@D0@(mean_div_uh_NC1_P0-mean_div_uh_NC1_P0_fine))/np.sqrt((mean_div_uh_NC1_P0)@D0@(mean_div_uh_NC1_P0))
         
         # reduziert nur auf circle net
-        new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine))/np.sqrt((dtau_new_uh_x_P1d)@D1@(dtau_new_uh_x_P1d))+\
-                       np.sqrt((dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine))/np.sqrt((dtau_new_uh_y_P1d)@D1@(dtau_new_uh_y_P1d))+\
-                       np.sqrt((mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))/np.sqrt((mean_new_div_uh_N0_P0)@D0@(mean_new_div_uh_N0_P0))
+        new_error[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine)@D1@(dtau_new_uh_x_P1d-dtau_new_uh_x_P1d_fine))+\
+                       np.sqrt((dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine)@D1@(dtau_new_uh_y_P1d-dtau_new_uh_y_P1d_fine))+\
+                       np.sqrt((mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine)@D0@(mean_new_div_uh_N0_P0-mean_new_div_uh_N0_P0_fine))
+                       
+        # reduziert überall
+        new_error2[i] = np.sqrt((dtau_new_uh0_x_P1d-dtau_new_uh0_x_P1d_fine)@D1@C1@(dtau_new_uh0_x_P1d-dtau_new_uh0_x_P1d_fine))+\
+                        np.sqrt((dtau_new_uh0_y_P1d-dtau_new_uh0_y_P1d_fine)@D1@C1@(dtau_new_uh0_y_P1d-dtau_new_uh0_y_P1d_fine))+\
+                        np.sqrt((mean_new_div_uh_N00_P0-mean_new_div_uh_N00_P0_fine)@D0@C0@(mean_new_div_uh_N00_P0-mean_new_div_uh_N00_P0_fine))
     
         # 0 - reduce everywhere except the circle
         error2[i] = np.sqrt((dtau_new_uh_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh_x_P1d-dtau_uh_x_P1d))/np.sqrt((dtau_uh_x_P1d)@D1@(dtau_uh_x_P1d))+\
@@ -420,7 +478,11 @@ for i in range(iterations):
         error3[i] = np.sqrt((dtau_new_uh0_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh0_x_P1d-dtau_uh_x_P1d))/np.sqrt((dtau_uh_x_P1d)@D1@(dtau_uh_x_P1d))+\
                     np.sqrt((dtau_new_uh0_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh0_y_P1d-dtau_uh_y_P1d))/np.sqrt((dtau_uh_y_P1d)@D1@(dtau_uh_y_P1d))+\
                     np.sqrt((mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0))/np.sqrt((mean_div_uh_NC1_P0)@D0@(mean_div_uh_NC1_P0))
-        
+                    
+        # 00 - reduce everywhere
+        # error3[i] = np.sqrt((dtau_new_uh0_x_P1d-dtau_uh_x_P1d)@D1@(dtau_new_uh0_x_P1d-dtau_uh_x_P1d))+\
+        #             np.sqrt((dtau_new_uh0_y_P1d-dtau_uh_y_P1d)@D1@(dtau_new_uh0_y_P1d-dtau_uh_y_P1d))+\
+        #             np.sqrt((mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0)@D0@(mean_new_div_uh_N00_P0-mean_div_uh_NC1_P0))
         # error3[i] = np.sqrt((new_uh0_x_P1d-new_uh_x_P1d)@D1@(new_uh0_x_P1d-new_uh_x_P1d)+\
         #                     (new_uh0_y_P1d-new_uh_y_P1d)@D1@(new_uh0_y_P1d-new_uh_y_P1d))
         
@@ -428,24 +490,14 @@ for i in range(iterations):
         # print('max value is:',np.max(v))
         
         
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(dtau_new_uh_x_P1d-dtau_new_uh0_x_P1d), u_height = 0) # da passiert was
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (C1.diagonal())*((dtau_new_uh0_x_P1d-dtau_new_uh0_x_P1d_fine)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh0_y_P1d_fine)**2), u_height = 1) # da passiert was
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh_x_P1d-0*dtau_new_uh_x_P1d_fine)**2 + (dtau_new_uh_y_P1d-0*dtau_new_uh_y_P1d_fine)**2, u_height = 1) # da passiert was
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh_x_P1d-dtau_new_uh0_x_P1d)**2 + (dtau_new_uh_y_P1d-dtau_new_uh0_y_P1d)**2, u_height = 1) # da passiert was
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(    dtau_uh_x_P1d-dtau_new_uh0_x_P1d), u_height = 0)
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(    dtau_uh_x_P1d-dtau_new_uh_x_P1d), u_height = 0)
         # # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2)
         # fig.show()
     ################################################################################
-
-    dtau_uh_x_P1d_fine = MESH.refine(dtau_uh_x_P1d)
-    dtau_uh_y_P1d_fine = MESH.refine(dtau_uh_y_P1d)
-    mean_div_uh_NC1_P0_fine = MESH.refine(mean_div_uh_NC1_P0)
-    
-    dtau_new_uh_x_P1d_fine = MESH.refine(dtau_new_uh_x_P1d)
-    dtau_new_uh_y_P1d_fine = MESH.refine(dtau_new_uh_y_P1d)
-    mean_new_div_uh_N0_P0_fine = MESH.refine(mean_new_div_uh_N0_P0)
-    
-    dtau_new_uh0_x_P1d_fine = MESH.refine(dtau_new_uh0_x_P1d)
-    dtau_new_uh0_y_P1d_fine = MESH.refine(dtau_new_uh0_y_P1d)
-    mean_new_div_uh_N00_P0_fine = MESH.refine(mean_new_div_uh_N00_P0)
     
     ################################################################################
     
@@ -458,6 +510,19 @@ for i in range(iterations):
     # fig.show()
     
     if i+1!=iterations:
+
+        dtau_uh_x_P1d_fine = MESH.refine(dtau_uh_x_P1d)
+        dtau_uh_y_P1d_fine = MESH.refine(dtau_uh_y_P1d)
+        mean_div_uh_NC1_P0_fine = MESH.refine(mean_div_uh_NC1_P0)
+        
+        dtau_new_uh_x_P1d_fine = MESH.refine(dtau_new_uh_x_P1d)
+        dtau_new_uh_y_P1d_fine = MESH.refine(dtau_new_uh_y_P1d)
+        mean_new_div_uh_N0_P0_fine = MESH.refine(mean_new_div_uh_N0_P0)
+        
+        dtau_new_uh0_x_P1d_fine = MESH.refine(dtau_new_uh0_x_P1d)
+        dtau_new_uh0_y_P1d_fine = MESH.refine(dtau_new_uh0_y_P1d)
+        mean_new_div_uh_N00_P0_fine = MESH.refine(mean_new_div_uh_N00_P0)
+        
         MESH.refinemesh(); dt = dt/2;
         
         # init_ref = init_ref/(np.sqrt(2)/2); dt = dt/2
@@ -476,20 +541,24 @@ for i in range(iterations):
     
     
     rate = np.log2(error[1:-1]/error[2:])
-    print("Convergenge rates : ",rate)
-    print("Errors: ",error)
+    print("1. Convergenge rates : ",rate)
+    print("1. Errors: ",error)
     
     new_rate = np.log2(new_error[1:-1]/new_error[2:])
-    print("Convergenge rates : ",new_rate)
-    print("Errors: ",new_error)
+    print("2. Convergenge rates : ",new_rate)
+    print("2. Errors: ",new_error)
+    
+    new_rate2 = np.log2(new_error2[1:-1]/new_error2[2:])
+    print("3. Convergenge rates : ",new_rate2)
+    print("3. Errors: ",new_error2)
     
     rate2 = np.log2(error2[1:-1]/error2[2:])
-    print("Convergenge rates : ",rate2)
-    print("Errors: ",error2)
+    print("4. Convergenge rates : ",rate2)
+    print("4. Errors: ",error2)
     
     rate3 = np.log2(error3[1:-1]/error3[2:])
-    print("Convergenge rates : ",rate3)
-    print("Errors: ",error3)
+    print("5. Convergenge rates : ",rate3)
+    print("5. Errors: ",error3)
     
 gmsh.finalize()
 # do()
