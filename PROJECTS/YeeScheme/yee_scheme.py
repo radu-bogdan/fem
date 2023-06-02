@@ -43,8 +43,8 @@ np.set_printoptions(precision = 8)
 # init_ref = 0.25
 # use_GPU = False
 
-T = 2
-dt = 0.03/2*2*1.8/2
+T = 2.5
+dt = 0.03/2*2*2/2*1.5
 iterations = 5#6
 init_ref = 0.125#0.25
 use_GPU = True
@@ -491,12 +491,15 @@ for i in range(iterations):
         
         
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (C1.diagonal())*((dtau_new_uh0_x_P1d-dtau_new_uh0_x_P1d_fine)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh0_y_P1d_fine)**2), u_height = 1) # da passiert was
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh_x_P1d-0*dtau_new_uh_x_P1d_fine)**2 + (dtau_new_uh_y_P1d-0*dtau_new_uh_y_P1d_fine)**2, u_height = 1) # da passiert was
+        fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt((new_uh_x_P1d)**2 + (new_uh_y_P1d)**2), u_height = 0) # da passiert was
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh_x_P1d-dtau_new_uh0_x_P1d)**2 + (dtau_new_uh_y_P1d-dtau_new_uh0_y_P1d)**2, u_height = 1) # da passiert was
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(    dtau_uh_x_P1d-dtau_new_uh0_x_P1d), u_height = 0)
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.abs(    dtau_uh_x_P1d-dtau_new_uh_x_P1d), u_height = 0)
-        # # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2)
-        # fig.show()
+        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), (dtau_new_uh0_x_P1d-dtau_new_uh_x_P1d)**2 + (dtau_new_uh0_y_P1d-dtau_new_uh_y_P1d)**2)
+        
+        fig.data[0].colorscale='Jet'
+        fig.data[0].cmax=2.5
+        fig.show()
     ################################################################################
     
     ################################################################################

@@ -9,7 +9,7 @@ from sparse_dot_mkl import dot_product_mkl as mult
 import numpy as np
 import gc
 import pde
-# import scipy.sparse as sps
+import scipy.sparse as sps
 # from sksparse.cholmod import cholesky
 import time
 import gmsh
@@ -47,25 +47,6 @@ T = 2
 dt = 0.03/2*2*1.8
 iterations = 9
 init_ref = 0.25
-use_GPU = True
-
-def to_torch_csr(X):
-    # coo = X.tocoo()
-    # row = torch.from_numpy(coo.row.astype(np.int64)).to(torch.long)
-    # col = torch.from_numpy(coo.col.astype(np.int64)).to(torch.long)
-    # edge_index = torch.stack([row, col], dim=0)
-    # val = torch.from_numpy(coo.data.astype(np.float64))
-    # return torch.sparse.FloatTensor(edge_index, val, torch.Size(coo.shape)).to_sparse_csr()#.cuda()
-    return X
-
-def torch_from_numpy(X):
-    # return torch.from_numpy(X)#.cuda()
-    return X
-
-def numpy_from_torch(X):
-    # return X.cpu().numpy()
-    # return X.numpy()
-    return X
 
 
 
@@ -112,6 +93,7 @@ dtau_uh_y_P1d_fine = np.empty(0); dtau_new_uh_y_P1d_fine = np.empty(0); dtau_new
 mean_div_uh_NC1_P0_fine = np.empty(0); mean_new_div_uh_N0_P0_fine = np.empty(0); mean_new_div_uh_N00_P0_fine = np.empty(0)
 
 for i in range(iterations):
+    
     print('Iteration', i+1, 'out of', iterations)
     h_approx = 2/np.sqrt(MESH.nt/2)
     h_richtig = MESH.h().min()
@@ -165,6 +147,7 @@ for i in range(iterations):
     D1 = qD1@D2@qD1.T
     
     iMh = pde.tools.fastBlockInverse(Mh) # print(sps.linalg.norm(Mh@iMh,np.inf))
+    iMh_epsilon = pde.tools.fastBlockInverse(Mh_epsilon) # print(sps.linalg.norm(Mh@iMh,np.inf))
     
     # iMh_Mh_sigma = iMh@Mh_sigma
     # iMh_K = iMh@K
@@ -176,10 +159,6 @@ for i in range(iterations):
     
     circ_DOFS = MESH.Boundary_Edges[MESH.Boundary_Region==5]
     P,Q,R = reduction_matrix.makeProjectionMatrices(MESH, indices = np.sort(circ_DOFS))
-    
-    # P = P0.copy()
-    # Q = Q0.copy()
-    # R = R0.copy()
           
     # print('K has {:4.2f} MB, iMh has {:4.2f} MB, Mh_sigma has {:4.2f} MB.'.format(\
     #        K.data.nbytes/(1024**2),iMh.data.nbytes/(1024**2),Mh_sigma.data.nbytes/(1024**2)))
@@ -195,20 +174,86 @@ for i in range(iterations):
     new_iMh0 = R0@iMh@R0.T
     new_Mh0_sigma = P0.T@Mh2_sigma@P0
     new_K0 = P0.T@K@P0
-
-    
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(uh_x_P1d**2+uh_y_P1d**2), u_height=0)
-    # fig.data[0].colorscale='Jet'
-    # fig.show()
-    
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1d', controls = 1), np.sqrt(new_uh_x_P1d**2+new_uh_y_P1d**2), u_height=0)
-    # fig.data[0].colorscale='Jet'
-    # fig.show()
     
     print(iMh.shape)
     print(new_iMh.shape)
     print(new_iMh0.shape)
+    
+    a,_ = sps.linalg.eigs(K,1,Mh_epsilon)
+    lam = np.real(a[0])
+    tau = np.sqrt(2)/(h_richtig*np.sqrt(lam))
+    print('CFL:', tau)
+    
+    
+    # a,_ = sps.linalg.eigs(K,1,Mh_epsilon,maxiter = 10000)
+    # lam = np.real(a[0])
+    # tau = np.sqrt(2)/(h_richtig*np.sqrt(lam))
+    # print('CFL:', tau)
+    
+    # # C = 0.2; np.real(sps.linalg.eigs(1/2*Mh_epsilon-(C*h_richtig)**2/4*K,1)[0][0])
+    
+    # for i in range(100):
+    #     a,_ = sps.linalg.eigs(K,1,Mh_epsilon+tau*1e10*(R.T@new_Mh_sigma@R-Mh_sigma))
+    #     lam = np.real(a[0])
+    #     tau = np.sqrt(2)/(h_richtig*np.sqrt(lam))
+    # print('new CFL2:', tau)
+    
+    # tau = 0.1
+    
+    # v = np.random.rand(Mh_epsilon.shape[0])
+    # for i in range(100):
+    #     KK = iMh_epsilon@K
+    #     v1 = KK@v
+    #     v = v1/np.linalg.norm(v1)
+    #     lam = (v@KK@v)/(v@v)
+    #     tau = np.sqrt(2)/(h_richtig*np.sqrt(lam))
+    # print('new CFL3:', tau)
+    
+    
+    
+    
+    from scipy.optimize import root_scalar
+    
+    f_min1 = lambda tau : np.real(sps.linalg.eigs(1/2*Mh_epsilon-tau**2/4*K-0*tau/2*(R.T@new_Mh_sigma@R-Mh_sigma),1,which='SR')[0][0])
+    root1 = root_scalar(f_min1, bracket=[0.0, 0.5]).root
+    print(root1/h_richtig)
+    
+    f_min1 = lambda tau : np.real(sps.linalg.eigs(1/2*Mh_epsilon-tau**2/4*K-1*tau/2*(R.T@new_Mh_sigma@R-Mh_sigma),1,which='SR')[0][0])
+    root1 = root_scalar(f_min1, bracket=[0.0, 0.5]).root
+    
+    print('kek0 ',root1/h_richtig)
+    print('kek1 ',root1/(h_richtig+100/2*h_richtig**2))
+    
+    print(MESH)
+    
+    
+    
+    
+    
+    # tau = 0.01; 
+    # def get_tau(tau):
+    #     print(np.real(sps.linalg.eigs(1/2*Mh_epsilon-tau**2/4*K-1*tau/2*(R.T@new_Mh_sigma@R-Mh_sigma),1,which='SR')[0][0]))
+    #     print(np.real(sps.linalg.eigs(1/2*Mh_epsilon-tau**2/4*K-0*tau/2*(R.T@new_Mh_sigma@R-Mh_sigma),1,which='SR')[0][0]))
+    #     print(tau/h_richtig)
+        
+    # def get_lam(lam):
+    #     print((sps.linalg.eigs(Mh_epsilon-lam*K,1,which='SM')[0][0]))
+    #     print(lam)
+        
+    # v = np.random.rand(Mh_epsilon.shape[0])
+    # # tau = 0.4
+    # for i in range(100):
+    #     # KK = tau*iMh_epsilon@K
+    #     KK = tau/(1+tau)*iMh_epsilon@K
+    #     v1 = KK@v
+    #     v = v1/np.linalg.norm(v1)
+    #     lam = (v@KK@v)/(v@v)
+    #     # tau = 2/lam
+    #     tau = (-lam+np.sqrt(lam**2+8*lam))/(2*lam*h_richtig)
+    # print('new CFL4:',tau)
     print('\n\n')
+    
+    # stop
     
     if i+1!=iterations:
         MESH.refinemesh(); dt = dt/2;
