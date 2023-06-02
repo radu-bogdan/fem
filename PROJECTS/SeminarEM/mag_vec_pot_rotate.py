@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.animation as animation
 from matplotlib.animation import FFMpegWriter
-cmap = matplotlib.colors.ListedColormap("limegreen")
+# cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
 
 
@@ -180,14 +180,6 @@ fxx = lambda ux,uy : fxx_linear(ux,uy)*new_mask_linear + fxx_iron(ux,uy)*new_mas
 fxy = lambda ux,uy : fxy_linear(ux,uy)*new_mask_linear + fxy_iron(ux,uy)*new_mask_nonlinear
 fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + fyx_iron(ux,uy)*new_mask_nonlinear
 fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mask_nonlinear
-
-# f   = lambda ux,uy :   f_linear(ux,uy)*new_mask_linear + 1/1000*f_linear(ux,uy)*new_mask_nonlinear
-# fx  = lambda ux,uy :  fx_linear(ux,uy)*new_mask_linear + 1/1000*fx_linear(ux,uy)*new_mask_nonlinear
-# fy  = lambda ux,uy :  fy_linear(ux,uy)*new_mask_linear + 1/1000*fy_linear(ux,uy)*new_mask_nonlinear
-# fxx = lambda ux,uy : fxx_linear(ux,uy)*new_mask_linear + 1/1000*fxx_linear(ux,uy)*new_mask_nonlinear
-# fxy = lambda ux,uy : fxy_linear(ux,uy)*new_mask_linear + 1/1000*fxy_linear(ux,uy)*new_mask_nonlinear
-# fyx = lambda ux,uy : fyx_linear(ux,uy)*new_mask_linear + 1/1000*fyx_linear(ux,uy)*new_mask_nonlinear
-# fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + 1/1000*fyy_linear(ux,uy)*new_mask_nonlinear
 ###########################################################################################
 
 rot_speed = 1; rt = 0
@@ -351,7 +343,7 @@ for k in range(rots):
                                               (Q1*uy)@D_order_dphidphi@ux +
                                               (Q2*ux)@D_order_dphidphi@uy +
                                               (Q3*uy)@D_order_dphidphi@uy)
-    print(k,'Torque:', T)
+    print(k, 'Torque:', T)
     
     tor[k] = T
     
@@ -360,6 +352,18 @@ for k in range(rots):
     ##########################################################################################
     
     energy[k] = J(u)
+    
+    ##########################################################################################
+    # Local energy
+    ##########################################################################################
+    
+    ux = dphix_H1_o0.T@u
+    uy = dphiy_H1_o0.T@u
+    u_P0 = 1/3*(u[MESH.t[:,0]]+u[MESH.t[:,1]]+u[MESH.t[:,2]])
+    eu = f(ux,uy)-J0*u_P0 +(M00*uy - M10*ux)
+    # eu = ux**2+uy**2
+    # eu = f(ux,uy)-1/2*(M00*uy - M10*ux)
+    nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
     
     ##########################################################################################
     # Virtual work principle
@@ -411,14 +415,15 @@ for k in range(rots):
     
     ax1.cla()
     ax2.cla()
-    MESH.pdegeom(ax = ax1)
+    # MESH.pdegeom(ax = ax1)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
     # chip = ax1.tripcolor(Triang, -stiffness_part_local + energy_part_local, cmap = cmap, shading = 'flat', lw = 0.1)
-    chip = ax1.tripcolor(Triang, zT, cmap = cmap, shading = 'flat', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'flat', lw = 0.1)
+    # ax1.tripcolor(Triang, zT, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', lw = 0.1)
     # chip = ax1.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
+    chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat')
     # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
     ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
     ax2.plot(tor)
