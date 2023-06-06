@@ -32,7 +32,7 @@ fig = plt.figure()
 fig.show()
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
-ax1.set_aspect(aspect = 'equal')
+# ax1.set_aspect(aspect = 'equal')
 # ax2.set_aspect(aspect = 'equal')
 
 # cbar = plt.colorbar(ax)
@@ -72,6 +72,8 @@ MESH = pde.mesh(p,e,t,q)
 # MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
+t = MESH.t
+p = MESH.p
 ##########################################################################################
 
 
@@ -93,8 +95,8 @@ mask_rotor     = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
 mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
 mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
 
-trig_rotor = t[np.where(mask_rotor)[0],0:3]
-trig_air_gap_rotor = t[np.where(mask_air_gap_rotor)[0],0:3]
+trig_rotor = MESH.t[np.where(mask_rotor)[0],0:3]
+trig_air_gap_rotor = MESH.t[np.where(mask_air_gap_rotor)[0],0:3]
 points_rotor = np.unique(trig_rotor)
 points_rotor_and_airgaprotor = np.unique(np.r_[trig_rotor,trig_air_gap_rotor])
 
@@ -183,8 +185,9 @@ fyy = lambda ux,uy : fyy_linear(ux,uy)*new_mask_linear + fyy_iron(ux,uy)*new_mas
 ###########################################################################################
 
 rot_speed = 1; rt = 0
-rots = 10
+rots = 100
 tor = np.zeros(rots)
+tor2 = np.zeros(rots)
 tor_vw = np.zeros(rots)
 energy = np.zeros(rots)
 
@@ -327,7 +330,8 @@ for k in range(rots):
     # Arkkio torque computation
     ##########################################################################################
     
-    lz = 0.1795 # where does this come from?
+    # lz = 0.1795 # where does this come from?
+    lz = 1
     rTorqueOuter = 79.242*10**(-3)
     rTorqueInner = 78.63225*10**(-3)
     
@@ -401,6 +405,61 @@ for k in range(rots):
                  + (u @ dphix_H1) * (D_order_dphidphi @ (-M10*resize)) \
                  + (u @ dphiy_H1) * (D_order_dphidphi @ (+M00*resize))
     
+    ##########################################################################################
+    # Virtual work principle v2.0
+    ##########################################################################################
+    
+    ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+    
+    r1 = p[edges_rotor_outer[0,0],0]
+    # r2 = r1 + 0.0007
+    # r2 = r1 + 0.00024
+    
+    #outer radius rotor
+    r_outer = 78.63225*10**(-3);
+    #sliding mesh rotor
+    r_sliding = 78.8354999*10**(-3);
+    #sliding mesh stator
+    r_sliding2 = 79.03874999*10**(-3);
+    #inner radius stator
+    r_inner = 79.242*10**(-3);
+    
+    r2 = r_inner
+    
+    
+    # dazwischen = lambda x,y : 
+    scale = lambda x,y : 1*(x**2+y**2<r1**2)+(x**2+y**2-r2**2)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+    scalex = lambda x,y : (2*x)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+    scaley = lambda x,y : (2*y)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+    
+    v = lambda x,y : np.r_[-y,x]*scale(x,y)
+    v1x = lambda x,y : -y*scalex(x,y)
+    v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
+    v2x = lambda x,y : scale(x,y)+x*scalex(x,y)
+    v2y = lambda x,y : x*scaley(x,y)
+    
+    
+    v1x_fem = pde.int.evaluate(MESH, order = 0, coeff = v1x).diagonal()
+    v1y_fem = pde.int.evaluate(MESH, order = 0, coeff = v1y).diagonal()
+    v2x_fem = pde.int.evaluate(MESH, order = 0, coeff = v2x).diagonal()
+    v2y_fem = pde.int.evaluate(MESH, order = 0, coeff = v2y).diagonal()
+    
+    
+    b1 = uy
+    b2 = -ux
+    fu = f(ux,uy)-(M00*uy-M10*ux)
+    fbb1 =  fy(ux,uy)-M00
+    fbb2 = -fx(ux,uy)-M10
+    a_P0 = u_P0
+
+    
+    term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
+    term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
+    
+    
+    term = -(term1+term2)
+    tor2[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term
+    print(k, 'Torque2:', tor2[k])
     
     
     
@@ -415,23 +474,39 @@ for k in range(rots):
     
     ax1.cla()
     ax2.cla()
+    
     # MESH.pdegeom(ax = ax1)
+    # MESH.pdemesh2(ax = ax1)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
     # chip = ax1.tripcolor(Triang, -stiffness_part_local + energy_part_local, cmap = cmap, shading = 'flat', lw = 0.1)
     # ax1.tripcolor(Triang, zT, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, nH, cmap = cmap, shading = 'flat', lw = 0.1)
-    chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat')
-    # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=nH.min(), vmax=nH.max()))
-    ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
-    ax2.plot(tor)
+    # chip = ax1.tripcolor(Triang, fx(ux,uy)**2+fy(ux,uy)**2, cmap = cmap, shading = 'flat', lw = 0.1)
+    chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, ux**2+uy**2, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, scale_fem, cmap = cmap, shading = 'flat')
+    # chip = ax1.tripcolor(Triang, np.abs(term), cmap = cmap, shading = 'flat')
+    # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=np.abs(eu.min()), vmax=np.abs(eu.max())))
+    # ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid') #Feldlinien
+    
+    ax1.plot(tor,linewidth = 1)
+    ax1.plot(tor2,linewidth = 1)
+    energy_diff = energy[1:]-np.r_[energy[-1],energy[0:-2]]
+    energy_diff = (-energy_diff*(np.abs(energy_diff)<1)/(2*a1)).copy()
+    ax1.plot(energy_diff,linewidth = 1)
+    
+    ax2.plot(energy_diff-tor[:-1])
+    ax2.plot(energy_diff-tor2[:-1])
+    ax2.plot(tor-tor2)
+    
+    # ax2.plot(tor/tor2)
     
     fig.show()
     
     plt.pause(0.01)
-    # writer.grab_frame()
+    writer.grab_frame()
     
     
     
