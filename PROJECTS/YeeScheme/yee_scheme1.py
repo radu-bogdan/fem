@@ -44,7 +44,6 @@ time = 3060
 iteration = 1
 init_ref = 1
 
-
 kx = 1; ky = 1; s0 = -3
 c = np.sqrt(kx**2+ky**2)
 

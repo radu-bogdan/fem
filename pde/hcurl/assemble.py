@@ -46,18 +46,12 @@ def assemble(MESH,space,matrix,order=-1):
         ellmatsBx = npy.zeros((nqp*nt,lphi))
         ellmatsBy = npy.zeros((nqp*nt,lphi))
         
-        # print(LIST_DOF)
-        
         im = npy.tile(LIST_DOF,(nqp,1))
         jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
-                phii = phi[j](qp[0,i],qp[1,i])
-                
-                # ellmatsBx[i*nt:(i+1)*nt,j] = 1/detA*(A00*phii[0] + A01*phii[1])*DIRECTION_DOF[:,j]
-                # ellmatsBy[i*nt:(i+1)*nt,j] = 1/detA*(A10*phii[0] + A11*phii[1])*DIRECTION_DOF[:,j]
-                
+                phii = phi[j](qp[0,i],qp[1,i])                
                 ellmatsBx[i*nt:(i+1)*nt,j] = 1/detA*( A11*phii[0] -A10*phii[1])*DIRECTION_DOF[:,j]
                 ellmatsBy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*phii[0] +A00*phii[1])*DIRECTION_DOF[:,j]
         
