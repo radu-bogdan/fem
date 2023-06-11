@@ -78,6 +78,9 @@ def assemble(MESH,space,matrix,order=-1):
         BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
         BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)
         return BKx, BKy
+        
+    if matrix == 'div':
+        return 0
 
 # @nb.jit(cache=True)
 def assembleB(MESH,space,matrix,shape,order=-1):

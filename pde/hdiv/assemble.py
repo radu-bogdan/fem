@@ -38,7 +38,7 @@ def assemble(MESH,space,matrix,order=-1):
     # Mass matrix
     #####################################################################################
     
-    if matrix == 'M':
+    if matrix == 'M' or matrix == 'phi':
         if order == -1:
             qp = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
             we = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
@@ -64,7 +64,7 @@ def assemble(MESH,space,matrix,order=-1):
     # Stiffness matrix
     #####################################################################################
     
-    if matrix == 'K':
+    if matrix == 'K' or matrix == 'divphi':
         if order == -1:
             qp = MESH.FEMLISTS[space]['TRIG']['qp_we_K'][0]; 
             we = MESH.FEMLISTS[space]['TRIG']['qp_we_K'][1]; nqp = len(we)
