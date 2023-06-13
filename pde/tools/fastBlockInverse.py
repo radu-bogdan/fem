@@ -11,90 +11,142 @@ found = spam_spec is not None
 
 from scipy.sparse.linalg import splu
 
-if (found == True):
-    print('kek')
+# found = False
 
-def sparse_cholesky(A): # The input matrix A must be a sparse symmetric positive-definite.
-  
-  n = A.shape[0]
-  LU = splu(A,diag_pivot_thresh=0) # sparse LU decomposition
-  
-  if ( LU.perm_r == np.arange(n) ).all() and ( LU.U.diagonal() > 0 ).all(): # check the matrix A is positive definite.
-    return LU.L.dot( sps.diags(LU.U.diagonal()**0.5) )
-  else:
-    sys.exit('The matrix is not positive definite')
+if found == False:
+    def fastBlockInverse(Mh):
+        spluMh = splu(Mh)
+        L = spluMh.L; U = spluMh.U
 
-def fastBlockInverse(Mh):
-    
-    if found == True:
+        Pv2 = spluMh.perm_r
+        Pv3 = spluMh.perm_c
+
+        P2 = sps.csc_matrix((np.ones(Pv2.size),(np.r_[0:Pv2.size],Pv2)), shape = (Pv2.size,Pv2.size))
+        P3 = sps.csc_matrix((np.ones(Pv3.size),(np.r_[0:Pv3.size],Pv3)), shape = (Pv3.size,Pv3.size))
+        
+        L = L.tocsc()
+        UT = (U.T).tocsc()
+        
+        
+        #####################################################################################
+        # Find indices where the blocks begin/end
+        #####################################################################################
+        tm = time.time()
+        
+        L_diag = L.diagonal(k=-1) # Nebendiagonale anfangen
+        block_ends_L = np.r_[np.argwhere(abs(L_diag)==0)[:,0],L.shape[0]-1]
+        
+        for i in range(L.shape[0]):
+            L_diag = np.r_[L.diagonal(k=-(i+2)),np.zeros(i+2)]
+            
+            for j in range(i+1):
+                arg = np.argwhere(abs(L_diag[block_ends_L-j])>0)[:,0]
+                block_ends_L = np.delete(block_ends_L,arg).copy()
+                
+            if np.linalg.norm(L_diag)==0: break
+        
+        block_ends_L = np.r_[0,block_ends_L+1]
+        
+        #####################################################################################
+        
+        
+        #####################################################################################
+        # Find indices where the blocks begin/end
+        #####################################################################################
+        
+        UT_diag = UT.diagonal(k=-1) # Nebendiagonale anfangen
+        block_ends_UT = np.r_[np.argwhere(abs(UT_diag)==0)[:,0],UT.shape[0]-1]
+        
+        for i in range(UT.shape[0]):
+            UT_diag = np.r_[UT.diagonal(k=-(i+2)),np.zeros(i+2)]
+            
+            for j in range(i+1):
+                arg = np.argwhere(abs(UT_diag[block_ends_UT-j])>0)[:,0]
+                block_ends_UT = np.delete(block_ends_UT,arg).copy()
+                
+            if np.linalg.norm(UT_diag)==0: break
+        
+        block_ends_UT = np.r_[0,block_ends_UT+1]
+        
+        elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
+        #####################################################################################
+        
+        tm = time.time()
+        data_iUT,indices_iUT,indptr_iUT = createIndicesInversion(UT.data,UT.indices,UT.indptr,block_ends_UT)
+        iUT = sps.csc_matrix((data_iUT, indices_iUT, indptr_iUT), shape = UT.shape)
+        
+        data_iL,indices_iL,indptr_iL = createIndicesInversion(L.data,L.indices,L.indptr,block_ends_L)
+        iL = sps.csc_matrix((data_iL, indices_iL, indptr_iL), shape = L.shape)
+        elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
+        
+        # iMh = (P3@(iUT.T@iL)@P2.T)@Mh1
+        return P3@(iUT.T@iL)@P2.T
+
+if found == True:
+    def fastBlockInverse(Mh):
+        
         cholMh = cholesky(Mh)
         N = cholMh.L()
         Pv = cholMh.P()
-        P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
-    else:
-        spluMh = splu(Mh)
-        N = spluMh.L
-        CC = spluMh.perm_c        
-        Pv = spluMh.U
-        P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
+        P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))            
         
-    # Extracting diagonals seems to be fastest with csc
-    N = N.tocsc()
-    
-    #####################################################################################
-    # Find indices where the blocks begin/end
-    #####################################################################################
-    tm = time.time()
-    
-    N_diag = N.diagonal(k=-1) # Nebendiagonale anfangen
-    block_ends = np.r_[np.argwhere(abs(N_diag)==0)[:,0],N.shape[0]-1]
-    
-    for i in range(N.shape[0]):
-        N_diag = np.r_[N.diagonal(k=-(i+2)),np.zeros(i+2)]
+        # Extracting diagonals seems to be fastest with csc
+        N = N.tocsc()
         
-        for j in range(i+1):
-            arg = np.argwhere(abs(N_diag[block_ends-j])>0)[:,0]
-            block_ends = np.delete(block_ends,arg).copy()
+        #####################################################################################
+        # Find indices where the blocks begin/end
+        #####################################################################################
+        tm = time.time()
+        
+        N_diag = N.diagonal(k=-1) # Nebendiagonale anfangen
+        block_ends = np.r_[np.argwhere(abs(N_diag)==0)[:,0],N.shape[0]-1]
+        
+        for i in range(N.shape[0]):
+            N_diag = np.r_[N.diagonal(k=-(i+2)),np.zeros(i+2)]
             
-        if np.linalg.norm(N_diag)==0: break
-    
-    block_ends = np.r_[0,block_ends+1]
-    
-    elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
-    #####################################################################################
-    
-    
-    #####################################################################################
-    # Inversion of the blocks (naive version, keeping for sanity checks, who knows amirite?)
-    #####################################################################################
-    # iN = sps.lil_matrix(N.shape)
-    
-    # tm = time.time()
-    # for i,ii in enumerate(block_ends[:-1]):
+            for j in range(i+1):
+                arg = np.argwhere(abs(N_diag[block_ends-j])>0)[:,0]
+                block_ends = np.delete(block_ends,arg).copy()
+                
+            if np.linalg.norm(N_diag)==0: break
         
-    #     C = N[block_ends[i]:block_ends[i+1],
-    #           block_ends[i]:block_ends[i+1]].toarray()
+        block_ends = np.r_[0,block_ends+1]
         
-    #     iC = np.linalg.inv(C)
+        elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
+        #####################################################################################
         
-    #     iN[block_ends[i]:block_ends[i+1],
-    #         block_ends[i]:block_ends[i+1]] = iC
         
-    # elapsed = time.time()-tm; print('Inverting naively took {:4.8f} seconds.'.format(elapsed))
-    #####################################################################################    
-    
-    
-    #####################################################################################
-    # Inversion of the blocks, 2nd try.
-    #####################################################################################
-    
-    tm = time.time()
-    data_iN,indices_iN,indptr_iN = createIndicesInversion(N.data,N.indices,N.indptr,block_ends)
-    iN = sps.csc_matrix((data_iN, indices_iN, indptr_iN), shape = N.shape)
-    elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
-    
-    iMh = P.T@(iN.T@iN)@P
-    return iMh
+        #####################################################################################
+        # Inversion of the blocks (naive version, keeping for sanity checks, who knows amirite?)
+        #####################################################################################
+        # iN = sps.lil_matrix(N.shape)
+        
+        # tm = time.time()
+        # for i,ii in enumerate(block_ends[:-1]):
+            
+        #     C = N[block_ends[i]:block_ends[i+1],
+        #           block_ends[i]:block_ends[i+1]].toarray()
+            
+        #     iC = np.linalg.inv(C)
+            
+        #     iN[block_ends[i]:block_ends[i+1],
+        #         block_ends[i]:block_ends[i+1]] = iC
+            
+        # elapsed = time.time()-tm; print('Inverting naively took {:4.8f} seconds.'.format(elapsed))
+        #####################################################################################    
+        
+        
+        #####################################################################################
+        # Inversion of the blocks, 2nd try.
+        #####################################################################################
+        
+        tm = time.time()
+        data_iN,indices_iN,indptr_iN = createIndicesInversion(N.data,N.indices,N.indptr,block_ends)
+        iN = sps.csc_matrix((data_iN, indices_iN, indptr_iN), shape = N.shape)
+        elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
+        
+        iMh = P.T@(iN.T@iN)@P
+        return iMh
 
 
 

@@ -111,14 +111,14 @@ from scipy import interpolate
 t, c, k = interpolate.splrep(np.array(H_KL), np.array(B_KL), s=0.1, k=3)
 spline = interpolate.BSpline(t, c, k, extrapolate = True)
 xx = np.linspace(0,1e7,10_000_000)
-plt.cla(); plt.plot(xx,spline(xx))
-print(spline(xx))
+# plt.cla(); plt.plot(xx,spline(xx))
+# print(spline(xx))
 
 dxspline = spline.derivative()
-plt.plot(xx,dxspline(xx))
+# plt.plot(xx,dxspline(xx))
 
 dxxspline = dxspline.derivative()
-plt.plot(xx,dxxspline(xx))
+# plt.plot(xx,dxxspline(xx))
 
 f = interpolate.interp1d(H_KL, B_KL)
 
@@ -153,7 +153,7 @@ phix_Hcurl_o1 = phi_Hcurl(1)[0];
 phiy_Hcurl_o1 = phi_Hcurl(1)[1];
 
 C = phi_L2_o1 @ D1 @ curlphi_Hcurl_o1.T
-# pde.tools.condest(Mh1)
+
 iMh = pde.tools.fastBlockInverse(Mh1)
 S = C@iMh@C.T
 
@@ -197,17 +197,45 @@ x2 = sps.linalg.spsolve(Kxx+Kyy+10**10*B_stator_outer,aM)
 
 
 fig = plt.figure()
-fig.show()
-ax1 = fig.add_subplot(111)
+ax1 = fig.add_subplot(121)
 ax1.set_aspect(aspect = 'equal')
 
 ax1.cla()
-
 MESH.pdegeom(ax = ax1)
 # MESH.pdemesh2(ax = ax1)
 
 Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
 chip = ax1.tripcolor(Triang, x, cmap = cmap, shading = 'flat', lw = 0.1)
-    
-    
-chip = ax1.tripcolor(Triang, x2, cmap = cmap, shading = 'gouraud', lw = 0.1)
+
+
+
+ax2 = fig.add_subplot(122)
+ax2.set_aspect(aspect = 'equal')
+
+ax2.cla()
+MESH.pdegeom(ax = ax2)
+chip = ax2.tripcolor(Triang, x2, cmap = cmap, shading = 'gouraud', lw = 0.1)
+
+fig.tight_layout()
+fig.show()
+
+
+from scipy.sparse.linalg import splu
+LU = splu(Mh1)
+L = LU.L; U = LU.U
+
+
+from sksparse.cholmod import cholesky
+cholMh = cholesky(Mh1)
+N = cholMh.L()
+Pv = cholMh.P()
+P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
+sps.linalg.norm(P.T @ N @ N.T @ P -Mh1,np.inf)
+
+Pv2 = LU.perm_r
+Pv3 = LU.perm_c
+
+P2 = sps.csc_matrix((np.ones(Pv2.size),(np.r_[0:Pv2.size],Pv2)), shape = (Pv2.size,Pv2.size))
+P3 = sps.csc_matrix((np.ones(Pv3.size),(np.r_[0:Pv3.size],Pv3)), shape = (Pv3.size,Pv3.size))
+
+sps.linalg.norm(P2@(L@U)@P3.T-Mh1,np.inf)
