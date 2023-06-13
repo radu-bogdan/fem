@@ -153,7 +153,7 @@ phix_Hcurl_o1 = phi_Hcurl(1)[0];
 phiy_Hcurl_o1 = phi_Hcurl(1)[1];
 
 C = phi_L2_o1 @ D1 @ curlphi_Hcurl_o1.T
-
+# pde.tools.condest(Mh1)
 iMh = pde.tools.fastBlockInverse(Mh1)
 S = C@iMh@C.T
 

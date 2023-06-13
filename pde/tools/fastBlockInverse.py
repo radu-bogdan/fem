@@ -1,16 +1,43 @@
+import sys
 import time
 import numpy as np
 import numba as nb
 import scipy.sparse as sps
 from sksparse.cholmod import cholesky
 
+import importlib.util
+spam_spec = importlib.util.find_spec("sksparse")
+found = spam_spec is not None
+
+from scipy.sparse.linalg import splu
+
+if (found == True):
+    print('kek')
+
+def sparse_cholesky(A): # The input matrix A must be a sparse symmetric positive-definite.
+  
+  n = A.shape[0]
+  LU = splu(A,diag_pivot_thresh=0) # sparse LU decomposition
+  
+  if ( LU.perm_r == np.arange(n) ).all() and ( LU.U.diagonal() > 0 ).all(): # check the matrix A is positive definite.
+    return LU.L.dot( sps.diags(LU.U.diagonal()**0.5) )
+  else:
+    sys.exit('The matrix is not positive definite')
+
 def fastBlockInverse(Mh):
     
-    cholMh = cholesky(Mh)
-    N = cholMh.L()
-    Pv = cholMh.P()
-    P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
-    
+    if found == True:
+        cholMh = cholesky(Mh)
+        N = cholMh.L()
+        Pv = cholMh.P()
+        P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
+    else:
+        spluMh = splu(Mh)
+        N = spluMh.L
+        CC = spluMh.perm_c        
+        Pv = spluMh.U
+        P = sps.csc_matrix((np.ones(Pv.size),(np.r_[0:Pv.size],Pv)), shape = (Pv.size,Pv.size))
+        
     # Extracting diagonals seems to be fastest with csc
     N = N.tocsc()
     
