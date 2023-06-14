@@ -3,15 +3,12 @@ import time
 import numpy as np
 import numba as nb
 import scipy.sparse as sps
-from sksparse.cholmod import cholesky
 
 import importlib.util
 spam_spec = importlib.util.find_spec("sksparse")
 found = spam_spec is not None
 
 from scipy.sparse.linalg import splu
-
-# found = False
 
 if found == False:
     def fastBlockInverse(Mh):
@@ -79,10 +76,11 @@ if found == False:
         iL = sps.csc_matrix((data_iL, indices_iL, indptr_iL), shape = L.shape)
         elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
         
-        # iMh = (P3@(iUT.T@iL)@P2.T)@Mh1
-        return P3@(iUT.T@iL)@P2.T
+        iMh = P3@(iUT.T@iL)@P2.T
+        return iMh#P3@(iUT.T@iL)@P2.T
 
 if found == True:
+    from sksparse.cholmod import cholesky
     def fastBlockInverse(Mh):
         
         cholMh = cholesky(Mh)
