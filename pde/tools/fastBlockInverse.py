@@ -150,7 +150,7 @@ if found == True:
 
 
 
-@nb.njit()
+@nb.njit(cache=True)
 def createIndicesInversion(dataN,indicesN,indptrN,block_ends):
 
     block_lengths = block_ends[1:]-block_ends[0:-1]
