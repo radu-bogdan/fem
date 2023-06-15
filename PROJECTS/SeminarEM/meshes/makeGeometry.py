@@ -507,28 +507,28 @@ scipy.io.savemat('motor.mat', {"t" : t.T+1,
 np.savez_compressed('motor.npz', p=p.T, e=e.T, t=t.T, regions_2d=regions_2d_np, regions_1d=regions_1d_np, m=m, j3=j3)
 #####################################################################################################################
 
-# import pde
-# MESH = pde.mesh(p,e,t,q)
+import pde
+MESH = pde.mesh(p,e,t,q)
 
-# ind_air_all = np.flatnonzero(np.core.defchararray.find(regions_2d,'air')!=-1)
-# ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(regions_2d,'iron')!=-1)
-# ind_magnet = np.flatnonzero(np.core.defchararray.find(regions_2d,'magnet')!=-1)
-# ind_coil = np.flatnonzero(np.core.defchararray.find(regions_2d,'coil')!=-1)
-# ind_shaft = np.flatnonzero(np.core.defchararray.find(regions_2d,'shaft')!=-1)
+ind_air_all = np.flatnonzero(np.core.defchararray.find(regions_2d,'air')!=-1)
+ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(regions_2d,'iron')!=-1)
+ind_magnet = np.flatnonzero(np.core.defchararray.find(regions_2d,'magnet')!=-1)
+ind_coil = np.flatnonzero(np.core.defchararray.find(regions_2d,'coil')!=-1)
+ind_shaft = np.flatnonzero(np.core.defchararray.find(regions_2d,'shaft')!=-1)
 
-# trig_air_all = np.where(np.isin(t[:,3],ind_air_all))
-# trig_stator_rotor = np.where(np.isin(t[:,3],ind_stator_rotor))
-# trig_magnet = np.where(np.isin(t[:,3],ind_magnet))
-# trig_coil = np.where(np.isin(t[:,3],ind_coil))
-# trig_shaft = np.where(np.isin(t[:,3],ind_shaft))
+trig_air_all = np.where(np.isin(t[:,3],ind_air_all))
+trig_stator_rotor = np.where(np.isin(t[:,3],ind_stator_rotor))
+trig_magnet = np.where(np.isin(t[:,3],ind_magnet))
+trig_coil = np.where(np.isin(t[:,3],ind_coil))
+trig_shaft = np.where(np.isin(t[:,3],ind_shaft))
 
-# vek = np.zeros(MESH.nt)
-# vek[trig_air_all] = 1
-# vek[trig_magnet] = 2
-# vek[trig_coil] = 3
-# vek[trig_stator_rotor] = 4
-# vek[trig_shaft] = 3.6
+vek = np.zeros(MESH.nt)
+vek[trig_air_all] = 1
+vek[trig_magnet] = 2
+vek[trig_coil] = 3
+vek[trig_stator_rotor] = 4
+vek[trig_shaft] = 3.6
 
-# # fig = MESH.pdemesh()
-# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek, u_height=0)
-# fig.show()
+# fig = MESH.pdemesh()
+fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek, u_height=0)
+fig.show()
