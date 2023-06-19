@@ -28,6 +28,7 @@ metadata = dict(title = 'Motor')
 writer = FFMpegWriter(fps = 10, metadata = metadata)
 
 # plt.ion()
+plt.close('all')
 fig = plt.figure()
 fig.show()
 ax1 = fig.add_subplot(121)
@@ -89,7 +90,8 @@ mask_coil = MESH.getIndices2d(regions_2d, 'coil')
 mask_shaft = MESH.getIndices2d(regions_2d, 'shaft')
 mask_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', exact = 1)
 mask_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', exact = 1)
-mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
+# mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
+mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap', exact = 0)
 
 mask_rotor     = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
 mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
@@ -167,6 +169,19 @@ fxy_iron = lambda x,y : x*nuy(x,y)
 fyx_iron = lambda x,y : y*nux(x,y)
 fyy_iron = lambda x,y : nu(x,y) + y*nuy(x,y)
 
+#################################
+# nu1 = lambda x,y : nu0+0*x*y
+# nu2 = lambda x,y : nu0+0*x*y
+
+# fx_iron = lambda x,y : nu1(x,y)*x
+# fy_iron = lambda x,y : nu2(x,y)*y
+# fxx_iron = lambda x,y : nu1(x,y)
+# fxy_iron = lambda x,y : 0 + 0*x*y
+# fyx_iron = lambda x,y : 0 + 0*x*y
+# fyy_iron = lambda x,y : nu2(x,y)
+
+#################################
+
 f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
 fx_linear = lambda x,y : nu0*x
 fy_linear = lambda x,y : nu0*y
@@ -188,6 +203,7 @@ rot_speed = 1; rt = 0
 rots = 100
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
+tor3 = np.zeros(rots)
 tor_vw = np.zeros(rots)
 energy = np.zeros(rots)
 
@@ -451,23 +467,39 @@ for k in range(rots):
     fbb1 =  fy(ux,uy)-M00
     fbb2 = -fx(ux,uy)-M10
     a_P0 = u_P0
-
+    
     
     term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
-    
     
     term = -(term1+term2)
     tor2[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term
     print(k, 'Torque2:', tor2[k])
     
+    b1 = uy
+    b2 = -ux
+    fu = f(ux,uy)
+    fbb1 =  fy(ux,uy)
+    fbb2 = -fx(ux,uy)
+    a_P0 = u_P0
+    
+    
+    term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
+    term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
+    
+    term = -(term1+term2)
+    tor3[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term
+    print(k, 'Torque3:', tor3[k])
+    
+    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    # stop
     
     
     # stiffness_part2 = gs(u)@u
     
     # print("loale: ",stiffness_part2-stiffness_part)
     
-    
+    chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
     
     
     
@@ -476,7 +508,7 @@ for k in range(rots):
     ax2.cla()
     
     # MESH.pdegeom(ax = ax1)
-    # MESH.pdemesh2(ax = ax1)
+    MESH.pdemesh2(ax = ax1)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
@@ -500,6 +532,7 @@ for k in range(rots):
     ax2.plot(energy_diff-tor[:-1])
     ax2.plot(energy_diff-tor2[:-1])
     ax2.plot(tor-tor2)
+    ax2.plot(tor-tor3)
     
     # ax2.plot(tor/tor2)
     
