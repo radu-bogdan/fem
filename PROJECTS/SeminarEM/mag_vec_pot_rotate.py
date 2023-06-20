@@ -118,9 +118,9 @@ r1 = p[edges_rotor_outer[0,0],0]
 a1 = 2*np.pi/edges_rotor_outer.shape[0]
 
 # Adjust points on the outer rotor to be equally spaced.
-for k in range(edges_rotor_outer.shape[0]):
-    p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
-    p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
+# for k in range(edges_rotor_outer.shape[0]):
+#     p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
+#     p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
 
 
@@ -472,8 +472,8 @@ for k in range(rots):
     term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
-    term = -(term1+term2)
-    tor2[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term
+    term_2 = -(term1+term2)
+    tor2[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term_2
     print(k, 'Torque2:', tor2[k])
     
     b1 = uy
@@ -487,8 +487,8 @@ for k in range(rots):
     term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
-    term = -(term1+term2)
-    tor3[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term
+    term_3 = -(term1+term2)
+    tor3[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term_3
     print(k, 'Torque3:', tor3[k])
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
