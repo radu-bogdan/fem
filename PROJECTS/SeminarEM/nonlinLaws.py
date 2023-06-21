@@ -82,13 +82,13 @@ def gx_gy_nonlinear_vek(x,y):
             
             # print(((fxu-Hn0)**2+(fyu-Hn1)**2)-((fx-Hn0)**2+(fy-Hn1)**2))
             # to_check = ((fxu-Hn0)**2+(fyu-Hn1)**2)-((fx-Hn0)**2+(fy-Hn1)**2)
-            if (((fxu-Hn0)**2+(fyu-Hn1)**2)-((fx-Hn0)**2+(fy-Hn1)**2)).any()<0: break
+            if ((((fxu-Hn0)**2+(fyu-Hn1)**2)-((fx-Hn0)**2+(fy-Hn1)**2))<0).all(): break
             else: alpha = alpha*(1/2)
             
         Bn0u = Bn0 - alpha*w0
         Bn1u = Bn1 - alpha*w1
         
-        if (np.sqrt((Bn1u-Bn1)**2+(Bn0u-Bn0)**2)).all()<1e-5:
+        if (np.sqrt((Bn1u-Bn1)**2+(Bn0u-Bn0)**2)<1e-6).all():
             break
         
         Bn0 = Bn0u.copy()
@@ -176,7 +176,7 @@ b = np.random.randint(100_000, size = 1_000).astype(float)
 
 tm = time.monotonic(); g,gx,gy,gxx,gxy,gyx,gyy = g_nonlinear_all(a,b); print(time.monotonic()-tm)
 
-for i in range(1):
+for i in range(100):
     a = np.random.randint(100_000, size = 1_000).astype(float)
     b = np.random.randint(100_000, size = 1_000).astype(float)
     # tm = time.monotonic(); gx,gy = gx_gy_nonlinear(a,b); print(time.monotonic()-tm)
