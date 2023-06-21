@@ -205,5 +205,22 @@ def g_nonlinear_all(x,y):
     
 ##########################################################################################
 
+nu0 = 10**7/(4*np.pi)
+
+f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
+fx_linear = lambda x,y : nu0*x
+fy_linear = lambda x,y : nu0*y
+fxx_linear = lambda x,y : nu0 + 0*x
+fxy_linear = lambda x,y : x*0
+fyx_linear = lambda x,y : y*0
+fyy_linear = lambda x,y : nu0 + 0*y
+
+g_linear = lambda x,y : 1/(2*nu0)*(x**2+y**2)
+gx_linear = lambda x,y : 1/nu0*x
+gy_linear = lambda x,y : 1/nu0*y
+gxx_linear = lambda x,y : 1/nu0 + 0*x
+gxy_linear = lambda x,y : x*0
+gyx_linear = lambda x,y : y*0
+gyy_linear = lambda x,y : 1/nu0 + 0*y
 
 

@@ -12,6 +12,8 @@ pio.renderers.default = 'browser'
 # import nonlinear_Algorithms
 import numba as nb
 import pyamg
+from scipy.sparse import hstack,vstack
+
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -72,32 +74,26 @@ MESH = pde.mesh(p,e,t,q)
 # Extract indices
 ##########################################################################################
 
-mask_air_all = MESH.getIndices2d(regions_2d, 'air')
-mask_stator_rotor_and_shaft = MESH.getIndices2d(regions_2d, 'iron')
-mask_magnet = MESH.getIndices2d(regions_2d, 'magnet')
-mask_coil = MESH.getIndices2d(regions_2d, 'coil')
-mask_shaft = MESH.getIndices2d(regions_2d, 'shaft')
-mask_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', exact = 1)
-mask_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', exact = 1)
-mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
+ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = True)[0]
+ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
 
-mask_rotor     = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
-mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
-mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
-
-trig_rotor = MESH.t[np.where(mask_rotor)[0],0:3]
-trig_air_gap_rotor = MESH.t[np.where(mask_air_gap_rotor)[0],0:3]
-points_rotor = np.unique(trig_rotor)
-points_rotor_and_airgaprotor = np.unique(np.r_[trig_rotor,trig_air_gap_rotor])
-
-
-ind_stator_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'stator_outer')!=-1)
-ind_rotor_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'rotor_outer')!=-1)
 ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
-ind_trig_coils   = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
+ind_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', return_index = True)[0]
+ind_trig_coils = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
 ind_trig_magnets = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
+ind_air_all = MESH.getIndices2d(regions_2d, 'air', return_index = True)[0]
+ind_magnet = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
+ind_shaft = MESH.getIndices2d(regions_2d, 'shaft', return_index = True)[0]
+ind_coil = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
+ind_stator_rotor_and_shaft = MESH.getIndices2d(regions_2d, 'iron', return_index = True)[0]
+ind_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', return_index = True)[0]
+ind_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', return_index = True)[0]
+
+ind_linear = np.r_[ind_air_all,ind_magnet,ind_shaft,ind_coil]
+ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
+ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                         [np.sin(x), np.cos(x)]])
@@ -141,6 +137,12 @@ phiy_Hcurl = phi_Hcurl(4)[1];
 C = phi_L2_o1 @ D1 @ curlphi_Hcurl_o1.T
 
 
+fem_linear = pde.int.evaluate(MESH, order = 4, regions = ind_linear).diagonal()
+fem_nonlinear = pde.int.evaluate(MESH, order = 4, regions = ind_nonlinear).diagonal()
+fem_rotor = pde.int.evaluate(MESH, order = 4, regions = ind_rotor).diagonal()
+fem_air_gap_rotor = pde.int.evaluate(MESH, order = 4, regions = ind_air_gap_rotor).diagonal()
+
+
 M0 = 0; M1 = 0; M00 = 0; M10 = 0
 for i in range(16):
     M0 += pde.int.evaluate(MESH, order = 4, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
@@ -163,7 +165,7 @@ tm = time.monotonic(); x = sps.linalg.spsolve(S,r); print('dual: ',time.monotoni
 
 ##########################################################################################
 
-from nonlinLaws import g_nonlinear_all
+from nonlinLaws import *
 
 a = np.random.randint(100_000, size = 1_000).astype(float)
 b = np.random.randint(100_000, size = 1_000).astype(float)
@@ -178,7 +180,17 @@ Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
 
 g_H,gx_H,gy_H,gxx_H,gxy_H,gyx_H,gyy_H = g_nonlinear_all(Hx,Hy)
 
-gxx_H_Mxx = phix_Hcurl @ D4 @ sps.diags(gxx_H)@ phix_Hcurl.T
+gxx_H_Mxx = phix_Hcurl @ D4 @ sps.diags(gxx_H*fem_nonlinear + gxx_linear(Hx,Hy)*fem_linear)@ phix_Hcurl.T
+gyy_H_Myy = phiy_Hcurl @ D4 @ sps.diags(gyy_H*fem_nonlinear + gyy_linear(Hx,Hy)*fem_linear)@ phiy_Hcurl.T
+gxy_H_Mxy = phiy_Hcurl @ D4 @ sps.diags(gxy_H*fem_nonlinear + gxy_linear(Hx,Hy)*fem_linear)@ phix_Hcurl.T
+gyx_H_Myx = phix_Hcurl @ D4 @ sps.diags(gyx_H*fem_nonlinear + gyx_linear(Hx,Hy)*fem_linear)@ phiy_Hcurl.T
+
+M = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
+Z = sps.csc_matrix((C.shape[0],C.shape[0]))
+S = vstack((hstack((M,-C.T)),
+            hstack((C,Z))))
+S1 = hstack((C,Z))
+
 
 # def gss(u):
 #     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
