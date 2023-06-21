@@ -16,7 +16,7 @@ import numba as jit
 
 # import plotly.figure_factory as ff
 
-
+import matplotlib
 import matplotlib.pyplot as plt
 # import plotly.express as px
 # import pandas as pd
@@ -62,6 +62,7 @@ class mesh:
             EdgeDirectionQuad = npy.empty(shape = (0,4), dtype = npy.int64)
             mp_quad = npy.empty(shape = (0,2), dtype = npy.int64)
             
+        # e_new = e[:,0:2].copy()
         e_new = npy.sort(e[:,0:2])
         
         nt = t.shape[0]
@@ -272,6 +273,21 @@ class mesh:
         
         ax.plot(xs,ys, linewidth = 0.7, color = 'red')
         return ax
+    
+    def pdesurf2(self,fun,**kwargs):
+        if "ax" not in kwargs:
+            # create new figure
+            fig = plt.figure(**{k: v for k, v in kwargs.items() if k in ['figsize']})
+            ax = fig.add_subplot(111)
+            aspect = kwargs["aspect"] if "aspect" in kwargs else 1.0
+            ax.set_aspect(aspect)
+            # ax.set_axis_off()
+        else:
+            ax = kwargs["ax"]
+            # ax.clear()
+            
+        Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
+        chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1)
     
     def pdemesh2(self,**kwargs):
         if "ax" not in kwargs:
