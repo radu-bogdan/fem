@@ -177,8 +177,8 @@ b = np.random.randint(100_000, size = 1_000).astype(float)
 tm = time.monotonic(); g,gx,gy,gxx,gxy,gyx,gyy = g_nonlinear_all(a,b); print(time.monotonic()-tm)
 
 for i in range(100):
-    a = np.random.randint(100_000, size = 1_000).astype(float)
-    b = np.random.randint(100_000, size = 1_000).astype(float)
+    a = np.random.randint(100_000, size = 1_0_000).astype(float)
+    b = np.random.randint(100_000, size = 1_0_000).astype(float)
     # tm = time.monotonic(); gx,gy = gx_gy_nonlinear(a,b); print(time.monotonic()-tm)
     tm = time.monotonic(); gx,gy = gx_gy_nonlinear_vek(a,b); print(time.monotonic()-tm)
 
