@@ -128,6 +128,8 @@ def assembleB(MESH,space,matrix,shape,order=-1):
         B = sparse(im,jm,ellmatsB,shape,nqp*ne)
         return B
 
+def assembleE(MESH,space,matrix,shape,order=-1):
+    s
 
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

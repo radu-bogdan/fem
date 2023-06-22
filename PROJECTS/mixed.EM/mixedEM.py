@@ -303,6 +303,11 @@ iMd = pde.tools.fastBlockInverse(Md)
 
 Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 
+
+
+# phi_H1b = pde.Hcurl.assembleB(MESH, space = 'RT0', matrix = 'M', shape = dphix_H1_o1.shape, order = 4)
+phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
+
 # ##########################################################################################
 
 # dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 4)
