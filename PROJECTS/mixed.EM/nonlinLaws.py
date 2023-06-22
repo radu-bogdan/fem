@@ -6,7 +6,7 @@ from numba import float64,float32
 @nb.njit() 
 def f_nonlinear(x,y):
     k1 = 49.4; k2 = 1.46; k3 = 520.6
-    return 1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
+    return k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
 
 @nb.njit() 
 def nu(x,y):
@@ -155,21 +155,53 @@ def gx_gy_nonlinear(x,y):
         # Bn[:,k] = Bnk1
     return Bn
 
+
 ##########################################################################################
+
+nu0 = 10**7/(4*np.pi)
+
+f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
+fx_linear = lambda x,y : nu0*x
+fy_linear = lambda x,y : nu0*y
+fxx_linear = lambda x,y : nu0 + 0*x
+fxy_linear = lambda x,y : x*0
+fyx_linear = lambda x,y : y*0
+fyy_linear = lambda x,y : nu0 + 0*y
+
+g_linear = lambda x,y : 1/(2*nu0)*(x**2+y**2)
+gx_linear = lambda x,y : 1/nu0*x
+gy_linear = lambda x,y : 1/nu0*y
+gxx_linear = lambda x,y : 1/nu0 + 0*x
+gxy_linear = lambda x,y : x*0
+gyx_linear = lambda x,y : y*0
+gyy_linear = lambda x,y : 1/nu0 + 0*y
+
+##########################################################################################
+
 def g_nonlinear_all(x,y):
-    gx,gy = gx_gy_nonlinear(x,y)
-    g = gx*x+gy*y-f_nonlinear(gx,gy)
+    gx_nl,gy_nl = gx_gy_nonlinear(x,y)
+    g_nl = gx_nl*x+gy_nl*y-f_nonlinear(gx_nl,gy_nl)
     
-    fxx = fxx_nonlinear(gx,gy)
-    fxy = fxy_nonlinear(gx,gy)
-    fyx = fyx_nonlinear(gx,gy)
-    fyy = fyy_nonlinear(gx,gy)
-    det = 1/(fxx*fyy-fyx*fxy)
+    fxx = fxx_nonlinear(gx_nl,gy_nl)
+    fxy = fxy_nonlinear(gx_nl,gy_nl)
+    fyx = fyx_nonlinear(gx_nl,gy_nl)
+    fyy = fyy_nonlinear(gx_nl,gy_nl)
+    inv_det = 1/(fxx*fyy-fyx*fxy)
     
-    gxx =  det*fyy; gxy = -det*fxy
-    gyx = -det*fyx; gyy =  det*fyy
+    gxx_nl =  inv_det*fyy; gxy_nl = -inv_det*fxy
+    gyx_nl = -inv_det*fyx; gyy_nl =  inv_det*fxx
     
-    return g,gx,gy,gxx,gxy,gyx,gyy
+    g_l = g_linear(x,y)
+    gx_l = gx_linear(x,y)
+    gy_l = gy_linear(x,y)
+    
+    gxx_l = gxx_linear(x,y)
+    gxy_l = gxy_linear(x,y)
+    gyx_l = gyx_linear(x,y)
+    gyy_l = gyy_linear(x,y)
+    
+    return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
+           g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
 ##########################################################################################
 
 # import time
@@ -204,23 +236,5 @@ def g_nonlinear_all(x,y):
     # print("inverse g' of f'. err: ",err)
     
 ##########################################################################################
-
-nu0 = 10**7/(4*np.pi)
-
-f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
-fx_linear = lambda x,y : nu0*x
-fy_linear = lambda x,y : nu0*y
-fxx_linear = lambda x,y : nu0 + 0*x
-fxy_linear = lambda x,y : x*0
-fyx_linear = lambda x,y : y*0
-fyy_linear = lambda x,y : nu0 + 0*y
-
-g_linear = lambda x,y : 1/(2*nu0)*(x**2+y**2)
-gx_linear = lambda x,y : 1/nu0*x
-gy_linear = lambda x,y : 1/nu0*y
-gxx_linear = lambda x,y : 1/nu0 + 0*x
-gxy_linear = lambda x,y : x*0
-gyx_linear = lambda x,y : y*0
-gyy_linear = lambda x,y : 1/nu0 + 0*y
 
 

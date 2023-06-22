@@ -287,7 +287,12 @@ class mesh:
             # ax.clear()
             
         Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
-        chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1)
+        
+        if (fun.size==self.np):
+            chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1, shading='gouraud')
+        else:
+            chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1)
+            
     
     def pdemesh2(self,**kwargs):
         if "ax" not in kwargs:

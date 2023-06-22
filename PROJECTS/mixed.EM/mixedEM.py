@@ -52,20 +52,11 @@ regions_2d = motor_npz['regions_2d']
 regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
-##########################################################################################
-
-
-
-##########################################################################################
-# Parameters
-##########################################################################################
 
 nu0 = 10**7/(4*np.pi)
-
 MESH = pde.mesh(p,e,t,q)
 # MESH.refinemesh()
 # MESH.refinemesh()
-
 ##########################################################################################
 
 
@@ -114,7 +105,6 @@ for k in range(edges_rotor_outer.shape[0]):
 # Assembling stuff
 ##########################################################################################
 
-# u = np.zeros(MESH.np)
 
 tm = time.monotonic()
 
@@ -131,6 +121,8 @@ D1 = D(1); D2 = D(2); D4 = D(4); Mh1 = Mh(1); Mh2 = Mh(2)
 phi_L2_o1 = phi_L2(1)
 curlphi_Hcurl_o1 = curlphi_Hcurl(1)
 
+curlphi_Hcurl = curlphi_Hcurl(4)
+
 phix_Hcurl = phi_Hcurl(4)[0];
 phiy_Hcurl = phi_Hcurl(4)[1];
 
@@ -142,6 +134,12 @@ fem_nonlinear = pde.int.evaluate(MESH, order = 4, regions = ind_nonlinear).diago
 fem_rotor = pde.int.evaluate(MESH, order = 4, regions = ind_rotor).diagonal()
 fem_air_gap_rotor = pde.int.evaluate(MESH, order = 4, regions = ind_air_gap_rotor).diagonal()
 
+Ja = 0; J0 = 0
+for i in range(48):
+    Ja += pde.int.evaluate(MESH, order = 4, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+    J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+Ja = 0*Ja
+J0 = 0*J0
 
 M0 = 0; M1 = 0; M00 = 0; M10 = 0
 for i in range(16):
@@ -154,6 +152,7 @@ for i in range(16):
 aM = phix_Hcurl@ D(4) @(M0) +\
      phiy_Hcurl@ D(4) @(M1)
 
+aJ = phi_L2(4)@ D4 @Ja
 
 iMh = pde.tools.fastBlockInverse(Mh1)
 S = C@iMh@C.T
@@ -175,31 +174,132 @@ g_nonlinear_all(a,b)
 
 # ux = dphix_H1.T@u; uy = dphiy_H1.T@u
 
+
+mu0 = (4*np.pi)/10**7
 H = 1+np.zeros(2*MESH.NoEdges)
-Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
+A = 0+np.zeros(MESH.nt)
 
-g_H,gx_H,gy_H,gxx_H,gxy_H,gyx_H,gyy_H = g_nonlinear_all(Hx,Hy)
+HA = np.r_[H,A]
+# Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
 
-gxx_H_Mxx = phix_Hcurl @ D4 @ sps.diags(gxx_H*fem_nonlinear + gxx_linear(Hx,Hy)*fem_linear)@ phix_Hcurl.T
-gyy_H_Myy = phiy_Hcurl @ D4 @ sps.diags(gyy_H*fem_nonlinear + gyy_linear(Hx,Hy)*fem_linear)@ phiy_Hcurl.T
-gxy_H_Mxy = phiy_Hcurl @ D4 @ sps.diags(gxy_H*fem_nonlinear + gxy_linear(Hx,Hy)*fem_linear)@ phix_Hcurl.T
-gyx_H_Myx = phix_Hcurl @ D4 @ sps.diags(gyx_H*fem_nonlinear + gyx_linear(Hx,Hy)*fem_linear)@ phiy_Hcurl.T
-
-M = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
-Z = sps.csc_matrix((C.shape[0],C.shape[0]))
-S = vstack((hstack((M,-C.T)),
-            hstack((C,Z))))
-S1 = hstack((C,Z))
-
-
-# def gss(u):
-#     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+def gss(allH):
+    gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6]; 
+    gxx_H_nl = allH[10]; gxy_H_nl = allH[11]; gyx_H_nl = allH[12]; gyy_H_nl = allH[13];
     
-#     fxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(fxx_linear(ux,uy)*fem_linear + fxx_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
-#     fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy_linear(ux,uy)*fem_linear + fyy_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-#     fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy_linear(ux,uy)*fem_linear + fxy_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
-#     fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx_linear(ux,uy)*fem_linear + fyx_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-#     return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
+    gxx_H_Mxx = phix_Hcurl @ D4 @ sps.diags(gxx_H_nl*fem_nonlinear + gxx_H_l*fem_linear)@ phix_Hcurl.T
+    gyy_H_Myy = phiy_Hcurl @ D4 @ sps.diags(gyy_H_nl*fem_nonlinear + gyy_H_l*fem_linear)@ phiy_Hcurl.T
+    gxy_H_Mxy = phiy_Hcurl @ D4 @ sps.diags(gxy_H_nl*fem_nonlinear + gxy_H_l*fem_linear)@ phix_Hcurl.T
+    gyx_H_Myx = phix_Hcurl @ D4 @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_Hcurl.T
+    
+    M = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
+    Z = sps.csc_matrix((C.shape[0],C.shape[0]))
+    
+    S = vstack((hstack((M, C.T)),
+                hstack((C, Z)))).tocsc()
+    return S
+
+def gs(allH,A,H):
+    gx_H_l  = allH[1]; gy_H_l  = allH[2];
+    gx_H_nl = allH[8]; gy_H_nl = allH[9];
+    
+    r1 = phix_Hcurl @ D4 @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
+         phiy_Hcurl @ D4 @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + C.T@A
+    
+    # assemble J here!
+    # r2 = np.zeros((C.shape[0]))
+    r2 = C@H
+    
+    # print(r1.shape,r2.shape)
+    return np.r_[r1,r2]
+
+def J(allH,H):
+    g_H_l = allH[0]; g_H_nl = allH[7];
+    return np.ones(D4.size)@ D4 @(g_H_l*fem_linear + g_H_nl*fem_nonlinear) + mu0*aM@H
+
+
+maxIter = 100
+epsangle = 1e-5;
+
+angleCondition = np.zeros(5)
+eps_newton = 1e-8
+factor_residual = 1/2
+mu = 0.0001
+
+tm = time.monotonic()
+for i in range(maxIter):
+
+    H = HA[:2*MESH.NoEdges]
+    A = HA[2*MESH.NoEdges:]
+
+    Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H    
+
+    tm = time.monotonic();
+    allH = g_nonlinear_all(Hx,Hy)
+    print('Evaluating nonlinearity took ', time.monotonic()-tm)
+    
+    gsu = gs(allH,A,H)
+    gssu = gss(allH)
+    
+    w = sps.linalg.spsolve(gssu,-gsu)
+    
+    norm_w = np.linalg.norm(w)
+    norm_gsu = np.linalg.norm(gsu)
+    
+    if (-(w@gsu)/(norm_w*norm_gsu)<epsangle):
+        angleCondition[i%5] = 1
+        if np.product(angleCondition)>0:
+            w = -gsu
+            print("STEP IN NEGATIVE GRADIENT DIRECTION")
+    else: angleCondition[i%5]=0
+    
+    alpha = 1
+    
+    # ResidualLineSearch
+    # for k in range(1000):
+        
+    #     HAu = HA + alpha*w
+    #     Hu = HAu[:2*MESH.NoEdges]
+        
+    #     Hxu = phix_Hcurl.T@(Hu);
+    #     Hyu = phiy_Hcurl.T@(Hu);
+        
+    #     allHu = g_nonlinear_all(Hxu,Hyu)
+        
+    #     if np.linalg.norm(gs(allHu,Hu)) <= np.linalg.norm(gs(allH,H)): break
+    #     else: alpha = alpha*factor_residual
+    
+    # AmijoBacktracking
+    float_eps = np.finfo(float).eps
+    for kk in range(1000):
+        
+        HAu = HA + alpha*w
+        Hu = HAu[:2*MESH.NoEdges]
+        
+        Hxu = phix_Hcurl.T@(Hu);
+        Hyu = phiy_Hcurl.T@(Hu);
+        
+        allHu = g_nonlinear_all(Hxu,Hyu)
+        if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
+        else: alpha = alpha*factor_residual
+        
+    HA = HA + alpha*w
+    
+    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H))+"||alpha: %2e" % (alpha))
+    
+    
+    H = HA[:2*MESH.NoEdges]
+    A = HA[2*MESH.NoEdges:]
+    Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
+    allH = g_nonlinear_all(Hx,Hy)
+    if(np.linalg.norm(gs(allH,A,H)) < eps_newton): break
+
+elapsed = time.monotonic()-tm
+print('Solving took ', elapsed, 'seconds')
+
+
+
+A = HA[2*MESH.NoEdges:]
+MESH.pdesurf2(A)
 
 
 
@@ -208,58 +308,48 @@ S1 = hstack((C,Z))
 
 
 
+# ##########################################################################################
 
+# dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 4)
 
+# Kxx = dphix_H1_o1 @ D(4) @ dphix_H1_o1.T
+# Kyy = dphiy_H1_o1 @ D(4) @ dphiy_H1_o1.T
 
+# phi_H1b = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = dphix_H1_o1.shape, order = 4)
 
+# D_stator_outer = pde.int.evaluateB(MESH, order = 4, edges = ind_stator_outer)
+# B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
-
-
-
-
-
-##########################################################################################
-
-dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 4)
-
-Kxx = dphix_H1_o1 @ D(4) @ dphix_H1_o1.T
-Kyy = dphiy_H1_o1 @ D(4) @ dphiy_H1_o1.T
-
-phi_H1b = pde.h1.assembleB(MESH, space = 'P1', matrix = 'M', shape = dphix_H1_o1.shape, order = 4)
-
-D_stator_outer = pde.int.evaluateB(MESH, order = 4, edges = ind_stator_outer)
-B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
-
-aM = dphix_H1_o1@ D(4) @(-M1) +\
-     dphiy_H1_o1@ D(4) @(+M0)
+# aM = dphix_H1_o1@ D(4) @(-M1) +\
+#      dphiy_H1_o1@ D(4) @(+M0)
      
 
 
-tm = time.monotonic(); x2 = sps.linalg.spsolve(Kxx+Kyy+10**10*B_stator_outer,aM); print('primal: ',time.monotonic()-tm)
+# tm = time.monotonic(); x2 = sps.linalg.spsolve(Kxx+Kyy+10**10*B_stator_outer,aM); print('primal: ',time.monotonic()-tm)
     
-##########################################################################################
-# Plotting stuff
-##########################################################################################
+# ##########################################################################################
+# # Plotting stuff
+# ##########################################################################################
 
 
-fig = plt.figure()
-ax1 = fig.add_subplot(121)
-ax1.set_aspect(aspect = 'equal')
+# fig = plt.figure()
+# ax1 = fig.add_subplot(121)
+# ax1.set_aspect(aspect = 'equal')
 
-ax1.cla()
-MESH.pdegeom(ax = ax1)
-# MESH.pdemesh2(ax = ax1)
+# ax1.cla()
+# MESH.pdegeom(ax = ax1)
+# # MESH.pdemesh2(ax = ax1)
 
-Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
-chip = ax1.tripcolor(Triang, x, cmap = cmap, shading = 'flat', lw = 0.1)
+# Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+# chip = ax1.tripcolor(Triang, x, cmap = cmap, shading = 'flat', lw = 0.1)
 
-ax2 = fig.add_subplot(122)
-ax2.set_aspect(aspect = 'equal')
+# ax2 = fig.add_subplot(122)
+# ax2.set_aspect(aspect = 'equal')
 
-ax2.cla()
-MESH.pdegeom(ax = ax2)
-chip = ax2.tripcolor(Triang, x2, cmap = cmap, shading = 'gouraud', lw = 0.1)
+# ax2.cla()
+# MESH.pdegeom(ax = ax2)
+# chip = ax2.tripcolor(Triang, x2, cmap = cmap, shading = 'gouraud', lw = 0.1)
 
-fig.tight_layout()
-fig.show()
+# fig.tight_layout()
+# fig.show()
 

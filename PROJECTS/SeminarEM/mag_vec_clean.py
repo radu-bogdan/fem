@@ -1,5 +1,6 @@
 import sys
 sys.path.insert(0,'../../') # adds parent directory
+sys.path.insert(0,'../mixed.EM') # adds parent directory
 # sys.path.insert(0,'../CEM') # adds parent directory
 
 import numpy as np
@@ -134,110 +135,41 @@ if ORDER == 2:
 
 
 
-##########################################################################################
-# Brauer/Nonlinear laws ... ?
-##########################################################################################
+# ##########################################################################################
+# # Brauer/Nonlinear laws ... ?
+# ##########################################################################################
 
-k1 = 49.4; k2 = 1.46; k3 = 520.6
-# k1 = 3.8; k2 = 2.17; k3 = 396.2
-
-f_nonlinear = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
-
-nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
-nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
-nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
-
-fx_nonlinear = lambda x,y : nu(x,y)*x
-fy_nonlinear = lambda x,y : nu(x,y)*y
-fxx_nonlinear = lambda x,y : nu(x,y) + x*nux(x,y)
-fxy_nonlinear = lambda x,y : x*nuy(x,y)
-fyx_nonlinear = lambda x,y : y*nux(x,y)
-fyy_nonlinear = lambda x,y : nu(x,y) + y*nuy(x,y)
-
-###########################################################################################
-f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
-fx_linear = lambda x,y : nu0*x
-fy_linear = lambda x,y : nu0*y
-fxx_linear = lambda x,y : nu0 + 0*x
-fxy_linear = lambda x,y : x*0
-fyx_linear = lambda x,y : y*0
-fyy_linear = lambda x,y : nu0 + 0*y
-###########################################################################################
+# k1 = 49.4; k2 = 1.46; k3 = 520.6
+# # k1 = 3.8; k2 = 2.17; k3 = 396.2
 
 
+# f_nonlinear = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
+
+# nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
+# nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
+# nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
 
 
-
-Hn = np.r_[1000,1000]
-Bn = np.r_[10,10]
-
-
-# def gx_gy_nonlinear(x,y):
-#     return gx_gy_nonlinear_full(x,y,fxx_nonlinear,fxy_nonlinear,fyx_nonlinear,fyy_nonlinear,fx_nonlinear,fy_nonlinear)
-
-
-# @nb.njit()
-# def gx_gy_nonlinear_full(x,y,fxx_nonlinear,fxy_nonlinear,fyx_nonlinear,fyy_nonlinear,fx_nonlinear,fy_nonlinear):
-def gx_gy_nonlinear(x,y):
-    
-    Hn = np.array([x,y],np.float64);
-    
-    le = 1 if (Hn.ndim==1) else Hn.shape[1]
-    
-    Bn = np.zeros((2,le),np.float64)
-    
-    for k in range(le):
-        Bnk = np.r_[10,10]
-        
-        Hnk = Hn if (Hn.ndim==1) else Hn[:,k]
-        
-        for it in range(1000):
-            fxx = fxx_nonlinear(Bnk[0],Bnk[1]); fxy = fxy_nonlinear(Bnk[0],Bnk[1])
-            fyx = fyx_nonlinear(Bnk[0],Bnk[1]); fyy = fyy_nonlinear(Bnk[0],Bnk[1])
-            fx = fx_nonlinear(Bnk[0],Bnk[1]); fy = fy_nonlinear(Bnk[0],Bnk[1])
-            
-            inv_Fxx = -1/(fxx*fyy-fxy*fyx)*np.array([[fyy,-fxy],[-fyx,fxx]])
-            Fx = np.array([fx,fy])
-            
-            Bnk1 = Bnk - inv_Fxx@(Hnk-Fx)
-            
-            if np.linalg.norm(Bnk1-Bnk,np.inf)<1e-6:
-                break
-                
-            Bnk = Bnk1.copy()
-            
-            if it==(1000-1):
-                print("did not converge!")
-        Bn[:,k] = Bnk1
-        print(k)
-    return Bn
+# fx_nonlinear = lambda x,y : nu(x,y)*x
+# fy_nonlinear = lambda x,y : nu(x,y)*y
+# fxx_nonlinear = lambda x,y : nu(x,y) + x*nux(x,y)
+# fxy_nonlinear = lambda x,y : x*nuy(x,y)
+# fyx_nonlinear = lambda x,y : y*nux(x,y)
+# fyy_nonlinear = lambda x,y : nu(x,y) + y*nuy(x,y)
 
 
-x=100; y=2054
+#############################################################################################
+# f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
+# fx_linear = lambda x,y : nu0*x
+# fy_linear = lambda x,y : nu0*y
+# fxx_linear = lambda x,y : nu0 + 0*x
+# fxy_linear = lambda x,y : x*0
+# fyx_linear = lambda x,y : y*0
+# fyy_linear = lambda x,y : nu0 + 0*y
+# ###########################################################################################
 
-Hn = np.array([x,y])
-Bnk = np.r_[10,10]
 
-
-for it in range(1000):
-    fxx = fxx_nonlinear(Bnk[0],Bnk[1]); fxy = fxy_nonlinear(Bnk[0],Bnk[1])
-    fyx = fyx_nonlinear(Bnk[0],Bnk[1]); fyy = fyy_nonlinear(Bnk[0],Bnk[1])
-    fx = fx_nonlinear(Bnk[0],Bnk[1]); fy = fy_nonlinear(Bnk[0],Bnk[1])
-    
-    inv_Fxx = -1/(fxx*fyy-fxy*fyx)*np.array([[fyy,-fxy],[-fyx,fxx]])
-    Fx = np.array([fx,fy])
-    
-    Bnk1 = Bnk - inv_Fxx@(Hn-Fx)
-    
-    print(np.linalg.norm(Bnk1-Bnk,np.inf))
-    
-    if np.linalg.norm(Bnk1-Bnk,np.inf)<1e-16:
-        print("It :",it)
-        print(Bnk)
-        Bnk = Bnk1.copy()
-        break
-
-    Bnk = Bnk1.copy()
+from nonlinLaws import *
 
 
 ###########################################################################################
@@ -245,7 +177,7 @@ for it in range(1000):
 
 
 rot_speed = 1; rt = 0
-rots = 100
+rots = 1
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
 tor3 = np.zeros(rots)
@@ -398,8 +330,9 @@ for k in range(rots):
     
     ax1.cla()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-    MESH.pdesurf2(ux**2+uy**2, ax = ax1)    
-    MESH.pdegeom(ax = ax1)
+    MESH.pdesurf2(u, ax = ax1)
+    # MESH.pdesurf2(ux**2+uy**2, ax = ax1)
+    # MESH.pdegeom(ax = ax1)
     # MESH.pdemesh2(ax = ax1)
     
     fig.show()
