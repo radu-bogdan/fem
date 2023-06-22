@@ -108,8 +108,8 @@ for k in range(edges_rotor_outer.shape[0]):
 
 tm = time.monotonic()
 
-phi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'phi', order = x)
-curlphi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'curlphi', order = x)
+phi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'N0', matrix = 'phi', order = x)
+curlphi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'N0', matrix = 'curlphi', order = x)
 phi_L2 = lambda x : pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = x)
 
 D = lambda x : pde.int.assemble(MESH, order = x)
@@ -118,6 +118,7 @@ Mh = lambda x: phi_Hcurl(x)[0] @ D(x) @ phi_Hcurl(x)[0].T + \
                phi_Hcurl(x)[1] @ D(x) @ phi_Hcurl(x)[1].T
 
 D1 = D(1); D2 = D(2); D4 = D(4); Mh1 = Mh(1); Mh2 = Mh(2)
+print(D4.shape)
 phi_L2_o1 = phi_L2(1)
 curlphi_Hcurl_o1 = curlphi_Hcurl(1)
 
@@ -125,6 +126,7 @@ curlphi_Hcurl = curlphi_Hcurl(4)
 
 phix_Hcurl = phi_Hcurl(4)[0];
 phiy_Hcurl = phi_Hcurl(4)[1];
+print(phix_Hcurl.shape)
 
 C = phi_L2_o1 @ D1 @ curlphi_Hcurl_o1.T
 
@@ -154,11 +156,11 @@ aM = phix_Hcurl@ D(4) @(M0) +\
 
 aJ = phi_L2(4)@ D4 @Ja
 
-iMh = pde.tools.fastBlockInverse(Mh1)
-S = C@iMh@C.T
-r = C@(iMh@aM)
+# iMh = pde.tools.fastBlockInverse(Mh1)
+# S = C@iMh@C.T
+# r = C@(iMh@aM)
 
-tm = time.monotonic(); x = sps.linalg.spsolve(S,r); print('dual: ',time.monotonic()-tm)
+# tm = time.monotonic(); x = sps.linalg.spsolve(S,r); print('dual: ',time.monotonic()-tm)
 ##########################################################################################
 
 
@@ -166,21 +168,14 @@ tm = time.monotonic(); x = sps.linalg.spsolve(S,r); print('dual: ',time.monotoni
 
 from nonlinLaws import *
 
-a = np.random.randint(100_000, size = 1_000).astype(float)
-b = np.random.randint(100_000, size = 1_000).astype(float)
-g_nonlinear_all(a,b)
-
-# starting from an initial guess Hn, compute
-
-# ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-
+sH = phix_Hcurl.shape[0]
+sA = phi_L2_o1.shape[0]
 
 mu0 = (4*np.pi)/10**7
-H = 1+np.zeros(2*MESH.NoEdges)
-A = 0+np.zeros(MESH.nt)
+H = 1e-3+np.zeros(sH)
+A = 0+np.zeros(sA)
 
 HA = np.r_[H,A]
-# Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
 
 def gss(allH):
     gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6]; 
@@ -221,15 +216,17 @@ maxIter = 100
 epsangle = 1e-5;
 
 angleCondition = np.zeros(5)
-eps_newton = 1e-8
+eps_newton = 1e-12
 factor_residual = 1/2
 mu = 0.0001
 
-tm = time.monotonic()
+
+
+tm1 = time.monotonic()
 for i in range(maxIter):
 
-    H = HA[:2*MESH.NoEdges]
-    A = HA[2*MESH.NoEdges:]
+    H = HA[:sH]
+    A = HA[sH:]
 
     Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H    
 
@@ -259,13 +256,14 @@ for i in range(maxIter):
         
     #     HAu = HA + alpha*w
     #     Hu = HAu[:2*MESH.NoEdges]
+    #     Au = HAu[2*MESH.NoEdges:]
         
     #     Hxu = phix_Hcurl.T@(Hu);
     #     Hyu = phiy_Hcurl.T@(Hu);
         
     #     allHu = g_nonlinear_all(Hxu,Hyu)
         
-    #     if np.linalg.norm(gs(allHu,Hu)) <= np.linalg.norm(gs(allH,H)): break
+    #     if np.linalg.norm(gs(allHu,Au,Hu)) <= np.linalg.norm(gs(allH,A,H)): break
     #     else: alpha = alpha*factor_residual
     
     # AmijoBacktracking
@@ -273,40 +271,37 @@ for i in range(maxIter):
     for kk in range(1000):
         
         HAu = HA + alpha*w
-        Hu = HAu[:2*MESH.NoEdges]
-        
-        Hxu = phix_Hcurl.T@(Hu);
-        Hyu = phiy_Hcurl.T@(Hu);
-        
+        Hu = HAu[:sH]; Au = HAu[sH:]
+        Hxu = phix_Hcurl.T@(Hu); Hyu = phiy_Hcurl.T@(Hu);
         allHu = g_nonlinear_all(Hxu,Hyu)
+        
         if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
         else: alpha = alpha*factor_residual
         
     HA = HA + alpha*w
-    
-    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H))+"||alpha: %2e" % (alpha))
-    
-    
-    H = HA[:2*MESH.NoEdges]
-    A = HA[2*MESH.NoEdges:]
+    H = HA[:sH]; A = HA[sH:]
     Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
     allH = g_nonlinear_all(Hx,Hy)
+    
+    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H))+"||alpha: %2e" % (alpha))
     if(np.linalg.norm(gs(allH,A,H)) < eps_newton): break
 
-elapsed = time.monotonic()-tm
+elapsed = time.monotonic()-tm1
 print('Solving took ', elapsed, 'seconds')
 
 
 
-A = HA[2*MESH.NoEdges:]
+A = HA[sH:]
 MESH.pdesurf2(A)
 
 
+phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'phi', order = 4)
+curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'curlphi', order = 4)
 
+Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T + phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
+iMd = pde.tools.fastBlockInverse(Md)
 
-
-
-
+Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 
 # ##########################################################################################
 

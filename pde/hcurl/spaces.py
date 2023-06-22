@@ -212,3 +212,48 @@ def spaceInfo(MESH,space):
                                                      np.ones(MESH.nt),
                                                      np.ones(MESH.nt)]
     ###########################################################################
+    
+    
+    
+    
+    
+    ###########################################################################
+    if space == 'N0d':
+        
+        LISTS['N0d'] = {}
+        LISTS['N0d']['TRIG'] = {}
+        
+        LISTS['N0d']['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
+        LISTS['N0d']['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = 1)
+        LISTS['N0d']['TRIG']['qp_we_K'] = quadrature.dunavant(order = 0)
+        
+        LISTS['N0d']['TRIG']['sizeM'] = 3*MESH.nt
+        
+        LISTS['N0d']['TRIG']['phi'] = {}
+        LISTS['N0d']['TRIG']['phi'][0] = lambda x,y: np.r_[-y,x]
+        LISTS['N0d']['TRIG']['phi'][1] = lambda x,y: np.r_[-y,x-1]
+        LISTS['N0d']['TRIG']['phi'][2] = lambda x,y: np.r_[-y+1,x]
+        
+        LISTS['N0d']['TRIG']['curlphi'] = {}
+        LISTS['N0d']['TRIG']['curlphi'][0] = lambda x,y: 2+0*x
+        LISTS['N0d']['TRIG']['curlphi'][1] = lambda x,y: 2+0*x
+        LISTS['N0d']['TRIG']['curlphi'][2] = lambda x,y: 2+0*x
+        
+        LISTS['N0d']['TRIG']['LIST_DOF'] = np.r_[0:3*MESH.nt].reshape(MESH.nt,3)
+        LISTS['N0d']['TRIG']['DIRECTION_DOF'] = MESH.EdgeDirectionTrig
+
+        LISTS['N0d']['B'] = {}
+        LISTS['N0d']['B']['phi'] = {}
+        LISTS['N0d']['B']['phi'][0] = lambda x: 1
+        LISTS['N0d']['B']['qp_we_B'] = quadrature.one_d(order = 0)
+        
+        LISTS['N0d']['B']['LIST_DOF'] = MESH.Boundary_Edges
+        
+        LISTS['N0d']['TRIG']['phidual'] = {}
+        LISTS['N0d']['TRIG']['phidual'][0] = lambda x: 1+0*x
+    ###########################################################################
+    
+    
+    
+    
+    
