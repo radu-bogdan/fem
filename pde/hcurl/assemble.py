@@ -128,8 +128,53 @@ def assembleB(MESH,space,matrix,shape,order=-1):
         B = sparse(im,jm,ellmatsB,shape,nqp*ne)
         return B
 
-def assembleE(MESH,space,matrix,shape,order=-1):
-    s
+def assembleE(MESH,space,matrix,order=-1):
+    
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
+    
+    p = MESH.p; nt = MESH.nt
+    e = MESH.EdgesToVertices[MESH.Single_Edges,:]; ne = e.shape[0]
+    
+    phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
+    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF_E']
+    
+    if order != -1:
+        qp,we = quadrature.one_d(order); nqp = len(we)
+    
+    #####################################################################################
+    # Mappings
+    #####################################################################################
+    
+    e0 = e[:,0]; e1 = e[:,1]
+    A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+    detA = npy.sqrt(A0**2+A1**2)
+    
+    #####################################################################################
+    # Mass matrix (over the edge)
+    #####################################################################################
+    
+    if matrix == 'M':
+        if order == -1:
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]; 
+            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
+        
+        ellmatsB = npy.zeros((nqp*ne,lphi))
+        
+        
+        x = LIST_DOF
+        y = npy.c_[0:ne*nqp]
+        
+        im = npy.tile(x,(nqp,1))
+        jm = npy.tile(y.reshape(ne,nqp).T.flatten(),(lphi,1)).T
+        
+        for j in range(lphi):
+            for i in range(nqp):
+                ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])
+        
+        B = sparse(im,jm,ellmatsB,lphi*nt,nqp*ne)
+        return B
+        
 
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

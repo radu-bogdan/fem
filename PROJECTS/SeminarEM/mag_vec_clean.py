@@ -313,7 +313,7 @@ for k in range(rots):
         #     else: alpha = alpha*factor_residual
         
         # AmijoBacktracking
-        float_eps = np.finfo(float).eps
+        float_eps = 1e-11; #float_eps = np.finfo(float).eps
         for kk in range(1000):
             if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@w) + np.abs(J(u))*float_eps: break
             else: alpha = alpha*factor_residual

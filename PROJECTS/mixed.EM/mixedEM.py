@@ -164,6 +164,23 @@ aJ = phi_L2(4)@ D4 @Ja
 ##########################################################################################
 
 
+
+phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'phi', order = 4)
+curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'curlphi', order = 4)
+
+Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T + phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
+iMd = pde.tools.fastBlockInverse(Md)
+
+Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
+
+
+
+phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
+phi_H1bE = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
+
+
+stop
+
 ##########################################################################################
 
 from nonlinLaws import *
@@ -219,8 +236,6 @@ angleCondition = np.zeros(5)
 eps_newton = 1e-12
 factor_residual = 1/2
 mu = 0.0001
-
-
 
 tm1 = time.monotonic()
 for i in range(maxIter):
@@ -293,20 +308,6 @@ print('Solving took ', elapsed, 'seconds')
 
 A = HA[sH:]
 MESH.pdesurf2(A)
-
-
-phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'phi', order = 4)
-curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'curlphi', order = 4)
-
-Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T + phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
-iMd = pde.tools.fastBlockInverse(Md)
-
-Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
-
-
-
-# phi_H1b = pde.Hcurl.assembleB(MESH, space = 'RT0', matrix = 'M', shape = dphix_H1_o1.shape, order = 4)
-phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
 
 # ##########################################################################################
 

@@ -82,6 +82,26 @@ class mesh:
         BoundaryEdges = intersect2d(EdgesToVertices,e_new)
         #############################################################################################################
         
+        
+        
+        #############################################################################################################
+        tte_flat = npy.argsort(TriangleToEdges.flatten())
+        tte_sort = npy.sort(TriangleToEdges.flatten())
+        _,c = npy.unique(tte_sort, return_counts = True)
+        indices_single = npy.argwhere(c==1)[:,0]
+        
+        all_indices_pos = npy.arange(tte_flat.size)
+        indices_single_pos = 2*indices_single-npy.arange(indices_single.size)
+        
+        indices_double_pos = npy.setdiff1d(all_indices_pos, indices_single_pos)
+        
+        tte_sort_ind = tte_sort[indices_double_pos]
+        tte_flat_ind = tte_flat[indices_double_pos]
+        
+        IntEdgesToTriangles = npy.c_[npy.reshape(tte_flat_ind,(tte_flat_ind.size//2,2))//3, npy.unique(tte_sort_ind)]
+        #############################################################################################################
+
+        
         self.EdgesToVertices = EdgesToVertices
         self.TriangleToEdges = TriangleToEdges
         self.QuadToEdges = QuadToEdges
@@ -91,6 +111,8 @@ class mesh:
         self.Boundary_Region = e[:,2]
         self.Boundary_Edges = BoundaryEdges
         self.Boundary_NoEdges = BoundaryEdges.shape[0]
+        self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
+        self.Single_Edges = IntEdgesToTriangles[:,2]
 
         self.p = p; self.np = np
         self.e = e_new; self.ne = ne
