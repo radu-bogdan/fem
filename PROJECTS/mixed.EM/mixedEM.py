@@ -168,7 +168,8 @@ aJ = phi_L2(4)@ D4 @Ja
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'phi', order = 4)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'curlphi', order = 4)
 
-Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T + phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
+Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T +\
+     phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
 iMd = pde.tools.fastBlockInverse(Md)
 
 Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
@@ -178,6 +179,7 @@ Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
 phi_H1bE = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
 
+# phi_H1b2 = pde.hcurl.assembleB(MESH, space = 'N0d', matrix = 'M', shape = 3*MESH.nt, order = 4, edges = np.r_[:MESH.NoEdges])
 
 stop
 

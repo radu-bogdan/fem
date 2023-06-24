@@ -82,7 +82,7 @@ def assemble(MESH,space,matrix,order=-1):
         return K
     
 
-def assembleB(MESH,space,matrix,shape,order=-1):
+def assembleB(MESH,space,matrix,shape,order = -1, edges = npy.empty(0)):
     
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
@@ -90,12 +90,19 @@ def assembleB(MESH,space,matrix,shape,order=-1):
     if not hasattr(MESH, 'Boundary_EdgeOrientation'):
         MESH.makeBEO()
     
-    p = MESH.p;
+    p = MESH.p
     e = MESH.e; ne = e.shape[0]
     
-    phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
-    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
+    phi = MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
+    
+    if edges.size == 0:
+        e = MESH.e
+    else:
+        e = MESH.EdgesToVertices[edges,:]
         
+    ne = e.shape[0]
+    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
+    
     if order != -1:
         qp,we = quadrature.one_d(order); nqp = len(we)
             
@@ -106,6 +113,9 @@ def assembleB(MESH,space,matrix,shape,order=-1):
     e0 = e[:,0]; e1 = e[:,1]
     A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
     detA = npy.sqrt(A0**2+A1**2)
+    
+    if edges.size == 0:
+        detA = detA*MESH.Boundary_EdgeOrientation
     
     #####################################################################################
     # Mass matrix (over the edge)
@@ -123,7 +133,7 @@ def assembleB(MESH,space,matrix,shape,order=-1):
         
         for j in range(lphi):
             for i in range(nqp):
-                ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])*MESH.Boundary_EdgeOrientation
+                ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])
         
         B = sparse(im,jm,ellmatsB,shape,nqp*ne)
         return B
@@ -134,10 +144,11 @@ def assembleE(MESH,space,matrix,order=-1):
         spaceInfo(MESH,space)
     
     p = MESH.p; nt = MESH.nt
-    e = MESH.EdgesToVertices[MESH.Single_Edges,:]; ne = e.shape[0]
+    e = MESH.EdgesToVertices; ne = e.shape[0]
     
     phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF_E']
+    phi_T =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi_T = len(phi_T)
     
     if order != -1:
         qp,we = quadrature.one_d(order); nqp = len(we)
@@ -159,10 +170,11 @@ def assembleE(MESH,space,matrix,order=-1):
             qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]; 
             we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
         
-        ellmatsB = npy.zeros((nqp*ne,lphi))
+        ellmatsB = npy.zeros((nqp*ne,lphi_T))
         
         
         x = LIST_DOF
+        # x = MESH.IntEdgesToTriangles[:,0]
         y = npy.c_[0:ne*nqp]
         
         im = npy.tile(x,(nqp,1))
@@ -172,9 +184,10 @@ def assembleE(MESH,space,matrix,order=-1):
             for i in range(nqp):
                 ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])
         
-        B = sparse(im,jm,ellmatsB,lphi*nt,nqp*ne)
+        B = sparse(im,jm,ellmatsB,3*nt,nqp*ne)
+        # B = sparse(im,jm,ellmatsB,lphi*nt,nqp*ne)
         return B
         
-
+    
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

@@ -112,7 +112,7 @@ class mesh:
         self.Boundary_Edges = BoundaryEdges
         self.Boundary_NoEdges = BoundaryEdges.shape[0]
         self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
-        self.Single_Edges = IntEdgesToTriangles[:,2]
+        self.NonSingle_Edges = IntEdgesToTriangles[:,2]
 
         self.p = p; self.np = np
         self.e = e_new; self.ne = ne

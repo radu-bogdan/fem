@@ -20,6 +20,7 @@ def spaceInfo(MESH,space):
         LISTS['P0']['B']['phi'][0] = lambda x: 1
         
         LISTS['P0']['B']['qp_we_B'] = quadrature.one_d(order = 0)
+        # LISTS['P0']['B']['sizeM'] = MESH.NoEdges
         
         LISTS['P0']['TRIG']['phi'] = {}
         LISTS['P0']['TRIG']['phi'][0] = lambda x,y: 1+0*x+0*y
