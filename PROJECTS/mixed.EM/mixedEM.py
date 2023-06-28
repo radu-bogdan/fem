@@ -108,8 +108,8 @@ for k in range(edges_rotor_outer.shape[0]):
 
 tm = time.monotonic()
 
-phi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'N0', matrix = 'phi', order = x)
-curlphi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'N0', matrix = 'curlphi', order = x)
+phi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'phi', order = x)
+curlphi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = 'NC1', matrix = 'curlphi', order = x)
 phi_L2 = lambda x : pde.l2.assemble(MESH, space = 'P0', matrix = 'M', order = x)
 
 D = lambda x : pde.int.assemble(MESH, order = x)
@@ -176,12 +176,12 @@ Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 
 
 
-phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
-phi_H1bE = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
+# phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
+# s = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
 
 # phi_H1b2 = pde.hcurl.assembleB(MESH, space = 'N0d', matrix = 'M', shape = 3*MESH.nt, order = 4, edges = np.r_[:MESH.NoEdges])
 
-stop
+# stop
 
 ##########################################################################################
 
@@ -284,7 +284,7 @@ for i in range(maxIter):
     #     else: alpha = alpha*factor_residual
     
     # AmijoBacktracking
-    float_eps = np.finfo(float).eps
+    float_eps = 1e-7 #np.finfo(float).eps
     for kk in range(1000):
         
         HAu = HA + alpha*w
@@ -308,8 +308,24 @@ print('Solving took ', elapsed, 'seconds')
 
 
 
-A = HA[sH:]
-MESH.pdesurf2(A)
+# A = HA[sH:]
+# MESH.pdesurf2(A)
+
+# espace = 'RT0'
+# phi_Hcurl = lambda x : pde.hdiv.assemble(MESH, space = espace, matrix = 'phi', order = x)
+
+# xys = pde.hdiv.interp(MESH, space = espace, order = 5, f = lambda x,y : np.c_[200*y**2,2*y])
+# Hx = phi_Hcurl(1)[0].T@xys
+# Hy = phi_Hcurl(1)[1].T@xys
+
+# MESH.pdesurf2(np.abs(Hx))
+# MESH.pdesurf2(np.abs(Hy))
+
+Hx = phi_Hcurl(1)[0].T@H; Hy = phi_Hcurl(1)[1].T@H
+
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), Hx**2+Hy**2, u_height = 0)
+fig.show()
+
 
 # ##########################################################################################
 

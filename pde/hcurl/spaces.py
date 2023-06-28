@@ -40,7 +40,7 @@ def spaceInfo(MESH,space):
         LISTS['N0']['B']['LIST_DOF_E'] = np.r_[:MESH.NoEdges]
         
         LISTS['N0']['TRIG']['phidual'] = {}
-        LISTS['N0']['TRIG']['phidual'][0] = lambda x: 1+0*x
+        LISTS['N0']['TRIG']['phidual'][0] = lambda x: 2+0*x
     ###########################################################################
 
     
@@ -153,8 +153,8 @@ def spaceInfo(MESH,space):
         LISTS['NC1']['B']['LIST_DOF'] = np.c_[2*MESH.Boundary_Edges,
                                               2*MESH.Boundary_Edges + 1]
                                               
-        LISTS['NC1']['B']['LIST_DOF_E'] = np.c_[2*MESH.Single_Edges,
-                                                2*MESH.Single_Edges + 1]
+        LISTS['NC1']['B']['LIST_DOF_E'] = np.c_[2*MESH.NonSingle_Edges,
+                                                2*MESH.NonSingle_Edges + 1]
         
         LISTS['NC1']['TRIG']['phidual'] = {}
         LISTS['NC1']['TRIG']['phidual'][0] = lambda x: 6*x-2 # dual to x and 1-x on the edge...
