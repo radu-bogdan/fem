@@ -80,6 +80,7 @@ class mesh:
         TriangleToEdges = je[0:3*nt].reshape(nt,3, order = 'F').astype(npy.int64)
         QuadToEdges = je[3*nt:].reshape(nq,4, order = 'F')
         BoundaryEdges = intersect2d(EdgesToVertices,e_new)
+        InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
         #############################################################################################################
         
         
@@ -101,7 +102,7 @@ class mesh:
         IntEdgesToTriangles = npy.c_[npy.reshape(tte_flat_ind,(tte_flat_ind.size//2,2))//3, npy.unique(tte_sort_ind)]
         #############################################################################################################
 
-        
+        # self.ExtEdges = indices_single_pos
         self.EdgesToVertices = EdgesToVertices
         self.TriangleToEdges = TriangleToEdges
         self.QuadToEdges = QuadToEdges
@@ -113,6 +114,7 @@ class mesh:
         self.Boundary_NoEdges = BoundaryEdges.shape[0]
         self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
         self.NonSingle_Edges = IntEdgesToTriangles[:,2]
+        # self.IntEdges = npy.setdiff1d(npy.arange(NoEdges),self.ExtEdges)
 
         self.p = p; self.np = np
         self.e = e_new; self.ne = ne

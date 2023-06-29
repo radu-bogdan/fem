@@ -51,7 +51,7 @@ def assemble(MESH,space,matrix,order=-1):
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
         return B
 
-def assemble1d(MESH,space,matrix,order=-1):
+def assembleE(MESH,space,matrix,order=-1):
         
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)

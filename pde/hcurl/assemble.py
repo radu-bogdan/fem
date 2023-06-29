@@ -138,53 +138,84 @@ def assembleB(MESH,space,matrix,shape,order = -1, edges = npy.empty(0)):
         B = sparse(im,jm,ellmatsB,shape,nqp*ne)
         return B
 
-def assembleE(MESH,space,matrix,order=-1):
+def assembleE(MESH,space,matrix,order=1):
     
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
     p = MESH.p; nt = MESH.nt
-    e = MESH.EdgesToVertices; ne = e.shape[0]
+    t = MESH.t
+    e = MESH.EdgesToVertices
     
-    phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
-    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF_E']
-    phi_T =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi_T = len(phi_T)
+    # phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
+    phi =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
     
-    if order != -1:
-        qp,we = quadrature.one_d(order); nqp = len(we)
+    
+    LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
+    DIRECTION_DOF = MESH.FEMLISTS[space]['TRIG']['DIRECTION_DOF']
+    
+    qp,we = quadrature.one_d(order); nqp = len(we)
+    
+    # on edge3: (0,0) -> (1,0)
+    qp3 = npy.c_[qp,0*qp].T
+    # on edge2: (0,0) -> (0,1)
+    qp2 = npy.c_[0*qp,qp].T
+    # on edge1: (0,1) -> (1,0)
+    qp1 = npy.c_[qp,1-qp].T
     
     #####################################################################################
     # Mappings
     #####################################################################################
     
+    t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
+    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]
+    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
+    detA = A00*A11-A01*A10
+    
     e0 = e[:,0]; e1 = e[:,1]
     A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
-    detA = npy.sqrt(A0**2+A1**2)
+    
+    len_e = npy.sqrt(A0**2+A1**2)
+    
+    # len_e_local = len_e[MESH.TriangleToEdges]
+    
+    normal  = npy.c_[-A1/len_e, A0/len_e] # minus cuz it should point nach außen (i guess)
+    tangent = npy.c_[ A0/len_e, A1/len_e]
+    
+    n1 = normal[:,0];  n2 = normal[:,1]
+    t1 = tangent[:,0]; t2 = tangent[:,1]
+    
+    # MESH.TriangleToEdges
+    #####################################################################################
+
+    
     
     #####################################################################################
     # Mass matrix (over the edge)
     #####################################################################################
     
     if matrix == 'M':
-        if order == -1:
-            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]; 
-            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
         
-        ellmatsB = npy.zeros((nqp*ne,lphi_T))
+        ellmatsBx = npy.zeros((nqp*nt,lphi))
+        ellmatsBy = npy.zeros((nqp*nt,lphi))
         
         
         x = LIST_DOF
-        # x = MESH.IntEdgesToTriangles[:,0]
-        y = npy.c_[0:ne*nqp]
+        y = npy.c_[0:nt*nqp]
         
         im = npy.tile(x,(nqp,1))
-        jm = npy.tile(y.reshape(ne,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(y.reshape(nt,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
-                ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])
+                # ellmatsB[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*phi[j](qp[i]) #*DIRECTION_DOF[:,j]
+                phii = phi[j](qp2[0,i],qp2[1,i])                
+                ellmatsBx[i*nt:(i+1)*nt,j] = 1/detA*( A11*phii[0] -A10*phii[1])*DIRECTION_DOF[:,j]
+                ellmatsBy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*phii[0] +A00*phii[1])*DIRECTION_DOF[:,j]
+                
+        # B = sparse(im,jm,ellmatsBx,MESH.NoEdges,nqp*nt)
+        B = sparse(im,jm,ellmatsBx,lphi*nt,nqp*MESH.NoEdges)
         
-        B = sparse(im,jm,ellmatsB,3*nt,nqp*ne)
         # B = sparse(im,jm,ellmatsB,lphi*nt,nqp*ne)
         return B
     
