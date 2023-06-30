@@ -28,7 +28,7 @@ metadata = dict(title = 'Motor')
 writer = FFMpegWriter(fps = 10, metadata = metadata)
 
 # plt.ion()
-plt.close('all')
+plt.close('all')    
 fig = plt.figure()
 fig.show()
 ax1 = fig.add_subplot(121)
