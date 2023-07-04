@@ -16,13 +16,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.animation as animation
-from matplotlib.animation import FFMpegWriter
+# from matplotlib.animation import FFMpegWriter
 # cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
 
 
-metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 10, metadata = metadata)
+# metadata = dict(title = 'Motor')
+# writer = FFMpegWriter(fps = 10, metadata = metadata)
 
 # plt.ion()
 plt.close('all')
@@ -34,7 +34,7 @@ ax1.set_aspect(aspect = 'equal')
 
 # cbar = plt.colorbar(ax)
 
-writer.setup(fig, "writer_test.mp4", 500)
+# writer.setup(fig, "writer_test.mp4", 500)
 
 # @profile
 # def do():
@@ -123,7 +123,7 @@ if ORDER == 1:
     dxpoly = 'P0'
     order_phiphi = 2
     order_dphidphi = 0
-    u = np.zeros(MESH.np)
+    u = np.random.rand(MESH.np) * 0.5
     
 if ORDER == 2:
     poly = 'P2'
@@ -170,8 +170,51 @@ if ORDER == 2:
 
 
 from nonlinLaws import *
+from MaterialLawsBiro import biroTest
 
+f_Biro, df_Biro, ddf_Biro = biroTest(fac = 3, n = 1.3)
 
+def f_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = f_Biro(ux[i],uy[i])
+    return ret
+        
+def fx_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = df_Biro(ux[i],uy[i])[0]
+    return ret
+        
+def fy_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = df_Biro(ux[i],uy[i])[1]
+    return ret
+        
+def fxx_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = ddf_Biro(ux[i],uy[i])[0,0]
+    return ret
+
+def fxy_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = ddf_Biro(ux[i],uy[i])[0,1]
+    return ret
+
+def fyx_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = ddf_Biro(ux[i],uy[i])[1,0]
+    return ret
+
+def fyy_nonlinear(ux,uy):
+    ret = np.zeros(ux.size)
+    for i in range(ux.size):
+        ret[i] = ddf_Biro(ux[i],uy[i])[1,1]
+    return ret
 ###########################################################################################
 
 
@@ -338,7 +381,7 @@ for k in range(rots):
     fig.show()
     
     plt.pause(0.01)
-    writer.grab_frame()
+    # writer.grab_frame()
     
     
     ##########################################################################################
@@ -425,5 +468,5 @@ for k in range(rots):
     # fig.canvas.draw()
     # fig.canvas.flush_events()
  
-writer.finish()
+# writer.finish()
 # do()

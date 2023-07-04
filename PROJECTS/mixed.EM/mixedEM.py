@@ -55,7 +55,7 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
 
@@ -105,8 +105,8 @@ for k in range(edges_rotor_outer.shape[0]):
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'N1'
-space_Qh = 'P1'
+space_Vh = 'N0'
+space_Qh = 'P0'
 int_order = '2l'
 
 tm = time.monotonic()
@@ -358,13 +358,13 @@ pH = pHA[:sH]
 
 # Mdiv = Mdiv_xx + Mdiv_yy
 
-# Hx = phi_Hcurl(1)[0].T@H; Hy = phi_Hcurl(1)[1].T@H
-# allH = g_nonlinear_all(Hx,Hy)
-# gx_H_l  = allH[1]; gy_H_l  = allH[2];
-# gx_H_nl = allH[8]; gy_H_nl = allH[9];
+Hx = phi_Hcurl(1)[0].T@H; Hy = phi_Hcurl(1)[1].T@H
+allH = g_nonlinear_all(Hx,Hy)
+gx_H_l  = allH[1]; gy_H_l  = allH[2];
+gx_H_nl = allH[8]; gy_H_nl = allH[9];
 
-# fem_linear = pde.int.evaluate(MESH, order = 1, regions = ind_linear).diagonal()
-# fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = ind_nonlinear).diagonal()
+fem_linear = pde.int.evaluate(MESH, order = 1, regions = ind_linear).diagonal()
+fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = ind_nonlinear).diagonal()
 
 # r1 = phix_Hdiv @ D_int_order @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
 #      phiy_Hdiv @ D_int_order @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1)

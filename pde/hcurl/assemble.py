@@ -145,7 +145,7 @@ def assembleE(MESH,space,matrix,order=1):
     
     p = MESH.p; nt = MESH.nt
     t = MESH.t
-    e = MESH.EdgesToVertices
+    # e = MESH.EdgesToVertices
     
     # phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     phi =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
@@ -172,18 +172,23 @@ def assembleE(MESH,space,matrix,order=1):
     A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
     detA = A00*A11-A01*A10
     
-    e0 = e[:,0]; e1 = e[:,1]
-    A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+    # normal_e1 = npy.c_[]
     
-    len_e = npy.sqrt(A0**2+A1**2)
+    # e0 = e[:,0]; e1 = e[:,1]
+    # A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+    
+    
+    
+    
+    # len_e = npy.sqrt(A0**2+A1**2)
     
     # len_e_local = len_e[MESH.TriangleToEdges]
     
-    normal  = npy.c_[-A1/len_e, A0/len_e] # minus cuz it should point nach außen (i guess)
-    tangent = npy.c_[ A0/len_e, A1/len_e]
+    # normal  = npy.c_[-A1/len_e, A0/len_e] # minus cuz it should point nach außen (i guess)
+    # tangent = npy.c_[ A0/len_e, A1/len_e]
     
-    n1 = normal[:,0];  n2 = normal[:,1]
-    t1 = tangent[:,0]; t2 = tangent[:,1]
+    # n1 = normal[:,0];  n2 = normal[:,1]
+    # t1 = tangent[:,0]; t2 = tangent[:,1]
     
     # MESH.TriangleToEdges
     #####################################################################################
@@ -196,9 +201,7 @@ def assembleE(MESH,space,matrix,order=1):
     
     if matrix == 'M':
         
-        ellmatsBx = npy.zeros((nqp*nt,lphi))
-        ellmatsBy = npy.zeros((nqp*nt,lphi))
-        
+        ellmatsB = npy.zeros((nqp*nt,lphi))
         
         x = LIST_DOF
         y = npy.c_[0:nt*nqp]
@@ -209,12 +212,12 @@ def assembleE(MESH,space,matrix,order=1):
         for j in range(lphi):
             for i in range(nqp):
                 # ellmatsB[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*phi[j](qp[i]) #*DIRECTION_DOF[:,j]
-                phii = phi[j](qp2[0,i],qp2[1,i])                
-                ellmatsBx[i*nt:(i+1)*nt,j] = 1/detA*( A11*phii[0] -A10*phii[1])*DIRECTION_DOF[:,j]
-                ellmatsBy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*phii[0] +A00*phii[1])*DIRECTION_DOF[:,j]
+                phii = phi[j](qp1[0,i],qp1[1,i])                
+                ellmatsB[i*nt:(i+1)*nt,j] = 1/detA*( A11*phii[0] -A10*phii[1])*DIRECTION_DOF[:,j]+\
+                                            1/detA*(-A01*phii[0] +A00*phii[1])*DIRECTION_DOF[:,j]
                 
         # B = sparse(im,jm,ellmatsBx,MESH.NoEdges,nqp*nt)
-        B = sparse(im,jm,ellmatsBx,lphi*nt,nqp*MESH.NoEdges)
+        B = sparse(im,jm,ellmatsB,lphi*nt,nqp*MESH.NoEdges)
         
         # B = sparse(im,jm,ellmatsB,lphi*nt,nqp*ne)
         return B
