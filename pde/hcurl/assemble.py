@@ -143,13 +143,12 @@ def assembleE(MESH,space,matrix,order=1):
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
-    p = MESH.p; nt = MESH.nt
-    t = MESH.t
+    p = MESH.p; 
+    t = MESH.t; nt = MESH.nt
     # e = MESH.EdgesToVertices
     
     # phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     phi =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
-    
     
     LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     DIRECTION_DOF = MESH.FEMLISTS[space]['TRIG']['DIRECTION_DOF']
@@ -168,11 +167,21 @@ def assembleE(MESH,space,matrix,order=1):
     #####################################################################################
     
     t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
-    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]
-    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
+    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]; # brauche p[t1,0]-p[t2,0]
+    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]; # brauche p[t1,1]-p[t2,1]
     detA = A00*A11-A01*A10
     
-    # normal_e1 = npy.c_[]
+    len_e1 = npy.sqrt((A00-A01)**2 + (A10-A11)**2)
+    len_e2 = npy.sqrt(A01**2 + A11**2)
+    len_e3 = npy.sqrt(A00**2 + A10**2)
+    
+    tangent_e1 = npy.c_[ (A00-A01)/len_e1, (A10-A11)/len_e1]
+    tangent_e2 = npy.c_[ A01/len_e2, A11/len_e2]
+    tangent_e3 = npy.c_[-A00/len_e3,-A10/len_e3]
+    
+    normal_e1 = npy.c_[-(A10-A11)/len_e1, (A00-A01)/len_e1]
+    normal_e2 = npy.c_[-A11/len_e2, A01/len_e2]
+    normal_e3 = npy.c_[ A10/len_e3,-A00/len_e3]
     
     # e0 = e[:,0]; e1 = e[:,1]
     # A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
@@ -193,7 +202,7 @@ def assembleE(MESH,space,matrix,order=1):
     # MESH.TriangleToEdges
     #####################################################################################
 
-    
+    LIST_DOF2 = npy.r_[0:nt]
     
     #####################################################################################
     # Mass matrix (over the edge)
@@ -204,11 +213,12 @@ def assembleE(MESH,space,matrix,order=1):
         ellmatsB = npy.zeros((nqp*nt,lphi))
         
         x = LIST_DOF
-        y = npy.c_[0:nt*nqp]
+        y = npy.r_[0:nt]
         
         im = npy.tile(x,(nqp,1))
-        jm = npy.tile(y.reshape(nt,nqp).T.flatten(),(lphi,1)).T
-        
+        # jm = npy.tile(y.reshape(nt,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(npy.tile(y*nqp,nqp) + npy.arange(nqp).repeat(nt),lphi)
+
         for j in range(lphi):
             for i in range(nqp):
                 # ellmatsB[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*phi[j](qp[i]) #*DIRECTION_DOF[:,j]

@@ -16,13 +16,14 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.animation as animation
-# from matplotlib.animation import FFMpegWriter
+from matplotlib.animation import FFMpegWriter
+import ffmpeg
 # cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
 
 
-# metadata = dict(title = 'Motor')
-# writer = FFMpegWriter(fps = 10, metadata = metadata)
+metadata = dict(title = 'Motor')
+writer = FFMpegWriter(fps = 10, metadata = metadata)
 
 # plt.ion()
 plt.close('all')
@@ -34,7 +35,7 @@ ax1.set_aspect(aspect = 'equal')
 
 # cbar = plt.colorbar(ax)
 
-# writer.setup(fig, "writer_test.mp4", 500)
+# writer.setup(fig, 'writer_test.mp4', 500)
 
 # @profile
 # def do():
@@ -123,7 +124,8 @@ if ORDER == 1:
     dxpoly = 'P0'
     order_phiphi = 2
     order_dphidphi = 0
-    u = np.random.rand(MESH.np) * 0.5
+    # u = np.random.rand(MESH.np) * 0.005
+    u = np.zeros(MESH.np)#+0.01
     
 if ORDER == 2:
     poly = 'P2'
@@ -169,55 +171,54 @@ if ORDER == 2:
 # ###########################################################################################
 
 
-from nonlinLaws import *
-from MaterialLawsBiro import biroTest
+from nonlinLaws import f_nonlinear,fx_nonlinear,fy_nonlinear,fxx_nonlinear,fxy_nonlinear,fyx_nonlinear,fyy_nonlinear,\
+                       f_linear,fx_linear,fy_linear,fxx_linear,fxy_linear,fyx_linear,fyy_linear 
+# from MaterialLawsBiro import biroTest
 
-f_Biro, df_Biro, ddf_Biro = biroTest(fac = 3, n = 1.3)
+# f_Biro, df_Biro, ddf_Biro = biroTest(fac = 3, n = 1.3)
 
-def f_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = f_Biro(ux[i],uy[i])
-    return ret
+# def f_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = f_Biro(ux[i],uy[i])
+#     return ret
         
-def fx_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = df_Biro(ux[i],uy[i])[0]
-    return ret
+# def fx_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = df_Biro(ux[i],uy[i])[0]
+#     return ret
         
-def fy_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = df_Biro(ux[i],uy[i])[1]
-    return ret
+# def fy_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = df_Biro(ux[i],uy[i])[1]
+#     return ret
         
-def fxx_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = ddf_Biro(ux[i],uy[i])[0,0]
-    return ret
+# def fxx_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = ddf_Biro(ux[i],uy[i])[0,0]
+#     return ret
 
-def fxy_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = ddf_Biro(ux[i],uy[i])[0,1]
-    return ret
+# def fxy_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = ddf_Biro(ux[i],uy[i])[0,1]
+#     return ret
 
-def fyx_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = ddf_Biro(ux[i],uy[i])[1,0]
-    return ret
+# def fyx_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = ddf_Biro(ux[i],uy[i])[1,0]
+#     return ret
 
-def fyy_nonlinear(ux,uy):
-    ret = np.zeros(ux.size)
-    for i in range(ux.size):
-        ret[i] = ddf_Biro(ux[i],uy[i])[1,1]
-    return ret
+# def fyy_nonlinear(ux,uy):
+#     ret = np.zeros(ux.size)
+#     for i in range(ux.size):
+#         ret[i] = ddf_Biro(ux[i],uy[i])[1,1]
+#     return ret
 ###########################################################################################
-
-
 
 rot_speed = 1; rt = 0
 rots = 1
