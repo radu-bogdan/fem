@@ -167,8 +167,8 @@ def assembleE(MESH,space,matrix,order=1):
     #####################################################################################
     
     t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
-    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]; # brauche p[t1,0]-p[t2,0]
-    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]; # brauche p[t1,1]-p[t2,1]
+    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0];
+    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1];
     detA = A00*A11-A01*A10
     
     len_e1 = npy.sqrt((A00-A01)**2 + (A10-A11)**2)
@@ -183,9 +183,19 @@ def assembleE(MESH,space,matrix,order=1):
     normal_e2 = npy.c_[-A11/len_e2, A01/len_e2]
     normal_e3 = npy.c_[ A10/len_e3,-A00/len_e3]
     
-    # e0 = e[:,0]; e1 = e[:,1]
-    # A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+    # nor1 = npy.r_[1,1]; nor2 = npy.r_[-1,0]; nor3 = npy.r_[0,-1]
     
+    # # normal times the size of the edge
+    # normal_e1_0 = (A11*nor1[0]-A10*nor1[1]); normal_e1_1 = -A01*nor1[0]+A00*nor1[1]
+    # normal_e2_0 = (A11*nor2[0]-A10*nor2[1]); normal_e2_1 = -A01*nor2[0]+A00*nor2[1]
+    # normal_e3_0 = (A11*nor3[0]-A10*nor3[1]); normal_e3_1 = -A01*nor3[0]+A00*nor3[1]
+    
+    # tan1 = npy.r_[1,-1]; tan2 = npy.r_[0,1]; tan3 = npy.r_[-1,0]
+    
+    # # tangent times the size of the edge
+    # tangent_e1_0 = A00*tan1[0]+A01*tan1[1]; tangent_e1_1 = A10*tan1[0]+A11*tan1[1] 
+    # tangent_e2_0 = A00*tan2[0]+A01*tan2[1]; tangent_e2_1 = A10*tan2[0]+A11*tan2[1]
+    # tangent_e3_0 = A00*tan3[0]+A01*tan3[1]; tangent_e3_1 = A10*tan3[0]+A11*tan3[1]
     
     
     
