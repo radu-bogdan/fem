@@ -93,9 +93,9 @@ r1 = p[edges_rotor_outer[0,0],0]
 a1 = 2*np.pi/edges_rotor_outer.shape[0]
 
 # Adjust points on the outer rotor to be equally spaced.
-for k in range(edges_rotor_outer.shape[0]):
-    p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
-    p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
+# for k in range(edges_rotor_outer.shape[0]):
+#     p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
+#     p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
 
 
@@ -179,12 +179,29 @@ Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 
 
 
+B0,B1,B2 = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 2)
+R0,R1,R2 = pde.hcurl.assembleE(MESH, space = 'N0d', matrix = 'M', order = 2)
+
+phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 2)
+
+De = pde.int.assembleE(MESH, order = 2)
+KK = phi_e @ De @ (R0+R1+R2).T
+
+
+from scipy.sparse import bmat
+
+SYS = bmat([[Md,Cd.T,KK.T],\
+            [Cd,None,None],
+            [KK,None,None]]).tocsc()
+
+
 # phi_H1b = pde.hcurl.assembleB(MESH, space = 'N0', matrix = 'M', shape = MESH.NoEdges, order = 4)
-# s = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
+# D_stator_outer = pde.int.evaluateB(MESH, order = 4, edges = ind_stator_outer)
+# B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
 # phi_H1b2 = pde.hcurl.assembleB(MESH, space = 'N0d', matrix = 'M', shape = 3*MESH.nt, order = 4, edges = np.r_[:MESH.NoEdges])
 
-# stop
+stop
 
 ##########################################################################################
 

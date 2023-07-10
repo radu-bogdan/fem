@@ -19,8 +19,8 @@ def spaceInfo(MESH,space):
         LISTS['P0']['B']['phi'] = {}
         LISTS['P0']['B']['phi'][0] = lambda x: 1
         
-        LISTS['P0']['B']['qp_we_B'] = quadrature.one_d(order = 0)
-        # LISTS['P0']['B']['sizeM'] = MESH.NoEdges
+        LISTS['P0']['B']['LIST_DOF'] = np.r_[0:MESH.NoEdges]
+        LISTS['P0']['B']['sizeM'] = MESH.NoEdges
         
         LISTS['P0']['TRIG']['phi'] = {}
         LISTS['P0']['TRIG']['phi'][0] = lambda x,y: 1+0*x+0*y
@@ -39,6 +39,13 @@ def spaceInfo(MESH,space):
         LISTS['P1']['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
         
         LISTS['P1']['B'] = {}
+        LISTS['P1']['B']['phi'] = {}
+        LISTS['P1']['B']['phi'][0] = lambda x: 1-x
+        LISTS['P1']['B']['phi'][1] = lambda x: x
+        
+        LISTS['P1']['B']['LIST_DOF'] = np.r_[0:2*MESH.NoEdges].reshape(MESH.NoEdges,2)
+        LISTS['P1']['B']['sizeM'] = 2*MESH.NoEdges
+        
         LISTS['P1']['B']['qp_we_B'] = quadrature.one_d(order = 2)
         
         LISTS['P1']['TRIG']['phi'] = {}

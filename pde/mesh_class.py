@@ -102,7 +102,6 @@ class mesh:
         IntEdgesToTriangles = npy.c_[npy.reshape(tte_flat_ind,(tte_flat_ind.size//2,2))//3, npy.unique(tte_sort_ind)]
         #############################################################################################################
 
-        # self.ExtEdges = indices_single_pos
         self.EdgesToVertices = EdgesToVertices
         self.TriangleToEdges = TriangleToEdges
         self.QuadToEdges = QuadToEdges
@@ -114,7 +113,6 @@ class mesh:
         self.Boundary_NoEdges = BoundaryEdges.shape[0]
         self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
         self.NonSingle_Edges = IntEdgesToTriangles[:,2]
-        # self.IntEdges = npy.setdiff1d(npy.arange(NoEdges),self.ExtEdges)
 
         self.p = p; self.np = np
         self.e = e_new; self.ne = ne
@@ -128,10 +126,47 @@ class mesh:
         self.FEMLISTS = {}
         
         
+        #############################################################################################################
         t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
         A00 = self.p[t1,0]-self.p[t0,0]; A01 = self.p[t2,0]-self.p[t0,0]
         A10 = self.p[t1,1]-self.p[t0,1]; A11 = self.p[t2,1]-self.p[t0,1]
         self.detA = A00*A11-A01*A10
+        
+        
+        nor1 = npy.r_[1,1]; nor2 = npy.r_[-1,0]; nor3 = npy.r_[0,-1]
+        
+        # normal times the size of the edge
+        normal_e0_0 = (A11*nor1[0]-A10*nor1[1]); normal_e0_1 = -A01*nor1[0]+A00*nor1[1]
+        normal_e1_0 = (A11*nor2[0]-A10*nor2[1]); normal_e1_1 = -A01*nor2[0]+A00*nor2[1]
+        normal_e2_0 = (A11*nor3[0]-A10*nor3[1]); normal_e2_1 = -A01*nor3[0]+A00*nor3[1]
+        
+        tan1 = npy.r_[1,-1]; tan2 = npy.r_[0,1]; tan3 = npy.r_[-1,0]
+        
+        # tangent times the size of the edge
+        tangent_e0_0 = A00*tan1[0]+A01*tan1[1]; tangent_e0_1 = A10*tan1[0]+A11*tan1[1] 
+        tangent_e1_0 = A00*tan2[0]+A01*tan2[1]; tangent_e1_1 = A10*tan2[0]+A11*tan2[1]
+        tangent_e2_0 = A00*tan3[0]+A01*tan3[1]; tangent_e2_1 = A10*tan3[0]+A11*tan3[1]
+        
+        # normalization
+        len_e0 = npy.sqrt(tangent_e0_0**2+tangent_e0_1**2)
+        len_e1 = npy.sqrt(tangent_e1_0**2+tangent_e1_1**2)
+        len_e2 = npy.sqrt(tangent_e2_0**2+tangent_e2_1**2)
+        
+        self.A00 = A00
+        self.A10 = A10
+        self.A01 = A01
+        self.A11 = A11
+        
+        self.tangent0 = npy.c_[tangent_e0_0/len_e0,tangent_e1_0/len_e1,tangent_e2_0/len_e2]
+        self.tangent1 = npy.c_[tangent_e0_1/len_e0,tangent_e1_1/len_e1,tangent_e2_1/len_e2]
+        
+        self.normal0 = npy.c_[normal_e0_0/len_e0,normal_e1_0/len_e1,normal_e2_0/len_e2]
+        self.normal1 = npy.c_[normal_e0_1/len_e0,normal_e1_1/len_e1,normal_e2_1/len_e2]
+        
+        self.len_e = npy.c_[len_e0,len_e1,len_e2]
+        
+        
+        #############################################################################################################
         
     def __repr__(self):
         return f"np:{self.np}, nt:{self.nt}, nq:{self.nq}, ne:{self.ne}, ne_all:{self.NoEdges}"

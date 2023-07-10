@@ -51,24 +51,19 @@ def assemble(MESH,space,matrix,order=-1):
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
         return B
 
-def assembleE(MESH,space,matrix,order=-1):
+def assembleE(MESH,space,matrix,order=0):
         
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
     p = MESH.p; nt = MESH.nt
-    e = MESH.EdgesToVertices[MESH.NonSingle_Edges,:]; ne = e.shape[0]
-    
-    # sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
-    # phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
-    # LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
+    e = MESH.EdgesToVertices; ne = e.shape[0]
     
     phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
-    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
+    sizeM = MESH.FEMLISTS[space]['B']['sizeM']
     
-    if order != -1:
-        qp,we =  quadrature.dunavant(order); nqp = len(we)
+    qp,we = quadrature.one_d(order); nqp = len(we)
 
     #####################################################################################
     # Mappings
@@ -83,21 +78,21 @@ def assembleE(MESH,space,matrix,order=-1):
     # Mass matrix
     #####################################################################################
     
+    LIST_DOF_L2E = npy.r_[0:ne]
+    
     if matrix == 'M':
-        if order == -1:
-            qp = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
-            we = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
         
-        ellmatsB = npy.zeros((nqp*nt,lphi))
+        ellmatsB = npy.zeros((nqp*ne,lphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
+        # jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(npy.tile(LIST_DOF_L2E*nqp,nqp) + npy.arange(nqp).repeat(ne),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
-                ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i])
+                ellmatsB[i*ne:(i+1)*ne,j] = phi[j](qp[i])
         
-        B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
+        B = sparse(im,jm,ellmatsB,sizeM,nqp*ne)
         return B
 
 def sparse(i, j, v, m, n):

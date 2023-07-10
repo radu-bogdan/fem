@@ -62,6 +62,32 @@ def assembleB(MESH,order):
     return D
 
 
+def assembleE(MESH,order):
+    
+    p = MESH.p;
+    e = MESH.EdgesToVertices; ne = e.shape[0]
+    
+    qp,we = quadrature.one_d(order); nqp = len(we)
+            
+    #####################################################################################
+    # Mappings
+    #####################################################################################
+        
+    e0 = e[:,0]; e1 = e[:,1]
+    A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
+    detA = npy.sqrt(A0**2+A1**2)
+    
+    #####################################################################################
+
+    ellmatsD = npy.zeros((nqp*ne))
+    
+    iD = npy.r_[0:nqp*ne].reshape(ne,nqp).T
+    
+    for i in range(nqp):
+        ellmatsD[i*ne:(i+1)*ne] = npy.abs(detA)*we[i]
+    
+    D = sparse(iD,iD,ellmatsD,nqp*ne,nqp*ne)
+    return D
 
 def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0), indices = npy.empty(0)):
     
@@ -102,7 +128,6 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0), 
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
-# @profile
 def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), like = 0):
     
     if edges.size == 0:
@@ -148,6 +173,49 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), l
         return d
 
 
+def evaluateE(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), like = 0):
+    
+    if edges.size == 0:
+        edges = MESH.Boundary_Region
+    
+    # indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
+    indices = npy.in1d(MESH.Boundary_Region,edges)
+
+    p = MESH.p;    
+    e = MESH.e[indices,:]; ne = e.shape[0]
+    
+    #####################################################################################
+    # Mappings
+    #####################################################################################
+
+    e0 = e[:,0]; e1 = e[:,1]
+    A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+    
+    #####################################################################################
+    # Custom config matrix
+    #####################################################################################
+    
+    qp,we = quadrature.one_d(order); nqp = len(we)
+    ellmatsD = npy.zeros((nqp*ne))
+    
+    iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
+    iD = iD[:,indices]
+    
+    d = npy.zeros(nqp*MESH.ne)
+    
+    for i in range(nqp):
+        qpT_i_1 = A0*qp[i] + p[e0,0]
+        qpT_i_2 = A1*qp[i] + p[e0,1]
+        ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
+    
+    # D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
+    d[iD.flatten()] = ellmatsD
+    
+    if like == 0:
+        return sp.diags(d)
+    
+    if like == 1:
+        return d
 
 # def reduceEssential(MESH, order, edges = npy.empty(0)):
     
