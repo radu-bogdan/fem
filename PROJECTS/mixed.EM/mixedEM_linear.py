@@ -55,7 +55,7 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
 
@@ -177,7 +177,7 @@ rhs = np.r_[aM,np.zeros(MESH.nt)]
 
 tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
 y2 = x2[MESH.NoEdges:]
-MESH.pdesurf2(y2)
+# MESH.pdesurf2(y2)
 
 
 ##########################################################################################
@@ -189,11 +189,8 @@ curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'curlphi', or
 
 Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T +\
      phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
-iMd = pde.tools.fastBlockInverse(Md)
 
 Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
-
-
 
 B0,B1,B2 = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = 'N0d', matrix = 'M', order = 4)
@@ -203,8 +200,6 @@ phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 4)
 De = pde.int.assembleE(MESH, order = 4)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-
-# a = np.setdiff1d(np.r_[0:MESH.NoEdges],MESH.NonSingle_Edges)
 KK = KK[MESH.NonSingle_Edges,:]
 
 aMd = phix_d_Hcurl@ D4 @(M0) +\
@@ -214,8 +209,24 @@ SYS2 = bmat([[Md,Cd.T,KK.T],\
              [Cd,None,None],
              [KK,None,None]]).tocsc()
 
-rhs2 = np.r_[aMd,np.zeros(MESH.nt+MESH.NonSingle_Edges.size)]
+rhs2 = np.r_[aMd,np.zeros(MESH.nt + MESH.NonSingle_Edges.size)]
 
-tm = time.monotonic(); x3 = sps.linalg.spsolve(SYS2,rhs2); print('mixed: ',time.monotonic()-tm)
-y3 = x3[3*MESH.nt:3*MESH.nt+MESH.nt]
-MESH.pdesurf2(y3)
+tm = time.monotonic(); x3 = sps.linalg.spsolve(SYS2,rhs2); print('mixed with decoupling: ',time.monotonic()-tm)
+y3 = x3[3*MESH.nt:3*MESH.nt + MESH.nt]
+lam3 = x3[3*MESH.nt + MESH.nt:]
+# MESH.pdesurf2(y3)
+
+
+
+iMd = pde.tools.fastBlockInverse(Md)
+iBBd = pde.tools.fastBlockInverse(Cd@iMd@Cd.T)
+
+
+SYS3 = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
+rhs3 = -KK@iMd@aMd + KK@iMd@Cd.T@iBBd@Cd@iMd@aMd
+
+
+tm = time.monotonic(); x4 = sps.linalg.spsolve(SYS3,rhs3); print('reduced hybrid stuff: ',time.monotonic()-tm)
+lam4 = x4
+y4 = iBBd@Cd@iMd@(aMd-KK.T@lam4)
+MESH.pdesurf2(y4)
