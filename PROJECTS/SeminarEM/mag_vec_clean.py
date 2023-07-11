@@ -67,7 +67,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 t = MESH.t
@@ -336,8 +336,11 @@ for k in range(rots):
     for i in range(maxIter):
         gsu = gs(u)
         gssu = gss(u)
+        
+        tm = time.monotonic()
         # w = chol(gssu).solve_A(-gsu)
         w = sps.linalg.spsolve(gssu,-gsu)
+        print('Solving took ', time.monotonic()-tm)
         
         norm_w = np.linalg.norm(w)
         norm_gsu = np.linalg.norm(gsu)

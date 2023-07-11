@@ -11,6 +11,7 @@ found = spam_spec is not None
 from scipy.sparse.linalg import splu
 
 if found == False:
+    # @profile()
     def fastBlockInverse(Mh):
         spluMh = splu(Mh)
         L = spluMh.L; U = spluMh.U
@@ -65,7 +66,7 @@ if found == False:
         
         block_ends_UT = np.r_[0,block_ends_UT+1]
         
-        elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
+        # elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
         #####################################################################################
         
         tm = time.time()
@@ -74,7 +75,7 @@ if found == False:
         
         data_iL,indices_iL,indptr_iL = createIndicesInversion(L.data,L.indices,L.indptr,block_ends_L)
         iL = sps.csc_matrix((data_iL, indices_iL, indptr_iL), shape = L.shape)
-        elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
+        # elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
         
         iMh = P3@(iUT.T@iL)@P2.T
         return iMh#P3@(iUT.T@iL)@P2.T

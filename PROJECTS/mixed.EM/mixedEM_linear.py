@@ -55,7 +55,7 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 ##########################################################################################
 
@@ -214,9 +214,7 @@ rhs2 = np.r_[aMd,np.zeros(MESH.nt + MESH.NonSingle_Edges.size)]
 tm = time.monotonic(); x3 = sps.linalg.spsolve(SYS2,rhs2); print('mixed with decoupling: ',time.monotonic()-tm)
 y3 = x3[3*MESH.nt:3*MESH.nt + MESH.nt]
 lam3 = x3[3*MESH.nt + MESH.nt:]
-# MESH.pdesurf2(y3)
-
-
+u3 = x3[:3*MESH.nt]
 
 iMd = pde.tools.fastBlockInverse(Md)
 iBBd = pde.tools.fastBlockInverse(Cd@iMd@Cd.T)
@@ -229,4 +227,11 @@ rhs3 = -KK@iMd@aMd + KK@iMd@Cd.T@iBBd@Cd@iMd@aMd
 tm = time.monotonic(); x4 = sps.linalg.spsolve(SYS3,rhs3); print('reduced hybrid stuff: ',time.monotonic()-tm)
 lam4 = x4
 y4 = iBBd@Cd@iMd@(aMd-KK.T@lam4)
-MESH.pdesurf2(y4)
+u4 = iMd@(-Cd.T@y4-KK.T@lam4+aMd)
+
+
+print(np.linalg.norm(lam3-lam4,np.inf))
+print(np.linalg.norm(y3-y4,np.inf))
+print(np.linalg.norm(u3-u4,np.inf))
+
+# MESH.pdesurf2(y4)
