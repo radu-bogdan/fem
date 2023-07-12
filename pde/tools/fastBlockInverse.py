@@ -3,6 +3,7 @@ import time
 import numpy as np
 import numba as nb
 import scipy.sparse as sps
+from numba import float64,float32,int64
 
 import importlib.util
 spam_spec = importlib.util.find_spec("sksparse")
@@ -149,21 +150,24 @@ if found == True:
 
 
 
-@nb.njit(cache=True)
-def createIndicesInversion(dataN,indicesN,indptrN,block_ends):
+@nb.njit(cache = True, parallel = False)
+def createIndicesInversion(dataN,indicesN,indptrN,block_ends) -> (float64[:],int64[:],int64[:]):
 
     block_lengths = block_ends[1:]-block_ends[0:-1]
     
-    sbl = np.sum(block_lengths)
+    sbl = np.sum(block_lengths)+1
     sbl2 = np.sum(block_lengths**2)
     
     C = np.zeros(sbl2)
-    indices_iN = np.zeros(sbl2, dtype = np.int64)
-    indptr_iN = np.zeros(sbl+1, dtype = np.int64)
+    indptr_iN = np.zeros(sbl, dtype = int64)
+    indices_iN = np.zeros(sbl2, dtype = int64)
     
     bli = 0; blis = 0; blis2 = 0
     
-    for i in nb.prange(len(block_lengths)):
+    for i in nb.prange(block_lengths.size):
+        
+        
+        # hier ist es ein offensichtlicher fail !!!
         
         blis = blis + bli
         blis2 = blis2 + bli**2
@@ -175,18 +179,40 @@ def createIndicesInversion(dataN,indicesN,indptrN,block_ends):
         
         CC = np.zeros(shape = (bli,bli), dtype = np.float64)
         
+        # print(blis+1+np.arange(0,bli),blis2+bli*(np.arange(0,bli)+1))
+        # indptr_iN[blis+1+np.arange(0,bli+1)] = blis2+bli*(np.arange(0,bli+1)+1)
+        # indptr_iN2[blis+1+np.arange(0,bli)] = blis2+bli*(np.arange(0,bli)+1)
+        
         for k in range(bli):
-            in_k = np.arange(start = indptrN[bei+k], stop = indptrN[bei+k+1], step = 1, dtype = np.int64)
-            for j,jj in enumerate(in_k):
+            # # in_k = np.arange(start = indptrN[bei+k], stop = indptrN[bei+k+1], step = 1, dtype = np.int32)
+            in_k = np.arange(indptrN[bei+k],indptrN[bei+k+1])
+            for _,jj in enumerate(in_k):
                 CC[k,indicesN[jj]-bei] = dataN[jj]
-                
+                                
             indptr_iN[k+blis+1] = blis2+bli*(k+1)
             indices_iN[blis2+bli*np.repeat(k,bli)+np.arange(0,bli)] = np.arange(bei,bei+bli)
+            
+            # print(blis2+bli*np.repeat(k,bli)+np.arange(0,bli))
         
         # This is needed (instead of above) if u wanna use parallel=True. Note: thats still slow af.
         # indptr_iN[blis+1+np.arange(0,k+1)] = blis2+bli*(np.arange(0,k+1)+1)
         
         iCCflat = np.linalg.inv(CC).flatten()
+        # iCCflat = CC.flatten()
         C[blis2:blis2p1] = iCCflat
-        
+    
+    # indptr_iN = indptr_iN2
+    # print(indptr_iN2)
+    # print(np.max(np.abs(indptr_iN2-indptr_iN)),indptr_iN[0])
     return C,indices_iN,indptr_iN
+
+# createIndicesInversion.parallel_diagnostics(level=4)
+
+Md = np.load('lol.npz',allow_pickle=True)['Md'].tolist()
+
+tm = time.monotonic()
+for i in range(1):
+    iMd = fastBlockInverse(Md)
+print('Inverting took ', time.monotonic()-tm)
+
+print(sps.linalg.norm(Md@iMd-sps.eye(Md.shape[0]),np.inf))

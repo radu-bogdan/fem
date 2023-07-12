@@ -67,7 +67,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 t = MESH.t
@@ -332,7 +332,7 @@ for k in range(rots):
         ux = dphix_H1.T@u; uy = dphiy_H1.T@u
         return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear) -(aJ-aM)@u + 1/2*penalty*u@B_stator_outer@u
     
-    tm = time.monotonic()
+    tm2 = time.monotonic()
     for i in range(maxIter):
         gsu = gs(u)
         gssu = gss(u)
@@ -371,7 +371,7 @@ for k in range(rots):
         
         if(np.linalg.norm(gs(u)) < eps_newton): break
     
-    elapsed = time.monotonic()-tm
+    elapsed = time.monotonic()-tm2
     print('Solving took ', elapsed, 'seconds')
     
     

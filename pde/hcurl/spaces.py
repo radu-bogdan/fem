@@ -249,19 +249,57 @@ def spaceInfo(MESH,space):
         LISTS['N0d']['TRIG']['curlphi'][1] = lambda x,y: 2+0*x
         LISTS['N0d']['TRIG']['curlphi'][2] = lambda x,y: 2+0*x
         
-        LISTS['N0d']['TRIG']['LIST_DOF'] = np.r_[0:3*MESH.nt].reshape(MESH.nt,3)
+        LISTS['N0d']['TRIG']['LIST_DOF'] = np.c_[0:3*MESH.nt:3,\
+                                                 1:3*MESH.nt:3,\
+                                                 2:3*MESH.nt:3]
         LISTS['N0d']['TRIG']['DIRECTION_DOF'] = MESH.EdgeDirectionTrig
+    ###########################################################################
+    
+    ###########################################################################
+    if space == 'NC1d':
+        
+        LISTS['NC1d'] = {}
+        LISTS['NC1d']['TRIG'] = {}
+        
+        LISTS['NC1d']['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
+        LISTS['NC1d']['TRIG']['qp_we_Mh'] = quadrature.dunavant(order = 1)
+        LISTS['NC1d']['TRIG']['qp_we_K'] = quadrature.dunavant(order = 0)
+        
+        LISTS['NC1d']['TRIG']['sizeM'] = 6*MESH.nt
+        
+        LISTS['NC1d']['TRIG']['phi'] = {}
+        LISTS['NC1d']['TRIG']['phi'][0] = lambda x,y: np.r_[0*x,x]
+        LISTS['NC1d']['TRIG']['phi'][1] = lambda x,y: np.r_[-y,0*x]
+        LISTS['NC1d']['TRIG']['phi'][2] = lambda x,y: np.r_[-y,-y]
+        LISTS['NC1d']['TRIG']['phi'][3] = lambda x,y: np.r_[0*x,x+y-1]
+        LISTS['NC1d']['TRIG']['phi'][4] = lambda x,y: np.r_[-x-y+1,0*y]
+        LISTS['NC1d']['TRIG']['phi'][5] = lambda x,y: np.r_[x,x]
+        
+        LISTS['NC1d']['TRIG']['curlphi'] = {}
+        LISTS['NC1d']['TRIG']['curlphi'][0] = lambda x,y: 1+0*x
+        LISTS['NC1d']['TRIG']['curlphi'][1] = lambda x,y: 1+0*x
+        LISTS['NC1d']['TRIG']['curlphi'][2] = lambda x,y: 1+0*x
+        LISTS['NC1d']['TRIG']['curlphi'][3] = lambda x,y: 1+0*x
+        LISTS['NC1d']['TRIG']['curlphi'][4] = lambda x,y: 1+0*x
+        LISTS['NC1d']['TRIG']['curlphi'][5] = lambda x,y: 1+0*x
+        
+        
+        LISTS['NC1d']['TRIG']['LIST_DOF'] = np.c_[2*np.r_[0:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
+                                                  2*np.r_[0:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),
+                                                  2*np.r_[1:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,1]-1),
+                                                  2*np.r_[1:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,1]-1),
+                                                  2*np.r_[2:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,2]-1),
+                                                  2*np.r_[2:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1)].astype(int)
+        
+        # LISTS['NC1d']['TRIG']['LIST_DOF'] = np.r_[0:6*MESH.nt].reshape(MESH.nt,6)
+        
+        LISTS['NC1d']['TRIG']['DIRECTION_DOF'] = np.c_[MESH.EdgeDirectionTrig[:,0],
+                                                       MESH.EdgeDirectionTrig[:,0],
+                                                       MESH.EdgeDirectionTrig[:,1],
+                                                       MESH.EdgeDirectionTrig[:,1],
+                                                       MESH.EdgeDirectionTrig[:,2],
+                                                       MESH.EdgeDirectionTrig[:,2]]
 
-        LISTS['N0d']['B'] = {}
-        LISTS['N0d']['B']['phi'] = {}
-        LISTS['N0d']['B']['phi'][0] = lambda x: 1
-        LISTS['N0d']['B']['qp_we_B'] = quadrature.one_d(order = 0)
-        
-        LISTS['N0d']['B']['LIST_DOF'] = np.arange(MESH.NoEdges)[:,None]
-        # LISTS['N0d']['B']['LIST_DOF'] = MESH.IntEdgesToTriangles[:,0]
-        
-        LISTS['N0d']['TRIG']['phidual'] = {}
-        LISTS['N0d']['TRIG']['phidual'][0] = lambda x: 1+0*x
     ###########################################################################
     
     
