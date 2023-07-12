@@ -150,7 +150,7 @@ if found == True:
 
 
 
-@nb.njit(cache = True, parallel = False)
+@nb.njit(cache = True, parallel = True, fastmath=True)
 def createIndicesInversion(dataN,indicesN,indptrN,block_ends) -> (float64[:],int64[:],int64[:]):
 
     block_lengths = block_ends[1:]-block_ends[0:-1]
@@ -158,19 +158,30 @@ def createIndicesInversion(dataN,indicesN,indptrN,block_ends) -> (float64[:],int
     sbl = np.sum(block_lengths)+1
     sbl2 = np.sum(block_lengths**2)
     
+    blicum = np.zeros(block_lengths.size+1, dtype = np.int64)
+    bli2cum = np.zeros(block_lengths.size+1, dtype = np.int64)
+    
+    for z in range(block_lengths.size):
+        blicum[z+1] = blicum[z] + block_lengths[z]
+        bli2cum[z+1] = bli2cum[z] + block_lengths[z]**2
+    
+    # blicum = np.cumsum(block_lengths)
     C = np.zeros(sbl2)
     indptr_iN = np.zeros(sbl, dtype = int64)
     indices_iN = np.zeros(sbl2, dtype = int64)
     
-    bli = 0; blis = 0; blis2 = 0
+    blis = 0; blis2 = 0
     
     for i in nb.prange(block_lengths.size):
         
+        # if i==0: bli = 0
+        # else: bli = block_lengths[i-1]
         
-        # hier ist es ein offensichtlicher fail !!!
+        blis = blicum[i]
+        blis2 = bli2cum[i]
         
-        blis = blis + bli
-        blis2 = blis2 + bli**2
+        #blis = blis + bli
+        #blis2 = blis2 + bli**2
         
         bli = block_lengths[i]
         bei = block_ends[i]
@@ -210,9 +221,10 @@ def createIndicesInversion(dataN,indicesN,indptrN,block_ends) -> (float64[:],int
 
 Md = np.load('lol.npz',allow_pickle=True)['Md'].tolist()
 
-tm = time.monotonic()
-for i in range(1):
-    iMd = fastBlockInverse(Md)
-print('Inverting took ', time.monotonic()-tm)
-
-print(sps.linalg.norm(Md@iMd-sps.eye(Md.shape[0]),np.inf))
+if __name__ == '__main__':
+    tm = time.monotonic()
+    for i in range(1):
+        iMd = fastBlockInverse(Md)
+    print('Inverting took ', time.monotonic()-tm)
+        
+    print(sps.linalg.norm(Md@iMd-sps.eye(Md.shape[0]),np.inf))
