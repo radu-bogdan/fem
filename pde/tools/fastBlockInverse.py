@@ -150,7 +150,7 @@ if found == True:
 
 
 
-@nb.njit(cache = True, parallel = True, fastmath=True)
+@nb.njit(cache = True, parallel = True, fastmath = False)
 def createIndicesInversion(dataN,indicesN,indptrN,block_ends) -> (float64[:],int64[:],int64[:]):
 
     block_lengths = block_ends[1:]-block_ends[0:-1]
@@ -219,12 +219,12 @@ def createIndicesInversion(dataN,indicesN,indptrN,block_ends) -> (float64[:],int
 
 # createIndicesInversion.parallel_diagnostics(level=4)
 
-Md = np.load('lol.npz',allow_pickle=True)['Md'].tolist()
+# Md = np.load('lol.npz',allow_pickle=True)['Md'].tolist()
 
-if __name__ == '__main__':
-    tm = time.monotonic()
-    for i in range(1):
-        iMd = fastBlockInverse(Md)
-    print('Inverting took ', time.monotonic()-tm)
+# if __name__ == '__main__':
+#     tm = time.monotonic()
+#     for i in range(1):
+#         iMd = fastBlockInverse(Md)
+#     print('Inverting took ', time.monotonic()-tm)
         
-    print(sps.linalg.norm(Md@iMd-sps.eye(Md.shape[0]),np.inf))
+#     print(sps.linalg.norm(Md@iMd-sps.eye(Md.shape[0]),np.inf))

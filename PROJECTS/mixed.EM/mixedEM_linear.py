@@ -105,7 +105,7 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'N0'
+space_Vh = 'NC1'
 space_Qh = 'P0'
 int_order = 4
 
@@ -182,25 +182,34 @@ y2 = x2[MESH.NoEdges:]
 
 ##########################################################################################
 
+spaceVh = 'NC1d'
 
-
-phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'phi', order = 4)
-curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = 'N0d', matrix = 'curlphi', order = 4)
+phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'phi', order = 4)
+curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'curlphi', order = 4)
 
 Md = phix_d_Hcurl @ D4 @ phix_d_Hcurl.T +\
      phiy_d_Hcurl @ D4 @ phiy_d_Hcurl.T
 
 Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 
-B0,B1,B2 = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 4)
-R0,R1,R2 = pde.hcurl.assembleE(MESH, space = 'N0d', matrix = 'M', order = 4)
+# spaceVh = 'N0d'
+R0,R1,R2 = pde.hcurl.assembleE(MESH, space = spaceVh, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 4)
+phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
 
-De = pde.int.assembleE(MESH, order = 4)
+De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-KK = KK[MESH.NonSingle_Edges,:]
+KK.data = KK.data*(np.abs(KK.data)>1e-13)
+KK.eliminate_zeros()
+KK
+
+KK = KK[np.r_[2*MESH.NonSingle_Edges,2*MESH.NonSingle_Edges+1],:]
+# KK = KK[MESH.NonSingle_Edges,:]
+
+sH = phix_d_Hcurl.shape[0]
+sA = phi_L2_o1.shape[0]
+sL = KK.shape[0]
 
 aMd = phix_d_Hcurl@ D4 @(M0) +\
       phiy_d_Hcurl@ D4 @(M1)
@@ -209,29 +218,42 @@ SYS2 = bmat([[Md,Cd.T,KK.T],\
              [Cd,None,None],
              [KK,None,None]]).tocsc()
 
-rhs2 = np.r_[aMd,np.zeros(MESH.nt + MESH.NonSingle_Edges.size)]
+rhs2 = np.r_[aMd,np.zeros(sA+sL)]
 
 tm = time.monotonic(); x3 = sps.linalg.spsolve(SYS2,rhs2); print('mixed with decoupling: ',time.monotonic()-tm)
-y3 = x3[3*MESH.nt:3*MESH.nt + MESH.nt]
-lam3 = x3[3*MESH.nt + MESH.nt:]
-u3 = x3[:3*MESH.nt]
 
-iMd = pde.tools.fastBlockInverse(Md)
-iBBd = pde.tools.fastBlockInverse(Cd@iMd@Cd.T)
+H = x3[:sH]
+A = x3[sH:sH+sA]
+L = x3[sH+sA:]
+
+##########################################################################################
+
+phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'phi', order = 1)
+
+Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0',controls = 1), A, u_height = 0)
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), Hx**2+Hy**2, u_height = 0)
+fig.show()
+
+##########################################################################################
+
+# iMd = pde.tools.fastBlockInverse(Md)
+# iBBd = pde.tools.fastBlockInverse(Cd@iMd@Cd.T)
 
 
-SYS3 = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
-rhs3 = -KK@iMd@aMd + KK@iMd@Cd.T@iBBd@Cd@iMd@aMd
+# SYS3 = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
+# rhs3 = -KK@iMd@aMd + KK@iMd@Cd.T@iBBd@Cd@iMd@aMd
 
 
-tm = time.monotonic(); x4 = sps.linalg.spsolve(SYS3,rhs3); print('reduced hybrid stuff: ',time.monotonic()-tm)
-lam4 = x4
-y4 = iBBd@Cd@iMd@(aMd-KK.T@lam4)
-u4 = iMd@(-Cd.T@y4-KK.T@lam4+aMd)
+# tm = time.monotonic(); x4 = sps.linalg.spsolve(SYS3,rhs3); print('reduced hybrid stuff: ',time.monotonic()-tm)
+# lam4 = x4
+# y4 = iBBd@Cd@iMd@(aMd-KK.T@lam4)
+# u4 = iMd@(-Cd.T@y4-KK.T@lam4+aMd)
 
 
-print(np.linalg.norm(lam3-lam4,np.inf))
-print(np.linalg.norm(y3-y4,np.inf))
-print(np.linalg.norm(u3-u4,np.inf))
+# # print(np.linalg.norm(lam3-lam4,np.inf))
+# # print(np.linalg.norm(y3-y4,np.inf))
+# # print(np.linalg.norm(u3-u4,np.inf))
 
 # MESH.pdesurf2(y4)

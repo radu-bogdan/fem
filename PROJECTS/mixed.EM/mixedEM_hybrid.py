@@ -168,7 +168,7 @@ aJ = phi_L2(int_order)@ D(int_order) @Ja
 ##########################################################################################
 
 
-space_Vhd = 'N0d'
+space_Vhd = 'NC1d'
 
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = int_order)
@@ -185,13 +185,13 @@ aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
 # B0,B1,B2 = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 2)
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 2)
+phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
 
 De = pde.int.assembleE(MESH, order = 2)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-# KK = KK[np.r_[2*MESH.NonSingle_Edges,2*MESH.NonSingle_Edges+1],:]
-KK = KK[MESH.NonSingle_Edges,:]
+KK = KK[np.r_[2*MESH.NonSingle_Edges,2*MESH.NonSingle_Edges+1],:]
+# KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 

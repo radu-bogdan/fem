@@ -140,6 +140,9 @@ def assembleB(MESH,space,matrix,shape,order = -1, edges = npy.empty(0)):
 
 def assembleE(MESH,space,matrix,order=1):
     
+    # if space[-1] == 'd': spaceC = space[:-1]
+    # else: spaceC = space
+    
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
@@ -150,14 +153,15 @@ def assembleE(MESH,space,matrix,order=1):
     # phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     phi =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
     sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
-    
+        
     LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
+    # LIST_DOF_C = MESH.FEMLISTS[spaceC]['TRIG']['LIST_DOF']
     DIRECTION_DOF = MESH.FEMLISTS[space]['TRIG']['DIRECTION_DOF']
     
     qp,we = quadrature.one_d(order); nqp = len(we)
     
     # on edge2: (0,0) -> (1,0)
-    qp2 = npy.c_[qp,0*qp].T
+    qp2 = npy.c_[1-qp,0*qp].T
     # on edge1: (0,0) -> (0,1)
     qp1 = npy.c_[0*qp,qp].T
     # on edge0: (0,1) -> (1,0)
@@ -184,9 +188,26 @@ def assembleE(MESH,space,matrix,order=1):
         
         im = npy.tile(LIST_DOF,(nqp,1))
         
-        jm0 = npy.tile(npy.tile(MESH.TriangleToEdges[:,0]*nqp,nqp) + npy.arange(nqp).repeat(nt),(lphi,1)).T
-        jm1 = npy.tile(npy.tile(MESH.TriangleToEdges[:,1]*nqp,nqp) + npy.arange(nqp).repeat(nt),(lphi,1)).T
-        jm2 = npy.tile(npy.tile(MESH.TriangleToEdges[:,2]*nqp,nqp) + npy.arange(nqp).repeat(nt),(lphi,1)).T
+        ind0 = npy.argwhere(MESH.EdgeDirectionTrig[:,0]==-1)
+        ind1 = npy.argwhere(MESH.EdgeDirectionTrig[:,1]==-1)
+        ind2 = npy.argwhere(MESH.EdgeDirectionTrig[:,2]==-1)
+        
+        indices = npy.tile(npy.arange(nqp),(nt,1))
+        
+        indices0 = indices.copy(); indices1 = indices.copy(); indices2 = indices.copy()
+        
+        indices0[ind0,:] = indices0[ind0,::-1]; 
+        indices1[ind1,:] = indices1[ind1,::-1]; 
+        indices2[ind2,:] = indices2[ind2,::-1]
+        
+        
+        jm0 = npy.tile(npy.tile(MESH.TriangleToEdges[:,0]*nqp,nqp) + indices0.T.flatten(),(lphi,1)).T
+        jm1 = npy.tile(npy.tile(MESH.TriangleToEdges[:,1]*nqp,nqp) + indices1.T.flatten(),(lphi,1)).T
+        jm2 = npy.tile(npy.tile(MESH.TriangleToEdges[:,2]*nqp,nqp) + indices2.T.flatten(),(lphi,1)).T
+        
+        # jm0n = npy.tile(MESH.TriangleToEdges[:,0]*nqp,(nqp,1)) + npy.tile(npy.arange(nqp).repeat(nt),(lphi,1)).T
+        # jm1n = npy.tile(MESH.TriangleToEdges[:,1]*nqp,(nqp,1)) + npy.tile(npy.arange(nqp).repeat(nt),(lphi,1)).T
+        # jm2n = npy.tile(MESH.TriangleToEdges[:,2]*nqp,(nqp,1)) + npy.tile(npy.arange(nqp).repeat(nt),(lphi,1)).T
 
         for j in range(lphi):
             for i in range(nqp):

@@ -61,7 +61,7 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -133,92 +133,18 @@ if ORDER == 2:
     order_phiphi = 4
     order_dphidphi = 2
     u = np.zeros(MESH.np + MESH.NoEdges)
-##########################################################################################
+############################################################################################
 
 
 
-# ##########################################################################################
-# # Brauer/Nonlinear laws ... ?
-# ##########################################################################################
-
-# k1 = 49.4; k2 = 1.46; k3 = 520.6
-# # k1 = 3.8; k2 = 2.17; k3 = 396.2
-
-
-# f_nonlinear = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
-
-# nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
-# nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
-# nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
-
-
-# fx_nonlinear = lambda x,y : nu(x,y)*x
-# fy_nonlinear = lambda x,y : nu(x,y)*y
-# fxx_nonlinear = lambda x,y : nu(x,y) + x*nux(x,y)
-# fxy_nonlinear = lambda x,y : x*nuy(x,y)
-# fyx_nonlinear = lambda x,y : y*nux(x,y)
-# fyy_nonlinear = lambda x,y : nu(x,y) + y*nuy(x,y)
-
-
-#############################################################################################
-# f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
-# fx_linear = lambda x,y : nu0*x
-# fy_linear = lambda x,y : nu0*y
-# fxx_linear = lambda x,y : nu0 + 0*x
-# fxy_linear = lambda x,y : x*0
-# fyx_linear = lambda x,y : y*0
-# fyy_linear = lambda x,y : nu0 + 0*y
-# ###########################################################################################
-
+############################################################################################
+## Brauer/Nonlinear laws ... ?
+############################################################################################
 
 from nonlinLaws import f_nonlinear,fx_nonlinear,fy_nonlinear,fxx_nonlinear,fxy_nonlinear,fyx_nonlinear,fyy_nonlinear,\
-                       f_linear,fx_linear,fy_linear,fxx_linear,fxy_linear,fyx_linear,fyy_linear 
-# from MaterialLawsBiro import biroTest
-
-# f_Biro, df_Biro, ddf_Biro = biroTest(fac = 3, n = 1.3)
-
-# def f_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = f_Biro(ux[i],uy[i])
-#     return ret
-        
-# def fx_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = df_Biro(ux[i],uy[i])[0]
-#     return ret
-        
-# def fy_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = df_Biro(ux[i],uy[i])[1]
-#     return ret
-        
-# def fxx_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = ddf_Biro(ux[i],uy[i])[0,0]
-#     return ret
-
-# def fxy_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = ddf_Biro(ux[i],uy[i])[0,1]
-#     return ret
-
-# def fyx_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = ddf_Biro(ux[i],uy[i])[1,0]
-#     return ret
-
-# def fyy_nonlinear(ux,uy):
-#     ret = np.zeros(ux.size)
-#     for i in range(ux.size):
-#         ret[i] = ddf_Biro(ux[i],uy[i])[1,1]
-#     return ret
-###########################################################################################
+                       f_linear,fx_linear,fy_linear,fxx_linear,fxy_linear,fyx_linear,fyy_linear
+                       
+############################################################################################
 
 rot_speed = 1; rt = 0
 rots = 1
@@ -261,12 +187,12 @@ for k in range(rots):
     D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
     B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
-    fem_linear = pde.int.evaluate(MESH, order = 0, regions = ind_linear).diagonal()
-    fem_nonlinear = pde.int.evaluate(MESH, order = 0, regions = ind_nonlinear).diagonal()
-    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_rotor).diagonal()
-    fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()
+    fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_nonlinear).diagonal()
+    fem_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_rotor).diagonal()
+    fem_air_gap_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_air_gap_rotor).diagonal()
     
-    fem_ind_rotor_outer = pde.int.evaluateB(MESH, order = 0, edges = ind_rotor_outer).diagonal()
+    fem_ind_rotor_outer = pde.int.evaluateB(MESH, order = order_dphidphi, edges = ind_rotor_outer).diagonal()
     
     penalty = 1e10
     

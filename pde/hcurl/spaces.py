@@ -252,6 +252,11 @@ def spaceInfo(MESH,space):
         LISTS['N0d']['TRIG']['LIST_DOF'] = np.c_[0:3*MESH.nt:3,\
                                                  1:3*MESH.nt:3,\
                                                  2:3*MESH.nt:3]
+        
+        LISTS['N0d']['TRIG']['LIST_DOF_C'] = np.c_[0:3*MESH.nt:3,\
+                                                   1:3*MESH.nt:3,\
+                                                   2:3*MESH.nt:3]
+            
         LISTS['N0d']['TRIG']['DIRECTION_DOF'] = MESH.EdgeDirectionTrig
     ###########################################################################
     
@@ -284,14 +289,22 @@ def spaceInfo(MESH,space):
         LISTS['NC1d']['TRIG']['curlphi'][5] = lambda x,y: 1+0*x
         
         
-        LISTS['NC1d']['TRIG']['LIST_DOF'] = np.c_[2*np.r_[0:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
-                                                  2*np.r_[0:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),
-                                                  2*np.r_[1:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,1]-1),
-                                                  2*np.r_[1:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,1]-1),
-                                                  2*np.r_[2:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,2]-1),
-                                                  2*np.r_[2:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1)].astype(int)
+        # LISTS['NC1d']['TRIG']['LIST_DOF_C'] = np.c_[2*np.r_[0:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
+        #                                             2*np.r_[0:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),
+        #                                             2*np.r_[1:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,1]-1),
+        #                                             2*np.r_[1:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,1]-1),
+        #                                             2*np.r_[2:3*MESH.nt:3]   -1/2*(MESH.EdgeDirectionTrig[:,2]-1),
+        #                                             2*np.r_[2:3*MESH.nt:3]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1)].astype(int)
         
-        # LISTS['NC1d']['TRIG']['LIST_DOF'] = np.r_[0:6*MESH.nt].reshape(MESH.nt,6)
+        
+        # LISTS['NC1d']['TRIG']['LIST_DOF_C'] = np.c_[2*MESH.TriangleToEdges[:,0]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
+        #                                             2*MESH.TriangleToEdges[:,0]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),
+        #                                             2*MESH.TriangleToEdges[:,1]   -1/2*(MESH.EdgeDirectionTrig[:,1]-1),
+        #                                             2*MESH.TriangleToEdges[:,1]+1 +1/2*(MESH.EdgeDirectionTrig[:,1]-1),
+        #                                             2*MESH.TriangleToEdges[:,2]   -1/2*(MESH.EdgeDirectionTrig[:,2]-1),
+        #                                             2*MESH.TriangleToEdges[:,2]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1)]
+        
+        LISTS['NC1d']['TRIG']['LIST_DOF'] = np.r_[0:6*MESH.nt].reshape(MESH.nt,6)
         
         LISTS['NC1d']['TRIG']['DIRECTION_DOF'] = np.c_[MESH.EdgeDirectionTrig[:,0],
                                                        MESH.EdgeDirectionTrig[:,0],

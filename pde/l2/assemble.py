@@ -56,6 +56,8 @@ def assembleE(MESH,space,matrix,order=0):
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
+    # print(space)
+    
     p = MESH.p; nt = MESH.nt
     e = MESH.EdgesToVertices; ne = e.shape[0]
     
