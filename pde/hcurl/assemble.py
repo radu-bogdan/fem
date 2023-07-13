@@ -198,7 +198,7 @@ def assembleE(MESH,space,matrix,order=1):
         
         indices0[ind0,:] = indices0[ind0,::-1]; 
         indices1[ind1,:] = indices1[ind1,::-1]; 
-        indices2[ind2,:] = indices2[ind2,::-1]
+        indices2[ind2,:] = indices2[ind2,::-1];
         
         
         jm0 = npy.tile(npy.tile(MESH.TriangleToEdges[:,0]*nqp,nqp) + indices0.T.flatten(),(lphi,1)).T

@@ -183,11 +183,11 @@ aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
       phiy_d_Hcurl@ D(int_order) @(M1)
 
 # B0,B1,B2 = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 2)
-R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 2)
+R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 1)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
+phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 1)
 
-De = pde.int.assembleE(MESH, order = 2)
+De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
 
 KK = KK[np.r_[2*MESH.NonSingle_Edges,2*MESH.NonSingle_Edges+1],:]
@@ -279,6 +279,8 @@ for i in range(maxIter):
     iBBd = inv(Cd@iMd@Cd.T)
     print('Inverting took ', time.monotonic()-tm)
     
+    
+    
     tm = time.monotonic()
     gssuR = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
     gsuR = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
@@ -287,7 +289,6 @@ for i in range(maxIter):
     tm = time.monotonic()
     
     wL = sps.linalg.spsolve(gssuR,-gsuR)
-    
     wA = iBBd@Cd@iMd@(-r1-KK.T@wL)+iBBd@r2
     wH = iMd@(-Cd.T@wA-KK.T@wL-r1)
     
