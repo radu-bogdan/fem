@@ -106,7 +106,7 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 
 space_Vh = 'NC1'
 space_Qh = 'P0'
-int_order = 4
+int_order = 1
 
 tm = time.monotonic()
 
@@ -248,7 +248,6 @@ for i in range(maxIter):
     tm = time.monotonic()
     allH = g_nonlinear_all(Hx,Hy)
     
-    
     print('Evaluating nonlinearity took ', time.monotonic()-tm)
     
     tm = time.monotonic()
@@ -326,8 +325,8 @@ for i in range(maxIter):
     #     Hu = HAu[:2*MESH.NoEdges]
     #     Au = HAu[2*MESH.NoEdges:]
         
-    #     Hxu = phix_Hcurl.T@(Hu);
-    #     Hyu = phiy_Hcurl.T@(Hu);
+    #     Hxu = phix_Hcurl.T@(Hu)
+    #     Hyu = phiy_Hcurl.T@(Hu)
         
     #     allHu = g_nonlinear_all(Hxu,Hyu)
         
@@ -339,7 +338,6 @@ for i in range(maxIter):
     tm = time.monotonic()
     float_eps = 1e-8 #np.finfo(float).eps
     for kk in range(1000):
-        # print('line',kk)
         
         HALu = HAL + alpha*w
         Hu = HALu[:sH]

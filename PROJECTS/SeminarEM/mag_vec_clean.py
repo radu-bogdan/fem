@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.animation as animation
 from matplotlib.animation import FFMpegWriter
-import ffmpeg
+# import ffmpeg
 # cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
 
