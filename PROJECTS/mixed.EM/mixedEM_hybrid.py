@@ -104,9 +104,9 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'NC1'
-space_Qh = 'P0'
-int_order = 1
+space_Vh = 'N1'
+space_Qh = 'P1'
+int_order = 4
 
 tm = time.monotonic()
 
@@ -168,7 +168,7 @@ aJ = phi_L2(int_order)@ D(int_order) @Ja
 ##########################################################################################
 
 
-space_Vhd = 'NC1d'
+space_Vhd = 'N1d'
 
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = int_order)
@@ -182,7 +182,6 @@ Cd = phi_L2(int_order) @ D(int_order) @ curlphi_d_Hcurl.T
 aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
       phiy_d_Hcurl@ D(int_order) @(M1)
 
-# B0,B1,B2 = pde.hcurl.assembleE(MESH, space = 'N0', matrix = 'M', order = 2)
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 1)
 
 phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 1)
@@ -260,7 +259,6 @@ for i in range(maxIter):
     gyx_H_Myx = phix_d_Hcurl @ D_int_order @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_d_Hcurl.T
     
     Md = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
-    
     
     gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9];
     
