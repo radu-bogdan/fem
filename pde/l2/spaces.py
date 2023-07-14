@@ -56,3 +56,35 @@ def spaceInfo(MESH,space):
         LISTS['P1']['TRIG']['LIST_DOF'] = np.r_[0:3*MESH.nt].reshape(MESH.nt,3)
     ###########################################################################
     
+    
+    ###########################################################################
+    if space == 'P1_orth_divN1':
+        
+        LISTS[space] = {}
+        LISTS[space]['TRIG'] = {}
+        
+        LISTS[space]['TRIG']['sizeM'] = 3*MESH.nt
+        LISTS[space]['TRIG']['qp_we_M'] = quadrature.dunavant(order = 2)
+        
+        LISTS[space]['B'] = {}
+        LISTS[space]['B']['phi'] = {}
+        LISTS[space]['B']['phi'][0] = lambda x: 1-x
+        LISTS[space]['B']['phi'][1] = lambda x: x
+        
+        LISTS[space]['B']['LIST_DOF'] = np.r_[0:2*MESH.NoEdges].reshape(MESH.NoEdges,2)
+        LISTS[space]['B']['sizeM'] = 2*MESH.NoEdges
+        
+        LISTS[space]['B']['qp_we_B'] = quadrature.one_d(order = 2)
+        
+        LISTS[space]['TRIG']['phi'] = {}
+        LISTS[space]['TRIG']['phi'][0] = lambda x,y: -12*x-12*y+11
+        LISTS[space]['TRIG']['phi'][1] = lambda x,y:  12*x-1
+        LISTS[space]['TRIG']['phi'][2] = lambda x,y:  12*y-1
+        
+        # LISTS[space]['TRIG']['phi'][0] = lambda x,y: -12*x+7
+        # LISTS[space]['TRIG']['phi'][1] = lambda x,y: -12*y+7
+        # LISTS[space]['TRIG']['phi'][2] = lambda x,y:  12*x+12*y-5
+        
+        LISTS[space]['TRIG']['LIST_DOF'] = np.r_[0:3*MESH.nt].reshape(MESH.nt,3)
+    ###########################################################################
+    

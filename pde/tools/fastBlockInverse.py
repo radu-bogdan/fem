@@ -79,6 +79,9 @@ if found == False:
         # elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
         
         iMh = P3@(iUT.T@iL)@P2.T
+        iMh.data = iMh.data*(np.abs(iMh.data)>1e-13)
+        iMh.eliminate_zeros()
+        
         return iMh#P3@(iUT.T@iL)@P2.T
 
 if found == True:

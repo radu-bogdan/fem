@@ -67,7 +67,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 t = MESH.t
@@ -249,7 +249,7 @@ for k in range(rots):
         fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx_linear(ux,uy)*fem_linear + fyx_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
         return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
         
-    def gs(u):    
+    def gs(u):
         ux = dphix_H1.T@u; uy = dphiy_H1.T@u
         return dphix_H1 @ D_order_dphidphi @ (fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear) +\
                dphiy_H1 @ D_order_dphidphi @ (fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear) + penalty*B_stator_outer@u - aJ + aM
@@ -303,15 +303,22 @@ for k in range(rots):
     
     ax1.cla()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-    MESH.pdesurf2(u, ax = ax1)
+    
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), ux**2+uy**2, u_height = 0)
+    fig.show()
+    
+    
+    # MESH.pdesurf2(u, ax = ax1)
     # MESH.pdesurf2(ux**2+uy**2, ax = ax1)
     # MESH.pdegeom(ax = ax1)
     # MESH.pdemesh2(ax = ax1)
     
-    fig.show()
+    # fig.show()
     
-    plt.pause(0.01)
+    # plt.pause(0.01)
     # writer.grab_frame()
+    
+    stop
     
     
     ##########################################################################################

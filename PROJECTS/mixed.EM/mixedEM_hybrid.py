@@ -54,8 +54,10 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q)
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
+
 ##########################################################################################
 
 
@@ -105,8 +107,9 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 ##########################################################################################
 
 space_Vh = 'N1'
-space_Qh = 'P1'
-int_order = 4
+# space_Qh = 'P1'
+space_Qh = 'P1_orth_divN1'
+int_order = '2l'
 
 tm = time.monotonic()
 
@@ -155,10 +158,10 @@ for i in range(16):
     M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
 
-aM = phix_Hcurl@ D(int_order) @(M0) +\
-     phiy_Hcurl@ D(int_order) @(M1)
+# aM = phix_Hcurl@ D(int_order) @(M0) +\
+#      phiy_Hcurl@ D(int_order) @(M1)
 
-aJ = phi_L2(int_order)@ D(int_order) @Ja
+# aJ = phi_L2(int_order)@ D(int_order) @Ja
 
 # iMh = pde.tools.fastBlockInverse(Mh1)
 # S = C@iMh@C.T
@@ -177,6 +180,9 @@ Md = phix_d_Hcurl @ D(int_order) @ phix_d_Hcurl.T +\
      phiy_d_Hcurl @ D(int_order) @ phiy_d_Hcurl.T
 iMd = pde.tools.fastBlockInverse(Md)
 
+iMd.data = iMd.data*(np.abs(iMd.data)>1e-7)
+iMd.eliminate_zeros()
+
 Cd = phi_L2(int_order) @ D(int_order) @ curlphi_d_Hcurl.T
 
 aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
@@ -189,7 +195,9 @@ phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 1)
 De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-KK = KK[np.r_[2*MESH.NonSingle_Edges,2*MESH.NonSingle_Edges+1],:]
+KK = KK[np.r_[2*MESH.NonSingle_Edges,\
+              2*MESH.NonSingle_Edges+1],:]
+
 # KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
@@ -201,7 +209,7 @@ sA = phi_L2_o1.shape[0]
 sL = KK.shape[0]
 
 mu0 = (4*np.pi)/10**7
-H = 1e-3+np.zeros(sH)
+H = 1e-2+np.zeros(sH)
 A = 0+np.zeros(sA)
 L = 0+np.zeros(sL)
 
@@ -283,21 +291,16 @@ for i in range(maxIter):
     gsuR = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
     print('Multiplication took ', time.monotonic()-tm)
     
-    tm = time.monotonic()
     
+    
+    tm = time.monotonic()
     wL = sps.linalg.spsolve(gssuR,-gsuR)
     wA = iBBd@Cd@iMd@(-r1-KK.T@wL)+iBBd@r2
     wH = iMd@(-Cd.T@wA-KK.T@wL-r1)
-    
     w = np.r_[wH,wA,wL]
-    
-    # gsu = np.r_[r1,r2,r3]
-    
     print('Solving the system took ', time.monotonic()-tm)
     
-    # allH = g_nonlinear_all(Hx,Hy)
     gsu = gs_hybrid(allH,A,H,L)
-    # gssu = gss_hybrid(allH)
     
     ##########################################################################################
     
@@ -340,7 +343,7 @@ for i in range(maxIter):
         HALu = HAL + alpha*w
         Hu = HALu[:sH]
         
-        Hxu = phix_d_Hcurl.T@(Hu); Hyu = phiy_d_Hcurl.T@(Hu);
+        Hxu = phix_d_Hcurl.T@Hu; Hyu = phiy_d_Hcurl.T@Hu;
         allHu = g_nonlinear_all(Hxu,Hyu)
         
         if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break

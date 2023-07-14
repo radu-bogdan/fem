@@ -332,15 +332,6 @@ def spaceInfo(MESH,space):
         LISTS['N1d']['TRIG']['curlphi'][5] = lambda x,y: 1 -1*LISTS['N1d']['TRIG']['curlphi'][6](x,y) +1*LISTS['N1d']['TRIG']['curlphi'][7](x,y)        
         
         LISTS['N1d']['TRIG']['LIST_DOF'] = np.r_[0:8*MESH.nt].reshape(MESH.nt,8)
-        
-        # LISTS['N1d']['TRIG']['LIST_DOF'] = np.c_[2*MESH.TriangleToEdges[:,0]   -1/2*(MESH.EdgeDirectionTrig[:,0]-1),
-        #                                          2*MESH.TriangleToEdges[:,0]+1 +1/2*(MESH.EdgeDirectionTrig[:,0]-1),
-        #                                          2*MESH.TriangleToEdges[:,1]   -1/2*(MESH.EdgeDirectionTrig[:,1]-1),
-        #                                          2*MESH.TriangleToEdges[:,1]+1 +1/2*(MESH.EdgeDirectionTrig[:,1]-1),
-        #                                          2*MESH.TriangleToEdges[:,2]   -1/2*(MESH.EdgeDirectionTrig[:,2]-1),
-        #                                          2*MESH.TriangleToEdges[:,2]+1 +1/2*(MESH.EdgeDirectionTrig[:,2]-1),
-        #                                          range(2*MESH.NoEdges+0,2*MESH.NoEdges+2*MESH.nt,2),
-        #                                          range(2*MESH.NoEdges+1,2*MESH.NoEdges+2*MESH.nt,2)]
     
         LISTS['N1d']['TRIG']['DIRECTION_DOF'] = np.c_[MESH.EdgeDirectionTrig[:,0],
                                                       MESH.EdgeDirectionTrig[:,0],
