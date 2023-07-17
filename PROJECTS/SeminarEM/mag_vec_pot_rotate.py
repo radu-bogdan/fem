@@ -33,7 +33,7 @@ fig = plt.figure()
 fig.show()
 ax1 = fig.add_subplot(121)
 ax2 = fig.add_subplot(122)
-# ax1.set_aspect(aspect = 'equal')
+ax1.set_aspect(aspect = 'equal')
 # ax2.set_aspect(aspect = 'equal')
 
 # cbar = plt.colorbar(ax)
@@ -64,15 +64,16 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
-MESH.refinemesh()
 # MESH.refinemesh()
+# MESH.refinemesh()
+# MESH.refinemesh()
+
 t = MESH.t
 p = MESH.p
 ##########################################################################################
@@ -148,15 +149,19 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 if ORDER == 1:
     poly = 'P1'
     dxpoly = 'P0'
-    order_phiphi = 2
-    order_dphidphi = 0
+    order_phi = 1
+    order_dphi = 0
+    order_phiphi = order_phi*2
+    order_dphidphi = order_dphi*2
     u = np.zeros(MESH.np)
     
 if ORDER == 2:
     poly = 'P2'
     dxpoly = 'P1'
-    order_phiphi = 4
-    order_dphidphi = 2
+    order_phi = 2
+    order_dphi = 1
+    order_phiphi = order_phi*2
+    order_dphidphi = order_dphi*2
     u = np.zeros(MESH.np + MESH.NoEdges)
 ##########################################################################################
 
@@ -166,55 +171,13 @@ if ORDER == 2:
 # Brauer/Nonlinear laws ... ?
 ##########################################################################################
 
-k1 = 49.4; k2 = 1.46; k3 = 520.6
-# k1 = 3.8; k2 = 2.17; k3 = 396.2
-
-f_nonlinear = lambda x,y : k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2) # magnetic energy density in iron
-
-nu = lambda x,y : k1*np.exp(k2*(x**2+y**2))+k3
-nux = lambda x,y : 2*x*k1*k2*np.exp(k2*(x**2+y**2))
-nuy = lambda x,y : 2*y*k1*k2*np.exp(k2*(x**2+y**2))
-
-fx_nonlinear = lambda x,y : nu(x,y)*x
-fy_nonlinear = lambda x,y : nu(x,y)*y
-fxx_nonlinear = lambda x,y : nu(x,y) + x*nux(x,y)
-fxy_nonlinear = lambda x,y : x*nuy(x,y)
-fyx_nonlinear = lambda x,y : y*nux(x,y)
-fyy_nonlinear = lambda x,y : nu(x,y) + y*nuy(x,y)
-
-###########################################################################################
-
-# nu1 = lambda x,y : nu0+0*x*y
-# nu2 = lambda x,y : nu0+0*x*y
-
-# fx_iron = lambda x,y : nu1(x,y)*x
-# fy_iron = lambda x,y : nu2(x,y)*y
-# fxx_iron = lambda x,y : nu1(x,y)
-# fxy_iron = lambda x,y : 0 + 0*x*y
-# fyx_iron = lambda x,y : 0 + 0*x*y
-# fyy_iron = lambda x,y : nu2(x,y)
-
-###########################################################################################
-
-f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
-fx_linear = lambda x,y : nu0*x
-fy_linear = lambda x,y : nu0*y
-fxx_linear = lambda x,y : nu0 + 0*x
-fxy_linear = lambda x,y : x*0
-fyx_linear = lambda x,y : y*0
-fyy_linear = lambda x,y : nu0 + 0*y
-###########################################################################################
-
-
-
-
-
-
+sys.path.insert(1,'../mixed.EM')
+from nonlinLaws import *
 
 
 ###########################################################################################
 
-rot_speed = 0; rt = 0
+rot_speed = 1; rt = 0
 rots = 100
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
@@ -234,8 +197,10 @@ for k in range(rots):
     
     phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
     phi_H1_order_dphidphi  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_dphidphi)
+    phi_H1_order_dphi  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_dphi)
     phi_H1_o0  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = 0)
     dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
+    dphix_H1_order_dphi, dphiy_H1_order_dphi = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphi)
     dphix_H1_o0, dphiy_H1_o0 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
     dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 1)
     dphix_H1_order_phiphi, dphiy_H1_order_phiphi = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_phiphi)
@@ -244,6 +209,7 @@ for k in range(rots):
     
     
     D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
+    D_order_dphi = pde.int.assemble(MESH, order = order_dphi)
     D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
     D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
     
@@ -270,13 +236,16 @@ for k in range(rots):
     Ja = 0*Ja
     Ja0 = 0*Ja0
     
-    M0 = 0; M1 = 0; M00 = 0; M10 = 0
+    M0 = 0; M1 = 0; M00 = 0; M10 = 0; M0_dphi = 0; M1_dphi = 0
     for i in range(16):
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
         M00 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M10 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        
+        M0_dphi += pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M1_dphi += pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @Ja
     
@@ -364,10 +333,6 @@ for k in range(rots):
     elapsed = time.monotonic()-tm
     print('Solving took ', elapsed, 'seconds')
     
-    ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-    f = lambda ux,uy : f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)
-    fx = lambda ux,uy : fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)
-    fy = lambda ux,uy : fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)
     
     
     ##########################################################################################
@@ -405,24 +370,31 @@ for k in range(rots):
     # Local energy
     ##########################################################################################
     
-    ux = dphix_H1.T@u
-    uy = dphiy_H1.T@u
+    # ux = dphix_H1_order_dphi.T@u
+    # uy = dphiy_H1_order_dphi.T@u
+    # u_Pk = phi_H1_order_dphi.T@u
     
-    u_Pk = phi_H1_order_dphidphi.T@u
-    
-    eu = f(ux,uy)-Ja0*u_Pk +(M10*uy - M10*ux)
-    # eu = ux**2+uy**2
-    # eu = f(ux,uy)-1/2*(M00*uy - M10*ux)
-    nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
+    # eu = f(ux,uy)-Ja0*u_Pk +(M10*uy - M10*ux)
+    # nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
     
     
     ##########################################################################################
     # Virtual work principle v2.0
     ##########################################################################################
     
-    ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
-    r1 = p[edges_rotor_outer[0,0],0]
+    
+    fem_linear = pde.int.evaluate(MESH, order = order_dphi, regions = ind_linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphi, regions = ind_nonlinear).diagonal()
+    
+    ux = dphix_H1_order_dphi.T@u; uy = dphiy_H1_order_dphi.T@u
+    f = lambda ux,uy : f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear
+    fx = lambda ux,uy : fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear
+    fy = lambda ux,uy : fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear
+    
+    u_Pk = phi_H1_order_dphi.T@u
+    
+    # r1 = p[edges_rotor_outer[0,0],0]
     # r2 = r1 + 0.0007
     # r2 = r1 + 0.00024
     
@@ -435,31 +407,38 @@ for k in range(rots):
     #inner radius stator
     r_inner = 79.242*10**(-3);
     
+    r1 = r_outer
     r2 = r_inner
     
     # dazwischen = lambda x,y : 
     scale = lambda x,y : 1*(x**2+y**2<r1**2)+(x**2+y**2-r2**2)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
-    scalex = lambda x,y : (2*x)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
-    scaley = lambda x,y : (2*y)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+    scalex = lambda x,y : (2*x)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+    scaley = lambda x,y : (2*y)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
     
-    v = lambda x,y : np.r_[-y,x]*scale(x,y)
+    v = lambda x,y : np.r_[-y,x]*scale(x,y) # v wird nie wirklich gebraucht...
+    
     v1x = lambda x,y : -y*scalex(x,y)
     v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
     v2x = lambda x,y :  scale(x,y)+x*scalex(x,y)
     v2y = lambda x,y : x*scaley(x,y)
     
     
-    v1x_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v1x).diagonal()
-    v1y_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v1y).diagonal()
-    v2x_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v2x).diagonal()
-    v2y_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v2y).diagonal()
+    v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = np.r_[ind_air_gaps]).diagonal()
+    v1y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1y, regions = np.r_[ind_air_gaps]).diagonal()
+    v2x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2x, regions = np.r_[ind_air_gaps]).diagonal()
+    v2y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2y, regions = np.r_[ind_air_gaps]).diagonal()
+    
+    scale_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = scale, regions = np.r_[ind_air_gaps,ind_rotor]).diagonal()
+    
+    one_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : 1+0*x+0*y, regions = np.r_[ind_air_gaps,ind_rotor]).diagonal()
+    # v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = ind_air_gaps).diagonal()
     
     
     b1 = uy
     b2 = -ux
-    fu = f(ux,uy)-(M00*uy-M10*ux)
-    fbb1 =  fy(ux,uy)-M00
-    fbb2 = -fx(ux,uy)-M10
+    fu = f(ux,uy)+1/2*(M0_dphi*uy-M1_dphi*ux)
+    fbb1 =  fy(ux,uy)+M0_dphi
+    fbb2 = -fx(ux,uy)+M1_dphi
     a_Pk = u_Pk
     
     
@@ -467,8 +446,8 @@ for k in range(rots):
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_2 = -(term1+term2)
-    tor2[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term_2
-    print(k, 'Torque2:', tor2[k])
+    tor2[k] = one_fem@D_order_dphi@term_2
+    print(k, 'Torque2:', tor2[k],term_2.min(),term_2.max())
     
     b1 = uy
     b2 = -ux
@@ -482,10 +461,15 @@ for k in range(rots):
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_3 = -(term1+term2)
-    tor3[k] = np.ones(D_order_dphidphi.size)@D_order_dphidphi@term_3
+    tor3[k] = one_fem@D_order_dphi@term_3
     print(k, 'Torque3:', tor3[k])
     
-    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), term_3, u_height = 0)
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), (ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0)
+    # fig.show()
+    
+    # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     # stop
     
     
@@ -493,7 +477,7 @@ for k in range(rots):
     
     # print("loale: ",stiffness_part2-stiffness_part)
     
-    chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, (ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, cmap = cmap, shading = 'flat', lw = 0.1)
     
     
     
@@ -502,7 +486,7 @@ for k in range(rots):
     ax2.cla()
     
     # MESH.pdegeom(ax = ax1)
-    MESH.pdemesh2(ax = ax1)
+    # MESH.pdemesh2(ax = ax1)
     
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
@@ -510,30 +494,35 @@ for k in range(rots):
     # ax1.tripcolor(Triang, zT, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', lw = 0.1)
     # chip = ax1.tripcolor(Triang, fx(ux,uy)**2+fy(ux,uy)**2, cmap = cmap, shading = 'flat', lw = 0.1)
-    chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, ux**2+uy**2, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
+    chip = ax1.tripcolor(Triang, ux**2+uy**2, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, scale_fem, cmap = cmap, shading = 'flat')
     # chip = ax1.tripcolor(Triang, np.abs(term), cmap = cmap, shading = 'flat')
     # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=np.abs(eu.min()), vmax=np.abs(eu.max())))
     # ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid') #Feldlinien
     
-    ax1.plot(tor,linewidth = 1)
-    ax1.plot(tor2,linewidth = 1)
+    # ax1.plot(tor,linewidth = 1)
+    # ax1.plot(tor2,linewidth = 1)
     energy_diff = energy[1:]-np.r_[energy[-1],energy[0:-2]]
     energy_diff = (-energy_diff*(np.abs(energy_diff)<1)/(2*a1)).copy()
-    ax1.plot(energy_diff,linewidth = 1)
+    # ax1.plot(energy_diff,linewidth = 1)
     
-    ax2.plot(energy_diff-tor[:-1])
-    ax2.plot(energy_diff-tor2[:-1])
-    ax2.plot(tor-tor2)
-    ax2.plot(tor-tor3)
+    # ax2.plot(energy_diff-tor[:-1])
+    # ax2.plot(energy_diff-tor2[:-1])
+    # ax2.plot(tor-tor2)
+    # ax2.plot(tor-tor3)
+    
+    ax2.plot(energy_diff)
+    ax2.plot(tor)
+    ax2.plot(tor2)
+    ax2.plot(tor3)
     
     # ax2.plot(tor/tor2)
     
-    fig.show()
+    # fig.show()
     
     plt.pause(0.01)
-    writer.grab_frame()
+    # writer.grab_frame()
     
     
     
@@ -627,7 +616,7 @@ for k in range(rots):
     
     ##########################################################################################
     
-    stop
+    # stop
     
     trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
     # trig_air_gap_rotor = MESH.t[np.where(mask_air_gap_rotor)[0],0:3]
