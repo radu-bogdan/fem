@@ -64,14 +64,14 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
-# MESH.refinemesh()
+MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 t = MESH.t
 p = MESH.p
@@ -135,9 +135,9 @@ r1 = p[edges_rotor_outer[0,0],0]
 a1 = 2*np.pi/edges_rotor_outer.shape[0]
 
 # Adjust points on the outer rotor to be equally spaced.
-for k in range(edges_rotor_outer.shape[0]):
-    MESH.p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
-    MESH.p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
+# for k in range(edges_rotor_outer.shape[0]):
+#     MESH.p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
+#     MESH.p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
 
 
@@ -214,7 +214,7 @@ fyy_linear = lambda x,y : nu0 + 0*y
 
 ###########################################################################################
 
-rot_speed = 1; rt = 0
+rot_speed = 0; rt = 0
 rots = 100
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
@@ -233,6 +233,7 @@ for k in range(rots):
     tm = time.monotonic()
     
     phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
+    phi_H1_order_dphidphi  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_dphidphi)
     phi_H1_o0  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = 0)
     dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
     dphix_H1_o0, dphiy_H1_o0 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
@@ -255,27 +256,27 @@ for k in range(rots):
     D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
     B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
-    fem_linear = pde.int.evaluate(MESH, order = 0, regions = ind_linear).diagonal()
-    fem_nonlinear = pde.int.evaluate(MESH, order = 0, regions = ind_nonlinear).diagonal()
-    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_rotor).diagonal()
-    fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()
+    fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_nonlinear).diagonal()
+    fem_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_rotor).diagonal()
+    fem_air_gap_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_air_gap_rotor).diagonal()
     
     penalty = 1e10
     
-    Ja = 0; J0 = 0
+    Ja = 0; Ja0 = 0
     for i in range(48):
         Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
-        J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+        Ja0 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
     Ja = 0*Ja
-    J0 = 0*J0
+    Ja0 = 0*Ja0
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0
     for i in range(16):
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
-        M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-        M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M00 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M10 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @Ja
     
@@ -363,6 +364,7 @@ for k in range(rots):
     elapsed = time.monotonic()-tm
     print('Solving took ', elapsed, 'seconds')
     
+    ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     f = lambda ux,uy : f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)
     fx = lambda ux,uy : fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)
     fy = lambda ux,uy : fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)
@@ -403,10 +405,12 @@ for k in range(rots):
     # Local energy
     ##########################################################################################
     
-    ux = dphix_H1_o0.T@u
-    uy = dphiy_H1_o0.T@u
-    u_P0 = 1/3*(u[MESH.t[:,0]]+u[MESH.t[:,1]]+u[MESH.t[:,2]])
-    eu = f(ux,uy)-J0*u_P0 +(M00*uy - M10*ux)
+    ux = dphix_H1.T@u
+    uy = dphiy_H1.T@u
+    
+    u_Pk = phi_H1_order_dphidphi.T@u
+    
+    eu = f(ux,uy)-Ja0*u_Pk +(M10*uy - M10*ux)
     # eu = ux**2+uy**2
     # eu = f(ux,uy)-1/2*(M00*uy - M10*ux)
     nH = np.sqrt((fx(ux,uy)-M00)**2+(fy(ux,uy)-M10)**2)
@@ -433,7 +437,6 @@ for k in range(rots):
     
     r2 = r_inner
     
-    
     # dazwischen = lambda x,y : 
     scale = lambda x,y : 1*(x**2+y**2<r1**2)+(x**2+y**2-r2**2)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
     scalex = lambda x,y : (2*x)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
@@ -442,14 +445,14 @@ for k in range(rots):
     v = lambda x,y : np.r_[-y,x]*scale(x,y)
     v1x = lambda x,y : -y*scalex(x,y)
     v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
-    v2x = lambda x,y : scale(x,y)+x*scalex(x,y)
+    v2x = lambda x,y :  scale(x,y)+x*scalex(x,y)
     v2y = lambda x,y : x*scaley(x,y)
     
     
-    v1x_fem = pde.int.evaluate(MESH, order = 0, coeff = v1x).diagonal()
-    v1y_fem = pde.int.evaluate(MESH, order = 0, coeff = v1y).diagonal()
-    v2x_fem = pde.int.evaluate(MESH, order = 0, coeff = v2x).diagonal()
-    v2y_fem = pde.int.evaluate(MESH, order = 0, coeff = v2y).diagonal()
+    v1x_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v1x).diagonal()
+    v1y_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v1y).diagonal()
+    v2x_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v2x).diagonal()
+    v2y_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v2y).diagonal()
     
     
     b1 = uy
@@ -457,10 +460,10 @@ for k in range(rots):
     fu = f(ux,uy)-(M00*uy-M10*ux)
     fbb1 =  fy(ux,uy)-M00
     fbb2 = -fx(ux,uy)-M10
-    a_P0 = u_P0
+    a_Pk = u_Pk
     
     
-    term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
+    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_2 = -(term1+term2)
@@ -472,10 +475,10 @@ for k in range(rots):
     fu = f(ux,uy)
     fbb1 =  fy(ux,uy)
     fbb2 = -fx(ux,uy)
-    a_P0 = u_P0
+    a_Pk = u_Pk
     
     
-    term1 = (fu + fbb1*b1 +fbb2*b2 -J0*a_P0)*(v1x_fem + v2y_fem)
+    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_3 = -(term1+term2)
@@ -623,6 +626,8 @@ for k in range(rots):
     # fig.show()
     
     ##########################################################################################
+    
+    stop
     
     trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
     # trig_air_gap_rotor = MESH.t[np.where(mask_air_gap_rotor)[0],0:3]
