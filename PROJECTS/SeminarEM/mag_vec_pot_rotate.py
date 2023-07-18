@@ -56,7 +56,17 @@ regions_2d = motor_npz['regions_2d']
 regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
+
+# Making sure points are equidistant along the connecting edge.
+a1 = 0.006599984566365112
+r1 = 0.07863225
+ind_edges_rotor_outer = np.where(np.isin(e[:,2],593))[0]
+edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
+for k in range(edges_rotor_outer.shape[0]):
+    p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
+    p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
+
 
 
 
@@ -70,7 +80,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 
@@ -83,29 +93,6 @@ p = MESH.p
 ##########################################################################################
 # Extract indices
 ##########################################################################################
-
-# mask_air_all = MESH.getIndices2d(regions_2d, 'air')
-# mask_stator_rotor_and_shaft = MESH.getIndices2d(regions_2d, 'iron')
-# mask_magnet = MESH.getIndices2d(regions_2d, 'magnet')
-# mask_coil = MESH.getIndices2d(regions_2d, 'coil')
-# mask_shaft = MESH.getIndices2d(regions_2d, 'shaft')
-# mask_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', exact = 1)
-# mask_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', exact = 1)
-# # mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', exact = 1)
-# mask_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap', exact = 0)
-
-# mask_rotor     = mask_iron_rotor + mask_magnet + mask_rotor_air + mask_shaft
-# mask_linear    = mask_air_all + mask_magnet + mask_shaft + mask_coil
-# mask_nonlinear = mask_stator_rotor_and_shaft - mask_shaft
-
-# trig_rotor = MESH.t[np.where(mask_rotor)[0],0:3]
-# trig_air_gap_rotor = MESH.t[np.where(mask_air_gap_rotor)[0],0:3]
-# points_rotor = np.unique(trig_rotor)
-# points_rotor_and_airgaprotor = np.unique(np.r_[trig_rotor,trig_air_gap_rotor])
-
-
-# ind_stator_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'stator_outer')!=-1)
-# ind_rotor_outer = np.flatnonzero(np.core.defchararray.find(list(regions_1d),'rotor_outer')!=-1)
 
 ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = True)[0]
 ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
@@ -191,7 +178,9 @@ for k in range(rots):
     # Assembling stuff
     ##########################################################################################
     
-    # u = np.zeros(MESH.np)
+    # u = np.zeros(MESH.np + MESH.NoEdges)
+    
+    # u = u/10000
     
     tm = time.monotonic()
     
@@ -495,8 +484,8 @@ for k in range(rots):
     # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', lw = 0.1)
     # chip = ax1.tripcolor(Triang, fx(ux,uy)**2+fy(ux,uy)**2, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
-    chip = ax1.tripcolor(Triang, ux**2+uy**2, cmap = cmap, shading = 'flat', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, scale_fem, cmap = cmap, shading = 'flat')
+    # chip = ax1.tripcolor(Triang, ux**2+uy**2, cmap = cmap, shading = 'flat', lw = 0.1)
+    # chip = ax1.tripcolor(Triang, term_3, cmap = cmap, shading = 'flat')
     # chip = ax1.tripcolor(Triang, np.abs(term), cmap = cmap, shading = 'flat')
     # chip = ax1.tripcolor(Triang, eu, cmap = cmap, shading = 'flat', lw = 0.1, norm=colors.LogNorm(vmin=np.abs(eu.min()), vmax=np.abs(eu.max())))
     # ax1.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid') #Feldlinien
@@ -618,8 +607,10 @@ for k in range(rots):
     
     # stop
     
-    trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
-    # trig_air_gap_rotor = MESH.t[np.where(mask_air_gap_rotor)[0],0:3]
+    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_rotor).diagonal()
+    fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()
+    
+    trig_rotor = t[np.where(fem_rotor)[0],0:3]
     points_rotor = np.unique(trig_rotor)
     
     rt += rot_speed
@@ -635,6 +626,10 @@ for k in range(rots):
     m_new = R(a1*rt)@m
     
     MESH = pde.mesh(p_new,e,t_new,q)
+    
+    
+    
+    
 
     # fig = MESH.pdemesh()
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), f(1,1)+0*vek, u_height=0)

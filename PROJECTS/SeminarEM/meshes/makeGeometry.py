@@ -358,6 +358,13 @@ geo = Glue(domains)
 
 geoOCC = OCCGeometry(geo, dim=2)
 mesh = Mesh(geoOCC.GenerateMesh())
+mesh.Curve(2)
+mesh.ngmesh.SecondOrder()
+# a = mesh.ngmesh.Elements2D().NumPy()
+# print(a)
+
+# stop
+
 # mesh.ngmesh.Save("Motor_Bosch_2d.vol")
 
 
@@ -373,9 +380,14 @@ regions_1d_np[:] = list(regions_1d)
 regions_2d_np = np.zeros((len(regions_2d),), dtype=object)
 regions_2d_np[:] = list(regions_2d)
 
+# p = []
+# for k in mesh.vertices:
+#     p += [np.array(mesh[k].point)]
+# p = np.array(p)
+
 p = []
-for k in mesh.vertices:
-    p += [np.array(mesh[k].point)]
+for i, el in enumerate(mesh.ngmesh.Points()):
+    p += [np.array([el[0],el[1]])]
 p = np.array(p)
 
 t = []

@@ -252,7 +252,6 @@ class mesh:
                                              + str(e_new.shape[0]) + ' boundary edges, ' 
                                              + str(t_new.shape[0]) + ' triangles, ' 
                                              + str(q_new.shape[0]) + ' quadrilaterals.')
-        # return p_new,e_new,t_new
     
     def rho(self):
         x = self.p[self.t[:,1],:]-self.p[self.t[:,2],:]
