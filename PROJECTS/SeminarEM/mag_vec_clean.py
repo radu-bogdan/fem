@@ -67,7 +67,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 t = MESH.t

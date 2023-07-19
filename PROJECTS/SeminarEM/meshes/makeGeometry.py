@@ -360,11 +360,11 @@ geoOCC = OCCGeometry(geo, dim=2)
 mesh = Mesh(geoOCC.GenerateMesh())
 mesh.Curve(2)
 mesh.ngmesh.SecondOrder()
+
+
 # a = mesh.ngmesh.Elements2D().NumPy()
 # print(a)
-
 # stop
-
 # mesh.ngmesh.Save("Motor_Bosch_2d.vol")
 
 
@@ -392,12 +392,21 @@ p = np.array(p)
 
 t = []
 for i, el in enumerate(mesh.ngmesh.Elements2D()):
-    t += [np.array([el.points[0].nr,el.points[1].nr,el.points[2].nr,el.index])-1]
+    t += [np.array([el.points[0].nr,\
+                    el.points[1].nr,\
+                    el.points[2].nr,\
+                    el.points[3].nr,\
+                    el.points[4].nr,\
+                    el.points[5].nr,\
+                    el.index])-1]
 t = np.array(t)
 
 e = []
 for i, el in enumerate(mesh.ngmesh.Elements1D()):
-    e += [np.array([el.points[0].nr,el.points[1].nr,el.index])-1]
+    e += [np.array([el.points[0].nr,\
+                    el.points[1].nr,\
+                    el.points[2].nr,\
+                    el.index])-1]
 e = np.array(e)
 
 q = np.empty(0)
