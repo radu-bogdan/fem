@@ -8,7 +8,7 @@ import pde
 import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
-from sksparse.cholmod import cholesky as chol
+# from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 import numba as nb
@@ -140,12 +140,12 @@ if ORDER == 2:
 ## Brauer/Nonlinear laws ... ?
 ############################################################################################
 
-from nonlinLaws import f_nonlinear,fx_nonlinear,fy_nonlinear,fxx_nonlinear,fxy_nonlinear,fyx_nonlinear,fyy_nonlinear,\
-                       f_linear,fx_linear,fy_linear,fxx_linear,fxy_linear,fyx_linear,fyy_linear
+sys.path.insert(1,'../mixed.EM')
+from nonlinLaws import *                       
                        
 ############################################################################################
 
-rot_speed = 1; rt = 0
+rot_speed = 1; rt = 100
 rots = 1
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
@@ -202,13 +202,16 @@ for k in range(rots):
     Ja = 0*Ja
     J0 = 0*J0
     
-    M0 = 0; M1 = 0; M00 = 0; M10 = 0
+    M0 = 0; M1 = 0; M00 = 0; M10 = 0; M1_dphi = 0; M0_dphi = 0
     for i in range(16):
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         
         M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
         M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        
+        M0_dphi += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M1_dphi += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @Ja
     
@@ -263,8 +266,8 @@ for k in range(rots):
         gssu = gss(u)
         
         tm = time.monotonic()
-        w = chol(gssu).solve_A(-gsu)
-        # w = sps.linalg.spsolve(gssu,-gsu)
+        # w = chol(gssu).solve_A(-gsu)
+        w = sps.linalg.spsolve(gssu,-gsu)
         print('Solving took ', time.monotonic()-tm)
         
         norm_w = np.linalg.norm(w)
@@ -301,11 +304,14 @@ for k in range(rots):
     
     
     ax1.cla()
-    ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+    ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), ux**2+uy**2, u_height = 0)
+    # fig = MESH.pdesurf(ux**2+uy**2)
+    # fig = MESH.pdesurf(ux**2+uy**2, cmax = 5)
+    # fig.show()
+    
+    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
     fig.show()
-    
     
     # MESH.pdesurf2(u, ax = ax1)
     # MESH.pdesurf2(ux**2+uy**2, ax = ax1)

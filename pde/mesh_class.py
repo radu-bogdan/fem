@@ -54,16 +54,9 @@ class mesh:
             
         # e_new = e[:,0:2].copy()
         e_new = npy.sort(e[:,:2])
-        
-        if t.shape[1]==7:
-            maxp = t[:,:3].max()
-            p2 = p.copy()
-            p = p[:maxp+1,:]
             
         nt = t.shape[0]
         nq = q.shape[0]
-        np = p.shape[0]
-        ne = e_new.shape[0]
         
         #############################################################################################################
         edges = npy.r_[npy.sort(edges_trigs),
@@ -75,7 +68,10 @@ class mesh:
         TriangleToEdges = je[0:3*nt].reshape(nt,3, order = 'F').astype(npy.int64)
         QuadToEdges = je[3*nt:].reshape(nq,4, order = 'F')
         BoundaryEdges = intersect2d(EdgesToVertices,e_new)
-        InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
+        # InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
+        
+        EdgesToVertices = npy.c_[EdgesToVertices,npy.zeros(EdgesToVertices.shape[0],dtype = npy.int64)-1]
+        EdgesToVertices[BoundaryEdges,2] = e[:,-1]
         #############################################################################################################
         
         
@@ -96,6 +92,15 @@ class mesh:
         
         IntEdgesToTriangles = npy.c_[npy.reshape(tte_flat_ind,(tte_flat_ind.size//2,2))//3, npy.unique(tte_sort_ind)]
         #############################################################################################################
+        
+        if t.shape[1]==7:
+            maxp = t[:,:3].max()
+            pm = p.copy()
+            p = p[:maxp+1,:]
+        else:
+            pm = p.copy()
+            
+        #############################################################################################################
 
         self.EdgesToVertices = EdgesToVertices
         self.TriangleToEdges = TriangleToEdges
@@ -109,31 +114,42 @@ class mesh:
         self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
         self.NonSingle_Edges = IntEdgesToTriangles[:,2]
 
-        self.p = p; self.np = np
-        self.e = e_new; self.ne = ne
-        self.t = t; self.nt = nt
+        self.p = p; self.np = p.shape[0]
+        self.e = e_new; self.ne = e_new.shape[0]
+        self.t = t[:,npy.r_[:3,-1]]; self.nt = nt
         self.q = q; self.nq = nq
         self.mp = npy.r_[mp_trig,mp_quad]
         
-        # if t.shape[1]>3: self.RegionsT = t[:,3]
-        # if q.shape[1]>4: self.RegionsQ = q[:,4]
-        
         self.FEMLISTS = {}
-        
         #############################################################################################################
         
-        t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
-        C00 = self.p[t0,0]; C01 = self.p[t1,0]; C02 = self.p[t2,0];
-        C10 = self.p[t0,1]; C11 = self.p[t1,1]; C12 = self.p[t2,1];
+        if t.shape[1]==4:
+            t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
+            C00 = pm[t0,0]; C01 = pm[t1,0]; C02 = pm[t2,0];
+            C10 = pm[t0,1]; C11 = pm[t1,1]; C12 = pm[t2,1];
+            
+            self.Fx = lambda x,y : C00*(1-x-y) + C01*x + C02*y
+            self.Fy = lambda x,y : C10*(1-x-y) + C11*x + C12*y
+            
+            self.JF00 = lambda x,y : C01-C00
+            self.JF01 = lambda x,y : C02-C00
+            self.JF10 = lambda x,y : C11-C10
+            self.JF11 = lambda x,y : C12-C10
         
-        self.Fx = lambda x,y : C01*x + C02*y + C00*(1-x-y)
-        self.Fy = lambda x,y : C11*x + C12*y + C10*(1-x-y)
+        if t.shape[1]==7:
+            t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]; t3 = t[:,3]; t4 = t[:,4]; t5 = t[:,5]
+            C00 = pm[t0,0]; C01 = pm[t1,0]; C02 = pm[t2,0]; C03 = pm[t3,0]; C04 = pm[t4,0]; C05 = pm[t5,0];
+            C10 = pm[t0,1]; C11 = pm[t1,1]; C12 = pm[t2,1]; C13 = pm[t3,1]; C14 = pm[t4,1]; C15 = pm[t5,1];
+            
+            self.Fx = lambda x,y : C00*(1-x-y)*(1-2*x-2*y) + C01*x*(2*x-1) + C02*y*(2*y-1) + C03*4*x*y + C04*4*y*(1-x-y) + C05*4*x*(1-x-y)
+            self.Fy = lambda x,y : C10*(1-x-y)*(1-2*x-2*y) + C11*x*(2*x-1) + C12*y*(2*y-1) + C13*4*x*y + C14*4*y*(1-x-y) + C15*4*x*(1-x-y)
+            
+            self.JF00 = lambda x,y : C00*(4*x+4*y-3) + C01*(4*x-1) + C02*(0*x)   + C03*(4*y) + C04*(-4*y)         + C05*(-4*(2*x+y-1))
+            self.JF01 = lambda x,y : C00*(4*x+4*y-3) + C01*(0*x)   + C02*(4*y-1) + C03*(4*x) + C04*(-4*(x+2*y-1)) + C05*(-4*x)
+            self.JF10 = lambda x,y : C10*(4*x+4*y-3) + C11*(4*x-1) + C12*(0*x)   + C13*(4*y) + C14*(-4*y)         + C15*(-4*(2*x+y-1))
+            self.JF11 = lambda x,y : C10*(4*x+4*y-3) + C11*(0*x)   + C12*(4*y-1) + C13*(4*x) + C14*(-4*(x+2*y-1)) + C15*(-4*x)
         
-        self.JF00 = lambda x,y : C01-C00
-        self.JF01 = lambda x,y : C02-C00
-        self.JF10 = lambda x,y : C11-C10
-        self.JF11 = lambda x,y : C12-C10
-        
+            
         self.detA = lambda x,y : self.JF00(x,y)*self.JF11(x,y)-self.JF01(x,y)*self.JF10(x,y)
         
         self.iJF00 = lambda x,y:  1/self.detA(x,y)*self.JF11(x,y)
@@ -142,6 +158,7 @@ class mesh:
         self.iJF11 = lambda x,y:  1/self.detA(x,y)*self.JF00(x,y)
         
         #############################################################################################################
+        
         t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
         A00 = self.p[t1,0]-self.p[t0,0]; A01 = self.p[t2,0]-self.p[t0,0]
         A10 = self.p[t1,1]-self.p[t0,1]; A11 = self.p[t2,1]-self.p[t0,1]
@@ -527,7 +544,113 @@ class mesh:
                                      fill = "none"))
         return fig
     
-    
+    def pdesurf(self,u,**kwargs):
+        
+        cmin = npy.min(u)
+        cmax = npy.max(u)
+        
+        if 'cmin' in kwargs.keys():
+            cmin = kwargs['cmin']
+        if 'cmax' in kwargs.keys():
+            cmax = kwargs['cmax']
+        
+        nt = self.nt; p = self.p; t = self.t[:,0:3]; np = self.np
+        
+        xx_trig = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0]]
+        yy_trig = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1]]
+        
+        if u.size == 3*nt:
+            zz = u[:3*nt].reshape(nt,3)
+        if u.size == nt:
+            zz = npy.tile(u[:nt],(3,1)).T
+        if u.size == np:
+            zz = u[t]
+        
+        fig = go.Figure()
+        
+        ii, jj, kk = npy.r_[:3*nt].reshape((nt, 3)).T
+        fig.add_trace(go.Mesh3d(
+            name = 'Trig values',
+            x = xx_trig.flatten(), y = yy_trig.flatten(), z = 0*zz.flatten(),
+            i = ii, j = jj, k = kk, intensity = zz.flatten(), 
+            colorscale = 'Rainbow',
+            cmin = cmin,
+            cmax = cmax,
+            intensitymode = 'vertex',
+            lighting = dict(ambient = 1),
+            contour_width = 1, contour_color = "#000000", contour_show = True,
+        ))
+        
+        xxx_trig = npy.c_[xx_trig,xx_trig[:,0],npy.nan*xx_trig[:,0]]
+        yyy_trig = npy.c_[yy_trig,yy_trig[:,0],npy.nan*yy_trig[:,0]]
+        zzz_trig = npy.c_[zz,zz[:,0],npy.nan*zz[:,0]]
+        
+        fig.add_trace(go.Scatter3d(name = 'Trig traces',
+                                    mode = 'lines',
+                                    x = xxx_trig.flatten(),
+                                    y = yyy_trig.flatten(),
+                                    z = 0*zzz_trig.flatten(),
+                                    line = go.scatter3d.Line(color = 'black', 
+                                                            width = 1.5),
+                                    showlegend = False))
+        
+        camera = dict(eye = dict(x = 0, y = -0.0001, z = 1))
+        ratio = (max(self.p[:,0])-min(self.p[:,0]))/(max(self.p[:,1])-min(self.p[:,1]))
+        scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
+                           xaxis = dict(showspikes = False, visible=False),
+                           yaxis = dict(showspikes = False, visible=False),
+                           zaxis = dict(showspikes = False, visible=False))
+        
+        fig.update_layout(
+                          scene_camera = camera,
+                          margin_l=0,
+                          margin_t=0,
+                          margin_r=0,
+                          margin_b=0,
+                          legend = dict(yanchor = "top",
+                                          y = 1,
+                                          xanchor = "left",
+                                          x = 0,
+                                          bgcolor = "LightSteelBlue",
+                                          bordercolor = "Black",
+                                          borderwidth = 2),
+                          )
+        fig.update_traces(showlegend = True)
+        color_scales_3D = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd']
+        list_color_scales = list(map(lambda x: dict(args=["colorscale", x],label=x,method="restyle"),color_scales_3D))
+                    
+        fig.update_layout(
+        updatemenus = [
+            dict(
+                buttons = list_color_scales,
+                direction = "down",
+                showactive = False,
+                xanchor = "left",
+                yanchor = "top"),
+            dict(
+                buttons = list([
+                    dict(
+                        args = ["scene.camera.projection.type", "orthographic"],
+                        label = "Orthographic",
+                        method = "relayout"
+                    ),
+                    dict(
+                        args = ["scene.camera.projection.type", "perspective"],
+                        label = "Perspective",
+                        method = "relayout"
+                    ),
+                ]),
+                direction="down",
+                showactive=True,
+                xanchor="left",
+                yanchor="bottom")],
+                      margin_l=0,
+                      margin_t=0,
+                      margin_r=0,
+                      margin_b=0,)
+        
+        
+        return fig
     
     def pdesurf_hybrid(self,TrigQuadDict,u,u_height=1):
         

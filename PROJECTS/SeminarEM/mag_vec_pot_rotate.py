@@ -46,7 +46,7 @@ writer.setup(fig, "writer_test.mp4", 500)
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('meshes/motor_fo.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -58,7 +58,8 @@ m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 # Making sure points are equidistant along the connecting edge.
-a1 = 0.006599984566365112
+# a1 = 0.006599984566365112
+a1 = 0.00320570678937734
 r1 = 0.07863225
 ind_edges_rotor_outer = np.where(np.isin(e[:,2],593))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
@@ -80,7 +81,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 
@@ -97,7 +98,7 @@ p = MESH.p
 ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = True)[0]
 ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
 
-ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
+ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
 ind_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', return_index = True)[0]
@@ -436,7 +437,7 @@ for k in range(rots):
     
     term_2 = -(term1+term2)
     tor2[k] = one_fem@D_order_dphi@term_2
-    print(k, 'Torque2:', tor2[k],term_2.min(),term_2.max())
+    print(k, 'Torque2:', tor2[k])
     
     b1 = uy
     b2 = -ux

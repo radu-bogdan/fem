@@ -54,8 +54,8 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
-MESH.refinemesh()
+# MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 
 ##########################################################################################
@@ -106,8 +106,8 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'N0'
-space_Qh = 'P0'
+space_Vh = 'N1'
+space_Qh = 'P1'
 # space_Qh = 'P1_orth_divN1'
 int_order = '2l'
 
@@ -171,7 +171,7 @@ for i in range(16):
 ##########################################################################################
 
 
-space_Vhd = 'N0d'
+space_Vhd = 'N1d'
 
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = int_order)
@@ -190,15 +190,15 @@ aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
 
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 2)
+phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
 
 De = pde.int.assembleE(MESH, order = 2)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-# KK = KK[np.r_[2*MESH.NonSingle_Edges,\
-#               2*MESH.NonSingle_Edges+1],:]
+KK = KK[np.r_[2*MESH.NonSingle_Edges,\
+              2*MESH.NonSingle_Edges+1],:]
 
-KK = KK[MESH.NonSingle_Edges,:]
+# KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 
@@ -364,24 +364,24 @@ print('Solving took ', elapsed, 'seconds')
 # Torque
 ##########################################################################################
 
-
+# TODO
 
 ##########################################################################################
 
-phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = 0)
+phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = 1)
 
 Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
 allH = g_nonlinear_all(Hx,Hy)
 gx_H_l  = allH[1]; gy_H_l  = allH[2];
 gx_H_nl = allH[8]; gy_H_nl = allH[9];
 
-fem_linear = pde.int.evaluate(MESH, order = 0, regions = ind_linear).diagonal()
-fem_nonlinear = pde.int.evaluate(MESH, order = 0, regions = ind_nonlinear).diagonal()
+fem_linear = pde.int.evaluate(MESH, order = 1, regions = ind_linear).diagonal()
+fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = ind_nonlinear).diagonal()
 
 Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear)
 By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear)
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), Bx**2+By**2, u_height = 0)
+fig = MESH.pdesurf(Bx**2+By**2, cmax = 5)
 fig.show()
 
 ##########################################################################################
