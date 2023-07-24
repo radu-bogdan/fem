@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'..') # adds parent directory
+sys.path.insert(0,'../../') # adds parent directory
 sys.path.insert(0,'../CEM') # adds parent directory
 
 import numpy as np
@@ -9,7 +9,7 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
 import geometries
-from sksparse.cholmod import cholesky
+# from sksparse.cholmod import cholesky
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
@@ -34,17 +34,14 @@ u = lambda x,y : np.sin(np.pi*x)*np.sin(np.pi*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
-# MESH.makeFemLists(space = 'P1')
 
-iterations = 10
+iterations = 8
 
 err = np.zeros(shape = (iterations,1))
 
 for i in range(iterations):
     
     tm = time.time()
-    
-    print(MESH.np)
     
     # Mass & Stifness
     Kx,Ky = pde.h1.assemble(MESH, space = 'P1', matrix = 'K', order = 0)
@@ -80,8 +77,9 @@ for i in range(iterations):
     
     
     tm = time.time()
-    factor = cholesky(A)
-    uh = factor(b)
+    # factor = cholesky(A)
+    # uh = factor(b)
+    uh = sps.linalg.spsolve(A,b)
     elapsed = time.time()-tm; print('Solving took  {:4.8f} seconds.'.format(elapsed))
     
     err[i] = np.sqrt((u_ex-uh)@(M + Kxx + Kyy)@(u_ex-uh))

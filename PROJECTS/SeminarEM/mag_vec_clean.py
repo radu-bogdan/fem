@@ -8,7 +8,7 @@ import pde
 import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
-# from sksparse.cholmod import cholesky as chol
+from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 import numba as nb
@@ -43,7 +43,7 @@ ax1.set_aspect(aspect = 'equal')
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('meshes/motor_fo.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -61,15 +61,14 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
 # MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
+
 t = MESH.t
 p = MESH.p
 ##########################################################################################
@@ -83,7 +82,7 @@ p = MESH.p
 ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = True)[0]
 ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
 
-ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
+ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
 edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
 
 ind_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', return_index = True)[0]
@@ -264,8 +263,8 @@ for k in range(rots):
         gssu = gss(u)
         
         tm = time.monotonic()
-        # w = chol(gssu).solve_A(-gsu)
-        w = sps.linalg.spsolve(gssu,-gsu)
+        w = chol(gssu).solve_A(-gsu)
+        # w = sps.linalg.spsolve(gssu,-gsu)
         print('Solving took ', time.monotonic()-tm)
         
         norm_w = np.linalg.norm(w)
@@ -304,7 +303,7 @@ for k in range(rots):
     ax1.cla()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), ux**2+uy**2, u_height = 0)
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), ux**2+uy**2, u_height = 0)
     fig.show()
     
     

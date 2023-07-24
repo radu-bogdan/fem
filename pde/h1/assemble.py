@@ -23,15 +23,6 @@ def assemble(MESH,space,matrix,order=-1):
     
     if order != -1:
         qp,we = quadrature.dunavant(order); nqp = len(we)
-
-    #####################################################################################
-    # Mappings
-    #####################################################################################
-
-    t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
-    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]
-    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
-    detA = A00*A11-A01*A10
     
     #####################################################################################
     # Mass matrix
@@ -72,8 +63,12 @@ def assemble(MESH,space,matrix,order=-1):
         for j in range(ldphi):
             for i in range(nqp):
                 dphii = dphi[j](qp[0,i],qp[1,i])
-                ellmatsBKx[i*nt:(i+1)*nt,j] = 1/detA*(A11*dphii[0]-A10*dphii[1])
-                ellmatsBKy[i*nt:(i+1)*nt,j] = 1/detA*(-A01*dphii[0]+A00*dphii[1])
+                detA = MESH.detA(qp[0,i],qp[1,i])
+                iJF00 = MESH.iJF00(qp[0,i],qp[1,i]); iJF01 = MESH.iJF01(qp[0,i],qp[1,i]);
+                iJF10 = MESH.iJF10(qp[0,i],qp[1,i]); iJF11 = MESH.iJF11(qp[0,i],qp[1,i]);
+                
+                ellmatsBKx[i*nt:(i+1)*nt,j] = iJF00*dphii[0]+iJF10*dphii[1]
+                ellmatsBKy[i*nt:(i+1)*nt,j] = iJF01*dphii[0]+iJF11*dphii[1]
         
         BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
         BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)

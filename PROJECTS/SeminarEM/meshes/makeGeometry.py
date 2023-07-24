@@ -1,12 +1,12 @@
 import sys
-sys.path.insert(0,'../../') # adds parent directory
+sys.path.insert(0,'../../../') # adds parent directory
 sys.path.insert(0,'../CEM') # adds parent directory
 
 
 import numpy as np
 from ngsolve import *
 from netgen.occ import *
-from netgen.webgui import Draw as DrawGeo
+# from netgen.webgui import Draw as DrawGeo
 
 def drawMagnet1(k):
     m1xnew = m1[0]*cos(k*pi/4) -m1[1]*sin(k*pi/4)
@@ -358,6 +358,7 @@ geo = Glue(domains)
 
 geoOCC = OCCGeometry(geo, dim=2)
 mesh = Mesh(geoOCC.GenerateMesh())
+
 mesh.Curve(2)
 mesh.ngmesh.SecondOrder()
 

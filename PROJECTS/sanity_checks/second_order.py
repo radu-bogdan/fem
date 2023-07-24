@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../SeminarEM/')
+sys.path.insert(0,'../../')
 sys.path.insert(0,'../CEM')
 
 import numpy as np
@@ -13,7 +14,7 @@ import geometries
 import plotly.io as pio
 pio.renderers.default = 'browser'
 from matplotlib.pyplot import spy
-from sksparse.cholmod import cholesky
+# from sksparse.cholmod import cholesky
 
 
 np.set_printoptions(threshold = np.inf)
@@ -36,13 +37,12 @@ u = lambda x,y : np.sin(np.pi*m*x)*np.sin(np.pi*n*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
-MESH.makeFemLists(space = 'P2')
 
-iterations = 10
+iterations = 9
 
 err = np.empty(shape = (iterations,1))
 for i in range(iterations):
-    print(i)
+    # print(i)
     tm = time.time()
     
     # Mass & Stifness    
@@ -87,8 +87,9 @@ for i in range(iterations):
     # phi = np.real(x[1][:,0])
     
     tm = time.time()
-    factor = cholesky(A)
-    uh = factor(b)
+    # factor = cholesky(A)
+    # uh = factor(b)
+    uh = sps.linalg.spsolve(A,b)
     elapsed = time.time()-tm
     print('Solving took {:4.8f} seconds.'.format(elapsed))
     
@@ -101,7 +102,6 @@ for i in range(iterations):
         elapsed = time.time()-tm; print('Refining mesh took {:4.8f} seconds.'.format(elapsed))
         
         tm = time.time()
-        MESH.makeFemLists(space = 'P2')
         elapsed = time.time()-tm; print('Making lists took {:4.8f} seconds.'.format(elapsed))
         
         print(MESH.np)

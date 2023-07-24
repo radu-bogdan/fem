@@ -1,16 +1,16 @@
 
 import numpy as npy # npy becauswe np is number of points... dont judge me :)
-npy.set_printoptions(edgeitems=10, linewidth = 1000000)
+# npy.set_printoptions(edgeitems=10, linewidth = 1000000)
 # npy.set_printoptions(threshold = npy.inf)
 # npy.set_printoptions(linewidth = npy.inf)
-npy.set_printoptions(precision=2)
+# npy.set_printoptions(precision=2)
 
 # import pandas as pd
 import plotly.graph_objects as go
 # import plotly.colors as plyc
 from scipy.interpolate import griddata
 from . import lists as femlists
-import numba as jit
+# import numba as jit
 # from .tools import *
 # from .tools import unique_rows
 
@@ -18,16 +18,6 @@ import numba as jit
 
 import matplotlib
 import matplotlib.pyplot as plt
-# import plotly.express as px
-# import pandas as pd
-
-# from plotly_resampler import register_plotly_resampler
-
-# Call the register function once and all Figures/FigureWidgets will be wrapped
-# according to the register_plotly_resampler its `mode` argument
-# register_plotly_resampler(mode='auto')
-
-
 
 class mesh:
     # @profile
@@ -63,8 +53,13 @@ class mesh:
             mp_quad = npy.empty(shape = (0,2), dtype = npy.int64)
             
         # e_new = e[:,0:2].copy()
-        e_new = npy.sort(e[:,0:2])
+        e_new = npy.sort(e[:,:2])
         
+        if t.shape[1]==7:
+            maxp = t[:,:3].max()
+            p2 = p.copy()
+            p = p[:maxp+1,:]
+            
         nt = t.shape[0]
         nq = q.shape[0]
         np = p.shape[0]
@@ -108,7 +103,7 @@ class mesh:
         self.NoEdges = NoEdges
         self.EdgeDirectionTrig = EdgeDirectionTrig
         self.EdgeDirectionQuad = EdgeDirectionQuad
-        self.Boundary_Region = e[:,2]
+        self.Boundary_Region = e[:,-1]
         self.Boundary_Edges = BoundaryEdges
         self.Boundary_NoEdges = BoundaryEdges.shape[0]
         self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
@@ -125,12 +120,32 @@ class mesh:
         
         self.FEMLISTS = {}
         
+        #############################################################################################################
+        
+        t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
+        C00 = self.p[t0,0]; C01 = self.p[t1,0]; C02 = self.p[t2,0];
+        C10 = self.p[t0,1]; C11 = self.p[t1,1]; C12 = self.p[t2,1];
+        
+        self.Fx = lambda x,y : C01*x + C02*y + C00*(1-x-y)
+        self.Fy = lambda x,y : C11*x + C12*y + C10*(1-x-y)
+        
+        self.JF00 = lambda x,y : C01-C00
+        self.JF01 = lambda x,y : C02-C00
+        self.JF10 = lambda x,y : C11-C10
+        self.JF11 = lambda x,y : C12-C10
+        
+        self.detA = lambda x,y : self.JF00(x,y)*self.JF11(x,y)-self.JF01(x,y)*self.JF10(x,y)
+        
+        self.iJF00 = lambda x,y:  1/self.detA(x,y)*self.JF11(x,y)
+        self.iJF01 = lambda x,y: -1/self.detA(x,y)*self.JF01(x,y)
+        self.iJF10 = lambda x,y: -1/self.detA(x,y)*self.JF10(x,y)
+        self.iJF11 = lambda x,y:  1/self.detA(x,y)*self.JF00(x,y)
         
         #############################################################################################################
         t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
         A00 = self.p[t1,0]-self.p[t0,0]; A01 = self.p[t2,0]-self.p[t0,0]
         A10 = self.p[t1,1]-self.p[t0,1]; A11 = self.p[t2,1]-self.p[t0,1]
-        self.detA = A00*A11-A01*A10
+        # self.detA = A00*A11-A01*A10
         
         
         nor1 = npy.r_[1,1]; nor2 = npy.r_[-1,0]; nor3 = npy.r_[0,-1]
@@ -441,8 +456,8 @@ class mesh:
         
         p = self.p; t = self.t[:,0:3]
         
-        x = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0],p[t[:,0],0],npy.nan*p[t[:,0],0]].flatten()#.tolist()
-        y = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1],p[t[:,0],1],npy.nan*p[t[:,0],1]].flatten()#.tolist()
+        # x = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0],p[t[:,0],0],npy.nan*p[t[:,0],0]].flatten()#.tolist()
+        # y = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1],p[t[:,0],1],npy.nan*p[t[:,0],1]].flatten()#.tolist()
                         
         xx_trig = npy.c_[p[t[:,0],0],p[t[:,1],0],p[t[:,2],0]]
         yy_trig = npy.c_[p[t[:,0],1],p[t[:,1],1],p[t[:,2],1]]
