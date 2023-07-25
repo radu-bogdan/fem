@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 class mesh:
     # @profile
-    def __init__(self, p,e,t,q):
+    def __init__(self, p,e,t,q,r2d = npy.empty(0),r1d = npy.empty(0)):
         
         if t.size != 0:
             edges_trigs = npy.r_[npy.c_[t[:,1],t[:,2]],
@@ -119,6 +119,8 @@ class mesh:
         self.t = t[:,npy.r_[:3,-1]]; self.nt = nt
         self.q = q; self.nq = nq
         self.mp = npy.r_[mp_trig,mp_quad]
+        self.regions_2d = list(r2d)
+        self.regions_1d = list(r1d)
         
         self.FEMLISTS = {}
         #############################################################################################################
@@ -329,7 +331,7 @@ class mesh:
         common_ind = b_ind[npy.isin(b_unique, common_unique, assume_unique=True)]
         return bool_ind, common_ind[common_inv]
     
-    def getIndices2d(self, liste, name, exact = 0, return_index = False):
+    def getIndices2d_old(self, liste, name, exact = 0, return_index = False):
         if exact == 0:
             ind = npy.flatnonzero(npy.core.defchararray.find(list(liste),name)!=-1)
         else:
@@ -341,14 +343,13 @@ class mesh:
         else:
             return mask
         
-    def getIndices2d_new(self, liste, name, exact = 0):
-        if exact == 0:
-            ind = npy.flatnonzero(npy.core.defchararray.find(list(liste),name)!=-1)
-        else:
-            ind = [i for i, x in enumerate(list(liste)) if x == name]
-        elem = npy.where(npy.isin(self.t[:,3],ind))[0]
-        # mask = npy.zeros(self.nt); mask[elem] = 1
-        return ind
+    def getIndices2d(self, liste, name):
+        regions = npy.char.split(name,',').tolist()
+        ind = npy.empty(shape=(0,),dtype=npy.int64)
+        for k in regions:
+            n = npy.flatnonzero(npy.char.find(liste,k)!=-1)
+            ind = npy.append(ind,n,axis=0)
+        return npy.unique(ind)
         
     def pdegeom(self,**kwargs):
         if "ax" not in kwargs:
@@ -582,7 +583,7 @@ class mesh:
             name = 'Trig values',
             x = xx_trig.flatten(), y = yy_trig.flatten(), z = 0*zz.flatten(),
             i = ii, j = jj, k = kk, intensity = zz.flatten(), 
-            colorscale = 'Rainbow',
+            colorscale = 'Jet',
             cmin = cmin,
             cmax = cmax,
             intensitymode = 'vertex',

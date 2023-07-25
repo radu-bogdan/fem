@@ -89,13 +89,15 @@ def assembleE(MESH,order):
     D = sparse(iD,iD,ellmatsD,nqp*ne,nqp*ne)
     return D
 
-def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = npy.empty(0), indices = npy.empty(0)):
+def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = npy.empty(0)):
     
     if indices.size == 0:
-        if regions.size == 0:
-            # regions = MESH.RegionsT
-            regions = MESH.t[:,3]
-        indices = npy.in1d(MESH.t[:,3],regions)
+        if regions == '':
+            ind_regions = MESH.t[:,-1]
+        else:
+            ind_regions = MESH.getIndices2d(MESH.regions_2d,regions)
+        indices = npy.in1d(MESH.t[:,-1],ind_regions)
+    
     
     # indices = npy.argwhere(npy.in1d(MESH.t[:,3],regions))[:,0]
     

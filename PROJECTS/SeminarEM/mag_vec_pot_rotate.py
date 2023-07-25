@@ -80,10 +80,10 @@ total = 1
 
 nu0 = 10**7/(4*np.pi)
 
-MESH = pde.mesh(p,e,t,q)
-MESH.refinemesh()
-MESH.refinemesh()
-MESH.refinemesh()
+MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
+# MESH.refinemesh()
+# MESH.refinemesh()
+# MESH.refinemesh()
 
 t = MESH.t
 p = MESH.p
@@ -95,27 +95,30 @@ p = MESH.p
 # Extract indices
 ##########################################################################################
 
-ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = True)[0]
-ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
+ind_stator_outer = MESH.getIndices2d(MESH.regions_1d, 'stator_outer')
+ind_rotor_outer = MESH.getIndices2d(MESH.regions_1d, 'rotor_outer')
 
 ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
 edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
 
-ind_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', return_index = True)[0]
-ind_trig_coils = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
-ind_trig_magnets = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
-ind_air_all = MESH.getIndices2d(regions_2d, 'air', return_index = True)[0]
-ind_magnet = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
-ind_shaft = MESH.getIndices2d(regions_2d, 'shaft', return_index = True)[0]
-ind_coil = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
-ind_stator_rotor_and_shaft = MESH.getIndices2d(regions_2d, 'iron', return_index = True)[0]
-ind_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', return_index = True)[0]
-ind_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', return_index = True)[0]
+ind_air_gap_rotor = MESH.getIndices2d(MESH.regions_2d, 'air_gap_rotor')
+ind_trig_coils = MESH.getIndices2d(MESH.regions_2d, 'coil')
+ind_trig_magnets = MESH.getIndices2d(MESH.regions_2d, 'magnet')
+ind_air_all = MESH.getIndices2d(MESH.regions_2d, 'air')
+ind_magnet = MESH.getIndices2d(MESH.regions_2d, 'magnet')
+ind_shaft = MESH.getIndices2d(MESH.regions_2d, 'shaft')
+ind_coil = MESH.getIndices2d(MESH.regions_2d, 'coil')
+ind_stator_rotor_and_shaft = MESH.getIndices2d(MESH.regions_2d, 'iron')
+ind_iron_rotor = MESH.getIndices2d(MESH.regions_2d, 'rotor_iron')
+ind_rotor_air = MESH.getIndices2d(MESH.regions_2d, 'rotor_air')
 
 ind_linear = np.r_[ind_air_all,ind_magnet,ind_shaft,ind_coil]
 ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
 ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
 
+linear = 'air,magnet,shaft,coil'
+nonlinear = 'stator_iron,rotor_iron'
+rotor = 'rotor_iron,magnet,rotor_air,shaft'
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                         [np.sin(x), np.cos(x)]])
@@ -209,33 +212,34 @@ for k in range(rots):
     Cx = phi_L2 @ D_order_dphidphi @ dphix_H1.T
     Cy = phi_L2 @ D_order_dphidphi @ dphiy_H1.T
     
+    
     D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
     B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
-    fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_linear).diagonal()
-    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_nonlinear).diagonal()
-    fem_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_rotor).diagonal()
-    fem_air_gap_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = ind_air_gap_rotor).diagonal()
+    fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'air,magnet,shaft,coil').diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'stator_iron,rotor_iron').diagonal()
+    fem_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'rotor_iron,magnet,rotor_air,shaft').diagonal()
+    fem_air_gap_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'air_gap_rotor').diagonal()
     
     penalty = 1e10
     
     Ja = 0; Ja0 = 0
     for i in range(48):
-        Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
-        Ja0 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+        Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
+        Ja0 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
     Ja = 0*Ja
     Ja0 = 0*Ja0
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0; M0_dphi = 0; M1_dphi = 0
     for i in range(16):
-        M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-        M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+        M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
-        M00 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-        M10 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M00 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+        M10 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
-        M0_dphi += pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-        M1_dphi += pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+        M0_dphi += pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+        M1_dphi += pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
     
     aJ = phi_H1@ D_order_phiphi @Ja
     
@@ -334,12 +338,12 @@ for k in range(rots):
     rTorqueOuter = 79.242*10**(-3)
     rTorqueInner = 78.63225*10**(-3)
     
-    ind_air_gaps = MESH.getIndices2d(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
+    # ind_air_gaps = MESH.getIndices2d(regions_2d, 'air_gap')
     
-    Q0 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
-    Q1 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
-    Q2 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = ind_air_gaps).diagonal()
-    Q3 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = ind_air_gaps).diagonal()
+    Q0 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = 'air_gap').diagonal()
+    Q1 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = 'air_gap').diagonal()
+    Q2 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = 'air_gap').diagonal()
+    Q3 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = 'air_gap').diagonal()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
     T = lz*nu0/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux +
@@ -374,8 +378,8 @@ for k in range(rots):
     
     
     
-    fem_linear = pde.int.evaluate(MESH, order = order_dphi, regions = ind_linear).diagonal()
-    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphi, regions = ind_nonlinear).diagonal()
+    fem_linear = pde.int.evaluate(MESH, order = order_dphi, regions = linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphi, regions = nonlinear).diagonal()
     
     ux = dphix_H1_order_dphi.T@u; uy = dphiy_H1_order_dphi.T@u
     f = lambda ux,uy : f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear
@@ -413,14 +417,14 @@ for k in range(rots):
     v2y = lambda x,y :  x*scaley(x,y)
     
     
-    v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = np.r_[ind_air_gaps]).diagonal()
-    v1y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1y, regions = np.r_[ind_air_gaps]).diagonal()
-    v2x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2x, regions = np.r_[ind_air_gaps]).diagonal()
-    v2y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2y, regions = np.r_[ind_air_gaps]).diagonal()
+    v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = 'air_gap').diagonal()
+    v1y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1y, regions = 'air_gap').diagonal()
+    v2x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2x, regions = 'air_gap').diagonal()
+    v2y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2y, regions = 'air_gap').diagonal()
     
-    scale_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = scale, regions = np.r_[ind_air_gaps,ind_rotor]).diagonal()
+    scale_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = scale, regions = 'air_gap,'+rotor).diagonal()
     
-    one_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : 1+0*x+0*y, regions = np.r_[ind_air_gaps,ind_rotor]).diagonal()
+    one_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : 1+0*x+0*y, regions = 'air_gap,'+rotor).diagonal()
     # v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = ind_air_gaps).diagonal()
     
     
@@ -455,8 +459,8 @@ for k in range(rots):
     print(k, 'Torque3:', tor3[k])
     
     
-    fig = MESH.pdesurf(v1x_fem)
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), (ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0)
+    # fig = MESH.pdesurf(ux**2+uy**2)
+    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2)
     fig.show()
     
     # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
