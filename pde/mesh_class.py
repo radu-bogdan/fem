@@ -341,6 +341,15 @@ class mesh:
         else:
             return mask
         
+    def getIndices2d_new(self, liste, name, exact = 0):
+        if exact == 0:
+            ind = npy.flatnonzero(npy.core.defchararray.find(list(liste),name)!=-1)
+        else:
+            ind = [i for i, x in enumerate(list(liste)) if x == name]
+        elem = npy.where(npy.isin(self.t[:,3],ind))[0]
+        # mask = npy.zeros(self.nt); mask[elem] = 1
+        return ind
+        
     def pdegeom(self,**kwargs):
         if "ax" not in kwargs:
             # create new figure
