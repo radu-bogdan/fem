@@ -8,7 +8,7 @@ import pde
 import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
-# from sksparse.cholmod import cholesky as chol
+from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 import nonlinear_Algorithms
@@ -38,7 +38,7 @@ ax1.set_aspect(aspect = 'equal')
 
 # cbar = plt.colorbar(ax)
 
-writer.setup(fig, "writer_test.mp4", 500)
+# writer.setup(fig, "writer_test.mp4", 500)
 
 # @profile
 # def do():
@@ -46,7 +46,7 @@ writer.setup(fig, "writer_test.mp4", 500)
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('meshes/motor_fo.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor_fo.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -81,9 +81,9 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
+MESH.refinemesh()
+MESH.refinemesh()
+MESH.refinemesh()
 
 t = MESH.t
 p = MESH.p
@@ -99,7 +99,7 @@ ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = 
 ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
 
 ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
-edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
+edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
 
 ind_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', return_index = True)[0]
 ind_trig_coils = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
@@ -288,8 +288,8 @@ for k in range(rots):
     for i in range(maxIter):
         gsu = gs(u)
         gssu = gss(u)
-        # w = chol(gssu).solve_A(-gsu)
-        w = sps.linalg.spsolve(gssu,-gsu)
+        w = chol(gssu).solve_A(-gsu)
+        # w = sps.linalg.spsolve(gssu,-gsu)
         
         norm_w = np.linalg.norm(w)
         norm_gsu = np.linalg.norm(gsu)
@@ -410,7 +410,7 @@ for k in range(rots):
     v1x = lambda x,y : -y*scalex(x,y)
     v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
     v2x = lambda x,y :  scale(x,y)+x*scalex(x,y)
-    v2y = lambda x,y : x*scaley(x,y)
+    v2y = lambda x,y :  x*scaley(x,y)
     
     
     v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = np.r_[ind_air_gaps]).diagonal()
@@ -432,7 +432,7 @@ for k in range(rots):
     a_Pk = u_Pk
     
     
-    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+    term1 = (fu - fbb1*b1 -fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_2 = -(term1+term2)
@@ -447,7 +447,7 @@ for k in range(rots):
     a_Pk = u_Pk
     
     
-    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+    term1 = (fu - fbb1*b1 -fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_3 = -(term1+term2)
@@ -455,9 +455,9 @@ for k in range(rots):
     print(k, 'Torque3:', tor3[k])
     
     
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), term_3, u_height = 0)
+    fig = MESH.pdesurf(v1x_fem)
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), (ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0)
-    # fig.show()
+    fig.show()
     
     # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     # stop
@@ -493,8 +493,10 @@ for k in range(rots):
     
     # ax1.plot(tor,linewidth = 1)
     # ax1.plot(tor2,linewidth = 1)
+    
     energy_diff = energy[1:]-np.r_[energy[-1],energy[0:-2]]
     energy_diff = (-energy_diff*(np.abs(energy_diff)<1)/(2*a1)).copy()
+    
     # ax1.plot(energy_diff,linewidth = 1)
     
     # ax2.plot(energy_diff-tor[:-1])
@@ -606,7 +608,7 @@ for k in range(rots):
     
     ##########################################################################################
     
-    # stop
+    stop
     
     fem_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_rotor).diagonal()
     fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()

@@ -13,6 +13,7 @@ pio.renderers.default = 'browser'
 import numba as nb
 import pyamg
 from scipy.sparse import hstack,vstack,bmat
+from sksparse.cholmod import cholesky as chol
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -41,7 +42,7 @@ cmap = plt.cm.jet
 # regions_2d_rotor = motor_rotor_npz['regions_2d']
 # regions_1d_rotor = motor_rotor_npz['regions_1d']
 
-motor_npz = np.load('meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor_fo.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -54,7 +55,7 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 
@@ -109,7 +110,7 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 space_Vh = 'N1'
 space_Qh = 'P1'
 # space_Qh = 'P1_orth_divN1'
-int_order = '2l'
+int_order = 4
 
 tm = time.monotonic()
 
@@ -250,7 +251,7 @@ for i in range(maxIter):
     L = HAL[sH+sA:]
     
     ##########################################################################################
-    Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H    
+    Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
     
     tm = time.monotonic()
     allH = g_nonlinear_all(Hx,Hy)
@@ -294,11 +295,16 @@ for i in range(maxIter):
     
     
     tm = time.monotonic()
-    wL = sps.linalg.spsolve(gssuR,-gsuR)
+    wL = chol(-gssuR).solve_A(gsuR)
+    print('Solving the system took ', time.monotonic()-tm)
+    
+    # tm = time.monotonic()
+    # wL = sps.linalg.spsolve(-gssuR,gsuR)
+    # print('Solving the system took ', time.monotonic()-tm)
+    
     wA = iBBd@Cd@iMd@(-r1-KK.T@wL)+iBBd@r2
     wH = iMd@(-Cd.T@wA-KK.T@wL-r1)
     w = np.r_[wH,wA,wL]
-    print('Solving the system took ', time.monotonic()-tm)
     
     gsu = gs_hybrid(allH,A,H,L)
     
@@ -351,10 +357,10 @@ for i in range(maxIter):
         
     print('Line search took ', time.monotonic()-tm)
     
-    HAL = HALu; H = Hu; Hx = Hxu; Hy = Hyu
+    HAL = HALu; H = Hu; Hx = Hxu; Hy = Hyu; allH = allHu
     
-    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs_hybrid(allH,A,H,L))+"||alpha: %2e" % (alpha)); print("\n")
-    if(np.linalg.norm(gs_hybrid(allH,A,H,L)) < eps_newton): break
+    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs_hybrid(allH,A,H,L),np.inf)+"||alpha: %2e" % (alpha)); print("\n")
+    if(np.linalg.norm(gs_hybrid(allH,A,H,L),np.inf) < eps_newton): break
 
 elapsed = time.monotonic()-tm1
 print('Solving took ', elapsed, 'seconds')
@@ -364,7 +370,79 @@ print('Solving took ', elapsed, 'seconds')
 # Torque
 ##########################################################################################
 
-# TODO
+fem_linear = pde.int.evaluate(MESH, order = int_order, regions = ind_linear).diagonal()
+fem_nonlinear = pde.int.evaluate(MESH, order = int_order, regions = ind_nonlinear).diagonal()
+
+#outer radius rotor
+r_outer = 78.63225*10**(-3);
+#sliding mesh rotor
+r_sliding = 78.8354999*10**(-3);
+#sliding mesh stator
+r_sliding2 = 79.03874999*10**(-3);
+#inner radius stator
+r_inner = 79.242*10**(-3);
+
+r1 = r_outer
+r2 = r_inner
+
+# dazwischen = lambda x,y : 
+scale = lambda x,y : 1*(x**2+y**2<r1**2)+(x**2+y**2-r2**2)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+scalex = lambda x,y : (2*x)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+scaley = lambda x,y : (2*y)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+
+v = lambda x,y : np.r_[-y,x]*scale(x,y) # v wird nie wirklich gebraucht...
+
+v1x = lambda x,y : -y*scalex(x,y)
+v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
+v2x = lambda x,y :  scale(x,y)+x*scalex(x,y)
+v2y = lambda x,y :  x*scaley(x,y)
+
+ind_air_gaps = MESH.getIndices2d(regions_2d, 'air_gap', exact = 0, return_index = True)[0]
+
+v1x_fem = pde.int.evaluate(MESH, order = int_order, coeff = v1x, regions = np.r_[ind_air_gaps]).diagonal()
+v1y_fem = pde.int.evaluate(MESH, order = int_order, coeff = v1y, regions = np.r_[ind_air_gaps]).diagonal()
+v2x_fem = pde.int.evaluate(MESH, order = int_order, coeff = v2x, regions = np.r_[ind_air_gaps]).diagonal()
+v2y_fem = pde.int.evaluate(MESH, order = int_order, coeff = v2y, regions = np.r_[ind_air_gaps]).diagonal()
+
+scale_fem = pde.int.evaluate(MESH, order = int_order, coeff = scale, regions = np.r_[ind_air_gaps,ind_rotor]).diagonal()
+one_fem = pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : 1+0*x+0*y, regions = np.r_[ind_air_gaps,ind_rotor]).diagonal()
+
+Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9]; g_H_l = allH[0]; g_H_nl = allH[7];
+
+gHx = gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0
+gHy = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1
+
+gH = g_H_l*fem_linear + g_H_nl*fem_nonlinear
+
+# b1 = uy
+# b2 = -ux
+# fu = f(ux,uy)+1/2*(M0_dphi*uy-M1_dphi*ux)
+# fbb1 =  fy(ux,uy)+M0_dphi
+# fbb2 = -fx(ux,uy)+M1_dphi
+# a_Pk = u_Pk
+
+# term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+
+# term2 = (fbb1*b1)*v1x_fem + \
+#         (fbb2*b1)*v2x_fem + \
+#         (fbb1*b2)*v1y_fem + \
+#         (fbb2*b2)*v2y_fem
+
+
+term1 = (gH - gHx*Hx -gHy*Hy)*(v1x_fem + v2y_fem)
+term2 = (gHx*Hx)*v1x_fem + \
+        (gHy*Hx)*v2x_fem + \
+        (gHx*Hy)*v1y_fem + \
+        (gHy*Hy)*v2y_fem
+
+
+term_2 = -(term1+term2)
+tor = one_fem@D_int_order@term_2
+print('Torque:', tor)
+
+
+
 
 ##########################################################################################
 
