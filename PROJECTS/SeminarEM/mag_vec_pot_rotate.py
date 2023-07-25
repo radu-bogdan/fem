@@ -101,20 +101,20 @@ ind_rotor_outer = MESH.getIndices2d(MESH.regions_1d, 'rotor_outer')
 ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
 edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
 
-ind_air_gap_rotor = MESH.getIndices2d(MESH.regions_2d, 'air_gap_rotor')
-ind_trig_coils = MESH.getIndices2d(MESH.regions_2d, 'coil')
-ind_trig_magnets = MESH.getIndices2d(MESH.regions_2d, 'magnet')
-ind_air_all = MESH.getIndices2d(MESH.regions_2d, 'air')
-ind_magnet = MESH.getIndices2d(MESH.regions_2d, 'magnet')
-ind_shaft = MESH.getIndices2d(MESH.regions_2d, 'shaft')
-ind_coil = MESH.getIndices2d(MESH.regions_2d, 'coil')
-ind_stator_rotor_and_shaft = MESH.getIndices2d(MESH.regions_2d, 'iron')
-ind_iron_rotor = MESH.getIndices2d(MESH.regions_2d, 'rotor_iron')
-ind_rotor_air = MESH.getIndices2d(MESH.regions_2d, 'rotor_air')
+# ind_air_gap_rotor = MESH.getIndices2d(MESH.regions_2d, 'air_gap_rotor')
+# ind_trig_coils = MESH.getIndices2d(MESH.regions_2d, 'coil')
+# ind_trig_magnets = MESH.getIndices2d(MESH.regions_2d, 'magnet')
+# ind_air_all = MESH.getIndices2d(MESH.regions_2d, 'air')
+# ind_magnet = MESH.getIndices2d(MESH.regions_2d, 'magnet')
+# ind_shaft = MESH.getIndices2d(MESH.regions_2d, 'shaft')
+# ind_coil = MESH.getIndices2d(MESH.regions_2d, 'coil')
+# ind_stator_rotor_and_shaft = MESH.getIndices2d(MESH.regions_2d, 'iron')
+# ind_iron_rotor = MESH.getIndices2d(MESH.regions_2d, 'rotor_iron')
+# ind_rotor_air = MESH.getIndices2d(MESH.regions_2d, 'rotor_air')
 
-ind_linear = np.r_[ind_air_all,ind_magnet,ind_shaft,ind_coil]
-ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
-ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
+# ind_linear = np.r_[ind_air_all,ind_magnet,ind_shaft,ind_coil]
+# ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
+# ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
 
 linear = 'air,magnet,shaft,coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -232,6 +232,9 @@ for k in range(rots):
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0; M0_dphi = 0; M1_dphi = 0
     for i in range(16):
+        
+        # add a directive for unique region finding, for example region = '*magnet1'
+        
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
