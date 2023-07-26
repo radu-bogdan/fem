@@ -75,7 +75,7 @@ for k in range(edges_rotor_outer.shape[0]):
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -116,9 +116,9 @@ edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
 # ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
 # ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
 
-linear = 'air,magnet,shaft,coil'
+linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
-rotor = 'rotor_iron,magnet,rotor_air,shaft'
+rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 
 R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                         [np.sin(x), np.cos(x)]])
@@ -216,9 +216,9 @@ for k in range(rots):
     D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
     B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
-    fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'air,magnet,shaft,coil').diagonal()
-    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'stator_iron,rotor_iron').diagonal()
-    fem_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'rotor_iron,magnet,rotor_air,shaft').diagonal()
+    fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = nonlinear).diagonal()
+    fem_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = rotor).diagonal()
     fem_air_gap_rotor = pde.int.evaluate(MESH, order = order_dphidphi, regions = 'air_gap_rotor').diagonal()
     
     penalty = 1e10
@@ -343,10 +343,10 @@ for k in range(rots):
     
     # ind_air_gaps = MESH.getIndices2d(regions_2d, 'air_gap')
     
-    Q0 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = 'air_gap').diagonal()
-    Q1 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = 'air_gap').diagonal()
-    Q2 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = 'air_gap').diagonal()
-    Q3 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = 'air_gap').diagonal()
+    Q0 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : x*y/np.sqrt(x**2+y**2), regions = '*air_gap').diagonal()
+    Q1 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = '*air_gap').diagonal()
+    Q2 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : (y**2-x**2)/(2*np.sqrt(x**2+y**2)), regions = '*air_gap').diagonal()
+    Q3 = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : -x*y/np.sqrt(x**2+y**2), regions = '*air_gap').diagonal()
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u
     
     T = lz*nu0/(rTorqueOuter-rTorqueInner) * ((Q0*ux)@D_order_dphidphi@ux +
@@ -420,14 +420,14 @@ for k in range(rots):
     v2y = lambda x,y :  x*scaley(x,y)
     
     
-    v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = 'air_gap').diagonal()
-    v1y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1y, regions = 'air_gap').diagonal()
-    v2x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2x, regions = 'air_gap').diagonal()
-    v2y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2y, regions = 'air_gap').diagonal()
+    v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = '*air_gap').diagonal()
+    v1y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1y, regions = '*air_gap').diagonal()
+    v2x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2x, regions = '*air_gap').diagonal()
+    v2y_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v2y, regions = '*air_gap').diagonal()
     
-    scale_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = scale, regions = 'air_gap,'+rotor).diagonal()
+    scale_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = scale, regions = '*air_gap,'+rotor).diagonal()
     
-    one_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : 1+0*x+0*y, regions = 'air_gap,'+rotor).diagonal()
+    one_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = lambda x,y : 1+0*x+0*y, regions = '*air_gap,'+rotor).diagonal()
     # v1x_fem = pde.int.evaluate(MESH, order = order_dphi, coeff = v1x, regions = ind_air_gaps).diagonal()
     
     
@@ -463,7 +463,8 @@ for k in range(rots):
     
     
     # fig = MESH.pdesurf(ux**2+uy**2)
-    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2)
+    # fig = MESH.pdesurf(u)
+    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, cmax=5)
     fig.show()
     
     # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
