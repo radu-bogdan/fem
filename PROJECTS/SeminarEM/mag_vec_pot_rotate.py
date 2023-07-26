@@ -75,63 +75,23 @@ for k in range(edges_rotor_outer.shape[0]):
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-# MESH.refinemesh()
+MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 
 t = MESH.t
 p = MESH.p
-##########################################################################################
-
-
-
-##########################################################################################
-# Extract indices
-##########################################################################################
-
-ind_stator_outer = MESH.getIndices2d(MESH.regions_1d, 'stator_outer')
-ind_rotor_outer = MESH.getIndices2d(MESH.regions_1d, 'rotor_outer')
-
-ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
-edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
-
-# ind_air_gap_rotor = MESH.getIndices2d(MESH.regions_2d, 'air_gap_rotor')
-# ind_trig_coils = MESH.getIndices2d(MESH.regions_2d, 'coil')
-# ind_trig_magnets = MESH.getIndices2d(MESH.regions_2d, 'magnet')
-# ind_air_all = MESH.getIndices2d(MESH.regions_2d, 'air')
-# ind_magnet = MESH.getIndices2d(MESH.regions_2d, 'magnet')
-# ind_shaft = MESH.getIndices2d(MESH.regions_2d, 'shaft')
-# ind_coil = MESH.getIndices2d(MESH.regions_2d, 'coil')
-# ind_stator_rotor_and_shaft = MESH.getIndices2d(MESH.regions_2d, 'iron')
-# ind_iron_rotor = MESH.getIndices2d(MESH.regions_2d, 'rotor_iron')
-# ind_rotor_air = MESH.getIndices2d(MESH.regions_2d, 'rotor_air')
-
-# ind_linear = np.r_[ind_air_all,ind_magnet,ind_shaft,ind_coil]
-# ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
-# ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
-
-R = lambda x: np.array([[np.cos(x),-np.sin(x)],
-                        [np.sin(x), np.cos(x)]])
-
-r1 = p[edges_rotor_outer[0,0],0]
-a1 = 2*np.pi/edges_rotor_outer.shape[0]
-
-# Adjust points on the outer rotor to be equally spaced.
-# for k in range(edges_rotor_outer.shape[0]):
-#     MESH.p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
-#     MESH.p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
-
 
 
 ##########################################################################################
@@ -140,8 +100,8 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 if ORDER == 1:
     poly = 'P1'
     dxpoly = 'P0'
-    order_phi = 1
-    order_dphi = 0
+    order_phi = 2
+    order_dphi = 1
     order_phiphi = order_phi*2
     order_dphidphi = order_dphi*2
     u = np.zeros(MESH.np)
@@ -150,7 +110,7 @@ if ORDER == 2:
     poly = 'P2'
     dxpoly = 'P1'
     order_phi = 2
-    order_dphi = 1
+    order_dphi = 2
     order_phiphi = order_phi*2
     order_dphidphi = order_dphi*2
     u = np.zeros(MESH.np + MESH.NoEdges)
@@ -213,7 +173,7 @@ for k in range(rots):
     Cy = phi_L2 @ D_order_dphidphi @ dphiy_H1.T
     
     
-    D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = ind_stator_outer)
+    D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = 'stator_outer')
     B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
 
     fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = linear).diagonal()
@@ -232,8 +192,6 @@ for k in range(rots):
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0; M0_dphi = 0; M1_dphi = 0
     for i in range(16):
-        
-        # add a directive for unique region finding, for example region = '*magnet1'
         
         M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
         M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
@@ -439,7 +397,7 @@ for k in range(rots):
     a_Pk = u_Pk
     
     
-    term1 = (fu - fbb1*b1 -fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_2 = -(term1+term2)
@@ -454,7 +412,7 @@ for k in range(rots):
     a_Pk = u_Pk
     
     
-    term1 = (fu - fbb1*b1 -fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_3 = -(term1+term2)
@@ -617,6 +575,17 @@ for k in range(rots):
     ##########################################################################################
     
     stop
+    
+    
+
+    ind_stator_outer = MESH.getIndices2d(MESH.regions_1d, 'stator_outer')
+    ind_rotor_outer = MESH.getIndices2d(MESH.regions_1d, 'rotor_outer')
+    
+    ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
+    edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
+
+    R = lambda x: np.array([[np.cos(x),-np.sin(x)],
+                            [np.sin(x), np.cos(x)]])
     
     fem_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_rotor).diagonal()
     fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()

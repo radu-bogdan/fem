@@ -95,10 +95,10 @@ def drawMagnet2(k):
     a4new = (a4xnew,a4ynew,0)
 
     #Draw magnet
-    seg1 = Segment(m5new,m6new);
-    seg2 = Segment(m6new,m7new);
-    seg3 = Segment(m7new,m8new);
-    seg4 = Segment(m8new,m5new);
+    seg1 = Segment(m5new,m6new)
+    seg2 = Segment(m6new,m7new)
+    seg3 = Segment(m7new,m8new)
+    seg4 = Segment(m8new,m5new)
     magnet2 = Face(Wire([seg1,seg2,seg3,seg4]))
     air_seg1 = Segment(m5new,a3new)
     air_seg2 = Segment(a3new,a4new)

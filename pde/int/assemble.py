@@ -98,9 +98,6 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
             ind_regions = MESH.getIndices2d(MESH.regions_2d,regions)
         indices = npy.in1d(MESH.t[:,-1],ind_regions)
     
-    
-    # indices = npy.argwhere(npy.in1d(MESH.t[:,3],regions))[:,0]
-    
     p = MESH.p;
     t = MESH.t[indices,:]; nt = t.shape[0]
     
@@ -132,12 +129,18 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
 
 def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), like = 0):
     
-    if edges.size == 0:
-        edges = MESH.Boundary_Region
+    # if edges.size == 0:
+    #     edges = MESH.Boundary_Region
     
     # indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
-    indices = npy.in1d(MESH.Boundary_Region,edges)
-
+    # indices = npy.in1d(MESH.Boundary_Region,edges)
+    
+    if edges == '':
+        ind_edges = MESH.Boundary_Region
+    else:
+        ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+    indices = npy.in1d(MESH.Boundary_Region,ind_edges)
+    
     p = MESH.p;    
     e = MESH.e[indices,:]; ne = e.shape[0]
     

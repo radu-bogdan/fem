@@ -274,7 +274,7 @@ class mesh:
                        npy.c_[bn,self.e[:,1],self.Boundary_Region]].astype(npy.int64)
         q_new = self.q
         
-        self.__init__(p_new,e_new,t_new,q_new)
+        self.__init__(p_new,e_new,t_new,q_new,self.regions_2d,self.regions_1d)
         self.FEMLISTS = {} # reset fem lists, cuz new mesh
         # self.delattr("Boundary_EdgeOrientation")
         

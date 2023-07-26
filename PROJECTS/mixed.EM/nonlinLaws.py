@@ -2,6 +2,8 @@ import numba as nb
 import numpy as np
 from numba import float64,float32
 
+all_linear = True
+
 ##########################################################################################
 @nb.njit() 
 def f_nonlinear(x,y):
@@ -175,6 +177,15 @@ gxx_linear = lambda x,y : 1/nu0 + 0*x
 gxy_linear = lambda x,y : x*0
 gyx_linear = lambda x,y : y*0
 gyy_linear = lambda x,y : 1/nu0 + 0*y
+
+if all_linear == True:
+    f_nonlinear = lambda x,y : 1/2*nu0*(x**2+y**2)
+    fx_nonlinear = lambda x,y : nu0*x
+    fy_nonlinear = lambda x,y : nu0*y
+    fxx_nonlinear = lambda x,y : nu0 + 0*x
+    fxy_nonlinear = lambda x,y : x*0
+    fyx_nonlinear = lambda x,y : y*0
+    fyy_nonlinear = lambda x,y : nu0 + 0*y
 
 ##########################################################################################
 
