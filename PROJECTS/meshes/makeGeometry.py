@@ -1,12 +1,11 @@
 import sys
-sys.path.insert(0,'../../../') # adds parent directory
+sys.path.insert(0,'../../') # adds parent directory
 sys.path.insert(0,'../CEM') # adds parent directory
 
-
+import ngsolve as ng
 import numpy as np
-from ngsolve import *
-from netgen.occ import *
-# from netgen.webgui import Draw as DrawGeo
+import netgen.occ as occ
+from numpy import sin,cos,pi
 
 def drawMagnet1(k):
     m1xnew = m1[0]*cos(k*pi/4) -m1[1]*sin(k*pi/4)
@@ -42,22 +41,22 @@ def drawMagnet1(k):
     a8new = (a8xnew,a8ynew,0)
 
     #Draw magnet
-    seg1 = Segment(m1new,m2new);
-    seg2 = Segment(m2new,m3new);
-    seg3 = Segment(m3new,m4new);
-    seg4 = Segment(m4new,m1new);
-    magnet1 = Face(Wire([seg1,seg2,seg3,seg4]))
+    seg1 = occ.Segment(m1new,m2new);
+    seg2 = occ.Segment(m2new,m3new);
+    seg3 = occ.Segment(m3new,m4new);
+    seg4 = occ.Segment(m4new,m1new);
+    magnet1 = occ.Face(occ.Wire([seg1,seg2,seg3,seg4]))
     #Draw air around magnet
-    air_seg1 = Segment(m1new,a5new)
-    air_seg2 = Segment(a5new,a6new)
-    air_seg3 = Segment(a6new,m2new)
-    air_seg4 = Segment(m2new,m1new)
-    air_magnet1_1 = Face(Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
-    air_seg5 = Segment(m4new,m3new)
-    air_seg6 = Segment(m3new,a7new)
-    air_seg7 = Segment(a7new,a8new)
-    air_seg8 = Segment(a8new,m4new)
-    air_magnet1_2 = Face(Wire([air_seg5,air_seg6,air_seg7,air_seg8]))
+    air_seg1 = occ.Segment(m1new,a5new)
+    air_seg2 = occ.Segment(a5new,a6new)
+    air_seg3 = occ.Segment(a6new,m2new)
+    air_seg4 = occ.Segment(m2new,m1new)
+    air_magnet1_1 = occ.Face(occ.Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
+    air_seg5 = occ.Segment(m4new,m3new)
+    air_seg6 = occ.Segment(m3new,a7new)
+    air_seg7 = occ.Segment(a7new,a8new)
+    air_seg8 = occ.Segment(a8new,m4new)
+    air_magnet1_2 = occ.Face(occ.Wire([air_seg5,air_seg6,air_seg7,air_seg8]))
 
     return (magnet1,air_magnet1_1,air_magnet1_2)
 
@@ -95,21 +94,21 @@ def drawMagnet2(k):
     a4new = (a4xnew,a4ynew,0)
 
     #Draw magnet
-    seg1 = Segment(m5new,m6new)
-    seg2 = Segment(m6new,m7new)
-    seg3 = Segment(m7new,m8new)
-    seg4 = Segment(m8new,m5new)
-    magnet2 = Face(Wire([seg1,seg2,seg3,seg4]))
-    air_seg1 = Segment(m5new,a3new)
-    air_seg2 = Segment(a3new,a4new)
-    air_seg3 = Segment(a4new,m6new)
-    air_seg4 = Segment(m6new,m5new)
-    air_magnet2_1 = Face(Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
-    air_seg5 = Segment(m8new,m7new)
-    air_seg6 = Segment(m7new,a2new)
-    air_seg7 = Segment(a2new,a1new)
-    air_seg8 = Segment(a1new,m8new)
-    air_magnet2_2 = Face(Wire([air_seg5,air_seg6,air_seg7,air_seg8]))
+    seg1 = occ.Segment(m5new,m6new)
+    seg2 = occ.Segment(m6new,m7new)
+    seg3 = occ.Segment(m7new,m8new)
+    seg4 = occ.Segment(m8new,m5new)
+    magnet2 = occ.Face(occ.Wire([seg1,seg2,seg3,seg4]))
+    air_seg1 = occ.Segment(m5new,a3new)
+    air_seg2 = occ.Segment(a3new,a4new)
+    air_seg3 = occ.Segment(a4new,m6new)
+    air_seg4 = occ.Segment(m6new,m5new)
+    air_magnet2_1 = occ.Face(occ.Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
+    air_seg5 = occ.Segment(m8new,m7new)
+    air_seg6 = occ.Segment(m7new,a2new)
+    air_seg7 = occ.Segment(a2new,a1new)
+    air_seg8 = occ.Segment(a1new,m8new)
+    air_magnet2_2 = occ.Face(occ.Wire([air_seg5,air_seg6,air_seg7,air_seg8]))
 
     return (magnet2,air_magnet2_1,air_magnet2_2)
 
@@ -147,19 +146,19 @@ def drawStatorNut(k):
     s8new = (s8xnew,s8ynew,0)
 
     #Draw stator coil
-    seg1 = Segment(s2new,s3new)
-    seg2 = Segment(s3new,s4new)
-    seg3 = Segment(s4new,s5new)
-    seg4 = Segment(s5new,s6new)
-    seg5 = Segment(s6new,s7new)
-    seg6 = Segment(s7new,s2new)
-    stator_coil = Face(Wire([seg1,seg2,seg3,seg4,seg5,seg6]))
+    seg1 = occ.Segment(s2new,s3new)
+    seg2 = occ.Segment(s3new,s4new)
+    seg3 = occ.Segment(s4new,s5new)
+    seg4 = occ.Segment(s5new,s6new)
+    seg5 = occ.Segment(s6new,s7new)
+    seg6 = occ.Segment(s7new,s2new)
+    stator_coil = occ.Face(occ.Wire([seg1,seg2,seg3,seg4,seg5,seg6]))
     #Draw air nut in the stator
-    air_seg1 = Segment(s1new,s2new)
-    air_seg2 = Segment(s2new,s7new)
-    air_seg3 = Segment(s7new,s8new)
-    air_seg4 = Segment(s8new,s1new)
-    stator_air = Face(Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
+    air_seg1 = occ.Segment(s1new,s2new)
+    air_seg2 = occ.Segment(s2new,s7new)
+    air_seg3 = occ.Segment(s7new,s8new)
+    air_seg4 = occ.Segment(s8new,s1new)
+    stator_air = occ.Face(occ.Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
 
     stator_air = stator_air-(stator_air*air_gap_stator)
     return (stator_coil,stator_air)
@@ -222,10 +221,9 @@ domains = []
 # h_rotor_iron = h_max
 # h_shaft_iron = h_max
 
-
 h_max = 0.005
 
-h_air_gap = 0.05*h_max
+h_air_gap = r6-r4 #0.05*h_max
 h_air_magnets = h_max
 h_coils = h_max
 h_stator_air = h_max
@@ -234,12 +232,23 @@ h_stator_iron = h_max
 h_rotor_iron = h_max
 h_shaft_iron = h_max
 
-rotor_inner  = Circle(orign,r=r1).Face()
-rotor_outer  = Circle(orign,r=r2).Face()
-sliding_inner  = Circle(orign,r=r4).Face()
-sliding_outer  = Circle(orign,r=r6).Face()
-stator_inner = Circle(orign,r=r7).Face()
-stator_outer = Circle(orign,r=r8).Face()
+# h_max = 0.005
+
+# h_air_gap = 0.05*h_max
+# h_air_magnets = h_max
+# h_coils = h_max
+# h_stator_air = h_max
+# h_magnets = h_max
+# h_stator_iron = h_max
+# h_rotor_iron = h_max
+# h_shaft_iron = h_max
+
+rotor_inner  = occ.Circle(orign,r=r1).Face()
+rotor_outer  = occ.Circle(orign,r=r2).Face()
+sliding_inner  = occ.Circle(orign,r=r4).Face()
+sliding_outer  = occ.Circle(orign,r=r6).Face()
+stator_inner = occ.Circle(orign,r=r7).Face()
+stator_outer = occ.Circle(orign,r=r8).Face()
 
 rotor_inner.edges[0].name = "rotor_inner"
 rotor_outer.edges[0].name = "rotor_outer"
@@ -354,13 +363,13 @@ domains.append(air_gap)
 domains.append(air_gap_rotor)
 domains.append(stator_iron)
 
-geo = Glue(domains)
+geo = occ.Glue(domains)
 
-geoOCC = OCCGeometry(geo, dim=2)
-mesh = Mesh(geoOCC.GenerateMesh())
+geoOCC = occ.OCCGeometry(geo, dim=2)
+mesh = ng.Mesh(geoOCC.GenerateMesh())
 
-mesh.Curve(2)
-mesh.ngmesh.SecondOrder()
+# mesh.Curve(2)
+# mesh.ngmesh.SecondOrder()
 
 
 # a = mesh.ngmesh.Elements2D().NumPy()
@@ -372,14 +381,14 @@ mesh.ngmesh.SecondOrder()
 
 
 #####################################################################################################################
-regions_1d = mesh.GetBoundaries()
-regions_2d = mesh.GetMaterials()
+regions_1d_np = mesh.GetBoundaries()
+regions_2d_np = mesh.GetMaterials()
 
-regions_1d_np = np.zeros((len(regions_1d),), dtype=object)
-regions_1d_np[:] = list(regions_1d)
+# regions_1d_np = np.zeros((len(regions_1d),), dtype=object)
+# regions_1d_np[:] = list(regions_1d)
 
-regions_2d_np = np.zeros((len(regions_2d),), dtype=object)
-regions_2d_np[:] = list(regions_2d)
+# regions_2d_np = np.zeros((len(regions_2d),), dtype=object)
+# regions_2d_np[:] = list(regions_2d)
 
 # p = []
 # for k in mesh.vertices:
@@ -396,9 +405,9 @@ for i, el in enumerate(mesh.ngmesh.Elements2D()):
     t += [np.array([el.points[0].nr,\
                     el.points[1].nr,\
                     el.points[2].nr,\
-                    el.points[3].nr,\
-                    el.points[4].nr,\
-                    el.points[5].nr,\
+                    # el.points[3].nr,\
+                    # el.points[4].nr,\
+                    # el.points[5].nr,\
                     el.index])-1]
 t = np.array(t)
 
@@ -406,7 +415,7 @@ e = []
 for i, el in enumerate(mesh.ngmesh.Elements1D()):
     e += [np.array([el.points[0].nr,\
                     el.points[1].nr,\
-                    el.points[2].nr,\
+                    # el.points[2].nr,\
                     el.index])-1]
 e = np.array(e)
 
@@ -530,13 +539,13 @@ np.savez_compressed('motor.npz', p=p.T, e=e.T, t=t.T, regions_2d=regions_2d_np, 
 #####################################################################################################################
 
 import pde
-MESH = pde.mesh(p,e,t,q)
+MESH = pde.mesh(p,e,t,q,regions_2d_np,regions_1d_np)
 
-ind_air_all = np.flatnonzero(np.core.defchararray.find(regions_2d,'air')!=-1)
-ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(regions_2d,'iron')!=-1)
-ind_magnet = np.flatnonzero(np.core.defchararray.find(regions_2d,'magnet')!=-1)
-ind_coil = np.flatnonzero(np.core.defchararray.find(regions_2d,'coil')!=-1)
-ind_shaft = np.flatnonzero(np.core.defchararray.find(regions_2d,'shaft')!=-1)
+ind_air_all = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'air')!=-1)
+ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'iron')!=-1)
+ind_magnet = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'magnet')!=-1)
+ind_coil = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'coil')!=-1)
+ind_shaft = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'shaft')!=-1)
 
 trig_air_all = np.where(np.isin(t[:,3],ind_air_all))
 trig_stator_rotor = np.where(np.isin(t[:,3],ind_stator_rotor))
@@ -552,5 +561,5 @@ vek[trig_stator_rotor] = 4
 vek[trig_shaft] = 3.6
 
 # fig = MESH.pdemesh()
-fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek, u_height=0)
+fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek/10, u_height=0)
 fig.show()

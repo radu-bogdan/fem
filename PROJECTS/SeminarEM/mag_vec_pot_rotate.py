@@ -46,7 +46,7 @@ ax1.set_aspect(aspect = 'equal')
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('../meshes/motor_fo.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -59,13 +59,13 @@ j3 = motor_npz['j3']
 
 # Making sure points are equidistant along the connecting edge.
 # a1 = 0.006599984566365112
-a1 = 0.00320570678937734
-r1 = 0.07863225
-ind_edges_rotor_outer = np.where(np.isin(e[:,2],593))[0]
-edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
-for k in range(edges_rotor_outer.shape[0]):
-    p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
-    p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
+# a1 = 0.00320570678937734
+# r1 = 0.07863225
+# ind_edges_rotor_outer = np.where(np.isin(e[:,2],593))[0]
+# edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
+# for k in range(edges_rotor_outer.shape[0]):
+#     p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
+#     p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 ##########################################################################################
 
 
@@ -81,7 +81,7 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 
@@ -101,7 +101,7 @@ if ORDER == 1:
     poly = 'P1'
     dxpoly = 'P0'
     order_phi = 2
-    order_dphi = 1
+    order_dphi = 2
     order_phiphi = order_phi*2
     order_dphidphi = order_dphi*2
     u = np.zeros(MESH.np)
@@ -123,7 +123,7 @@ if ORDER == 2:
 ##########################################################################################
 
 sys.path.insert(1,'../mixed.EM')
-from nonlinLaws import *
+from nonlinLaws_bosch import *
 
 
 ###########################################################################################
@@ -397,7 +397,7 @@ for k in range(rots):
     a_Pk = u_Pk
     
     
-    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+    term1 = (fu + fbb1*b1 +fbb2*b2 )*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_2 = -(term1+term2)
@@ -412,7 +412,7 @@ for k in range(rots):
     a_Pk = u_Pk
     
     
-    term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+    term1 = (fu + fbb1*b1 +fbb2*b2 )*(v1x_fem + v2y_fem)
     term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
     
     term_3 = -(term1+term2)

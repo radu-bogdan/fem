@@ -44,7 +44,7 @@ ax1.set_aspect(aspect = 'equal')
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('../meshes/motor_fo.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T

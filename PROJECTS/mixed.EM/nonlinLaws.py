@@ -1,8 +1,11 @@
 import numba as nb
 import numpy as np
 from numba import float64,float32
+import scipy as sp
 
-all_linear = True
+
+
+all_linear = False
 
 ##########################################################################################
 @nb.njit() 

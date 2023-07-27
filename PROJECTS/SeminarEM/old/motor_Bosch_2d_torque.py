@@ -20,6 +20,7 @@ import scipy.sparse.linalg as scspla
 # Torque =  1.026368410674496e-06
 # Torque =  6.830408506490356e-07
 # Torque =  1.2272362977996587e-07
+# Torque = -1.520227758003754e-07
 
 # Linear case with with current, refinements:
 # Torque =  33.3219699958261
@@ -255,6 +256,10 @@ def f48(s):
     return (s-1)%48+1
 
 def Cost_vol(u):
+    # Q = CoefficientFunction(( x*y/sqrt(x*x+y*y),\
+    #                          (y*y-x*x)/(2*sqrt(x*x+y*y)),\
+    #                          (y*y-x*x)/(2*sqrt(x*x+y*y)),\
+    #                          -x*y/sqrt(x*x+y*y)), dims=(2,2))
     return  (lz*nuAir / (rTorqueOuter-rTorqueInner) *( Q[0]*grad(u)[0]*grad(u)[0] + Q[1]*grad(u)[1]*grad(u)[0] + Q[2]*grad(u)[1]*grad(u)[0] + Q[3]*grad(u)[1]*grad(u)[1]) ) * dx(definedon = mesh.Materials("air_gap|air_gap_rotor|air_gap_stator"))
 
 def SolveNewton(a, rhs, maxit=100, maxerr=1e-11, dampfactor=1, printing=False, callback=None, linesearch=False, printenergy=False, print_wrong_direction=False, shift=0):
@@ -649,10 +654,10 @@ else:
 #print(mesh.GetMaterials())
 #print(mesh.GetBoundaries())
 
-mesh.Refine()
-mesh.Refine()
-mesh.Refine()
-mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
 
 #input("Meshing complete. Press Enter to continue")
 
