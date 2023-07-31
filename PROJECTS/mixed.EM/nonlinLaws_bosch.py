@@ -22,6 +22,7 @@ coenergy_density = HB_curve.antiderivative()
 t, c, k = interpolate.splrep(B_KL, H_KL, s=0.1, k=3)
 BH_curve = interpolate.BSpline(t, c, k, extrapolate = True)
 energy_density = BH_curve.antiderivative()
+dx_BH_curve = BH_curve.derivative()
 
 t, c, k = interpolate.splrep(B_KL[1:]**2, nu_KL, s=0.1, k=3)
 nu_curve = interpolate.BSpline(t, c, k, extrapolate = True)
@@ -45,21 +46,27 @@ def nuy(x,y):
 
 def fx_nonlinear(x,y):
     return nu(x,y)*x
+    # return 2*x*BH_curve(x**2+y**2)
 
 def fy_nonlinear(x,y):
     return nu(x,y)*y
+    # return 2*y*BH_curve(x**2+y**2)
 
 def fxx_nonlinear(x,y):
     return nu(x,y) + x*nux(x,y)
+    # return 2*BH_curve(x**2+y**2) + 2*x*dx_BH_curve(x**2+y**2)
 
 def fxy_nonlinear(x,y):
     return x*nuy(x,y)
+    # return 2*x*dx_BH_curve(x**2+y**2)
 
 def fyx_nonlinear(x,y):
     return y*nux(x,y)
+    # return 2*y*dx_BH_curve(x**2+y**2)
 
 def fyy_nonlinear(x,y):
     return nu(x,y) + y*nuy(x,y)
+    # return 2*BH_curve(x**2+y**2) + 2*y*dx_BH_curve(x**2+y**2)
 
 
 

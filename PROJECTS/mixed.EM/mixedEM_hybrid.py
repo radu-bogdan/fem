@@ -23,7 +23,7 @@ cmap = plt.cm.jet
 # Loading mesh
 ##########################################################################################
 
-motor_npz = np.load('../meshes/motor_fo.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T
@@ -36,7 +36,7 @@ j3 = motor_npz['j3']
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-MESH.refinemesh()
+# MESH.refinemesh()
 # MESH.refinemesh()
 # MESH.refinemesh()
 
@@ -59,10 +59,10 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'N1'
-space_Qh = 'P1'
+space_Vh = 'N0'
+space_Qh = 'P0'
 # space_Qh = 'P1_orth_divN1'
-int_order = 4
+int_order = 2
 
 tm = time.monotonic()
 
@@ -123,7 +123,7 @@ for i in range(16):
 ##########################################################################################
 
 
-space_Vhd = 'N1d'
+space_Vhd = 'N0d'
 
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = int_order)
@@ -142,15 +142,15 @@ aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
 
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
+phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 1)
 
-De = pde.int.assembleE(MESH, order = 2)
+De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-KK = KK[np.r_[2*MESH.NonSingle_Edges,\
-              2*MESH.NonSingle_Edges+1],:]
+# KK = KK[np.r_[2*MESH.NonSingle_Edges,\
+#               2*MESH.NonSingle_Edges+1],:]
 
-# KK = KK[MESH.NonSingle_Edges,:]
+KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 
@@ -381,7 +381,7 @@ gH = g_H_l*fem_linear + g_H_nl*fem_nonlinear
 #         (fbb2*b2)*v2y_fem
 
 
-term1 = (gH - gHx*Hx -gHy*Hy)*(v1x_fem + v2y_fem)
+term1 = (gH +gHx*Hx +gHy*Hy)*(v1x_fem + v2y_fem)
 term2 = (gHx*Hx)*v1x_fem + \
         (gHy*Hx)*v2x_fem + \
         (gHx*Hy)*v1y_fem + \

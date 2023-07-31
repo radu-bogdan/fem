@@ -260,6 +260,7 @@ def Cost_vol(u):
     #                          (y*y-x*x)/(2*sqrt(x*x+y*y)),\
     #                          (y*y-x*x)/(2*sqrt(x*x+y*y)),\
     #                          -x*y/sqrt(x*x+y*y)), dims=(2,2))
+    lz = 1
     return  (lz*nuAir / (rTorqueOuter-rTorqueInner) *( Q[0]*grad(u)[0]*grad(u)[0] + Q[1]*grad(u)[1]*grad(u)[0] + Q[2]*grad(u)[1]*grad(u)[0] + Q[3]*grad(u)[1]*grad(u)[1]) ) * dx(definedon = mesh.Materials("air_gap|air_gap_rotor|air_gap_stator"))
 
 def SolveNewton(a, rhs, maxit=100, maxerr=1e-11, dampfactor=1, printing=False, callback=None, linesearch=False, printenergy=False, print_wrong_direction=False, shift=0):
@@ -451,10 +452,8 @@ if (buildMotor==True):
     #inner radius rotor
     r1 = 26.5*10**(-3);
     #outer radius rotor
-    r2_original = 78.63225*10**(-3);
-    r2 =  78.62725*10**(-3);
+    r2 = 78.63225*10**(-3);
     #sliding mesh rotor
-    r4_reduced = 78.83*10**(-3);
     r4 = 78.8354999*10**(-3);
     #sliding mesh stator
     r6 = 79.03874999*10**(-3);
@@ -490,6 +489,49 @@ if (buildMotor==True):
     s6 = (80.086666706*10**(-3),7.5525611543*10**(-3),0)
     s7 = (79.980020247*10**(-3),6.4912415424*10**(-3),0)
     s8 = (78.88229587*10**(-3),6.4102654448*10**(-3),0)
+    # orign = (0,0);
+    # #inner radius rotor
+    # r1 = 26.5*10**(-3);
+    # #outer radius rotor
+    # r2_original = 78.63225*10**(-3);
+    # r2 =  78.62725*10**(-3);
+    # #sliding mesh rotor
+    # r4_reduced = 78.83*10**(-3);
+    # r4 = 78.8354999*10**(-3);
+    # #sliding mesh stator
+    # r6 = 79.03874999*10**(-3);
+    # #inner radius stator
+    # r7 = 79.242*10**(-3);
+    # #outer radius stator
+    # r8 = 116*10**(-3)
+
+    # #Points for magnet1 and air around magnet1
+    # m1 = (69.23112999*10**(-3),7.535512*10**(-3),0)
+    # m2 = (74.828958945*10**(-3),10.830092744*10**(-3),0)
+    # m3 = (66.13621099700001*10**(-3),25.599935335*10**(-3),0)
+    # m4 = (60.53713*10**(-3),22.30748*10**(-3),0)
+    # a5 = (69.75636*10**(-3),5.749913*10**(-3),0)
+    # a6 = (75.06735*10**(-3),3.810523*10**(-3),0)
+    # a7 = (65.3506200*10**(-3),26.51379*10**(-3),0)
+    # a8 = (59.942145092*10**(-3),24.083661604*10**(-3),0)
+    # #Points for magnet2 and air around magnet2
+    # m5 = (58.579985516*10**(-3), 27.032444757*10**(-3),0)
+    # m6 = (64.867251151*10**(-3),28.663475405*10**(-3),0)
+    # m7 = (60.570096319*10**(-3),45.254032279*10**(-3),0)
+    # m8 = (54.282213127*10**(-3),43.625389857*10**(-3),0)
+    # a1 = (53.39099766*10**(-3),45.259392713*10**(-3),0)
+    # a2 = (55.775078884*10**(-3),50.386185578*10**(-3),0)
+    # a3 = (59.41521771*10**(-3),25.355776837*10**(-3),0)
+    # a4 = (65.12210917100001*10**(-3),27.707477175*10**(-3),0)
+    # #Points for Stator Nut and air in the stator
+    # s1 = (79.04329892000*10**(-3),3.9538335974*10**(-3),0)
+    # s2 = (80.143057128*10**(-3),4.0037794254*10**(-3),0)
+    # s3 = (80.387321219*10**(-3),2.965459706*10**(-3),0)
+    # s4 = (98.78501315600001*10**(-3),3.9007973292*10**(-3),0)
+    # s5 = (98.44904989600001*10**(-3),9.026606148400001*10**(-3),0)
+    # s6 = (80.086666706*10**(-3),7.5525611543*10**(-3),0)
+    # s7 = (79.980020247*10**(-3),6.4912415424*10**(-3),0)
+    # s8 = (78.88229587*10**(-3),6.4102654448*10**(-3),0)
 
     domains = []
 
@@ -506,7 +548,7 @@ if (buildMotor==True):
 
     rotor_inner  = Circle(orign,r=r1).Face()
     rotor_outer  = Circle(orign,r=r2).Face()
-    sliding_inner_reduced  = Circle(orign,r=r4_reduced).Face()
+    # sliding_inner_reduced  = Circle(orign,r=r4_reduced).Face()
     sliding_inner  = Circle(orign,r=r4).Face()
     sliding_outer  = Circle(orign,r=r6).Face()
     stator_inner = Circle(orign,r=r7).Face()
@@ -515,7 +557,7 @@ if (buildMotor==True):
     rotor_inner.edges[0].name = "rotor_inner"
     rotor_outer.edges[0].name = "rotor_outer"
 
-    sliding_inner_reduced.edges[0].name = "sliding_inner_reduced"
+    # sliding_inner_reduced.edges[0].name = "sliding_inner_reduced"
     sliding_inner.edges[0].name = "sliding_inner"
 
     stator_inner.edges[0].name = "stator_inner"
@@ -668,7 +710,8 @@ ngsolve.internal.viewoptions.clipping.ny=0
 ngsolve.internal.viewoptions.clipping.nz=-1
 ngsolve.internal.viewoptions.clipping.dist=0
 
-lz = 0.1795
+lz = 1
+# lz = 0.1795
 rTorqueOuter = r7
 rTorqueInner = r2
 
@@ -738,13 +781,13 @@ reluc_curve_diff = reluc_curve.Differentiate()
 #######################################
 
 nuAir = 1e7/(4*pi)
-nuMagnet = nuAir / 1.05
-nuIron = nuAir / 5100
+nuMagnet = nuAir # / 1.05
+nuIron = nuAir # / 5100
 nuCoil = nuAir
 cfNu = mesh.MaterialCF({area_iron: nuIron, area_coils: nuCoil, area_air: nuAir, area_magnets: nuMagnet}, default=0)
 Draw(cfNu, mesh, 'cfNu')
 
-BR = 1.05*1.158095238095238 #remanence flux density
+BR = 1.158095238095238 #remanence flux density
 #if noMag == True:
     #BR = 0
 
@@ -758,12 +801,14 @@ areaOfOneCoil = (Integrate(1, mesh, order = 10, definedon=mesh.Materials('coil1'
 I1 = I0peak * sin(phi0 + phase_shift_I1)          #U+
 I2 =  (-1)* I0peak * sin(phi0 + phase_shift_I2)   #V-
 I3 = I0peak * sin(phi0 + phase_shift_I3)          #W+
+
 #print("UPlus" ,  I1* 2.75 / areaOfOneCoil)
 #print("VMinus", -I2* 2.75 / areaOfOneCoil)
 #print("WPlus" ,  I3* 2.75 / areaOfOneCoil)
 #print("UMinus", -I1* 2.75 / areaOfOneCoil)
 #print("VPlus" ,  I2* 2.75 / areaOfOneCoil)
 #print("WMinus", -I3* 2.75 / areaOfOneCoil)
+
 I1 = CoefficientFunction (I0peak * sin(phi0 + phase_shift_I1))          #U+
 I2 = CoefficientFunction ( (-1)* I0peak * sin(phi0 + phase_shift_I2))   #V-
 I3 = CoefficientFunction (I0peak * sin(phi0 + phase_shift_I3))          #W+
@@ -816,7 +861,7 @@ airgap_mask.Set(CoefficientFunction((1)), definedon = mesh.Materials("air_gap|ai
 Draw(rotor_outer_mask, mesh, 'rotor_outer_mask')
 Draw(airgap_mask, mesh, 'airgap_mask')
 
-readjustRotorOuterPoints()
+# readjustRotorOuterPoints()
 
 gfu = GridFunction(fes)
 

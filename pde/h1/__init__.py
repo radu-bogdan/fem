@@ -1,1 +1,1 @@
-from .assemble import assemble,assembleB
+from .assemble import assemble,assembleB,assembleE

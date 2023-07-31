@@ -46,6 +46,7 @@ def drawMagnet1(k):
     seg3 = occ.Segment(m3new,m4new);
     seg4 = occ.Segment(m4new,m1new);
     magnet1 = occ.Face(occ.Wire([seg1,seg2,seg3,seg4]))
+    
     #Draw air around magnet
     air_seg1 = occ.Segment(m1new,a5new)
     air_seg2 = occ.Segment(a5new,a6new)
@@ -346,7 +347,7 @@ air_gap_stator.faces.name = "air_gap_stator"
 air_gap.faces.maxh = h_air_gap
 air_gap.faces.name = "air_gap"
 
-air_gap_rotor.faces.maxh = h_air_gap
+air_gap_rotor.faces.maxh = 1.08*h_air_gap
 air_gap_rotor.faces.name = "air_gap_rotor"
 
 rotor_iron.faces.name = "rotor_iron"
@@ -371,13 +372,17 @@ mesh = ng.Mesh(geoOCC.GenerateMesh())
 # mesh.Curve(2)
 # mesh.ngmesh.SecondOrder()
 
+# mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
 
 # a = mesh.ngmesh.Elements2D().NumPy()
 # print(a)
 # stop
 # mesh.ngmesh.Save("Motor_Bosch_2d.vol")
 
-
+print(mesh.ngmesh.Elements2D().NumPy().shape)
 
 
 #####################################################################################################################
@@ -561,5 +566,5 @@ vek[trig_stator_rotor] = 4
 vek[trig_shaft] = 3.6
 
 # fig = MESH.pdemesh()
-fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek/10, u_height=0)
-fig.show()
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek/10, u_height=0)
+# fig.show()

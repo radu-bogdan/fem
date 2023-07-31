@@ -10,16 +10,16 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
 import geometries
-# from sksparse.cholmod import cholesky
+from sksparse.cholmod import cholesky
 
 import plotly.io as pio
 pio.renderers.default = 'browser'
 from matplotlib.pyplot import spy
 
 
-np.set_printoptions(threshold = np.inf)
-np.set_printoptions(linewidth = np.inf)
-np.set_printoptions(precision = 8)
+# np.set_printoptions(threshold = np.inf)
+# np.set_printoptions(linewidth = np.inf)
+# np.set_printoptions(precision = 8)
 
 gmsh.initialize()
 gmsh.model.add("Capacitor plates")
@@ -36,7 +36,7 @@ u = lambda x,y : np.sin(np.pi*x)*np.sin(np.pi*y)
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
 
-iterations = 8
+iterations = 4
 
 err = np.zeros(shape = (iterations,1))
 
@@ -61,6 +61,15 @@ for i in range(iterations):
     D0b = pde.int.assembleB(MESH, order = 2)
     B_full = Mb@D0b@Mb.T
     
+    
+    D_gE = pde.int.evaluateE(MESH, order = 2, coeff = g) # TODO!
+    R1,R2,R3 = pde.h1.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
+    D0bE = pde.int.assembleE(MESH, order = 2)
+    
+    B_fullE = (R1+R2+R3)@D0bE@(R1+R2+R3).T
+    B_g = (R1+R2+R3)@D0bE@D_gE.diagonal()
+    
+    
     D_g = pde.int.evaluateB(MESH, order = 2, coeff = g)
     B_g = Mb@D0b@D_g.diagonal()
     
@@ -78,16 +87,17 @@ for i in range(iterations):
     
     
     tm = time.time()
-    # factor = cholesky(A)
-    # uh = factor(b)
-    uh = sps.linalg.spsolve(A,b)
+    factor = cholesky(A)
+    uh = factor(b)
+    # uh = sps.linalg.spsolve(A,b)
     elapsed = time.time()-tm; print('Solving took  {:4.8f} seconds.'.format(elapsed))
     
     err[i] = np.sqrt((u_ex-uh)@(M + Kxx + Kyy)@(u_ex-uh))
     
-    tm = time.time()
-    MESH.refinemesh()
-    elapsed = time.time()-tm; print('Refining mesh took {:4.8f} seconds.'.format(elapsed))
+    if i!=iterations-1:
+        tm = time.time()
+        MESH.refinemesh()
+        elapsed = time.time()-tm; print('Refining mesh took {:4.8f} seconds.\n'.format(elapsed))
     
     # tm = time.time()
     # MESH = pde.mesh(p,e,t,q)

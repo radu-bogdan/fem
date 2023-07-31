@@ -5,7 +5,7 @@ import scipy as sp
 
 
 
-all_linear = False
+all_linear = True
 
 ##########################################################################################
 @nb.njit() 
@@ -181,15 +181,6 @@ gxy_linear = lambda x,y : x*0
 gyx_linear = lambda x,y : y*0
 gyy_linear = lambda x,y : 1/nu0 + 0*y
 
-if all_linear == True:
-    f_nonlinear = lambda x,y : 1/2*nu0*(x**2+y**2)
-    fx_nonlinear = lambda x,y : nu0*x
-    fy_nonlinear = lambda x,y : nu0*y
-    fxx_nonlinear = lambda x,y : nu0 + 0*x
-    fxy_nonlinear = lambda x,y : x*0
-    fyx_nonlinear = lambda x,y : y*0
-    fyy_nonlinear = lambda x,y : nu0 + 0*y
-
 ##########################################################################################
 
 def g_nonlinear_all(x,y):
@@ -217,6 +208,38 @@ def g_nonlinear_all(x,y):
     return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
            g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
 ##########################################################################################
+
+
+
+if all_linear == True:
+    f_nonlinear = lambda x,y : 1/2*nu0*(x**2+y**2)
+    fx_nonlinear = lambda x,y : nu0*x
+    fy_nonlinear = lambda x,y : nu0*y
+    fxx_nonlinear = lambda x,y : nu0 + 0*x
+    fxy_nonlinear = lambda x,y : x*0
+    fyx_nonlinear = lambda x,y : y*0
+    fyy_nonlinear = lambda x,y : nu0 + 0*y
+    
+    def g_nonlinear_all(x,y):
+        
+        g_l = lambda x,y : 1/(2*nu0)*(x**2+y**2)
+        gx_l = lambda x,y : 1/nu0*x
+        gy_l = lambda x,y : 1/nu0*y
+        gxx_l = lambda x,y : 1/nu0 + 0*x
+        gxy_l = lambda x,y : x*0
+        gyx_l = lambda x,y : y*0
+        gyy_l = lambda x,y : 1/nu0 + 0*y
+            
+        g_nl = lambda x,y : 1/(2*nu0)*(x**2+y**2)
+        gx_nl = lambda x,y : 1/nu0*x
+        gy_nl = lambda x,y : 1/nu0*y
+        gxx_nl = lambda x,y : 1/nu0 + 0*x
+        gxy_nl = lambda x,y : x*0
+        gyx_nl = lambda x,y : y*0
+        gyy_nl = lambda x,y : 1/nu0 + 0*y
+        
+        return g_l(x,y), gx_l(x,y), gy_l(x,y), gxx_l(x,y), gxy_l(x,y), gyx_l(x,y), gyy_l(x,y),\
+               g_nl(x,y),gx_nl(x,y),gy_nl(x,y),gxx_nl(x,y),gxy_nl(x,y),gyx_nl(x,y),gyy_nl(x,y)
 
 # import time
 # # a = np.random.rand(1_000_000)

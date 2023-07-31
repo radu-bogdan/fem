@@ -127,7 +127,7 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
-def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = npy.empty(0), like = 0):
+def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = '', like = 0):
     
     # if edges.size == 0:
     #     edges = MESH.Boundary_Region

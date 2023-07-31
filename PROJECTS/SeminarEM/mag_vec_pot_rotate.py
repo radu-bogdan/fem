@@ -88,9 +88,9 @@ MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
 t = MESH.t
 p = MESH.p
 
-linear = '*air,*magnet,shaft_iron,*coil'
+linear = '*air,*magnet,*coil,shaft_iron'
 nonlinear = 'stator_iron,rotor_iron'
-rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
+rotor = '*magnet,rotor_iron,rotor_air,shaft_iron'
 ##########################################################################################
 
 
@@ -100,8 +100,8 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 if ORDER == 1:
     poly = 'P1'
     dxpoly = 'P0'
-    order_phi = 2
-    order_dphi = 2
+    order_phi = 1
+    order_dphi = 0
     order_phiphi = order_phi*2
     order_dphidphi = order_dphi*2
     u = np.zeros(MESH.np)
@@ -123,7 +123,8 @@ if ORDER == 2:
 ##########################################################################################
 
 sys.path.insert(1,'../mixed.EM')
-from nonlinLaws_bosch import *
+from nonlinLaws import *
+# from nonlinLaws_bosch import *
 
 
 ###########################################################################################
@@ -422,8 +423,9 @@ for k in range(rots):
     
     # fig = MESH.pdesurf(ux**2+uy**2)
     # fig = MESH.pdesurf(u)
-    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, cmax=5)
-    fig.show()
+    
+    # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, cmax=5)
+    # fig.show()
     
     # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     # stop
@@ -436,7 +438,7 @@ for k in range(rots):
     # chip = ax1.tripcolor(Triang, (ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, cmap = cmap, shading = 'flat', lw = 0.1)
     
     
-    
+    stop
     
     ax1.cla()
     ax2.cla()
@@ -573,6 +575,8 @@ for k in range(rots):
     # fig.show()
     
     ##########################################################################################
+    
+    saveu = u
     
     stop
     

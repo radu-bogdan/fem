@@ -140,22 +140,16 @@ def assembleB(MESH,space,matrix,shape,order = -1, edges = npy.empty(0)):
 
 def assembleE(MESH,space,matrix,order=1):
     
-    # if space[-1] == 'd': spaceC = space[:-1]
-    # else: spaceC = space
-    
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
     p = MESH.p; 
     t = MESH.t; nt = MESH.nt
-    # e = MESH.EdgesToVertices
     
-    # phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     phi =  MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
     sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
         
     LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
-    # LIST_DOF_C = MESH.FEMLISTS[spaceC]['TRIG']['LIST_DOF']
     DIRECTION_DOF = MESH.FEMLISTS[space]['TRIG']['DIRECTION_DOF']
     
     qp,we = quadrature.one_d(order); nqp = len(we)
@@ -200,14 +194,9 @@ def assembleE(MESH,space,matrix,order=1):
         indices1[ind1,:] = indices1[ind1,::-1]; 
         indices2[ind2,:] = indices2[ind2,::-1];
         
-        
         jm0 = npy.tile(npy.tile(MESH.TriangleToEdges[:,0]*nqp,nqp) + indices0.T.flatten(),(lphi,1)).T
         jm1 = npy.tile(npy.tile(MESH.TriangleToEdges[:,1]*nqp,nqp) + indices1.T.flatten(),(lphi,1)).T
         jm2 = npy.tile(npy.tile(MESH.TriangleToEdges[:,2]*nqp,nqp) + indices2.T.flatten(),(lphi,1)).T
-        
-        # jm0n = npy.tile(MESH.TriangleToEdges[:,0]*nqp,(nqp,1)) + npy.tile(npy.arange(nqp).repeat(nt),(lphi,1)).T
-        # jm1n = npy.tile(MESH.TriangleToEdges[:,1]*nqp,(nqp,1)) + npy.tile(npy.arange(nqp).repeat(nt),(lphi,1)).T
-        # jm2n = npy.tile(MESH.TriangleToEdges[:,2]*nqp,(nqp,1)) + npy.tile(npy.arange(nqp).repeat(nt),(lphi,1)).T
 
         for j in range(lphi):
             for i in range(nqp):
