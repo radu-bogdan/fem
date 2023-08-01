@@ -30,13 +30,13 @@ gmsh.option.setNumber("Mesh.MeshSizeMin", 1)
 # gmsh.fltk.run()
 
 f = lambda x,y : (np.pi**2+np.pi**2)*np.sin(np.pi*x)*np.sin(np.pi*y)
-g = lambda x,y : 0*x
-u = lambda x,y : np.sin(np.pi*x)*np.sin(np.pi*y)
+g = lambda x,y : 1+0*x
+u = lambda x,y : 1+np.sin(np.pi*x)*np.sin(np.pi*y)
 
 p,e,t,q = pde.petq_generate()
 MESH = pde.mesh(p,e,t,q)
 
-iterations = 4
+iterations = 5
 
 err = np.zeros(shape = (iterations,1))
 
@@ -62,13 +62,15 @@ for i in range(iterations):
     B_full = Mb@D0b@Mb.T
     
     
-    D_gE = pde.int.evaluateE(MESH, order = 2, coeff = g) # TODO!
-    R1,R2,R3 = pde.h1.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
+    E1,E2,E3 = pde.h1.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
     D0bE = pde.int.assembleE(MESH, order = 2)
     
-    B_fullE = (R1+R2+R3)@D0bE@(R1+R2+R3).T
-    B_g = (R1+R2+R3)@D0bE@D_gE.diagonal()
+    B_fullE = (E1+E2+E3)@D0bE@(E1+E2+E3).T
     
+    D_gE = pde.int.evaluateE(MESH, order = 2, coeff = g)
+    
+    # TODO : This should be fixed somehow... mb for H1 it doesnt really make sense to integrate over all edges
+    B_gE = np.abs(E1+E2+E3)@D0bE@D_gE.diagonal()
     
     D_g = pde.int.evaluateB(MESH, order = 2, coeff = g)
     B_g = Mb@D0b@D_g.diagonal()
