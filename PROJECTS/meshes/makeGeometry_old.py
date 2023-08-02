@@ -367,15 +367,70 @@ domains.append(stator_iron)
 geo = occ.Glue(domains)
 
 geoOCC = occ.OCCGeometry(geo, dim=2)
-geoOCCmesh = geoOCC.GenerateMesh()
+mesh = ng.Mesh(geoOCC.GenerateMesh())
 
-geoOCCmesh.Refine()
-# geoOCCmesh.SecondOrder()
+# mesh.Curve(2)
+# mesh.ngmesh.SecondOrder()
+
+mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
+# mesh.Refine()
+
+# a = mesh.ngmesh.Elements2D().NumPy()
+# print(a)
+# stop
+# mesh.ngmesh.Save("Motor_Bosch_2d.vol")
 
 import pde
-MESH = pde.mesh.netgen(geoOCCmesh)
+MESH = pde.mesh.netgen(mesh.ngmesh)
+MESH.pdemesh2()
+
+stop
+
+print(mesh.ngmesh.Elements2D().NumPy().shape)
 
 
+#####################################################################################################################
+regions_1d_np = mesh.GetBoundaries()
+regions_2d_np = mesh.GetMaterials()
+
+# regions_1d_np = np.zeros((len(regions_1d),), dtype=object)
+# regions_1d_np[:] = list(regions_1d)
+
+# regions_2d_np = np.zeros((len(regions_2d),), dtype=object)
+# regions_2d_np[:] = list(regions_2d)
+
+# p = []
+# for k in mesh.vertices:
+#     p += [np.array(mesh[k].point)]
+# p = np.array(p)
+
+p = []
+for i, el in enumerate(mesh.ngmesh.Points()):
+    p += [np.array([el[0],el[1]])]
+p = np.array(p)
+
+t = []
+for i, el in enumerate(mesh.ngmesh.Elements2D()):
+    t += [np.array([el.points[0].nr,\
+                    el.points[1].nr,\
+                    el.points[2].nr,\
+                    # el.points[3].nr,\
+                    # el.points[4].nr,\
+                    # el.points[5].nr,\
+                    el.index])-1]
+t = np.array(t)
+
+e = []
+for i, el in enumerate(mesh.ngmesh.Elements1D()):
+    e += [np.array([el.points[0].nr,\
+                    el.points[1].nr,\
+                    # el.points[2].nr,\
+                    el.index])-1]
+e = np.array(e)
+
+q = np.empty(0)
 #####################################################################################################################
 
 
@@ -478,11 +533,11 @@ j3[area_coils_WMinus] = WMinus
 
 #####################################################################################################################
 import scipy.io
-scipy.io.savemat('motor.mat', {"t" : MESH.t,
-                               "e" : MESH.e,
-                               "p" : MESH.p,
-                               "regions_2d" : MESH.regions_2d,
-                               "regions_1d" : MESH.regions_1d,
+scipy.io.savemat('motor.mat', {"t" : t.T+1,
+                               "e" : e.T+1,
+                               "p" : p.T,
+                               "regions_2d" : regions_2d_np,
+                               "regions_1d" : regions_1d_np,
                                "m" : m,
                                "j3" : j3},
                  do_compression=True)
@@ -491,20 +546,23 @@ scipy.io.savemat('motor.mat', {"t" : MESH.t,
 
 
 #####################################################################################################################
-np.savez_compressed('motor.npz', p=MESH.p, e=MESH.e, t=MESH.t, regions_2d=MESH.regions_2d, regions_1d=MESH.regions_1d, m=m, j3=j3)
+np.savez_compressed('motor.npz', p=p.T, e=e.T, t=t.T, regions_2d=regions_2d_np, regions_1d=regions_1d_np, m=m, j3=j3)
 #####################################################################################################################
 
-ind_air_all = np.flatnonzero(np.core.defchararray.find(MESH.regions_2d,'air')!=-1)
-ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(MESH.regions_2d,'iron')!=-1)
-ind_magnet = np.flatnonzero(np.core.defchararray.find(MESH.regions_2d,'magnet')!=-1)
-ind_coil = np.flatnonzero(np.core.defchararray.find(MESH.regions_2d,'coil')!=-1)
-ind_shaft = np.flatnonzero(np.core.defchararray.find(MESH.regions_2d,'shaft')!=-1)
+import pde
+MESH = pde.mesh(p,e,t,q,regions_2d_np,regions_1d_np)
 
-trig_air_all = np.where(np.isin(MESH.t[:,-1],ind_air_all))
-trig_stator_rotor = np.where(np.isin(MESH.t[:,-1],ind_stator_rotor))
-trig_magnet = np.where(np.isin(MESH.t[:,-1],ind_magnet))
-trig_coil = np.where(np.isin(MESH.t[:,-1],ind_coil))
-trig_shaft = np.where(np.isin(MESH.t[:,-1],ind_shaft))
+ind_air_all = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'air')!=-1)
+ind_stator_rotor = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'iron')!=-1)
+ind_magnet = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'magnet')!=-1)
+ind_coil = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'coil')!=-1)
+ind_shaft = np.flatnonzero(np.core.defchararray.find(regions_2d_np,'shaft')!=-1)
+
+trig_air_all = np.where(np.isin(t[:,3],ind_air_all))
+trig_stator_rotor = np.where(np.isin(t[:,3],ind_stator_rotor))
+trig_magnet = np.where(np.isin(t[:,3],ind_magnet))
+trig_coil = np.where(np.isin(t[:,3],ind_coil))
+trig_shaft = np.where(np.isin(t[:,3],ind_shaft))
 
 vek = np.zeros(MESH.nt)
 vek[trig_air_all] = 1
@@ -514,5 +572,5 @@ vek[trig_stator_rotor] = 4
 vek[trig_shaft] = 3.6
 
 # fig = MESH.pdemesh()
-# fig = MESH.pdesurf(vek)
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), vek/10, u_height=0)
 # fig.show()

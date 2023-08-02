@@ -204,5 +204,32 @@ def assembleE(MESH,space,matrix,order=1):
         B2.eliminate_zeros()
         
         return B0,B1,B2
+
+def assembleR(MESH, space, edges = ''):
+    
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
+        
+    if type(edges) == str:
+        if edges == '':
+            ind_edges = MESH.Boundary_Region
+    else:
+        if MESH.regions_1d == []:
+            ind_edges = edges
+        else:
+            ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+    indices = npy.in1d(MESH.Boundary_Region,ind_edges)
+    
+    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
+    LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices,:])
+    LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
+    
+    D = sp.eye(sizeM, format = 'csc')
+    R1 = D[:,LIST_DOF]
+    R2 = D[:,LIST_DOF2]
+    
+    return R1.T.tocsc(),R2.T.tocsc()
+
+
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape=(m, n))

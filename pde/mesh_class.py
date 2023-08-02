@@ -20,7 +20,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 class mesh:
-    # @profile
+    # @profile       
+    
     def __init__(self, p,e,t,q,r2d = npy.empty(0),r1d = npy.empty(0)):
         
         if t.size != 0:
@@ -205,6 +206,39 @@ class mesh:
     def __repr__(self):
         return f"np:{self.np}, nt:{self.nt}, nq:{self.nq}, ne:{self.ne}, ne_all:{self.NoEdges}"
     
+    def from_netgen(self,geoOCCmesh):
+        npoints = geoOCCmesh.Elements2D().NumPy()['np'].max()
+
+        p = geoOCCmesh.Coordinates()
+        t = npy.c_[geoOCCmesh.Elements2D().NumPy()['nodes'].astype(npy.uint64)[:,:npoints],
+                   geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64)]-1
+
+        e = npy.c_[geoOCCmesh.Elements1D().NumPy()['nodes'].astype(npy.uint64)[:,:((npoints+1)//2)],
+                   geoOCCmesh.Elements1D().NumPy()['index'].astype(npy.uint64)]-1
+
+        max_bc_index = geoOCCmesh.Elements1D().NumPy()['index'].astype(npy.uint64).max()
+        max_rg_index = geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64).max()
+
+        q = npy.empty(0)
+
+        regions_1d_np = []
+        for i in range(max_bc_index):
+            regions_1d_np += [geoOCCmesh.GetBCName(i)]
+
+        regions_2d_np = []
+        for i in range(max_rg_index):
+            regions_2d_np += [geoOCCmesh.GetMaterial(i+1)]
+        
+        return p, e, t, q, regions_2d_np, regions_1d_np
+    
+    @classmethod
+    def netgen(cls, geoOCCmesh):
+        cls.geoOCCmesh = geoOCCmesh
+        p, e, t, q, regions_2d_np, regions_1d_np = cls.from_netgen(cls,geoOCCmesh)
+        
+        return cls(p, e, t, q, regions_2d_np, regions_1d_np)
+        # self.__init__(self, p,e,t,q,r2d = regions_2d_np,r1d = regions_1d_np)
+    
     # @profile
     def makeBEO(self): # Boundary Edge Orientations
         gem_list = npy.r_[self.TriangleToEdges.ravel(),self.QuadToEdges.ravel()]
@@ -260,26 +294,38 @@ class mesh:
         self.FEMLISTS = femlists.lists(self, space)
         
     def refinemesh(self):
-        pn = 1/2*(self.p[self.EdgesToVertices[:,0],:]+
-                  self.p[self.EdgesToVertices[:,1],:])
-        p_new = npy.r_[self.p,pn]
         
-        tn = self.np + self.TriangleToEdges
-        t_new = npy.r_[npy.c_[self.t[:,0],tn[:,2],tn[:,1],self.t[:,3]],
-                       npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.t[:,3]],
-                       npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.t[:,3]],
-                       npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.t[:,3]]].astype(npy.int64)
-        bn = self.np + self.Boundary_Edges
-        e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary_Region],
-                       npy.c_[bn,self.e[:,1],self.Boundary_Region]].astype(npy.int64)
-        q_new = self.q
-        
-        self.__init__(p_new,e_new,t_new,q_new,self.regions_2d,self.regions_1d)
-        self.FEMLISTS = {} # reset fem lists, cuz new mesh
-        # self.delattr("Boundary_EdgeOrientation")
-        
-        if hasattr(self, "Boundary_EdgeOrientation"):
-            del self.Boundary_EdgeOrientation
+        if hasattr(self, "geoOCCmesh"):
+            print("geoOCC")
+            self.geoOCCmesh.Refine()
+            p_new, e_new, t_new, q_new, regions_2d_np, regions_1d_np = self.from_netgen(self.geoOCCmesh)
+            self.__init__(p_new,e_new,t_new,q_new,regions_2d_np,regions_1d_np)
+            self.FEMLISTS = {} # reset fem lists, cuz new mesh
+            # self.delattr("Boundary_EdgeOrientation")
+            
+            if hasattr(self, "Boundary_EdgeOrientation"):
+                del self.Boundary_EdgeOrientation
+        else:
+            pn = 1/2*(self.p[self.EdgesToVertices[:,0],:]+
+                      self.p[self.EdgesToVertices[:,1],:])
+            p_new = npy.r_[self.p,pn]
+            
+            tn = self.np + self.TriangleToEdges
+            t_new = npy.r_[npy.c_[self.t[:,0],tn[:,2],tn[:,1],self.t[:,3]],
+                           npy.c_[self.t[:,1],tn[:,0],tn[:,2],self.t[:,3]],
+                           npy.c_[self.t[:,2],tn[:,1],tn[:,0],self.t[:,3]],
+                           npy.c_[    tn[:,0],tn[:,1],tn[:,2],self.t[:,3]]].astype(npy.int64)
+            bn = self.np + self.Boundary_Edges
+            e_new = npy.r_[npy.c_[self.e[:,0],bn,self.Boundary_Region],
+                           npy.c_[bn,self.e[:,1],self.Boundary_Region]].astype(npy.int64)
+            q_new = self.q
+            
+            self.__init__(p_new,e_new,t_new,q_new,self.regions_2d,self.regions_1d)
+            self.FEMLISTS = {} # reset fem lists, cuz new mesh
+            # self.delattr("Boundary_EdgeOrientation")
+            
+            if hasattr(self, "Boundary_EdgeOrientation"):
+                del self.Boundary_EdgeOrientation
 
         
         print('Generated refined mesh with ' + str(p_new.shape[0]) + ' points, ' 

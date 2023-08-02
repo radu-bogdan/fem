@@ -134,11 +134,25 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = '', like = 0):
     # indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
     # indices = npy.in1d(MESH.Boundary_Region,edges)
     
-    if edges == '':
-        ind_edges = MESH.Boundary_Region
+    # if edges == '':
+    #     ind_edges = MESH.Boundary_Region
+    # else:
+    #     ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+    # indices = npy.in1d(MESH.Boundary_Region,ind_edges)
+    
+    
+    if type(edges) == str:
+        if edges == '':
+            ind_edges = MESH.Boundary_Region
+        else:
+            ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
     else:
-        ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+        if MESH.regions_1d == []:
+            ind_edges = edges
+        
     indices = npy.in1d(MESH.Boundary_Region,ind_edges)
+    
+    
     
     p = MESH.p;    
     e = MESH.e[indices,:]; ne = e.shape[0]
