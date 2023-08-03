@@ -222,7 +222,7 @@ domains = []
 # h_rotor_iron = h_max
 # h_shaft_iron = h_max
 
-h_max = 0.005
+h_max = 1
 
 h_air_gap = r6-r4 #0.05*h_max
 h_air_magnets = h_max
@@ -369,7 +369,7 @@ geo = occ.Glue(domains)
 geoOCC = occ.OCCGeometry(geo, dim=2)
 geoOCCmesh = geoOCC.GenerateMesh()
 
-geoOCCmesh.Refine()
+# geoOCCmesh.Refine()
 # geoOCCmesh.SecondOrder()
 
 import pde
@@ -484,14 +484,15 @@ scipy.io.savemat('motor.mat', {"t" : MESH.t,
                                "regions_2d" : MESH.regions_2d,
                                "regions_1d" : MESH.regions_1d,
                                "m" : m,
-                               "j3" : j3},
+                               "j3" : j3,
+                               "geoOCC" : geoOCC},
                  do_compression=True)
 #####################################################################################################################
 
 
 
 #####################################################################################################################
-np.savez_compressed('motor.npz', p=MESH.p, e=MESH.e, t=MESH.t, regions_2d=MESH.regions_2d, regions_1d=MESH.regions_1d, m=m, j3=j3)
+np.savez_compressed('motor.npz', p=MESH.p, e=MESH.e, t=MESH.t, regions_2d=MESH.regions_2d, regions_1d=MESH.regions_1d, m=m, j3=j3, geoOCC = geoOCC)
 #####################################################################################################################
 
 ind_air_all = np.flatnonzero(np.core.defchararray.find(MESH.regions_2d,'air')!=-1)

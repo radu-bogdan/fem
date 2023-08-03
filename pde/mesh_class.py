@@ -293,9 +293,9 @@ class mesh:
     def makeFemLists(self,space):
         self.FEMLISTS = femlists.lists(self, space)
         
-    def refinemesh(self):
+    def refinemesh(self,classic = True):
         
-        if hasattr(self, "geoOCCmesh"):
+        if (hasattr(self, "geoOCCmesh") and classic == False):
             print("geoOCC")
             self.geoOCCmesh.Refine()
             p_new, e_new, t_new, q_new, regions_2d_np, regions_1d_np = self.from_netgen(self.geoOCCmesh)

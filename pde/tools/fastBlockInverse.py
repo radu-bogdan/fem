@@ -11,6 +11,8 @@ found = spam_spec is not None
 
 from scipy.sparse.linalg import splu
 
+# found = False
+
 if found == False:
     # @profile()
     def fastBlockInverse(Mh):

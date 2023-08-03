@@ -12,23 +12,26 @@ else:
     H_KL = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 200000, 500000] + [(zz-2.46158548)/(4*np.pi*10**-7)+500000 for zz in np.linspace(2.46158548+(2.46158548-2.08458619), 10, 60)])
     B_KL = np.array([0,  0.076361010000000,   0.151802010000000,   0.224483020000000,   0.294404020000000,   0.360645030000000,   0.422286030000000,   0.479327040000000,   0.532688040000000,   0.581449050000000,   0.626530050000000,   0.913580110000000,    1.047910160000000,   1.123360210000000,   1.172130270000000,   1.205260320000000,   1.231030370000000,  1.250360420000000,   1.266010480000000,   1.279820530000000,   1.356281060000000,   1.400541590000000,   1.436522120000000,   1.467902650000000,   1.497443190000000,   1.525143720000000,   1.551004250000000,   1.575944780000000,   1.599045310000000,   1.761970620000000,   1.836575930000000,   1.870701240000000,   1.891026550000000,   1.905831860000000,   1.919717170000000,   1.932682480000000,   1.945647790000000,   1.958613100000000,   2.084586190000000,   2.461585480000000] + [ zz for zz in np.linspace(2.46158548+(2.46158548-2.08458619), 10, 60)])
 
-mu_KL = B_KL[1:]/H_KL[1:]
-nu_KL = H_KL[1:]/B_KL[1:]
+ab = 1
 
-t, c, k = interpolate.splrep(H_KL, B_KL, s=0.1, k=3)
+mu_KL = B_KL[ab:]/H_KL[ab:]
+nu_KL = H_KL[ab:]/B_KL[ab:]
+
+t, c, k = interpolate.splrep(H_KL, B_KL, s=0.1, k=1)
 HB_curve = interpolate.BSpline(t, c, k, extrapolate = True)
 coenergy_density = HB_curve.antiderivative()
 
-t, c, k = interpolate.splrep(B_KL, H_KL, s=0.1, k=3)
-BH_curve = interpolate.BSpline(t, c, k, extrapolate = True)
-energy_density = BH_curve.antiderivative()
-dx_BH_curve = BH_curve.derivative()
-
-t, c, k = interpolate.splrep(B_KL[1:]**2, nu_KL, s=0.1, k=3)
+t, c, k = interpolate.splrep(B_KL[ab:]**2, nu_KL, s=0.1, k=1)
 nu_curve = interpolate.BSpline(t, c, k, extrapolate = True)
 dx_nu_curve = nu_curve.derivative()
 
-t, c, k = interpolate.splrep(H_KL[1:]**2, mu_KL, s=0.1, k=3)
+
+
+t, c, k = interpolate.splrep(B_KL, H_KL, s=0, k=2)
+BH_curve = interpolate.BSpline(t, c, k, extrapolate = True)
+energy_density = BH_curve.antiderivative()
+
+t, c, k = interpolate.splrep(H_KL[ab:]**2, mu_KL, s=0.001, k=2)
 mu_curve = interpolate.BSpline(t, c, k, extrapolate = True)
 dx_mu_curve = mu_curve.derivative()
 
@@ -46,28 +49,55 @@ def nuy(x,y):
 
 def fx_nonlinear(x,y):
     return nu(x,y)*x
-    # return 2*x*BH_curve(x**2+y**2)
 
 def fy_nonlinear(x,y):
     return nu(x,y)*y
-    # return 2*y*BH_curve(x**2+y**2)
 
 def fxx_nonlinear(x,y):
     return nu(x,y) + x*nux(x,y)
-    # return 2*BH_curve(x**2+y**2) + 2*x*dx_BH_curve(x**2+y**2)
 
 def fxy_nonlinear(x,y):
     return x*nuy(x,y)
-    # return 2*x*dx_BH_curve(x**2+y**2)
 
 def fyx_nonlinear(x,y):
     return y*nux(x,y)
-    # return 2*y*dx_BH_curve(x**2+y**2)
 
 def fyy_nonlinear(x,y):
     return nu(x,y) + y*nuy(x,y)
-    # return 2*BH_curve(x**2+y**2) + 2*y*dx_BH_curve(x**2+y**2)
 
+
+
+
+
+def g_nonlinear(x,y):
+    return coenergy_density(x**2+y**2)
+
+def mu(x,y):
+    return mu_curve(x**2+y**2)
+
+def mux(x,y):
+    return 2*x*dx_mu_curve(x**2+y**2)
+
+def muy(x,y):
+    return 2*y*dx_mu_curve(x**2+y**2)
+
+def gx_nonlinear(x,y):
+    return mu(x,y)*x
+
+def gy_nonlinear(x,y):
+    return mu(x,y)*y
+
+def gxx_nonlinear(x,y):
+    return mu(x,y) + x*mux(x,y)
+
+def gxy_nonlinear(x,y):
+    return x*muy(x,y)
+
+def gyx_nonlinear(x,y):
+    return y*mux(x,y)
+
+def gyy_nonlinear(x,y):
+    return mu(x,y) + y*muy(x,y)
 
 
 nu0 = 10**7/(4*np.pi)
@@ -90,5 +120,35 @@ gyy_linear = lambda x,y : 1/nu0 + 0*y
 
 
 
-# xx = np.linspace(0,1,10_000_000)
-# plt.cla(); plt.plot(xx,fxy_nonlinear(xx,xx)-fyx_nonlinear(xx,xx))
+def g_nonlinear_all(x,y):
+    g_nl = g_nonlinear(x,y)
+    gx_nl = gx_nonlinear(x,y)
+    gy_nl = gy_nonlinear(x,y)
+    
+    gxx_nl = gxx_nonlinear(x,y); gxy_nl = gxy_nonlinear(x,y)
+    gyx_nl = gyx_nonlinear(x,y); gyy_nl = gyy_nonlinear(x,y)
+    
+    g_l = g_linear(x,y)
+    gx_l = gx_linear(x,y)
+    gy_l = gy_linear(x,y)
+    
+    gxx_l = gxx_linear(x,y)
+    gxy_l = gxy_linear(x,y)
+    gyx_l = gyx_linear(x,y)
+    gyy_l = gyy_linear(x,y)
+    
+    return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
+           g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
+
+xx = np.linspace(0,4*1e13,10_000_000)
+plt.cla(); 
+plt.loglog(xx,mu_curve(xx))
+# plt.loglog(xx,dx_mu_curve(xx))
+
+plt.loglog(H_KL[1:]**2, mu_KL)
+# plt.plot(xx,coenergy_density(xx))
+
+# xx = np.linspace(0,5,10_000_000)
+# plt.cla();
+# plt.plot(xx,nu_curve(xx))
+# plt.plot(xx,dx_nu_curve(xx))

@@ -46,9 +46,9 @@ ax1.set_aspect(aspect = 'equal')
 ##########################################################################################
 motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
-p = motor_npz['p'].T
-e = motor_npz['e'].T
-t = motor_npz['t'].T
+p = motor_npz['p']
+e = motor_npz['e']
+t = motor_npz['t']
 q = np.empty(0)
 regions_2d = motor_npz['regions_2d']
 regions_1d = motor_npz['regions_1d']
@@ -108,7 +108,7 @@ if ORDER == 2:
 ############################################################################################
 
 sys.path.insert(1,'../mixed.EM')
-from nonlinLaws import *                       
+from nonlinLaws_bosch import *                       
                        
 ############################################################################################
 

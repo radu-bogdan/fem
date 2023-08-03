@@ -222,9 +222,10 @@ domains = []
 # h_rotor_iron = h_max
 # h_shaft_iron = h_max
 
-h_max = 0.005
+h_max = 0.5
 
-h_air_gap = r6-r4 #0.05*h_max
+h_air_gap = h_max
+# h_air_gap = r6-r4 #0.05*h_max
 h_air_magnets = h_max
 h_coils = h_max
 h_stator_air = h_max
@@ -367,12 +368,13 @@ domains.append(stator_iron)
 geo = occ.Glue(domains)
 
 geoOCC = occ.OCCGeometry(geo, dim=2)
-mesh = ng.Mesh(geoOCC.GenerateMesh())
+netgen_mesh = geoOCC.GenerateMesh()
+mesh = ng.Mesh(netgen_mesh)
 
 # mesh.Curve(2)
 # mesh.ngmesh.SecondOrder()
 
-mesh.Refine()
+# mesh.Refine()
 # mesh.Refine()
 # mesh.Refine()
 # mesh.Refine()
@@ -383,8 +385,17 @@ mesh.Refine()
 # mesh.ngmesh.Save("Motor_Bosch_2d.vol")
 
 import pde
-MESH = pde.mesh.netgen(mesh.ngmesh)
+
+# netgen_mesh.Refine()
+MESH = pde.mesh.netgen(netgen_mesh)
+MESH.refinemesh(classic = True)
+
+# mesh.Refine()
+# MESH = pde.mesh.netgen(mesh.ngmesh)
+
 MESH.pdemesh2()
+MESH.pdesurf2(MESH.t[:,-1])
+
 
 stop
 

@@ -9,6 +9,7 @@ import scipy.sparse.linalg
 import time
 import plotly.io as pio
 pio.renderers.default = 'browser'
+import ngsolve as ng
 
 import numba as nb
 import pyamg
@@ -25,20 +26,35 @@ cmap = plt.cm.jet
 
 motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
-p = motor_npz['p']
-e = motor_npz['e']
-t = motor_npz['t']
-q = np.empty(0)
-regions_2d = motor_npz['regions_2d']
-regions_1d = motor_npz['regions_1d']
+# p = motor_npz['p']
+# e = motor_npz['e']
+# t = motor_npz['t']
+# q = np.empty(0)
+# regions_2d = motor_npz['regions_2d']
+# regions_1d = motor_npz['regions_1d']
+
+geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-nu0 = 10**7/(4*np.pi)
-MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
 
-MESH.refinemesh()
-MESH.refinemesh()
+geoOCCmesh = geoOCC.GenerateMesh()
+ngsolve_mesh = ng.Mesh(geoOCCmesh)
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+
+
+nu0 = 10**7/(4*np.pi)
+MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
+
+
+
+
+# MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
+
+# MESH.refinemesh()
+# MESH.refinemesh()
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -154,14 +170,14 @@ KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 
-from nonlinLaws import *
+from nonlinLaws_bosch import *
 
 sH = phix_d_Hcurl.shape[0]
 sA = phi_L2_o1.shape[0]
 sL = KK.shape[0]
 
 mu0 = (4*np.pi)/10**7
-H = 1e-2+np.zeros(sH)
+H = 0+np.zeros(sH)
 A = 0+np.zeros(sA)
 L = 0+np.zeros(sL)
 
@@ -230,6 +246,7 @@ for i in range(maxIter):
     print('Assembling took ', time.monotonic()-tm)
     
     
+    print(sps.linalg.eigs(Md,which = 'LR',k=2)[0])
     
     tm = time.monotonic()
     iMd = inv(Md)
@@ -279,16 +296,17 @@ for i in range(maxIter):
     # ResidualLineSearch
     # for k in range(1000):
         
-    #     HAu = HA + alpha*w
-    #     Hu = HAu[:2*MESH.NoEdges]
-    #     Au = HAu[2*MESH.NoEdges:]
+    #     HALu = HAL + alpha*w
+    #     Hu = HALu[:sH]
+    #     Au = HALu[sH:sH+sA]
+    #     Lu = HALu[sH+sA:]
         
-    #     Hxu = phix_Hcurl.T@(Hu)
-    #     Hyu = phiy_Hcurl.T@(Hu)
+    #     Hxu = phix_d_Hcurl.T@(Hu)
+    #     Hyu = phiy_d_Hcurl.T@(Hu)
         
     #     allHu = g_nonlinear_all(Hxu,Hyu)
         
-    #     if np.linalg.norm(gs(allHu,Au,Hu)) <= np.linalg.norm(gs(allH,A,H)): break
+    #     if np.linalg.norm(gs_hybrid(allHu,Au,Hu,Lu)) <= np.linalg.norm(gs_hybrid(allH,A,H,L)): break
     #     else: alpha = alpha*factor_residual
     
     # AmijoBacktracking
@@ -302,6 +320,8 @@ for i in range(maxIter):
         
         Hxu = phix_d_Hcurl.T@Hu; Hyu = phiy_d_Hcurl.T@Hu;
         allHu = g_nonlinear_all(Hxu,Hyu)
+        
+        print(J(allHu,Hu),J(allH,H),J(allHu,Hu)-J(allH,H))
         
         if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
         else: alpha = alpha*factor_residual
