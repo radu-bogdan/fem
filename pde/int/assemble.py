@@ -153,9 +153,10 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = '', like = 0):
     indices = npy.in1d(MESH.Boundary_Region,ind_edges)
     
     
-    
     p = MESH.p;    
     e = MESH.e[indices,:]; ne = e.shape[0]
+    
+    # print(ind_edges,MESH.e.shape,e.shape)
     
     #####################################################################################
     # Mappings

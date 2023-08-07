@@ -1,6 +1,6 @@
 
 import numpy as npy # npy becauswe np is number of points... dont judge me :)
-# npy.set_printoptions(edgeitems=10, linewidth = 1000000)
+npy.set_printoptions(edgeitems=10, linewidth = 1000000)
 # npy.set_printoptions(threshold = npy.inf)
 # npy.set_printoptions(linewidth = npy.inf)
 # npy.set_printoptions(precision=2)
@@ -116,7 +116,7 @@ class mesh:
         self.NonSingle_Edges = IntEdgesToTriangles[:,2]
 
         self.p = p; self.np = p.shape[0]
-        self.e = e_new; self.ne = e_new.shape[0]
+        self.e = npy.c_[e_new,e[:,-1]]; self.ne = e_new.shape[0]
         self.t = t[:,npy.r_[:3,-1]]; self.nt = nt
         self.q = q; self.nq = nq
         self.mp = npy.r_[mp_trig,mp_quad]

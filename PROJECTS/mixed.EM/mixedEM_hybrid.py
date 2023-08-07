@@ -33,6 +33,10 @@ motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 # regions_2d = motor_npz['regions_2d']
 # regions_1d = motor_npz['regions_1d']
 
+# MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
+# MESH.refinemesh()
+# MESH.refinemesh()
+
 geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
@@ -47,14 +51,6 @@ ngsolve_mesh = ng.Mesh(geoOCCmesh)
 
 nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
-
-
-
-
-# MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-
-# MESH.refinemesh()
-# MESH.refinemesh()
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -170,14 +166,15 @@ KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 
-from nonlinLaws_bosch import *
+from nonlinLaws import *
+# from nonlinLaws_bosch import *
 
 sH = phix_d_Hcurl.shape[0]
 sA = phi_L2_o1.shape[0]
 sL = KK.shape[0]
 
 mu0 = (4*np.pi)/10**7
-H = 0+np.zeros(sH)
+H = 1e-2+np.zeros(sH)
 A = 0+np.zeros(sA)
 L = 0+np.zeros(sL)
 
@@ -219,6 +216,7 @@ for i in range(maxIter):
     
     ##########################################################################################
     Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+    print(Hx.max(),Hy.max())
     
     tm = time.monotonic()
     allH = g_nonlinear_all(Hx,Hy)
@@ -246,7 +244,7 @@ for i in range(maxIter):
     print('Assembling took ', time.monotonic()-tm)
     
     
-    print(sps.linalg.eigs(Md,which = 'LR',k=2)[0])
+    # print(sps.linalg.eigs(Md,which = 'LR',k=2)[0])
     
     tm = time.monotonic()
     iMd = inv(Md)
@@ -321,7 +319,7 @@ for i in range(maxIter):
         Hxu = phix_d_Hcurl.T@Hu; Hyu = phiy_d_Hcurl.T@Hu;
         allHu = g_nonlinear_all(Hxu,Hyu)
         
-        print(J(allHu,Hu),J(allH,H),J(allHu,Hu)-J(allH,H))
+        # print(J(allHu,Hu),J(allH,H),J(allHu,Hu)-J(allH,H))
         
         if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
         else: alpha = alpha*factor_residual
@@ -430,8 +428,8 @@ fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal(
 Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear)
 By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear)
 
-fig = MESH.pdesurf(Bx**2+By**2, cmax = 5)
-fig.show()
+# fig = MESH.pdesurf(Bx**2+By**2, cmax = 10)
+# fig.show()
 
 ##########################################################################################
 

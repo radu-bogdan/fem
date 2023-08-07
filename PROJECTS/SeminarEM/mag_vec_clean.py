@@ -67,13 +67,32 @@ total = 1
 
 nu0 = 10**7/(4*np.pi)
 
-MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-# MESH.refinemesh()
-# MESH.refinemesh()
-# MESH.refinemesh()
+# MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
+# # MESH.refinemesh()
+# # MESH.refinemesh()
+# # MESH.refinemesh()
 
-t = MESH.t
-p = MESH.p
+# t = MESH.t
+# p = MESH.p
+
+
+
+geoOCC = motor_npz['geoOCC'].tolist()
+m = motor_npz['m']; m_new = m
+j3 = motor_npz['j3']
+
+import ngsolve as ng
+geoOCCmesh = geoOCC.GenerateMesh()
+ngsolve_mesh = ng.Mesh(geoOCCmesh)
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+
+
+nu0 = 10**7/(4*np.pi)
+MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
+
+
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -108,7 +127,7 @@ if ORDER == 2:
 ############################################################################################
 
 sys.path.insert(1,'../mixed.EM')
-from nonlinLaws_bosch import *                       
+from nonlinLaws_bosch import *                 
                        
 ############################################################################################
 
