@@ -166,8 +166,8 @@ KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 
-from nonlinLaws import *
-# from nonlinLaws_bosch import *
+# from nonlinLaws import *
+from nonlinLaws_bosch import *
 
 sH = phix_d_Hcurl.shape[0]
 sA = phi_L2_o1.shape[0]
@@ -428,8 +428,8 @@ fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal(
 Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear)
 By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear)
 
-# fig = MESH.pdesurf(Bx**2+By**2, cmax = 10)
-# fig.show()
+fig = MESH.pdesurf(Bx**2+By**2)
+fig.show()
 
 ##########################################################################################
 

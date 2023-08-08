@@ -1,7 +1,8 @@
 from ngsolve import *
 from netgen.geom2d import SplineGeometry
 import numpy as np
-# import multistruct as multi
+import netgen.occ as occ
+
 # import netgen.gui
 
 rai_d=1e-3
@@ -91,9 +92,10 @@ s7 = (79.980020247*10**(-3),6.4912415424*10**(-3))
 s8 = (78.88229587*10**(-3),6.4102654448*10**(-3))
 s9 = (0.0786240034,0.0103510464)
 
-pStatorRef=[s1,s2,s3,s4,s5,s6,s7,s8,s9]
+pStatorRef = [s1,s2,s3,s4,s5,s6,s7,s8,s9]
 
-StatorRot=[0.9914448613738104111445575269285628712777382744481022714587746035 ,0.1305261922200515915484062278954890101937407048117322518906169483 ]
+StatorRot=[0.9914448613738104111445575269285628712777382744481022714587746035 ,
+           0.1305261922200515915484062278954890101937407048117322518906169483 ]
 pStator=pStatorRef
 p=[ geo.AppendPoint(*pnt) for pnt in pStator ]
 
@@ -120,6 +122,154 @@ for i in range(6):
         geo.Append(['spline3',p[7+9*i],p[8+9*i],p[0+9*(i+1)]],leftdomain=1,rightdomain=3)
 
 
+
+
+##################################################################################
+
+orign = (0,0);
+#inner radius rotor
+r1 = 26.5*10**(-3);
+#outer radius rotor
+r2 = 78.63225*10**(-3);
+#sliding mesh rotor
+r4 = 78.8354999*10**(-3);
+#sliding mesh stator
+r6 = 79.03874999*10**(-3);
+#inner radius stator
+r7 = 79.242*10**(-3);
+#outer radius stator
+r8 = 116*10**(-3)
+
+h_max = 1
+
+h_air_gap = 0.05*h_max
+h_air_magnets = h_max
+h_coils = h_max
+h_stator_air = h_max
+h_magnets = h_max
+h_stator_iron = h_max
+h_rotor_iron = h_max
+h_shaft_iron = h_max
+
+# h_max = 0.005
+
+# h_air_gap = 0.05*h_max
+# h_air_magnets = h_max
+# h_coils = h_max
+# h_stator_air = h_max
+# h_magnets = h_max
+# h_stator_iron = h_max
+# h_rotor_iron = h_max
+# h_shaft_iron = h_max
+
+rotor_inner  = occ.Circle(orign,r=r1).Face()
+rotor_outer  = occ.Circle(orign,r=r2).Face()
+sliding_inner  = occ.Circle(orign,r=r4).Face()
+sliding_outer  = occ.Circle(orign,r=r6).Face()
+stator_inner = occ.Circle(orign,r=r7).Face()
+stator_outer = occ.Circle(orign,r=r8).Face()
+
+rotor_inner.edges[0].name = "rotor_inner"
+rotor_outer.edges[0].name = "rotor_outer"
+stator_inner.edges[0].name = "stator_inner"
+stator_outer.edges[0].name = "stator_outer"
+
+rotor_iron = rotor_outer - rotor_inner
+
+air_gap_stator = stator_inner - sliding_outer
+air_gap = sliding_outer - sliding_inner
+air_gap_rotor = sliding_inner - rotor_outer
+
+stator_iron = stator_outer - stator_inner
+
+
+
+
+
+
+#Points for magnet1 and air around magnet1
+m1 = (69.23112999*10**(-3),7.535512*10**(-3),0)
+m2 = (74.828958945*10**(-3),10.830092744*10**(-3),0)
+m3 = (66.13621099700001*10**(-3),25.599935335*10**(-3),0)
+m4 = (60.53713*10**(-3),22.30748*10**(-3),0)
+a5 = (69.75636*10**(-3),5.749913*10**(-3),0)
+a6 = (75.06735*10**(-3),3.810523*10**(-3),0)
+# a7 = (65.3506200*10**(-3),26.51379*10**(-3),0)
+a7 = (65.6868747*10**(-3),26.3184618*10**(-3),0)
+a8 = (59.942145092*10**(-3),24.083661604*10**(-3),0)
+
+#Points for magnet2 and air around magnet2
+m5 = (58.579985516*10**(-3), 27.032444757*10**(-3),0)
+m6 = (64.867251151*10**(-3),28.663475405*10**(-3),0)
+m7 = (60.570096319*10**(-3),45.254032279*10**(-3),0)
+m8 = (54.282213127*10**(-3),43.625389857*10**(-3),0)
+a1 = (53.39099766*10**(-3),45.259392713*10**(-3),0)
+a2 = (55.775078884*10**(-3),50.386185578*10**(-3),0)
+a3 = (59.41521771*10**(-3),25.355776837*10**(-3),0)
+a4 = (65.12210917100001*10**(-3),27.707477175*10**(-3),0)
+
+#Draw magnets
+seg1 = occ.Segment(m1,m2)
+seg2 = occ.Segment(m2,m3)
+seg3 = occ.Segment(m3,m4)
+seg4 = occ.Segment(m4,m1)
+magnet1 = occ.Face(occ.Wire([seg1,seg2,seg3,seg4]))
+
+seg5 = occ.Segment(m5,m6)
+seg6 = occ.Segment(m6,m7)
+seg7 = occ.Segment(m7,m8)
+seg8 = occ.Segment(m8,m5)
+magnet2 = occ.Face(occ.Wire([seg5,seg6,seg7,seg8]))
+
+#Draw air around magnets
+air_seg1 = occ.Segment(a1,a2)
+air_seg2 = occ.Segment(a2,a3)
+air_seg3 = occ.Segment(a3,a4)
+air_seg4 = occ.Segment(a4,a1)
+air_magnet1_1 = occ.Face(occ.Wire([air_seg1,air_seg2,air_seg3,air_seg4]))
+
+air_seg5 = occ.Segment(a5,a6)
+air_seg6 = occ.Segment(a6,a7)
+air_seg7 = occ.Segment(a7,a8)
+air_seg8 = occ.Segment(a8,a5)
+air_magnet1_2 = occ.Face(occ.Wire([air_seg5,air_seg6,air_seg7,air_seg8]))
+
+domains = []
+# domains.append(stator_iron)
+# domains.append(rotor_iron)
+domains.append(rotor_inner)
+# domains.append(magnet1)
+# domains.append(magnet2)
+# domains.append(air_magnet1_1)
+# domains.append(air_magnet1_2)
+
+geo = occ.Glue(domains)
+
+geoOCC = occ.OCCGeometry(geo, dim=2)
+geoOCCmesh = geoOCC.GenerateMesh()
+
+import sys
+sys.path.insert(0,'../../') # adds parent directory
+
+import pde
+import ngsolve as ng
+
+meshng = ng.Mesh(geoOCCmesh)
+meshng.Refine()
+meshng.Refine()
+MESH = pde.mesh.netgen(meshng.ngmesh)
+
+
+# geoOCCmesh.Refine()
+# geoOCCmesh.Refine()
+# geoOCCmesh.Refine()
+MESH.pdemesh2()
+
+stop
+
+##################################################################################
+
+
 #Points for magnet1 and air around magnet1
 m1 = (69.23112999*10**(-3),7.535512*10**(-3))
 m2 = (74.828958945*10**(-3),10.830092744*10**(-3))
@@ -130,6 +280,7 @@ a6 = (75.06735*10**(-3),3.810523*10**(-3))
 a7 = (65.3506200*10**(-3),26.51379*10**(-3))
 a7 = (65.6868747*10**(-3),26.3184618*10**(-3))
 a8 = (59.942145092*10**(-3),24.083661604*10**(-3))
+
 #Points for magnet2 and air around magnet2
 m5 = (58.579985516*10**(-3), 27.032444757*10**(-3))
 m6 = (64.867251151*10**(-3),28.663475405*10**(-3))
@@ -144,7 +295,6 @@ M1ref=[m1,m2,m3,m4]
 A1ref=[a5,a6,a7,a8]
 M2ref=[m5,m6,m7,m8]
 A2ref=[a3,a4,a2,a1]
-
 
 MagnetRot=[np.cos(2*pi/(nMagnets)) ,np.sin(2*pi/(nMagnets)) ]
 M1=M1ref
@@ -201,175 +351,187 @@ for i in range(2*nMagnets):
     geo.SetMaterial(11+i,"M"+str(i+1))
     if i>0:
         strmag+="|"
-    strmag+="M"+str(i+1)
+    strmag += "M"+str(i+1)
+
+maxh_airgap = 0.0005
+maxh = 0.05
+
+geo.SetDomainMaxH(1,maxh)
+geo.SetDomainMaxH(2,maxh)
+geo.SetDomainMaxH(3,maxh)
+geo.SetDomainMaxH(4,maxh)
+geo.SetDomainMaxH(5,maxh)
+geo.SetDomainMaxH(6,maxh)
+geo.SetDomainMaxH(7,maxh)
+geo.SetDomainMaxH(8,maxh)
+geo.SetDomainMaxH(9,maxh)
+geo.SetDomainMaxH(10,maxh_airgap)
 
 
-geo.SetDomainMaxH(2,2e-3)
+# geoOCC = OCCGeometry(geo)
 
-maxh = 0.0005
-mesh = Mesh(geo.GenerateMesh(maxh=maxh)) #convert to a ngsolve mesh
+# DrawGeo(geo)
+# mesh = Mesh(geo.GenerateMesh(maxh=maxh)) #convert to a ngsolve mesh
+mesh = Mesh(geo.GenerateMesh()) #convert to a ngsolve mesh
 
 #####################################################################################################################
-regions_1d = mesh.GetBoundaries()
-regions_2d = mesh.GetMaterials()
+# regions_1d = mesh.GetBoundaries()
+# regions_2d = mesh.GetMaterials()
 
-regions_1d_np = np.zeros((len(regions_1d),), dtype=object)
-regions_1d_np[:] = list(regions_1d)
+# regions_1d_np = np.zeros((len(regions_1d),), dtype=object)
+# regions_1d_np[:] = list(regions_1d)
 
-regions_2d_np = np.zeros((len(regions_2d),), dtype=object)
-regions_2d_np[:] = list(regions_2d)
+# regions_2d_np = np.zeros((len(regions_2d),), dtype=object)
+# regions_2d_np[:] = list(regions_2d)
+
+# # p = []
+# # for k in mesh.vertices:
+# #     p += [np.array(mesh[k].point)]
+# # p = np.array(p)
 
 # p = []
-# for k in mesh.vertices:
-#     p += [np.array(mesh[k].point)]
+# for i, el in enumerate(mesh.ngmesh.Points()):
+#     p += [np.array([el[0],el[1]])]
 # p = np.array(p)
 
-p = []
-for i, el in enumerate(mesh.ngmesh.Points()):
-    p += [np.array([el[0],el[1]])]
-p = np.array(p)
+# t = []
+# for i, el in enumerate(mesh.ngmesh.Elements2D()):
+#     t += [np.array([el.points[0].nr,\
+#                     el.points[1].nr,\
+#                     el.points[2].nr,\
+#                     # el.points[3].nr,\
+#                     # el.points[4].nr,\
+#                     # el.points[5].nr,\
+#                     el.index])-1]
+# t = np.array(t)
 
-t = []
-for i, el in enumerate(mesh.ngmesh.Elements2D()):
-    t += [np.array([el.points[0].nr,\
-                    el.points[1].nr,\
-                    el.points[2].nr,\
-                    # el.points[3].nr,\
-                    # el.points[4].nr,\
-                    # el.points[5].nr,\
-                    el.index])-1]
-t = np.array(t)
+# e = []
+# for i, el in enumerate(mesh.ngmesh.Elements1D()):
+#     e += [np.array([el.points[0].nr,\
+#                     el.points[1].nr,\
+#                     # el.points[2].nr,\
+#                     el.index])-1]
+# e = np.array(e)
 
-e = []
-for i, el in enumerate(mesh.ngmesh.Elements1D()):
-    e += [np.array([el.points[0].nr,\
-                    el.points[1].nr,\
-                    # el.points[2].nr,\
-                    el.index])-1]
-e = np.array(e)
-
-q = np.empty(0)
+# q = np.empty(0)
 #####################################################################################################################
 
 import sys
 sys.path.insert(0,'../../') # adds parent directory
 
 import pde
-MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-
+MESH = pde.mesh.netgen(mesh.ngmesh)
 MESH.pdemesh2()
 
 
-stop
+# stop
 
-npper1=[]
-npper2=[]
-npperel1=[]
-npperel2=[]
-rotor_points=[]
-pnts=mesh.ngmesh.Points()
-for i,p in enumerate(pnts):
-    if sqrt(p[0]**2+p[1]**2)<rago*(1+1e-3):
-        rotor_points.append(p)
-    if p[1]<1e-6 and p[0]>1e-8:
-        npper1.append(i+1)
-        if abs(p[0]-(rdi+rdo)/2)<(rdo-rdi)/2*(1+1e-3):
-            npperel1.append(i+1)
-    if abs(p[0]-p[1])<1e-6 and p[1]>1e-8:
-        npper2.append(i+1)
-        if abs(sqrt(p[0]**2+p[1]**2)-(rdi+rdo)/2)<(rdo-rdi)/2*(1+1e-3):
-            npperel2.append(i+1)
+# npper1=[]
+# npper2=[]
+# npperel1=[]
+# npperel2=[]
+# rotor_points=[]
+# pnts=mesh.ngmesh.Points()
+# for i,p in enumerate(pnts):
+#     if sqrt(p[0]**2+p[1]**2)<rago*(1+1e-3):
+#         rotor_points.append(p)
+#     if p[1]<1e-6 and p[0]>1e-8:
+#         npper1.append(i+1)
+#         if abs(p[0]-(rdi+rdo)/2)<(rdo-rdi)/2*(1+1e-3):
+#             npperel1.append(i+1)
+#     if abs(p[0]-p[1])<1e-6 and p[1]>1e-8:
+#         npper2.append(i+1)
+#         if abs(sqrt(p[0]**2+p[1]**2)-(rdi+rdo)/2)<(rdo-rdi)/2*(1+1e-3):
+#             npperel2.append(i+1)
         
-pper1=[(pnts[i][0],pnts[i][1]) for i in npper1]
-pper2=[(pnts[i][0],pnts[i][1]) for i in npper2]
-index1=sorted(range(len(npper1)), key=lambda k: pper1[k][0])
-npper1=[npper1[index1[i]] for i in range(len(npper1))]
-index2=sorted(range(len(npper2)), key=lambda k: pper2[k][1])
-npper2=[npper2[index2[i]] for i in range(len(npper2))]
-npper1=[i-1 for i in npper1]
-npper2=[i-1 for i in npper2]
+# pper1=[(pnts[i][0],pnts[i][1]) for i in npper1]
+# pper2=[(pnts[i][0],pnts[i][1]) for i in npper2]
+# index1=sorted(range(len(npper1)), key=lambda k: pper1[k][0])
+# npper1=[npper1[index1[i]] for i in range(len(npper1))]
+# index2=sorted(range(len(npper2)), key=lambda k: pper2[k][1])
+# npper2=[npper2[index2[i]] for i in range(len(npper2))]
+# npper1=[i-1 for i in npper1]
+# npper2=[i-1 for i in npper2]
 
-pperel1=[(pnts[i][0],pnts[i][1]) for i in npperel1]
-pperel2=[(pnts[i][0],pnts[i][1]) for i in npperel2]
-index1=sorted(range(len(npperel1)), key=lambda k: pperel1[k][0])
-npperel1=[npperel1[index1[i]] for i in range(len(npperel1))]
-index2=sorted(range(len(npperel2)), key=lambda k: pperel2[k][1])
-npperel2=[npperel2[index2[i]] for i in range(len(npperel2))]
-npperel1=[i-1 for i in npperel1]
-npperel2=[i-1 for i in npperel2]
-
-
+# pperel1=[(pnts[i][0],pnts[i][1]) for i in npperel1]
+# pperel2=[(pnts[i][0],pnts[i][1]) for i in npperel2]
+# index1=sorted(range(len(npperel1)), key=lambda k: pperel1[k][0])
+# npperel1=[npperel1[index1[i]] for i in range(len(npperel1))]
+# index2=sorted(range(len(npperel2)), key=lambda k: pperel2[k][1])
+# npperel2=[npperel2[index2[i]] for i in range(len(npperel2))]
+# npperel1=[i-1 for i in npperel1]
+# npperel2=[i-1 for i in npperel2]
 
 
-mesh.ngmesh.Save("PMS2d.vol")
-Draw(mesh)
-print(mesh.nv)
-# input("§")
-
-stop
-
-# Mperp_mag1 =  (-0.507223091788922, 0.861814791678634) 
-# Mperp_mag2 =  (-0.250741225095427, 0.968054150364350) 
-# Mperp_mag3 =  (0.968055971101187, -0.250734195544481) 
-# Mperp_mag4 =  (0.861818474866413, -0.507216833690415) 
-# Mperp_mag5 =  (-0.861814791678634, -0.507223091788922)
-# Mperp_mag6 =  (-0.968054150364350, -0.250741225095427) 
-# Mperp_mag7 =  (0.250734195544481, 0.968055971101187) 
-# Mperp_mag8 =  (0.507216833690415, 0.861818474866413) 
-# Mperp_mag9 =  (0.507223091788922, -0.861814791678634) 
-# Mperp_mag10 = (0.250741225095427, -0.968054150364350) 
-# Mperp_mag11 = (-0.968055971101187, 0.250734195544481) 
-# Mperp_mag12 = (-0.861818474866413, 0.507216833690415) 
-# Mperp_mag13 = (0.861814791678634, 0.507223091788922) 
-# Mperp_mag14 = (0.968054150364350, 0.250741225095427) 
-# Mperp_mag15 = (-0.250734195544481, -0.968055971101187)
-# Mperp_mag16 = (-0.507216833690415, -0.861818474866413)
-
-# Mperp_all=[Mperp_mag1,Mperp_mag2,Mperp_mag3,Mperp_mag4,Mperp_mag5,Mperp_mag6,Mperp_mag7,Mperp_mag8,Mperp_mag9,Mperp_mag10,Mperp_mag11,Mperp_mag12,Mperp_mag13,Mperp_mag14,Mperp_mag15,Mperp_mag16]
-
-# cfMperp=CoefficientFunction([(0,0)]*10+Mperp_all)
-
-nu0=1e7/(4*pi)
-num=nu0/1.05
-BR = 1.05*1.158095238095238
-lz=0.1795
-T  = 2* 1.0*0.03
-rotation_angle = np.pi
-Vrot=rotation_angle/T
-nCoils=6
-areaCoils = Integrate(cf=1, mesh=mesh, order = 2, definedon = mesh.Materials("U|V|W|-U|-V|-W"))
-areaOfOneCoil = areaCoils/ nCoils
-Volall=Integrate(cf=1,mesh=mesh,order=2,definedon=mesh.Materials("design"))
-
-offset = 0
-pp  = 4
-gamma_correction_model = -30.0
-gamma = 40.0
-gamma_correction_timestep = -1
-phi0 = (gamma + gamma_correction_model + gamma_correction_timestep * pp) * pi/180.0
-
-I=1555.63491861*2.75 / areaOfOneCoil/2
-t=Parameter(0.0)
-IU=sin(phi0+4*t)
-IV=sin(phi0+4*t+2*pi/3)
-IW=sin(phi0+4*t+4*pi/3)
-I_d = {"default" : 0, "airin" : 0, "airout" : 0, "stator" : 0, "design" : 0, "airgap": 0,
-        "U": I*IU, "V": I*IV, "W": I*IW, "-U": -I*IU, "-V": -I*IV, "-W": -I*IW}
-cfI=CoefficientFunction([I_d[mat] for mat in mesh.GetMaterials()])
-# cfNu=CoefficientFunction([nu0,0,0]+[nu0]*7+[num]*2)
-# cfI=CoefficientFunction([0,0,0,I*IU,-I*IV,I*IW]+[0]*6)
 
 
-draw_d = {"default" : 0, "airin" : 0, "airout" : 0, "stator" : 1, "design" : 0, "airgap": 0,
-        "U": 0.75, "V": 0.75, "W": 0.75, "-U": 0.75, "-V": 0.75, "-W": 0.75}
-cfDraw=CoefficientFunction([draw_d[mat] for mat in mesh.GetMaterials()])
-matcolors = [1]+list(np.linspace(0.2,0.8,multi.nMagnets))+[0] ########### Draw-color/value of magnets
-if not len(matcolors)==multi.M:
-    matcolors = [1]+[0.4]*multi.nMagnets+[0]
-L=L2(mesh,order=0)
-cutratio=[]
-for i in range(multi.M):
-    fun=GridFunction(L)
-    fun.vec[:]=0
-    cutratio.append(fun)
-    
+# mesh.ngmesh.Save("PMS2d.vol")
+# # Draw(mesh)
+# print('done')
+
+
+
+
+
+
+
+
+
+
+
+# from netgen.webgui import Draw as DrawGeo
+# from ngsolve.webgui import Draw as DrawMesh
+# # a = DrawMesh(mesh)
+
+
+# from PyQt5.QtWidgets import QApplication, QMainWindow
+# from PyQt5 import QtWebEngineWidgets
+
+# app = QApplication(sys.argv)
+
+# window = QMainWindow()
+# window.setWindowTitle("Figure")
+
+# view = QtWebEngineWidgets.QWebEngineView()
+# view.setHtml(DrawMesh(mesh).GenerateHTML())
+# window.setCentralWidget(view)
+# window.show()
+
+# app.exec()
+
+
+
+
+
+
+
+
+
+# def webengine_hack():
+#     from PyQt5 import QtWidgets
+#     app = QtWidgets.QApplication.instance()
+#     if app is not None:
+#         import sip
+#         app.quit()
+#         sip.delete(app)
+#     import sys
+#     from PyQt5 import QtCore, QtWebEngineWidgets
+#     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+#     app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
+#     return app
+
+# try:
+#     # just for testing
+#     from PyQt5 import QtWidgets
+#     app = QtWidgets.QApplication([''])
+#     from PyQt5 import QtWebEngineWidgets
+# except ImportError as exception:
+#     print('\nRetrying webengine import...')
+#     app = webengine_hack()
+#     from PyQt5 import QtWebEngineWidgets
+
+# view = QtWebEngineWidgets.QWebEngineView()
+# view.setHtml('<h1>Hello World</h1>')
+# view.show()
+
+# app.exec()
