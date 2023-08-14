@@ -220,7 +220,7 @@ class mesh:
         max_rg_index = geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64).max()
 
         q = npy.empty(0)
-
+        
         regions_1d_np = []
         for i in range(max_bc_index):
             regions_1d_np += [geoOCCmesh.GetBCName(i)]

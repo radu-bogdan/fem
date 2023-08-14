@@ -364,7 +364,17 @@ domains.append(air_gap)
 domains.append(air_gap_rotor)
 domains.append(stator_iron)
 
-geo = occ.Glue(domains)
+pizza = occ.MoveTo(*orign).Line(1).Rotate(90).Line(1).Close().Face()
+
+geo = pizza*occ.Glue(domains)
+
+geo.edges[0].name = "first"
+geo.edges[1].name = "second"
+geo.edges[2].name = "thrid"
+geo.edges[3].name = "forth"
+geo.edges[4].name = "fifth"
+geo.edges[5].name = "sixth"
+geo.edges[6].name = "seventh"
 
 geoOCC = occ.OCCGeometry(geo, dim=2)
 geoOCCmesh = geoOCC.GenerateMesh()
@@ -374,7 +384,7 @@ geoOCCmesh = geoOCC.GenerateMesh()
 
 import pde
 MESH = pde.mesh.netgen(geoOCCmesh)
-
+MESH.pdemesh2()
 
 #####################################################################################################################
 
