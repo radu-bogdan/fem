@@ -213,6 +213,8 @@ def assembleR(MESH, space, edges = ''):
     if type(edges) == str:
         if edges == '':
             ind_edges = MESH.Boundary_Region
+        else:
+            ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
     else:
         if MESH.regions_1d == []:
             ind_edges = edges

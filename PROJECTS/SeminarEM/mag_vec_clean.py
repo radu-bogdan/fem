@@ -67,15 +67,6 @@ total = 1
 
 nu0 = 10**7/(4*np.pi)
 
-# MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-# # MESH.refinemesh()
-# # MESH.refinemesh()
-# # MESH.refinemesh()
-
-# t = MESH.t
-# p = MESH.p
-
-
 
 geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m

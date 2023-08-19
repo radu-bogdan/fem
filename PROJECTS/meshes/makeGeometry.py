@@ -6,6 +6,10 @@ import ngsolve as ng
 import numpy as np
 import netgen.occ as occ
 from numpy import sin,cos,pi
+from netgen.meshing import IdentificationType
+
+achtel = True
+
 
 def drawMagnet1(k):
     m1xnew = m1[0]*cos(k*pi/4) -m1[1]*sin(k*pi/4)
@@ -364,17 +368,41 @@ domains.append(air_gap)
 domains.append(air_gap_rotor)
 domains.append(stator_iron)
 
-pizza = occ.MoveTo(*orign).Line(1).Rotate(90).Line(1).Close().Face()
+# pizza = occ.MoveTo(*orign).Line(1).Rotate(90).Line(1).Close().Face()
 
-geo = pizza*occ.Glue(domains)
+# geo = pizza*occ.Glue(domains)
 
-geo.edges[0].name = "first"
-geo.edges[1].name = "second"
-geo.edges[2].name = "thrid"
-geo.edges[3].name = "forth"
-geo.edges[4].name = "fifth"
-geo.edges[5].name = "sixth"
-geo.edges[6].name = "seventh"
+geo = occ.Glue(domains)
+
+if achtel:
+    
+    pizza = occ.MoveTo(*orign).Line(1).Rotate(90).Line(1).Close().Face()
+    
+    geo = pizza*occ.Glue(domains)
+    
+    geo.edges[0].name = "left"
+    geo.edges[4].name = "left"
+    geo.edges[24].name = "left"
+    geo.edges[28].name = "left"
+    geo.edges[32].name = "left"
+    geo.edges[96].name = "left"
+    
+    geo.edges[2].name = "right"
+    geo.edges[6].name = "right"
+    geo.edges[26].name = "right"
+    geo.edges[30].name = "right"
+    geo.edges[46].name = "right"
+    geo.edges[98].name = "right"
+    
+    rot = occ.Rotation(occ.Axis((0,0,0), occ.Z), 45)
+    geo.edges[2].Identify(geo.edges[0], "per", IdentificationType.UNDEFINED,rot)
+    geo.edges[6].Identify(geo.edges[4], "per", IdentificationType.UNDEFINED,rot)
+    geo.edges[26].Identify(geo.edges[24], "per", IdentificationType.UNDEFINED,rot)
+    geo.edges[30].Identify(geo.edges[28], "per", IdentificationType.UNDEFINED,rot)
+    geo.edges[46].Identify(geo.edges[32], "per", IdentificationType.UNDEFINED,rot)
+    geo.edges[98].Identify(geo.edges[96], "dsa", IdentificationType.UNDEFINED,rot)
+
+
 
 geoOCC = occ.OCCGeometry(geo, dim=2)
 geoOCCmesh = geoOCC.GenerateMesh()

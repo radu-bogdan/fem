@@ -254,18 +254,18 @@ sys.path.insert(0,'../../') # adds parent directory
 import pde
 import ngsolve as ng
 
-meshng = ng.Mesh(geoOCCmesh)
-meshng.Refine()
-meshng.Refine()
-MESH = pde.mesh.netgen(meshng.ngmesh)
+# meshng = ng.Mesh(geoOCCmesh)
+# meshng.Refine()
+# meshng.Refine()
+# MESH = pde.mesh.netgen(meshng.ngmesh)
 
 
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
-MESH.pdemesh2()
+# MESH.pdemesh2()
 
-stop
+# stop
 
 ##################################################################################
 
