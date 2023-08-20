@@ -9,8 +9,6 @@ import scipy.sparse as sps
 import scipy.sparse.linalg
 import time
 from sksparse.cholmod import cholesky as chol
-import plotly.io as pio
-pio.renderers.default = 'browser'
 import numba as nb
 import matplotlib
 import matplotlib.pyplot as plt
@@ -285,7 +283,7 @@ for k in range(rots):
     # fig = MESH.pdesurf(ux**2+uy**2, cmax = 5)
     # fig.show()
     
-    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
+    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2)
     fig.show()
     
     # MESH.pdesurf2(u, ax = ax1)
