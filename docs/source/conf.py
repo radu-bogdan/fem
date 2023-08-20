@@ -110,37 +110,37 @@ html_sourcelink_suffix = ''
 nbsphinx_allow_errors = False
 
 # This is processed by Jinja2 and inserted before each notebook
-nbsphinx_prolog = r"""
-{% set docname = env.doc2path(env.docname, base='').replace('notebooks/', '') %}
+# nbsphinx_prolog = r"""
+# {% set docname = env.doc2path(env.docname, base='').replace('notebooks/', '') %}
 
-.. raw:: html
+# .. raw:: html
 
-    <style>
-        .p-Widget {
-            height: 400px;
-        }
-        .dg.main {
-            margin-left: 0px;
-        }
-        div.p-Widget div div div div.dg ul li {
-            list-style: none;
-            margin-left: 0px;
-        }
-        div.p-Widget div div div div.dg ul li div.dg {
-            margin-bottom: 0px;
-        }
-    </style>
+#     <style>
+#         .p-Widget {
+#             height: 400px;
+#         }
+#         .dg.main {
+#             margin-left: 0px;
+#         }
+#         div.p-Widget div div div div.dg ul li {
+#             list-style: none;
+#             margin-left: 0px;
+#         }
+#         div.p-Widget div div div div.dg ul li div.dg {
+#             margin-bottom: 0px;
+#         }
+#     </style>
 
-.. only:: html
-    .. role:: raw-html(raw)
-        :format: html
+# .. only:: html
+#     .. role:: raw-html(raw)
+#         :format: html
 
-    .. nbinfo::
+#     .. nbinfo::
 
-        This page was generated from `{{ docname }}`__.
+#         This page was generated from `{{ docname }}`__.
 
-    __ {{docname}}
-"""
+#     __ {{docname}}
+# """
 
 # END nbsphinx stuff
 
@@ -161,9 +161,9 @@ source_suffix = '.rst'
 # master_doc = 'index'
 
 # General information about the project.
-project = 'NGS-Py'
-copyright = '2017, Netgen/NGSolve team'
-author = 'Netgen/NGSolve team'
+project = 'FEM'
+# copyright = '2017, Netgen/NGSolve team'
+# author = 'Netgen/NGSolve team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -7,16 +7,7 @@ Welcome to FEM's documentation!
 ===============================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
    notebooks/createMesh
-   notebooks/occ
-   notebooks/dualbasis
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
