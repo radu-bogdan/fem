@@ -11,3 +11,4 @@ Welcome to FEM's documentation!
    :caption: Contents:
 
    notebooks/createMesh
+   ../PROJECTS/SeminarEM/mag_vec_pot

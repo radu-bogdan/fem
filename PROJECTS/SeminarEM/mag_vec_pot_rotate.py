@@ -48,12 +48,12 @@ ax1.set_aspect(aspect = 'equal')
 ##########################################################################################
 motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
-p = motor_npz['p']
-e = motor_npz['e']
-t = motor_npz['t']
-q = np.empty(0)
-regions_2d = motor_npz['regions_2d']
-regions_1d = motor_npz['regions_1d']
+# p = motor_npz['p']
+# e = motor_npz['e']
+# t = motor_npz['t']
+# q = np.empty(0)
+# regions_2d = motor_npz['regions_2d']
+# regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
@@ -89,12 +89,12 @@ nu0 = 10**7/(4*np.pi)
 # p = MESH.p
 
 
-geoOCC = motor_npz['geoOCC'].tolist()
+geoOCCmesh = motor_npz['geoOCCmesh'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 import ngsolve as ng
-geoOCCmesh = geoOCC.GenerateMesh()
+# geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
 # ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()

@@ -81,16 +81,16 @@
 <h1>Geometry and mesh for motor<a class="headerlink" href="#Geometry-and-mesh-for-motor" title="Permalink to this heading"></a></h1>
 <p>Decide whether to draw the whole motor or just an 8th slice</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pizza_slice</span> <span class="o">=</span> <span class="kc">True</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pizza_slice</span> <span class="o">=</span> <span class="kc">False</span>
 </pre></div>
 </div>
 </div>
 <p>Define radii and points that help define the magnets, coils, and airgaps.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">origin</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
@@ -142,7 +142,7 @@
 </div>
 <p>Next, use the points to define drawing functions for the magnets and coils</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -226,7 +226,7 @@
 </div>
 <p>Use the functions to define the shapes using the OCC technology.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">domains</span> <span class="o">=</span> <span class="p">[]</span>
@@ -383,7 +383,7 @@
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">netgen.webgui</span> <span class="kn">import</span> <span class="n">Draw</span> <span class="k">as</span> <span class="n">DrawGeo</span>
@@ -395,10 +395,10 @@
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "5a72762b6e594ac58132392f199b42c2", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ad85f80396b047499759d45c6d47a223", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -407,7 +407,7 @@ BaseWebGuiScene
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#ngsolvemesh.Refine()</span>
@@ -427,10 +427,10 @@ BaseWebGuiScene
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "be51cd7f668c4b998a515f20917847a7", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a297b7541a3e455e826bbceb5298b905", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -439,7 +439,7 @@ BaseWebGuiScene
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="c1">#####################################################################################################################</span>
@@ -553,7 +553,7 @@ BaseWebGuiScene
 
 
 <span class="c1">#####################################################################################################################</span>
-<span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="s1">&#39;motor_pizza.npz&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">j3</span><span class="o">=</span><span class="n">j3</span><span class="p">,</span> <span class="n">geoOCC</span> <span class="o">=</span> <span class="n">geoOCC</span><span class="p">,</span> <span class="n">geoOCCmesh</span> <span class="o">=</span> <span class="n">geoOCCmesh</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="s1">&#39;motor.npz&#39;</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">j3</span><span class="o">=</span><span class="n">j3</span><span class="p">,</span> <span class="n">geoOCC</span> <span class="o">=</span> <span class="n">geoOCC</span><span class="p">,</span> <span class="n">geoOCCmesh</span> <span class="o">=</span> <span class="n">geoOCCmesh</span><span class="p">)</span>
 <span class="c1">#####################################################################################################################</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -588,6 +588,14 @@ BaseWebGuiScene
 <span class="n">fig</span> <span class="o">=</span> <span class="n">MESH</span><span class="o">.</span><span class="n">pdemesh</span><span class="p">()</span>
 <span class="n">fig</span> <span class="o">=</span> <span class="n">MESH</span><span class="o">.</span><span class="n">pdesurf</span><span class="p">(</span><span class="n">vek</span><span class="p">)</span>
 <span class="c1"># fig.show()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>
