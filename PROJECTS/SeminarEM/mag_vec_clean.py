@@ -110,7 +110,7 @@ if ORDER == 2:
 ############################################################################################
 
 sys.path.insert(1,'../mixed.EM')
-from nonlinLaws_bosch import *                 
+from nonlinLaws import *                 
                        
 ############################################################################################
 
@@ -228,20 +228,19 @@ for k in range(rots):
     
     tm2 = time.monotonic()
     for i in range(maxIter):
-        gssu = gss(u)
-        gsu = gs(u)
+        # gssu = gss(u)
+        # gsu = gs(u)
         
-        # gssu = RS @ gss(u) @ RS.T
-        # gsu = RS @ gs(u) 
+        gssu = RS @ gss(u) @ RS.T
+        gsu = RS @ gs(u)
         
         tm = time.monotonic()
         # w = chol(gssu).solve_A(-gsu)
         wS = sps.linalg.spsolve(gssu,-gsu)
-        
-        w = wS
-        # w = RS.T@wS
-        
         print('Solving took ', time.monotonic()-tm)
+        
+        # w = wS
+        w = RS.T@wS
         
         # norm_w = np.linalg.norm(w,np.inf)
         # norm_gsu = np.linalg.norm(gsu,np.inf)
@@ -266,12 +265,12 @@ for k in range(rots):
             if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
             else: alpha = alpha*factor_residual
         
-        print(J(u+alpha*w)-J(u),J(u),J(u+alpha*w),(gsu@wS))
+        # print(J(u+alpha*w)-J(u),J(u),J(u+alpha*w),(gsu@wS))
         u = u + alpha*w
         
-        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(gs(u),np.inf)+"||alpha: %2e" % (alpha))
+        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
         
-        if(np.linalg.norm(gs(u)) < eps_newton): break
+        if(np.linalg.norm(RS @ gs(u)) < eps_newton): break
     
     elapsed = time.monotonic()-tm2
     print('Solving took ', elapsed, 'seconds')
