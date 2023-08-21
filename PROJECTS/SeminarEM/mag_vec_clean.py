@@ -12,51 +12,44 @@ from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 import numba as nb
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.animation as animation
-from matplotlib.animation import FFMpegWriter
+# import matplotlib
+# import matplotlib.pyplot as plt
+# import matplotlib.colors as colors
+# import matplotlib.animation as animation
+# from matplotlib.animation import FFMpegWriter
 # import ffmpeg
 # cmap = matplotlib.colors.ListedColormap("limegreen")
-cmap = plt.cm.jet
+# cmap = plt.cm.jet
 
 
-metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 10, metadata = metadata)
+# metadata = dict(title = 'Motor')
+# writer = FFMpegWriter(fps = 10, metadata = metadata)
 
-plt.close('all')
-fig = plt.figure()
-fig.show()
-ax1 = fig.add_subplot(111)
-ax1.set_aspect(aspect = 'equal')
+# plt.close('all')
+# fig = plt.figure()
+# fig.show()
+# ax1 = fig.add_subplot(111)
+# ax1.set_aspect(aspect = 'equal')
 
+print('loaded stuff...')
 
-# ax2.set_aspect(aspect = 'equal')
-
-# cbar = plt.colorbar(ax)
-
-# writer.setup(fig, 'writer_test.mp4', 500)
-
-# @profile
-# def do():
-    
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
 motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
-p = motor_npz['p']
-e = motor_npz['e']
-t = motor_npz['t']
-q = np.empty(0)
-regions_2d = motor_npz['regions_2d']
-regions_1d = motor_npz['regions_1d']
+# p = motor_npz['p']
+# e = motor_npz['e']
+# t = motor_npz['t']
+# q = np.empty(0)
+# regions_2d = motor_npz['regions_2d']
+# regions_1d = motor_npz['regions_1d']
+
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 ##########################################################################################
 
-
+print('loaded geo...')
 
 ##########################################################################################
 # Parameters
@@ -68,12 +61,12 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 
-geoOCC = motor_npz['geoOCC'].tolist()
+geoOCCmesh = motor_npz['geoOCCmesh'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 import ngsolve as ng
-geoOCCmesh = geoOCC.GenerateMesh()
+# geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
 # ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
@@ -84,13 +77,12 @@ nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 
 
-
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 ##########################################################################################
 
-
+print('generated mesh...')
 
 ##########################################################################################
 # Order configuration
@@ -135,9 +127,7 @@ for k in range(rots):
     ##########################################################################################
     # Assembling stuff
     ##########################################################################################
-    
-    # u = np.zeros(MESH.np)
-    
+        
     tm = time.monotonic()
     
     phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
@@ -149,6 +139,7 @@ for k in range(rots):
     phi_H1b = pde.h1.assembleB(MESH, space = poly, matrix = 'M', shape = phi_H1.shape, order = order_phiphi)
     phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
     
+    R0, RS = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer')
     
     D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
     D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
@@ -224,53 +215,61 @@ for k in range(rots):
         fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy_linear(ux,uy)*fem_linear + fyy_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
         fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy_linear(ux,uy)*fem_linear + fxy_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
         fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx_linear(ux,uy)*fem_linear + fyx_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-        return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) + penalty*B_stator_outer
+        return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) #+ penalty*B_stator_outer
         
     def gs(u):
         ux = dphix_H1.T@u; uy = dphiy_H1.T@u
         return dphix_H1 @ D_order_dphidphi @ (fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear) +\
-               dphiy_H1 @ D_order_dphidphi @ (fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear) + penalty*B_stator_outer@u - aJ + aM
+               dphiy_H1 @ D_order_dphidphi @ (fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear) - aJ + aM #+ penalty*B_stator_outer@u 
     
     def J(u):
         ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-        return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear) -(aJ-aM)@u + 1/2*penalty*u@B_stator_outer@u
+        return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear) -(aJ-aM)@u #+ 1/2*penalty*u@B_stator_outer@u
     
     tm2 = time.monotonic()
     for i in range(maxIter):
-        gsu = gs(u)
         gssu = gss(u)
+        gsu = gs(u)
+        
+        # gssu = RS @ gss(u) @ RS.T
+        # gsu = RS @ gs(u) 
         
         tm = time.monotonic()
-        w = chol(gssu).solve_A(-gsu)
-        # w = sps.linalg.spsolve(gssu,-gsu)
+        # w = chol(gssu).solve_A(-gsu)
+        wS = sps.linalg.spsolve(gssu,-gsu)
+        
+        w = wS
+        # w = RS.T@wS
+        
         print('Solving took ', time.monotonic()-tm)
         
-        norm_w = np.linalg.norm(w)
-        norm_gsu = np.linalg.norm(gsu)
+        # norm_w = np.linalg.norm(w,np.inf)
+        # norm_gsu = np.linalg.norm(gsu,np.inf)
         
-        if (-(w@gsu)/(norm_w*norm_gsu)<epsangle):
-            angleCondition[i%5] = 1
-            if np.product(angleCondition)>0:
-                w = -gsu
-                print("STEP IN NEGATIVE GRADIENT DIRECTION")
-        else: angleCondition[i%5]=0
+        # if (-(wS@gsu)/(norm_w*norm_gsu)<epsangle):
+        #     angleCondition[i%5] = 1
+        #     if np.product(angleCondition)>0:
+        #         w = -gsu
+        #         print("STEP IN NEGATIVE GRADIENT DIRECTION")
+        # else: angleCondition[i%5]=0
         
         alpha = 1
         
         # ResidualLineSearch
         # for k in range(1000):
-        #     if np.linalg.norm(gs(u+alpha*w)) <= np.linalg.norm(gs(u)): break
+        #     if np.linalg.norm(gs(u+alpha*w),np.inf) <= np.linalg.norm(gs(u),np.inf): break
         #     else: alpha = alpha*factor_residual
         
         # AmijoBacktracking
         float_eps = 1e-11; #float_eps = np.finfo(float).eps
         for kk in range(1000):
-            if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@w) + np.abs(J(u))*float_eps: break
+            if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
             else: alpha = alpha*factor_residual
-            
+        
+        print(J(u+alpha*w)-J(u),J(u),J(u+alpha*w),(gsu@wS))
         u = u + alpha*w
         
-        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(gs(u))+"||alpha: %2e" % (alpha))
+        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(gs(u),np.inf)+"||alpha: %2e" % (alpha))
         
         if(np.linalg.norm(gs(u)) < eps_newton): break
     
@@ -278,14 +277,15 @@ for k in range(rots):
     print('Solving took ', elapsed, 'seconds')
     
     
-    ax1.cla()
+    # ax1.cla()
     ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
     
     # fig = MESH.pdesurf(ux**2+uy**2)
     # fig = MESH.pdesurf(ux**2+uy**2, cmax = 5)
     # fig.show()
     
-    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
+    # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
+    fig = MESH.pdesurf(u)
     fig.show()
     
     # MESH.pdesurf2(u, ax = ax1)

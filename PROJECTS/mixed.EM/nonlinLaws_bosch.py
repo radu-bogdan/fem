@@ -157,13 +157,13 @@ def g_nonlinear_all(x,y):
     return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
            g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
 
-plt.cla()
+# plt.cla()
 
-xx = np.exp(np.linspace(0,40,100_000_00))
-plt.plot(xx,mu_curve(xx),'-')
-plt.loglog(xx,-dx_mu_curve(xx))
+# xx = np.exp(np.linspace(0,40,100_000_00))
+# plt.plot(xx,mu_curve(xx),'-')
+# plt.loglog(xx,-dx_mu_curve(xx))
 
-plt.loglog(H_KL[1:]**2, mu_KL, '--')
+# plt.loglog(H_KL[1:]**2, mu_KL, '--')
 # plt.loglog(H_KL_sat[1:]**2, mu_KL_sat, '*')
 # # plt.plot(xx,coenergy_density(xx))
 

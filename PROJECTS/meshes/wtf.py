@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'../../../') # adds parent directory
+sys.path.insert(0,'../../') # adds parent directory
 import ngsolve as ng
 import numpy as np
 import netgen.occ as occ
@@ -382,12 +382,12 @@ geo.edges[46].name = "right"
 geo.edges[98].name = "right"
 
 rot = occ.Rotation(occ.Axis((0,0,0), occ.Z), 45)
-geo.edges[2].Identify(geo.edges[0], "per", IdentificationType.UNDEFINED,rot)
-geo.edges[6].Identify(geo.edges[4], "per", IdentificationType.UNDEFINED,rot)
-geo.edges[26].Identify(geo.edges[24], "per", IdentificationType.UNDEFINED,rot)
-geo.edges[30].Identify(geo.edges[28], "per", IdentificationType.UNDEFINED,rot)
-geo.edges[46].Identify(geo.edges[32], "per", IdentificationType.UNDEFINED,rot)
-geo.edges[98].Identify(geo.edges[96], "dsa", IdentificationType.UNDEFINED,rot)
+geo.edges[2].Identify(geo.edges[0], "per", 0, rot)
+geo.edges[6].Identify(geo.edges[4], "per", 0, rot)
+geo.edges[26].Identify(geo.edges[24], "per", 0, rot)
+geo.edges[30].Identify(geo.edges[28], "per", 0, rot)
+geo.edges[46].Identify(geo.edges[32], "per", 0, rot)
+geo.edges[98].Identify(geo.edges[96], "dsa", 0, rot)
 
 geoOCC = occ.OCCGeometry(geo, dim=2)
 geoOCCmesh = geoOCC.GenerateMesh()
@@ -396,3 +396,17 @@ ngsolvemesh = ng.Mesh(geoOCCmesh)
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # geoOCCmesh.SecondOrder()
+
+import pde
+MESH = pde.mesh.netgen(geoOCCmesh)
+
+a = np.array(geoOCCmesh.GetIdentifications())
+
+femsol = np.zeros(MESH.np)
+femsol[a[:,0]-1] = +1
+femsol[a[:,1]-1] = -1
+
+import plotly.io as pio
+pio.renderers.default = 'browser'
+fig = MESH.pdesurf(femsol)
+fig.show()
