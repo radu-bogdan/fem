@@ -36,7 +36,8 @@ print('loaded stuff...')
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
+# motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 
 # p = motor_npz['p']
 # e = motor_npz['e']
