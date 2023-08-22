@@ -205,7 +205,7 @@ def assembleE(MESH,space,matrix,order=1):
         
         return B0,B1,B2
 
-def assembleR(MESH, space, edges = ''):
+def assembleR(MESH, space, edges = '', listDOF = npy.empty(0)):
     
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
@@ -220,11 +220,16 @@ def assembleR(MESH, space, edges = ''):
             ind_edges = edges
         else:
             ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+            
+    
     indices = npy.in1d(MESH.Boundary_Region,ind_edges)
     
     sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
     LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices,:])
     LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
+    
+    if listDOF.size > 0:
+        LIST_DOF = listDOF
     
     D = sp.eye(sizeM, format = 'csc')
     R1 = D[:,LIST_DOF]

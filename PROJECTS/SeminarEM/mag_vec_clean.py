@@ -12,39 +12,17 @@ from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
 import numba as nb
-# import matplotlib
-# import matplotlib.pyplot as plt
-# import matplotlib.colors as colors
-# import matplotlib.animation as animation
-# from matplotlib.animation import FFMpegWriter
-# import ffmpeg
-# cmap = matplotlib.colors.ListedColormap("limegreen")
-# cmap = plt.cm.jet
-
-
-# metadata = dict(title = 'Motor')
-# writer = FFMpegWriter(fps = 10, metadata = metadata)
-
-# plt.close('all')
-# fig = plt.figure()
-# fig.show()
-# ax1 = fig.add_subplot(111)
-# ax1.set_aspect(aspect = 'equal')
-
-print('loaded stuff...')
 
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
-# motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
-motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 
-# p = motor_npz['p']
-# e = motor_npz['e']
-# t = motor_npz['t']
-# q = np.empty(0)
-# regions_2d = motor_npz['regions_2d']
-# regions_1d = motor_npz['regions_1d']
+print('loaded stuff...')
+
+pizza = True
+
+if pizza: motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
+else: motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
@@ -70,11 +48,7 @@ import ngsolve as ng
 # geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
 # ngsolve_mesh.Refine()
-# ngsolve_mesh.Refine()
-# ngsolve_mesh.Refine()
 
-
-nu0 = 10**7/(4*np.pi)
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 
 
@@ -142,6 +116,24 @@ for k in range(rots):
     
     R0, RS = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer')
     
+    if pizza:
+        ident = np.array(geoOCCmesh.GetIdentifications())-1
+        i0 = ident[:,0]; i1 = ident[:,1]
+        
+        R_out, R_int = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer,left,right')
+        R_L, R_LR = pde.h1.assembleR(MESH, space ='P1', edges = 'left', listDOF = i1)
+        R_R, R_RR = pde.h1.assembleR(MESH, space ='P1', edges = 'right', listDOF = i0)
+        R_0, R_0R = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer')
+        
+        # manual stuff:
+        corners = np.r_[1,5]
+        ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
+        R_L = R_L[ind1,:]
+        R_R = R_R[ind1,:]
+        
+        from scipy.sparse import bmat        
+        RS =  bmat([[R_int], [R_L-R_R]])
+        
     D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
     D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
     D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
@@ -245,7 +237,6 @@ for k in range(rots):
         
         # norm_w = np.linalg.norm(w,np.inf)
         # norm_gsu = np.linalg.norm(gsu,np.inf)
-        
         # if (-(wS@gsu)/(norm_w*norm_gsu)<epsangle):
         #     angleCondition[i%5] = 1
         #     if np.product(angleCondition)>0:
@@ -265,8 +256,7 @@ for k in range(rots):
         for kk in range(1000):
             if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
             else: alpha = alpha*factor_residual
-        
-        # print(J(u+alpha*w)-J(u),J(u),J(u+alpha*w),(gsu@wS))
+            
         u = u + alpha*w
         
         print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
@@ -280,110 +270,34 @@ for k in range(rots):
     # ax1.cla()
     ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
     
-    # fig = MESH.pdesurf(ux**2+uy**2)
-    # fig = MESH.pdesurf(ux**2+uy**2, cmax = 5)
-    # fig.show()
-    
-    # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
-    fig = MESH.pdesurf(u)
+    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
+    # fig = MESH.pdesurf(u)
     fig.show()
     
-    # MESH.pdesurf2(u, ax = ax1)
-    # MESH.pdesurf2(ux**2+uy**2, ax = ax1)
-    # MESH.pdegeom(ax = ax1)
-    # MESH.pdemesh2(ax = ax1)
-    
-    # fig.show()
-    
-    # plt.pause(0.01)
-    # writer.grab_frame()
-    
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u, u_height=1)
+    fig.show()
     stop
     
     
     ##########################################################################################
     
-    trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
-    points_rotor = np.unique(trig_rotor)
-    
-    rt += rot_speed
-    
-    trig_air_gap_rotor = t[np.where(fem_air_gap_rotor)[0],0:3]
-    shifted_coeff = np.roll(edges_rotor_outer[:,0],rt)
-    kk, jj = MESH._mesh__ismember(trig_air_gap_rotor,edges_rotor_outer[:,0])
-    trig_air_gap_rotor[kk] = shifted_coeff[jj]
-
-    p_new = p.copy(); t_new = t.copy()
-    p_new[points_rotor,:] = (R(a1*rt)@p[points_rotor,:].T).T
-    t_new[np.where(fem_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
-    m_new = R(a1*rt)@m
-    
-    MESH = pde.mesh(p_new,e,t_new,q)
-    
     # trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
     # points_rotor = np.unique(trig_rotor)
     
     # rt += rot_speed
-    # # rt = 1
     
-    # MESH.makeBEO()
-    
-    # beo = MESH.Boundary_EdgeOrientation
-    
-    # e0 = MESH.e[:,0]; e1 = MESH.e[:,1]
-    # ue0 = 1/2*(e0-e1)*beo + 1/2*(e0+e1)
-    # ue1 = 1/2*(e1-e0)*beo + 1/2*(e0+e1)
-    # ue = np.c_[ue0,ue1].astype(int)
-    
-    # fem_ind_rotor_outer = pde.int.evaluateB(MESH, order = 0, edges = ind_rotor_outer).diagonal()
-    # # edges_rotor_outer = MESH.e[np.where(fem_ind_rotor_outer)[0],:]
-    # edges_rotor_outer  = ue[np.where(fem_ind_rotor_outer)[0],:]
-    # edges_rotor_outer2 = edges_rotor_outer.copy()
-    
-    # for i in range(edges_rotor_outer.shape[0]):
-    #     ss = edges_rotor_outer.shape[0]//2
-    #     if i%2==0:
-    #         edges_rotor_outer2[i,:] = edges_rotor_outer[i//2,:]
-    #     else:
-    #         edges_rotor_outer2[i,:] = edges_rotor_outer[i//2+ss,:]
-    #     print(i//2,i//2+ss)
-    
-    
-    # # edges_rotor_outer = MESH.e[np.where(fem_ind_rotor_outer)[0],:]
-    
-    # fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()
-    # trig_air_gap_rotor = MESH.t[np.where(fem_air_gap_rotor)[0],0:3]
-    
-    
-    # shifted_coeff = np.roll(edges_rotor_outer2[:,0],rt)
+    # trig_air_gap_rotor = t[np.where(fem_air_gap_rotor)[0],0:3]
+    # shifted_coeff = np.roll(edges_rotor_outer[:,0],rt)
     # kk, jj = MESH._mesh__ismember(trig_air_gap_rotor,edges_rotor_outer[:,0])
     # trig_air_gap_rotor[kk] = shifted_coeff[jj]
-    
-    
-    
-    
-    
+
     # p_new = p.copy(); t_new = t.copy()
-    
-    # # rotate all the points in the rotor
     # p_new[points_rotor,:] = (R(a1*rt)@p[points_rotor,:].T).T
     # t_new[np.where(fem_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
     # m_new = R(a1*rt)@m
     
     # MESH = pde.mesh(p_new,e,t_new,q)
     
-    # fig = plt.figure(); fig.show(); ax1 = fig.add_subplot(111); MESH.pdegeom(ax=ax1); MESH.pdemesh2(ax=ax1); ax1.set_aspect(aspect = 'equal'); MESH.pdesurf2(fem_air_gap_rotor,ax=ax1)
-    
-    # fig = MESH.pdemesh()
-    # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 0), f(1,1)+0*vek, u_height=0)
-    # fig.show()
-    
-    # u = np.r_[u[:MESH.np],1/2*(u[MESH.EdgesToVertices[:,0]] + u[MESH.EdgesToVertices[:,1]])].copy()
-    
-    
-    # MESH.pdemesh2(ax = ax)
-    # fig.canvas.draw()
-    # fig.canvas.flush_events()
- 
+   
 # writer.finish()
 # do()
