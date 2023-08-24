@@ -12,7 +12,7 @@ pio.renderers.default = 'browser'
 import ngsolve as ng
 
 import numba as nb
-import pyamg
+# import pyamg
 from scipy.sparse import hstack,vstack,bmat
 from sksparse.cholmod import cholesky as chol
 
@@ -44,8 +44,8 @@ j3 = motor_npz['j3']
 
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
-# ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 
 
@@ -167,7 +167,7 @@ KK = KK[MESH.NonSingle_Edges,:]
 ##########################################################################################
 
 # from nonlinLaws import *
-from nonlinLaws_bosch import *
+from nonlinLaws import *
 
 sH = phix_d_Hcurl.shape[0]
 sA = phi_L2_o1.shape[0]

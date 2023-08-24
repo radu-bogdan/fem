@@ -19,7 +19,7 @@ import numba as nb
 
 print('loaded stuff...')
 
-pizza = True
+pizza = False
 
 if pizza: motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 else: motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
@@ -47,7 +47,8 @@ j3 = motor_npz['j3']
 import ngsolve as ng
 # geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
 
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 
@@ -114,7 +115,7 @@ for k in range(rots):
     phi_H1b = pde.h1.assembleB(MESH, space = poly, matrix = 'M', shape = phi_H1.shape, order = order_phiphi)
     phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
     
-    R0, RS = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer')
+    R0, RS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
     
     if pizza:
         ident = np.array(geoOCCmesh.GetIdentifications())-1
@@ -228,8 +229,8 @@ for k in range(rots):
         gsu = RS @ gs(u)
         
         tm = time.monotonic()
-        # w = chol(gssu).solve_A(-gsu)
-        wS = sps.linalg.spsolve(gssu,-gsu)
+        wS = chol(gssu).solve_A(-gsu)
+        # wS = sps.linalg.spsolve(gssu,-gsu)
         print('Solving took ', time.monotonic()-tm)
         
         # w = wS
@@ -271,7 +272,7 @@ for k in range(rots):
     ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
     
     fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
-    # fig = MESH.pdesurf(u)
+    # fig = MESH.pdesurf(ux**2+uy**2)
     fig.show()
     
     fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u, u_height=1)
