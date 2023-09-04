@@ -42,21 +42,17 @@ cmap = plt.cm.jet
 # regions_2d_rotor = motor_rotor_npz['regions_2d']
 # regions_1d_rotor = motor_rotor_npz['regions_1d']
 
-motor_npz = np.load('meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
-p = motor_npz['p'].T
-e = motor_npz['e'].T
-t = motor_npz['t'].T
-q = np.empty(0)
-regions_2d = motor_npz['regions_2d']
-regions_1d = motor_npz['regions_1d']
+geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-nu0 = 10**7/(4*np.pi)
-MESH = pde.mesh(p,e,t,q)
-# MESH.refinemesh()
-# MESH.refinemesh()
+import ngsolve as ng
+geoOCCmesh = geoOCC.GenerateMesh()
+ngsolve_mesh = ng.Mesh(geoOCCmesh)
+ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
 ##########################################################################################
 
 

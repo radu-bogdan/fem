@@ -71,10 +71,11 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'N0'
-space_Qh = 'P0'
+space_Vh = 'N1'
+space_Qh = 'P1'
+space_Vhd = 'N1d'
 # space_Qh = 'P1_orth_divN1'
-int_order = 2
+int_order = 4
 
 tm = time.monotonic()
 
@@ -135,8 +136,6 @@ for i in range(16):
 ##########################################################################################
 
 
-space_Vhd = 'N0d'
-
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = int_order)
 
@@ -154,15 +153,15 @@ aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
 
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 1)
+phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 1)
 
 De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-# KK = KK[np.r_[2*MESH.NonSingle_Edges,\
-#               2*MESH.NonSingle_Edges+1],:]
+KK = KK[np.r_[2*MESH.NonSingle_Edges,\
+              2*MESH.NonSingle_Edges+1],:]
 
-KK = KK[MESH.NonSingle_Edges,:]
+# KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 

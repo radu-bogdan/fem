@@ -661,6 +661,7 @@ class mesh:
                            zaxis = dict(showspikes = False, visible=False))
         
         fig.update_layout(
+                          scene = scene,
                           scene_camera = camera,
                           margin_l=0,
                           margin_t=0,
@@ -734,7 +735,7 @@ class mesh:
                            zaxis = dict(showspikes = False, visible=False))
         # camera = dict(eye = dict(x = -1e-10, y = -1e-10, z = 1e10))
         fig.update_layout(
-                          # scene = scene,
+                          scene = scene,
                           scene_camera = camera,
                           # hovermode = "x",
                           # autosize = True,
@@ -755,6 +756,11 @@ class mesh:
         # fig.layout.paper_bgcolor = "#7f7f7f"
         # fig.layout.plot_bgcolor = "#c7c7c7"
         fig.update_traces(showlegend = True)
+        
+        scene = dict(aspectratio = dict(x = ratio, y = 1, z = 1),
+                           xaxis = dict(showspikes = False, visible=False),
+                           yaxis = dict(showspikes = False, visible=False),
+                           zaxis = dict(showspikes = False, visible=False))
         
         # border = 0
         # fig.update_xaxes(scaleanchor = "y", scaleratio = 1)
@@ -861,11 +867,12 @@ class mesh:
                                     showlegend = False))
         
         
-        if DATAT == 'P1ds':
+        if DATAT == 'P1':
             x = p[:,0]; y = p[:,1]; z = u;
-            xr = npy.linspace(x.min(), x.max(), 200); yr = npy.linspace(y.min(), y.max(), 100)
+            xr = npy.linspace(x.min(), x.max(), 200); yr = npy.linspace(y.min(), y.max(), 200)
             xr, yr = npy.meshgrid(xr, yr)
             Z = griddata((x, y), z, (xr, yr) , method='cubic', fill_value=0)
+            # Z = griddata((x, y), z, (xr, yr), fill_value=0)
             # print(u_height)
             # print(xr,yr,z)
             fig.add_trace(go.Surface(name = 'Isolines',
@@ -876,8 +883,8 @@ class mesh:
                                       showscale = False,
                                       contours_z = dict(show = True,
                                                         start = Z.min(),
-                                                        end = Z.max(),
-                                                        size = (Z.max()-Z.min())/50,
+                                                        end = 0.95*Z.max(),
+                                                        size = (Z.max()-Z.min())/15,
                                                         width = 2,
                                                         # usecolormap = True,
                                                         project_z = True,

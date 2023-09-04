@@ -416,7 +416,13 @@ fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = ind_nonlinear).diago
 Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear)
 By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear)
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), Bx**2+By**2, u_height = 0)
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), Bx**2+By**2, u_height = 0)
+# fig.show()
+
+import plotly.io as pio
+pio.renderers.default = "browser"
+
+fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 1)
 fig.show()
 
 

@@ -44,12 +44,12 @@ ax1.set_aspect(aspect = 'equal')
 ##########################################################################################
 motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
-p = motor_npz['p']
-e = motor_npz['e']
-t = motor_npz['t']
-q = np.empty(0)
-regions_2d = motor_npz['regions_2d']
-regions_1d = motor_npz['regions_1d']
+# p = motor_npz['p']
+# e = motor_npz['e']
+# t = motor_npz['t']
+# q = np.empty(0)
+# regions_2d = motor_npz['regions_2d']
+# regions_1d = motor_npz['regions_1d']
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 ##########################################################################################
@@ -60,7 +60,7 @@ j3 = motor_npz['j3']
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -96,9 +96,8 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 if ORDER == 1:
     poly = 'P1'
     dxpoly = 'P0'
-    order_phiphi = 2
+    order_phiphi = 0
     order_dphidphi = 0
-    # u = np.random.rand(MESH.np) * 0.005
     u = np.zeros(MESH.np)#+0.01
     
 if ORDER == 2:
@@ -283,7 +282,13 @@ for k in range(rots):
     # fig = MESH.pdesurf(ux**2+uy**2, cmax = 5)
     # fig.show()
     
+    import plotly.io as pio
+    pio.renderers.default = "browser"
+    
     fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2)
+    # fig = MESH.pdesurf(u)
+    
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1', quad = 'Q1', controls = 1), u[:MESH.np], u_height = 1)
     fig.show()
     
     # MESH.pdesurf2(u, ax = ax1)

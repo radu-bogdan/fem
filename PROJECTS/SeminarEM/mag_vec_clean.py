@@ -19,7 +19,7 @@ import numba as nb
 
 print('loaded stuff...')
 
-pizza = False
+pizza = True
 
 if pizza: motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 else: motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
@@ -34,7 +34,7 @@ print('loaded geo...')
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -47,8 +47,8 @@ j3 = motor_npz['j3']
 import ngsolve as ng
 # geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-ngsolve_mesh.Refine()
-ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
 
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 
@@ -121,12 +121,12 @@ for k in range(rots):
         ident = np.array(geoOCCmesh.GetIdentifications())-1
         i0 = ident[:,0]; i1 = ident[:,1]
         
-        R_out, R_int = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer,left,right')
-        R_L, R_LR = pde.h1.assembleR(MESH, space ='P1', edges = 'left', listDOF = i1)
-        R_R, R_RR = pde.h1.assembleR(MESH, space ='P1', edges = 'right', listDOF = i0)
-        R_0, R_0R = pde.h1.assembleR(MESH, space ='P1', edges = 'stator_outer')
+        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right')
+        R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
+        R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
+        R_0, R_0R = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
         
-        # manual stuff:
+        # manual stuff: (removing the point in the corner...)
         corners = np.r_[1,5]
         ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
         R_L = R_L[ind1,:]
@@ -275,7 +275,7 @@ for k in range(rots):
     # fig = MESH.pdesurf(ux**2+uy**2)
     fig.show()
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u, u_height=1)
+    fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
     fig.show()
     stop
     
