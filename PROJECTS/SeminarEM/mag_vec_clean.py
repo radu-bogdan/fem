@@ -43,6 +43,9 @@ nu0 = 10**7/(4*np.pi)
 geoOCCmesh = motor_npz['geoOCCmesh'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
+if pizza:
+    ident_points = motor_npz['ident_points']
+    ident_edges = motor_npz['ident_edges']
 
 import ngsolve as ng
 # geoOCCmesh = geoOCC.GenerateMesh()
@@ -118,7 +121,11 @@ for k in range(rots):
     R0, RS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
     
     if pizza:
-        ident = np.array(geoOCCmesh.GetIdentifications())-1
+        # ident = np.array(geoOCCmesh.GetIdentifications())-1
+        ident = ident_points
+        if ORDER == 2:
+            ident = np.r_[ident_points, MESH.np + ident_edges]
+        
         i0 = ident[:,0]; i1 = ident[:,1]
         
         R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right')
@@ -127,8 +134,9 @@ for k in range(rots):
         R_0, R_0R = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
         
         # manual stuff: (removing the point in the corner...)
-        corners = np.r_[1,5]
+        corners = np.r_[0,ident_points.shape[0]-1]
         ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
+        # ind1 = np.r_[1:R_L.shape[0]-1]
         R_L = R_L[ind1,:]
         R_R = R_R[ind1,:]
         
