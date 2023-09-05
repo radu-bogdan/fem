@@ -8,7 +8,7 @@ def mergeSort(arr):
     size = arr.size // 2
     # print('arrsize',size)
     
-    if size == 1:
+    if arr.size == 1:
         return arr
     
     arrL = mergeSort(arr[:size])
@@ -19,18 +19,18 @@ def mergeSort(arr):
     arrLs = arrL.size
     arrRs = arrR.size
     
-    print(arrL,arrR)
+    # print(arrL,arrR)
     
     mergedArr = np.zeros(arrLs + arrRs)
     
     i = 0; j = 0;
-    print('ai jay',i,j)
+    # print('ai jay',i,j)
     for k in range(arrLs + arrRs):
         if j == arrRs:
-            mergedArr[k] = arrL[i]
+            mergedArr[k:] = arrL[i:]
             return mergedArr
         if i == arrLs:
-            mergedArr[k] = arrR[j]
+            mergedArr[k:] = arrR[j:]
             return mergedArr
         
         if arrL[i]<arrR[j]:
@@ -39,7 +39,7 @@ def mergeSort(arr):
         else:
             mergedArr[k] = arrR[j]
             j = j + 1
-    
+            
     return mergedArr
 
 def bubbleSort(arr):
@@ -67,7 +67,7 @@ def convergence(algo,it):
         N = N*2
         arr = np.random.randint(0,N**2,N)
         tm = time.monotonic()
-        bubbleSort(arr)
+        algo(arr)
         times[i] = time.monotonic()-tm
         sizes[i] = N
         print(times)
@@ -77,14 +77,19 @@ def convergence(algo,it):
 
 N = 11;
 arr = np.random.randint(0,N**2,N)
-print(arr)
-print(mergeSort(arr))
+
+# arr = np.array([ 58, 114, 102,   9,  11, 119,  47,  32,  30, 118, 101])
+# print(arr)
+# print(mergeSort(arr))
 
 
 
-# sizes, times = convergence(bubbleSort,9)
-# plt.loglog(sizes,times)
-# plt.loglog(sizes,sizes**2/2,'*')
+sizes, times = convergence(bubbleSort,10)
+plt.loglog(sizes, times,'*r')
+plt.loglog(*convergence(mergeSort,10),'+')
+plt.loglog(*convergence(np.sort,10),'--k')
+plt.loglog(sizes,sizes**2,)
+plt.loglog(sizes,sizes*np.log(sizes))
 # plt.loglog(sizes,sizes,'--')
 
 
