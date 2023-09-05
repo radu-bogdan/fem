@@ -31,7 +31,7 @@ print('loaded geo...')
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -182,8 +182,8 @@ from nonlinLaws import *
                        
 ############################################################################################
 
-rot_speed = 1; rt = 1
-rots = 5
+rot_speed = 20; rt = 1
+rots = 10
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
 tor3 = np.zeros(rots)
@@ -224,23 +224,32 @@ for k in range(rots):
     R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
     # R_0, R_0R = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
     
-    
-    
+    ident_points_gap = np.c_[np.roll(ident_points_gap[:,0],-k*rot_speed),
+                             ident_points_gap[:,1]]
+
     ident_gap = ident_points_gap
     if ORDER == 2:
+                                     
+        # ident_points_gap = np.c_[ident_edges_gap[:,0],
+        #                          np.roll(ident_edges_gap[:,1],1)]
+        ident_edges_gap = np.c_[np.roll(ident_edges_gap[:,0],-k*rot_speed),
+                                 ident_edges_gap[:,1]]
         ident_gap = np.r_[ident_points_gap, MESH.np + ident_edges_gap]
+        
+        
+        
+        
     i0_gap = ident_gap[:,0]; i1_gap = ident_gap[:,1]
     R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = i0_gap)
     R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = i1_gap)
     
-    
+        
     
     
     
     # manual stuff: (removing the point in the three corners...)
     corners = np.r_[0,ident_points.shape[0]-1]
     ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
-    # ind1 = np.r_[1:R_L.shape[0]-1]
     R_L = R_L[ind1,:]
     R_R = R_R[ind1,:]
     
@@ -389,13 +398,13 @@ for k in range(rots):
     # ax1.cla()
     ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
     
-    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
-    fig.show()
+    # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
+    # fig.show()
     
     # fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
     # fig.show()
     
-    # MESH.pdesurf2(u[:MESH.np])
+    MESH.pdesurf2(u[:MESH.np])
     
     # stop
     
@@ -425,11 +434,11 @@ for k in range(rots):
     a1 = 2*np.pi/ident_edges_gap.shape[0]/8
     
     p_new = MESH.p.copy(); t_new = MESH.t.copy()
-    p_new[points_rotor,:] = (R(a1)@MESH.p[points_rotor,:].T).T
+    p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
     
     # t_new[np.where(fem_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
     
-    m_new = R(a1)@m
+    m_new = R(a1*rot_speed)@m
     
     MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
     # MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
