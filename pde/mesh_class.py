@@ -18,6 +18,7 @@ from . import lists as femlists
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.tri as tri
 
 class mesh:
     # @profile       
@@ -434,11 +435,16 @@ class mesh:
         else:
             ax = kwargs["ax"]
             # ax.clear()
-            
+        
         Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
         
         if (fun.size==self.np):
             chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1, shading='gouraud')
+            
+            # refiner = tri.UniformTriRefiner(Triang)
+            # tri_refi, z_test_refi = refiner.refine_field(fun, subdiv=3)
+            # chip = ax.tricontour(tri_refi, z_test_refi, colors = 'k')
+            chip = ax.tricontour(Triang, fun, colors='k')
         else:
             chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1)
             

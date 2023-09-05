@@ -40,25 +40,65 @@ total = 1
 nu0 = 10**7/(4*np.pi)
 
 
-geoOCCmesh = motor_npz['geoOCCmesh'].tolist()
-m = motor_npz['m']; m_new = m
-j3 = motor_npz['j3']
-if pizza:
-    ident_points = motor_npz['ident_points']
-    ident_edges = motor_npz['ident_edges']
-
 import ngsolve as ng
-# geoOCCmesh = geoOCC.GenerateMesh()
-ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
-# ngsolve_mesh.Refine()
+import netgen.occ as occ
 
-MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
+geoOCC = motor_npz['geoOCC'].tolist()
+geoOCCmesh = geoOCC.GenerateMesh()
+ngsolvemesh = ng.Mesh(geoOCCmesh)
+ngsolvemesh.Refine()
+ngsolvemesh.Refine()
 
+MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
+
+def makeIdentifications(MESH):
+
+    a = np.array(MESH.geoOCCmesh.GetIdentifications())
+
+    c0 = np.zeros(a.shape[0])
+    c1 = np.zeros(a.shape[0])
+
+    for i in range(a.shape[0]):
+        point0 = MESH.p[a[i,0]-1]
+        point1 = MESH.p[a[i,1]-1]
+
+        c0[i] = point0[0]**2+point0[1]**2
+        c1[i] = point1[0]**2+point1[1]**2
+
+    ind0 = np.argsort(c0)
+
+    aa = np.c_[a[ind0[:-1],0]-1,
+               a[ind0[1: ],0]-1]
+
+    edges0 = np.c_[a[ind0[:-1],0]-1,
+                   a[ind0[1: ],0]-1]
+    edges1 = np.c_[a[ind0[:-1],1]-1,
+                   a[ind0[1: ],1]-1]
+
+    edges0 = np.sort(edges0)
+    edges1 = np.sort(edges1)
+
+    edgecoord0 = np.zeros(edges0.shape[0],dtype=int)
+    edgecoord1 = np.zeros(edges1.shape[0],dtype=int)
+
+    for i in range(edges0.shape[0]):
+        edgecoord0[i] = np.where(np.all(MESH.EdgesToVertices[:,:2]==edges0[i,:],axis=1))[0][0]
+        edgecoord1[i] = np.where(np.all(MESH.EdgesToVertices[:,:2]==edges1[i,:],axis=1))[0][0]
+
+    identification = np.c_[np.r_[a[ind0,0]-1,MESH.np + edgecoord0],
+                           np.r_[a[ind0,1]-1,MESH.np + edgecoord1]]
+    ident_points = np.c_[a[ind0,0]-1,
+                         a[ind0,1]-1]
+    ident_edges = np.c_[edgecoord0,
+                        edgecoord1]
+    return ident_points, ident_edges
+
+ident_points, ident_edges = makeIdentifications(MESH)
+
 ##########################################################################################
 
 print('generated mesh...')
