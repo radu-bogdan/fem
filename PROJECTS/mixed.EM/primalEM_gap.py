@@ -23,7 +23,7 @@ from matplotlib.animation import FFMpegWriter
 cmap = plt.cm.jet
 
 metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 15, metadata = metadata)
+writer = FFMpegWriter(fps = 50, metadata = metadata)
 
 ##########################################################################################
 # Loading mesh
@@ -43,7 +43,7 @@ print('loaded geo...')
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -119,9 +119,18 @@ def makeIdentifications(MESH):
 
         c0[i] = point0[0]**2+point0[1]**2
         c1[i] = point1[0]**2+point1[1]**2
-
+    
+    r_sliding = 78.8354999*10**(-3)
+    r_sliding2 = 79.03874999*10**(-3)
+    
+    i0 = np.where(np.abs(c0-r_sliding**2 )<1e-10)[0][0]
+    i1 = np.where(np.abs(c0-r_sliding2**2)<1e-10)[0][0]
+    
+    
     ind0 = np.argsort(c0)
-
+    
+    jumps = np.r_[np.where(ind0==i0)[0][0],np.where(ind0==i1)[0][0]]
+    
     aa = np.c_[a[ind0[:-1],0]-1,
                a[ind0[1: ],0]-1]
 
@@ -143,6 +152,8 @@ def makeIdentifications(MESH):
         if v0.size == 1:
             edgecoord0[i] = v0
             edgecoord1[i] = v1
+            
+            
     
     
     identification = np.c_[np.r_[a[ind0,0]-1,MESH.np + edgecoord0],
@@ -156,9 +167,9 @@ def makeIdentifications(MESH):
     if index.size ==1:
         ident_edges = np.delete(ident_edges, index, axis=0)
 
-    return ident_points, ident_edges
+    return ident_points, ident_edges, jumps
 
-ident_points, ident_edges = makeIdentifications(MESH)
+ident_points, ident_edges, jumps = makeIdentifications(MESH)
 
 print('generated mesh...')
 
@@ -192,12 +203,10 @@ from nonlinLaws import *
                        
 ############################################################################################
 
-rot_speed = 1;
+rot_speed = 1
 rots = 305
+
 tor = np.zeros(rots)
-tor2 = np.zeros(rots)
-tor3 = np.zeros(rots)
-tor_vw = np.zeros(rots)
 energy = np.zeros(rots)
 
 for k in range(rots):
@@ -208,7 +217,10 @@ for k in range(rots):
     # Assembling stuff
     ##########################################################################################
     
-    u = np.zeros(MESH.np)
+    # if ORDER == 1:
+    #     u = np.zeros(MESH.np)
+    # if ORDER == 2:
+    #     u = np.zeros(MESH.np + MESH.NoEdges)
    
     tm = time.monotonic()
     
@@ -237,38 +249,49 @@ for k in range(rots):
     R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
     R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
     R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
-    
-    # R_0, R_0R = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-    
-    # ident_gap = np.c_[np.roll(ident_points_gap[:,0],-k*rot_speed),
-    #                           ident_points_gap[:,1]]
-    # if ORDER == 2:
-                                     
-    #     # ident_points_gap = np.c_[ident_edges_gap[:,0],
-    #     #                          np.roll(ident_edges_gap[:,1],1)]
-    #     ident_edges_gap = np.c_[np.roll(ident_edges_gap[:,0],-k*rot_speed),
-    #                              ident_edges_gap[:,1]]
-    #     ident_gap = np.r_[ident_points_gap, MESH.np + ident_edges_gap]
-        
-        
-        
-        
-    i0_gap = np.roll(ident_points_gap[:,0], -k*rot_speed)
-    i1_gap = ident_points_gap[:,1]
-    
-    R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = i0_gap)
-    R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = i1_gap)
-    
-     
-    
+   
     # manual stuff: (removing the point in the three corners...)
-    corners = np.r_[0,16,17,ident_points.shape[0]-1] #,21,24
+    corners = np.r_[0,jumps,ident_points.shape[0]-1]
     ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
     R_L = R_L[ind1,:]
     
-    corners = np.r_[0,16,17,ident_points.shape[0]-1] #,22,23
+    corners = np.r_[0,jumps,ident_points.shape[0]-1]
     ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
     R_R = R_R[ind1,:]
+    
+    
+    
+    ident0 = np.roll(ident_points_gap[:,0], -k*rot_speed)
+    ident1 = ident_points_gap[:,1]
+    
+    R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0)
+    R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1)
+        
+    if k>0:
+        R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
+        
+    if ORDER == 2:
+        
+        ident0_edge = MESH.np + np.roll(ident_edges_gap[:,0], -k*rot_speed)
+        ident1_edge = MESH.np + ident_edges_gap[:,1]
+        
+        R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0_edge)
+        R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1_edge)
+        
+        if k>0:
+            R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:]
+            
+        from scipy.sparse import bmat
+        R_AL =  bmat([[R_AL], [R_AL2]])
+        R_AR =  bmat([[R_AR], [R_AR2]])
+        
+        
+    # i0_gap = ident0; i1_gap = ident1
+    
+    # R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = i0_gap)
+    # R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = i1_gap)
+    
+     
     
     # corners_gap = np.r_[0,ident_points_gap.shape[0]-1]
     # corners_gap = np.r_[0,ident_points_gap.shape[0]-1]
@@ -276,8 +299,6 @@ for k in range(rots):
     # R_AL = R_AL[100:200,:]
     # R_AR = R_AR[100:200,:]
     
-    if k>0:
-        R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
     
     from scipy.sparse import bmat
     RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
@@ -368,6 +389,12 @@ for k in range(rots):
         ux = dphix_H1.T@u; uy = dphiy_H1.T@u
         return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear) -(aJ-aM)@u #+ 1/2*penalty*u@B_stator_outer@u
     
+    tm = time.monotonic()  
+    if k>0:
+        u = RS.T@chol(RS@RS.T).solve_A(RS@u)
+    print('Initial guess compute took  ', time.monotonic()-tm)
+        # stop
+        
     tm2 = time.monotonic()
     for i in range(maxIter):
         # gssu = gss(u)
@@ -417,7 +444,7 @@ for k in range(rots):
     
     
     # ax1.cla()
-    ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
+    ux = dphix_H1_o0.T@u; uy = dphiy_H1_o0.T@u
     
     # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
     # fig.show()
@@ -443,17 +470,35 @@ for k in range(rots):
         fig = plt.figure()
         writer.setup(fig, "writer_test.mp4", 500)
         fig.show()
-        
-    ax = fig.add_subplot(111)
-    ax.set_aspect(aspect = 'equal')
-    MESH.pdesurf2(u,ax = ax)
-    # MESH.pdemesh2(ax = ax)
-    MESH.pdegeom(ax = ax)
-    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
-    ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
     
-    plt.pause(0.01)
+    tm = time.monotonic()
+    ax1.cla()
+    ax1.set_aspect(aspect = 'equal')
+    MESH.pdesurf2(u[:MESH.np], ax = ax1)
+    # MESH.pdemesh2(ax = ax)
+    MESH.pdegeom(ax = ax1)
+    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    ax1.tricontour(Triang, u[:MESH.np], levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    
+    ax2.cla()
+    ax2.set_aspect(aspect = 'equal')
+    MESH.pdesurf2(ux**2+uy**2, ax = ax2)
+    # MESH.pdemesh2(ax = ax)
+    MESH.pdegeom(ax = ax2)
+    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    
+    
+    
+    
+    
+    print('Plotting took  ', time.monotonic()-tm)
+    
+    tm = time.monotonic()
+    # writer.grab_frame()
     writer.grab_frame()
+    print('Grabbing took  ', time.monotonic()-tm)
     # stop
     
     
@@ -476,8 +521,9 @@ for k in range(rots):
     m_new = R(a1*rot_speed)@m_new
     
     MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
-    # MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
-    
     # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
+    ##########################################################################################
+    
+    
     
 writer.finish()
