@@ -444,7 +444,7 @@ class mesh:
             # refiner = tri.UniformTriRefiner(Triang)
             # tri_refi, z_test_refi = refiner.refine_field(fun, subdiv=3)
             # chip = ax.tricontour(tri_refi, z_test_refi, colors = 'k')
-            chip = ax.tricontour(Triang, fun, colors='k')
+            # chip = ax.tricontour(Triang, fun, colors='k')
         else:
             chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1)
             

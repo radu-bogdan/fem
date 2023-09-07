@@ -13,7 +13,7 @@ import plotly.io as pio
 pio.renderers.default = 'browser'
 import nonlinear_Algorithms
 import numba as nb
-import pyamg
+# import pyamg
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ metadata = dict(title = 'Motor')
 writer = FFMpegWriter(fps = 10, metadata = metadata)
 
 # plt.ion()
-plt.close('all')    
+plt.close('all')
 fig = plt.figure()
 fig.show()
 ax1 = fig.add_subplot(121)
@@ -59,7 +59,7 @@ j3 = motor_npz['j3']
 
 # Making sure points are equidistant along the connecting edge.
 # a1 = 0.006599984566365112
-# a1 = 0.00320570678937734
+a1 = 0.00320570678937734
 # r1 = 0.07863225
 # ind_edges_rotor_outer = np.where(np.isin(e[:,2],593))[0]
 # edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
@@ -85,9 +85,6 @@ nu0 = 10**7/(4*np.pi)
 # # MESH.refinemesh()
 # # MESH.refinemesh()
 
-# t = MESH.t
-# p = MESH.p
-
 
 geoOCCmesh = motor_npz['geoOCCmesh'].tolist()
 m = motor_npz['m']; m_new = m
@@ -107,6 +104,9 @@ MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 linear = '*air,*magnet,*coil,shaft_iron'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = '*magnet,rotor_iron,rotor_air,shaft_iron'
+
+t = MESH.t
+p = MESH.p
 ##########################################################################################
 
 
@@ -454,7 +454,7 @@ for k in range(rots):
     # chip = ax1.tripcolor(Triang, (ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, cmap = cmap, shading = 'flat', lw = 0.1)
     
     
-    stop
+    # stop
     
     ax1.cla()
     ax2.cla()
@@ -466,7 +466,7 @@ for k in range(rots):
     
     # chip = ax1.tripcolor(Triang, -stiffness_part_local + energy_part_local, cmap = cmap, shading = 'flat', lw = 0.1)
     # ax1.tripcolor(Triang, zT, cmap = cmap, shading = 'flat', lw = 0.1)
-    # chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', lw = 0.1)
+    chip = ax1.tripcolor(Triang, u, cmap = cmap, shading = 'gouraud', lw = 0.1)
     # chip = ax1.tripcolor(Triang, fx(ux,uy)**2+fy(ux,uy)**2, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, v1y_fem, cmap = cmap, shading = 'flat', lw = 0.1)
     # chip = ax1.tripcolor(Triang, ux**2+uy**2, cmap = cmap, shading = 'flat', lw = 0.1)
@@ -478,8 +478,8 @@ for k in range(rots):
     # ax1.plot(tor,linewidth = 1)
     # ax1.plot(tor2,linewidth = 1)
     
-    energy_diff = energy[1:]-np.r_[energy[-1],energy[0:-2]]
-    energy_diff = (-energy_diff*(np.abs(energy_diff)<1)/(2*a1)).copy()
+    # energy_diff = energy[1:]-np.r_[energy[-1],energy[0:-2]]
+    # energy_diff = (-energy_diff*(np.abs(energy_diff)<1)/(2*a1)).copy()
     
     # ax1.plot(energy_diff,linewidth = 1)
     
@@ -488,10 +488,10 @@ for k in range(rots):
     # ax2.plot(tor-tor2)
     # ax2.plot(tor-tor3)
     
-    ax2.plot(energy_diff)
-    ax2.plot(tor)
-    ax2.plot(tor2)
-    ax2.plot(tor3)
+    # ax2.plot(energy_diff)
+    # ax2.plot(tor)
+    # ax2.plot(tor2)
+    # ax2.plot(tor3)
     
     # ax2.plot(tor/tor2)
     
@@ -594,21 +594,23 @@ for k in range(rots):
     
     saveu = u
     
-    stop
+    # stop
     
     
 
     ind_stator_outer = MESH.getIndices2d(MESH.regions_1d, 'stator_outer')
     ind_rotor_outer = MESH.getIndices2d(MESH.regions_1d, 'rotor_outer')
+    ind_rotor = MESH.getIndices2d(MESH.regions_2d, 'rotor_iron,*magnet,rotor_air,shaft_iron,air_gap_rotor')
     
     ind_edges_rotor_outer = np.where(np.isin(MESH.Boundary_Region,ind_rotor_outer))[0]
     edges_rotor_outer = MESH.e[ind_edges_rotor_outer,0:2]
+    edges_rotor_outer[-1,:] =  edges_rotor_outer[-1,np.r_[1,0]]
 
     R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                             [np.sin(x), np.cos(x)]])
     
-    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_rotor).diagonal()
-    fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = ind_air_gap_rotor).diagonal()
+    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = rotor).diagonal()
+    fem_air_gap_rotor = pde.int.evaluate(MESH, order = 0, regions = 'air_gap_rotor').diagonal()
     
     trig_rotor = t[np.where(fem_rotor)[0],0:3]
     points_rotor = np.unique(trig_rotor)
@@ -625,7 +627,7 @@ for k in range(rots):
     t_new[np.where(fem_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
     m_new = R(a1*rt)@m
     
-    MESH = pde.mesh(p_new,e,t_new,q)
+    MESH = pde.mesh(p_new,MESH.e,t_new,MESH.q,MESH.regions_2d,MESH.regions_1d)
     
     
     
@@ -639,8 +641,8 @@ for k in range(rots):
 
     
     # MESH.pdemesh2(ax = ax)
-    # fig.canvas.draw()
-    # fig.canvas.flush_events()
+    fig.canvas.draw()
+    fig.canvas.flush_events()
  
 writer.finish()
 # do()

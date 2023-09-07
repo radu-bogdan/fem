@@ -13,6 +13,18 @@ import plotly.io as pio
 pio.renderers.default = 'browser'
 import numba as nb
 
+import numba as nb
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import matplotlib.animation as animation
+from matplotlib.animation import FFMpegWriter
+# cmap = matplotlib.colors.ListedColormap("limegreen")
+cmap = plt.cm.jet
+
+metadata = dict(title = 'Motor')
+writer = FFMpegWriter(fps = 15, metadata = metadata)
+
 ##########################################################################################
 # Loading mesh
 ##########################################################################################
@@ -148,8 +160,6 @@ def makeIdentifications(MESH):
 
 ident_points, ident_edges = makeIdentifications(MESH)
 
-##########################################################################################
-
 print('generated mesh...')
 
 ##########################################################################################
@@ -178,12 +188,12 @@ if ORDER == 2:
 ############################################################################################
 
 sys.path.insert(1,'../mixed.EM')
-from nonlinLaws import *                 
+from nonlinLaws import *
                        
 ############################################################################################
 
-rot_speed = 10; rt = 1
-rots = 2
+rot_speed = 1;
+rots = 305
 tor = np.zeros(rots)
 tor2 = np.zeros(rots)
 tor3 = np.zeros(rots)
@@ -192,10 +202,14 @@ energy = np.zeros(rots)
 
 for k in range(rots):
     
+    print('Step : ', k)
+    
     ##########################################################################################
     # Assembling stuff
     ##########################################################################################
-        
+    
+    u = np.zeros(MESH.np)
+   
     tm = time.monotonic()
     
     phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
@@ -223,17 +237,18 @@ for k in range(rots):
     R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
     R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
     R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
+    
     # R_0, R_0R = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
     
     # ident_gap = np.c_[np.roll(ident_points_gap[:,0],-k*rot_speed),
     #                           ident_points_gap[:,1]]
-    if ORDER == 2:
+    # if ORDER == 2:
                                      
-        # ident_points_gap = np.c_[ident_edges_gap[:,0],
-        #                          np.roll(ident_edges_gap[:,1],1)]
-        ident_edges_gap = np.c_[np.roll(ident_edges_gap[:,0],-k*rot_speed),
-                                 ident_edges_gap[:,1]]
-        ident_gap = np.r_[ident_points_gap, MESH.np + ident_edges_gap]
+    #     # ident_points_gap = np.c_[ident_edges_gap[:,0],
+    #     #                          np.roll(ident_edges_gap[:,1],1)]
+    #     ident_edges_gap = np.c_[np.roll(ident_edges_gap[:,0],-k*rot_speed),
+    #                              ident_edges_gap[:,1]]
+    #     ident_gap = np.r_[ident_points_gap, MESH.np + ident_edges_gap]
         
         
         
@@ -244,22 +259,25 @@ for k in range(rots):
     R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = i0_gap)
     R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = i1_gap)
     
-    
+     
     
     # manual stuff: (removing the point in the three corners...)
-    corners = np.r_[0,ident_points.shape[0]-1] #,21,24
+    corners = np.r_[0,16,17,ident_points.shape[0]-1] #,21,24
     ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
     R_L = R_L[ind1,:]
     
-    corners = np.r_[0,ident_points.shape[0]-1] #,22,23
+    corners = np.r_[0,16,17,ident_points.shape[0]-1] #,22,23
     ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
     R_R = R_R[ind1,:]
     
     # corners_gap = np.r_[0,ident_points_gap.shape[0]-1]
-    corners_gap = np.r_[0,ident_points_gap.shape[0]-1]
-    ind1 = np.setdiff1d(np.r_[0:R_AL.shape[0]], corners_gap)
-    R_AL = R_AL[ind1,:]
-    R_AR = R_AR[ind1,:]
+    # corners_gap = np.r_[0,ident_points_gap.shape[0]-1]
+    # ind1 = np.setdiff1d(np.r_[0:R_AL.shape[0]], corners_gap)
+    # R_AL = R_AL[100:200,:]
+    # R_AR = R_AR[100:200,:]
+    
+    if k>0:
+        R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
     
     from scipy.sparse import bmat
     RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
@@ -404,12 +422,38 @@ for k in range(rots):
     # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
     # fig.show()
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
-    fig.show()
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
+    # fig.show()
     
-    # MESH.pdesurf2(u[:MESH.np])
-    MESH.pdemesh(info=1).show()
     
+    # if k == 0:
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111)
+    
+    # ax.cla()
+    # MESH.pdesurf2(u[:MESH.np],ax = ax)
+    
+    # fig.canvas.draw()
+    # fig.canvas.flush_events()
+    # time.sleep(0.1)
+    
+    # input()
+    
+    if k == 0:
+        fig = plt.figure()
+        writer.setup(fig, "writer_test.mp4", 500)
+        fig.show()
+        
+    ax = fig.add_subplot(111)
+    ax.set_aspect(aspect = 'equal')
+    MESH.pdesurf2(u,ax = ax)
+    # MESH.pdemesh2(ax = ax)
+    MESH.pdegeom(ax = ax)
+    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    
+    plt.pause(0.01)
+    writer.grab_frame()
     # stop
     
     
@@ -420,35 +464,20 @@ for k in range(rots):
     fem_rotor = pde.int.evaluate(MESH, order = 0, regions = rotor).diagonal()
     trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
     points_rotor = np.unique(trig_rotor)
-    
-    # stop
-    
-    # rt += rot_speed
-    
-    # trig_air_gap_rotor = t[np.where(fem_air_gap_rotor)[0],0:3]
-    # shifted_coeff = np.roll(edges_rotor_outer[:,0],rt)
-    # kk, jj = MESH._mesh__ismember(trig_air_gap_rotor,edges_rotor_outer[:,0])
-    # trig_air_gap_rotor[kk] = shifted_coeff[jj]
 
     R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                             [np.sin(x), np.cos(x)]])
-    # r2 = 78.63225*10**(-3)
-    # a1 = (2*np.pi*r2)/(ident_edges_gap.shape[0])
     
     a1 = 2*np.pi/ident_edges_gap.shape[0]/8
     
     p_new = MESH.p.copy(); t_new = MESH.t.copy()
-    # MESH.p[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
+    p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
     
-    # t_new[np.where(fem_air_gap_rotor)[0],0:3] = trig_air_gap_rotor
+    m_new = R(a1*rot_speed)@m_new
     
-    # m_new = m
-    m_new = R(a1*rot_speed)@m
-    
-    # MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
+    MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
     # MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
     
     # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
-# MESH.pdesurf2(u[:MESH.np])
-# writer.finish()
-# do()
+    
+writer.finish()

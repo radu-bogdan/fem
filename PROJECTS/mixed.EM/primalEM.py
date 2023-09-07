@@ -10,8 +10,7 @@ import scipy.sparse.linalg
 import time
 from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
-pio.renderers.default = 'browser'
-import numba as nb
+
 
 ##########################################################################################
 # Loading mesh
@@ -19,7 +18,7 @@ import numba as nb
 
 print('loaded stuff...')
 
-pizza = True
+pizza = False
 
 if pizza: motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 else: motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
@@ -34,7 +33,7 @@ print('loaded geo...')
 # Parameters
 ##########################################################################################
 
-ORDER = 2
+ORDER = 1
 total = 1
 
 nu0 = 10**7/(4*np.pi)
@@ -46,8 +45,8 @@ import netgen.occ as occ
 geoOCC = motor_npz['geoOCC'].tolist()
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
-ngsolvemesh.Refine()
-ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
 
 MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
 
@@ -97,7 +96,8 @@ def makeIdentifications(MESH):
                         edgecoord1]
     return ident_points, ident_edges
 
-ident_points, ident_edges = makeIdentifications(MESH)
+if pizza:
+    ident_points, ident_edges = makeIdentifications(MESH)
 
 ##########################################################################################
 
@@ -319,13 +319,26 @@ for k in range(rots):
     # ax1.cla()
     ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
     
-    fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
-    # fig = MESH.pdesurf(ux**2+uy**2)
-    fig.show()
+    # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
+    # # fig = MESH.pdesurf(ux**2+uy**2)
+    # fig.show()
     
-    fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
-    fig.show()
-    stop
+    # fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
+    # fig.show()
+    # stop
+    
+    if k == 0:
+        fig = plt.figure()
+        fig.show()
+        ax = fig.add_subplot(111)
+        ax.set_aspect(aspect = 'equal')
+        
+    MESH.pdesurf2(u,ax = ax)
+    # MESH.pdemesh2(ax = ax)
+    MESH.pdegeom(ax = ax)
+    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    ax.tricontour(Triang, u, levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    
     
     
     ##########################################################################################
@@ -348,5 +361,5 @@ for k in range(rots):
     # MESH = pde.mesh(p_new,e,t_new,q)
     
    
-# writer.finish()
+writer.finish()
 # do()
