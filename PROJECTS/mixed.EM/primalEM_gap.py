@@ -11,9 +11,7 @@ import time
 from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
-import numba as nb
 
-import numba as nb
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
