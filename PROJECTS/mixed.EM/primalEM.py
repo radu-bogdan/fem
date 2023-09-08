@@ -10,6 +10,8 @@ import scipy.sparse.linalg
 import time
 from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
+import matplotlib.pyplot as plt
+import matplotlib
 
 
 ##########################################################################################

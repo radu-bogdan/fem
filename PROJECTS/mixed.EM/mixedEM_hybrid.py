@@ -24,7 +24,7 @@ cmap = plt.cm.jet
 # Loading mesh
 ##########################################################################################
 
-motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor_pizza_withslice.npz', allow_pickle = True)
 
 # p = motor_npz['p']
 # e = motor_npz['e']
@@ -44,8 +44,8 @@ j3 = motor_npz['j3']
 
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-ngsolve_mesh.Refine()
-ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 
 
@@ -71,9 +71,9 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'N1'
-space_Qh = 'P1'
-space_Vhd = 'N1d'
+space_Vh = 'N0'
+space_Qh = 'P0'
+space_Vhd = 'N0d'
 # space_Qh = 'P1_orth_divN1'
 int_order = 4
 
@@ -153,15 +153,15 @@ aMd = phix_d_Hcurl@ D(int_order) @(M0) +\
 
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 1)
+phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 1)
 
 De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
 
-KK = KK[np.r_[2*MESH.NonSingle_Edges,\
-              2*MESH.NonSingle_Edges+1],:]
+# KK = KK[np.r_[2*MESH.NonSingle_Edges,\
+#               2*MESH.NonSingle_Edges+1],:]
 
-# KK = KK[MESH.NonSingle_Edges,:]
+KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 

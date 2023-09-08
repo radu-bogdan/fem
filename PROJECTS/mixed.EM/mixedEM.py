@@ -11,7 +11,6 @@ import plotly.io as pio
 pio.renderers.default = 'browser'
 # import nonlinear_Algorithms
 import numba as nb
-import pyamg
 from scipy.sparse import hstack,vstack,bmat
 
 import matplotlib.pyplot as plt
@@ -41,7 +40,7 @@ cmap = plt.cm.jet
 # regions_2d_rotor = motor_rotor_npz['regions_2d']
 # regions_1d_rotor = motor_rotor_npz['regions_1d']
 
-motor_npz = np.load('meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 p = motor_npz['p'].T
 e = motor_npz['e'].T

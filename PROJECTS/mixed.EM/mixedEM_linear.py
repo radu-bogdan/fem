@@ -11,7 +11,6 @@ import plotly.io as pio
 pio.renderers.default = 'browser'
 # import nonlinear_Algorithms
 import numba as nb
-import pyamg
 from scipy.sparse import hstack,vstack
 
 
@@ -42,7 +41,7 @@ cmap = plt.cm.jet
 # regions_2d_rotor = motor_rotor_npz['regions_2d']
 # regions_1d_rotor = motor_rotor_npz['regions_1d']
 
-motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 
 geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
@@ -51,8 +50,14 @@ j3 = motor_npz['j3']
 import ngsolve as ng
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-ngsolve_mesh.Refine()
-ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+
+MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
+
+linear = '*air,*magnet,shaft_iron,*coil'
+nonlinear = 'stator_iron,rotor_iron'
+rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 ##########################################################################################
 
 
@@ -61,32 +66,11 @@ ngsolve_mesh.Refine()
 # Extract indices
 ##########################################################################################
 
-ind_stator_outer = MESH.getIndices2d(regions_1d, 'stator_outer', return_index = True)[0]
-ind_rotor_outer = MESH.getIndices2d(regions_1d, 'rotor_outer', return_index = True)[0]
+# R = lambda x: np.array([[np.cos(x),-np.sin(x)],
+#                         [np.sin(x), np.cos(x)]])
 
-ind_edges_rotor_outer = np.where(np.isin(e[:,2],ind_rotor_outer))[0]
-edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
-
-ind_air_gap_rotor = MESH.getIndices2d(regions_2d, 'air_gap_rotor', return_index = True)[0]
-ind_trig_coils = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
-ind_trig_magnets = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
-ind_air_all = MESH.getIndices2d(regions_2d, 'air', return_index = True)[0]
-ind_magnet = MESH.getIndices2d(regions_2d, 'magnet', return_index = True)[0]
-ind_shaft = MESH.getIndices2d(regions_2d, 'shaft', return_index = True)[0]
-ind_coil = MESH.getIndices2d(regions_2d, 'coil', return_index = True)[0]
-ind_stator_rotor_and_shaft = MESH.getIndices2d(regions_2d, 'iron', return_index = True)[0]
-ind_iron_rotor = MESH.getIndices2d(regions_2d, 'rotor_iron', return_index = True)[0]
-ind_rotor_air = MESH.getIndices2d(regions_2d, 'rotor_air', return_index = True)[0]
-
-ind_linear = np.r_[ind_air_all,ind_magnet,ind_shaft,ind_coil]
-ind_nonlinear = np.setdiff1d(ind_stator_rotor_and_shaft,ind_shaft)
-ind_rotor = np.r_[ind_iron_rotor,ind_magnet,ind_rotor_air,ind_shaft]
-
-R = lambda x: np.array([[np.cos(x),-np.sin(x)],
-                        [np.sin(x), np.cos(x)]])
-
-r1 = p[edges_rotor_outer[0,0],0]
-a1 = 2*np.pi/edges_rotor_outer.shape[0]
+# r1 = p[edges_rotor_outer[0,0],0]
+# a1 = 2*np.pi/edges_rotor_outer.shape[0]
 
 # Adjust points on the outer rotor to be equally spaced.
 # for k in range(edges_rotor_outer.shape[0]):
@@ -101,7 +85,7 @@ a1 = 2*np.pi/edges_rotor_outer.shape[0]
 # Assembling stuff
 ##########################################################################################
 
-space_Vh = 'NC1'
+space_Vh = 'N0'
 space_Qh = 'P0'
 int_order = 4
 
@@ -130,25 +114,25 @@ C = phi_L2(int_order) @ D(int_order) @ curlphi_Hcurl(int_order).T
 Z = sps.csc_matrix((C.shape[0],C.shape[0]))
 
 
-fem_linear = pde.int.evaluate(MESH, order = int_order, regions = ind_linear).diagonal()
-fem_nonlinear = pde.int.evaluate(MESH, order = int_order, regions = ind_nonlinear).diagonal()
-fem_rotor = pde.int.evaluate(MESH, order = int_order, regions = ind_rotor).diagonal()
-fem_air_gap_rotor = pde.int.evaluate(MESH, order = int_order, regions = ind_air_gap_rotor).diagonal()
+fem_linear = pde.int.evaluate(MESH, order = int_order, regions = linear).diagonal()
+fem_nonlinear = pde.int.evaluate(MESH, order = int_order, regions = nonlinear).diagonal()
+fem_rotor = pde.int.evaluate(MESH, order = int_order, regions = rotor).diagonal()
+fem_air_gap_rotor = pde.int.evaluate(MESH, order = int_order, regions = 'air_gap_rotor').diagonal()
 
 Ja = 0; J0 = 0
 for i in range(48):
-    Ja += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
-    J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = np.r_[ind_trig_coils[i]]).diagonal()
+    Ja += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
+    J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
 Ja = 0*Ja
 J0 = 0*J0
 
 M0 = 0; M1 = 0; M00 = 0; M10 = 0
 for i in range(16):
-    M0 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-    M1 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+    M0 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+    M1 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
     
-    M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
-    M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = np.r_[ind_trig_magnets[i]]).diagonal()
+    M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+    M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
 
 aM = phix_Hcurl@ D(int_order) @(M0) +\
      phiy_Hcurl@ D(int_order) @(M1)
@@ -173,12 +157,12 @@ rhs = np.r_[aM,np.zeros(MESH.nt)]
 
 tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
 y2 = x2[MESH.NoEdges:]
-# MESH.pdesurf2(y2)
+MESH.pdesurf2(y2)
 
 
 ##########################################################################################
 
-spaceVh = 'NC1d'
+spaceVh = 'N0d'
 
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'phi', order = 4)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'curlphi', order = 4)
@@ -191,7 +175,7 @@ Cd = phi_L2(4) @ D4 @ curlphi_d_Hcurl.T
 # spaceVh = 'N0d'
 R0,R1,R2 = pde.hcurl.assembleE(MESH, space = spaceVh, matrix = 'M', order = 2)
 
-phi_e = pde.l2.assembleE(MESH, space = 'P1', matrix = 'M', order = 2)
+phi_e = pde.l2.assembleE(MESH, space = 'P0', matrix = 'M', order = 2)
 
 De = pde.int.assembleE(MESH, order = 1)
 KK = phi_e @ De @ (R0+R1+R2).T
@@ -200,8 +184,10 @@ KK.data = KK.data*(np.abs(KK.data)>1e-13)
 KK.eliminate_zeros()
 KK
 
-KK = KK[np.r_[2*MESH.NonSingle_Edges,2*MESH.NonSingle_Edges+1],:]
-# KK = KK[MESH.NonSingle_Edges,:]
+# KK = KK[np.r_[2*MESH.NonSingle_Edges,
+#               2*MESH.NonSingle_Edges+1],:]
+
+KK = KK[MESH.NonSingle_Edges,:]
 
 sH = phix_d_Hcurl.shape[0]
 sA = phi_L2_o1.shape[0]
@@ -228,8 +214,8 @@ phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = '
 
 Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
 
-# fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0',controls = 1), A, u_height = 0)
-fig = MESH.pdesurf_hybrid(dict(trig = 'P1d',quad = 'Q0',controls = 1), Hx**2+Hy**2, u_height = 0)
+fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0',controls = 1), A, u_height = 0)
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), Hx**2+Hy**2, u_height = 0)
 fig.show()
 
 ##########################################################################################
