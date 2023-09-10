@@ -28,6 +28,8 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 # Loading mesh
 ##########################################################################################
 
+ORDER = 1
+
 motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
 
 geoOCC = motor_npz['geoOCC'].tolist()
@@ -196,6 +198,27 @@ def makeIdentifications(MESH):
 
 ident_points, ident_edges, jumps = makeIdentifications(MESH)
 
+##########################################################################################
+# Order configuration
+##########################################################################################
+if ORDER == 1:
+    polyH = 'N0'
+    polyA = 'P0'
+    order_HH = 2
+    order_AA = 0
+    u = np.zeros(MESH.NoEdges)
+    
+if ORDER == 2:
+    poly = 'P2'
+    dxpoly = 'P1'
+    order_phiphi = 4
+    order_dphidphi = 2
+    u = np.zeros(MESH.np + MESH.NoEdges)
+############################################################################################
+
+# TODO: war grad dabei die ordnungen zu setzen
+
+
 rot_speed = 1
 rots = 305
 
@@ -270,27 +293,197 @@ for k in range(rots):
     if k>0:
         R_AL[-k*rot_speed+1:,:] = -R_AL[-k*rot_speed+1:,:]
         R_AL[0,:] = -R_AL[0,:]
+    
     ##########################################################################################
     
     from scipy.sparse import bmat
     RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-    # RS =  bmat([[R_int], [R_L-R_R]])
     
-    SYS = bmat([[Mh2,C.T],\
-                [C,None]]).tocsc()
-    rhs = np.r_[aM,np.zeros(MESH.nt)]
+    # SYS = bmat([[Mh2,C.T],\
+    #             [C,None]]).tocsc()
+    # rhs = np.r_[aM,np.zeros(MESH.nt)]
     
-    SYS2= bmat([[RS@Mh2@RS.T,RS@C.T],\
-                [C@RS.T,None]]).tocsc()
+    # SYS2= bmat([[RS@Mh2@RS.T,RS@C.T],\
+    #             [C@RS.T,None]]).tocsc()
     
-    rhs2= np.r_[RS@aM,np.zeros(MESH.nt)]
+    # rhs2= np.r_[RS@aM,np.zeros(MESH.nt)]
     
-    # tm = time.monotonic(); x = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
-    tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS2,rhs2); print('mixed: ',time.monotonic()-tm)
+    # # tm = time.monotonic(); x = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
+    # tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS2,rhs2); print('mixed: ',time.monotonic()-tm)
+    
+    # A = x2[-MESH.nt:]
+    # H = RS.T@x2[:-MESH.nt]
+    
+    ##########################################################################################
+    # Solving with Newton
+    ##########################################################################################
+    
+    from nonlinLaws import *
+
+    sH = phix_d_Hcurl.shape[0]
+    sA = phi_L2_o1.shape[0]
+    sL = KK.shape[0]
     
     
-    A = x2[-MESH.nt:]
-    H = RS.T@x2[:-MESH.nt]
+    mu0 = (4*np.pi)/10**7
+    H = 1e-2+np.zeros(sH)
+    A = 0+np.zeros(sA)
+    L = 0+np.zeros(sL)
+
+    HAL = np.r_[H,A,L]
+    
+    
+    def gs_hybrid(allH,A,H,L):
+        gx_H_l  = allH[1]; gy_H_l  = allH[2];
+        gx_H_nl = allH[8]; gy_H_nl = allH[9];
+        
+        r1 = phix_d_Hcurl @ D_int_order @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
+             phiy_d_Hcurl @ D_int_order @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A +KK.T@L
+        r2 = Cd@H
+        r3 = KK@H
+        
+        # r = -KK@iMd@r1 + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
+        
+        return np.r_[r1,r2,r3]
+
+    def J(allH,H):
+        g_H_l = allH[0]; g_H_nl = allH[7];
+        return np.ones(D_int_order.size)@ D_int_order @(g_H_l*fem_linear + g_H_nl*fem_nonlinear) + mu0*aMd@H
+
+
+    maxIter = 100
+    epsangle = 1e-5;
+
+    angleCondition = np.zeros(5)
+    eps_newton = 1e-12
+    factor_residual = 1/2
+    mu = 0.0001
+
+    tm1 = time.monotonic()
+    for i in range(maxIter):
+        
+        H = HAL[:sH]
+        A = HAL[sH:sH+sA]
+        L = HAL[sH+sA:]
+        
+        ##########################################################################################
+        Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+        
+        tm = time.monotonic()
+        allH = g_nonlinear_all(Hx,Hy)
+        
+        print('Evaluating nonlinearity took ', time.monotonic()-tm)
+        
+        tm = time.monotonic()
+        gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6];
+        gxx_H_nl = allH[10]; gxy_H_nl = allH[11]; gyx_H_nl = allH[12]; gyy_H_nl = allH[13];
+        
+        gxx_H_Mxx = phix_d_Hcurl @ D_int_order @ sps.diags(gxx_H_nl*fem_nonlinear + gxx_H_l*fem_linear)@ phix_d_Hcurl.T
+        gyy_H_Myy = phiy_d_Hcurl @ D_int_order @ sps.diags(gyy_H_nl*fem_nonlinear + gyy_H_l*fem_linear)@ phiy_d_Hcurl.T
+        gxy_H_Mxy = phiy_d_Hcurl @ D_int_order @ sps.diags(gxy_H_nl*fem_nonlinear + gxy_H_l*fem_linear)@ phix_d_Hcurl.T
+        gyx_H_Myx = phix_d_Hcurl @ D_int_order @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_d_Hcurl.T
+        
+        Md = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
+        
+        gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9];
+        
+        r1 = phix_d_Hcurl @ D_int_order @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
+             phiy_d_Hcurl @ D_int_order @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
+        r2 = Cd@H
+        r3 = KK@H
+        
+        print('Assembling took ', time.monotonic()-tm)
+        
+        
+        # print(sps.linalg.eigs(Md,which = 'LR',k=2)[0])
+        
+        tm = time.monotonic()
+        iMd = inv(Md)
+        iBBd = inv(Cd@iMd@Cd.T)
+        print('Inverting took ', time.monotonic()-tm)
+        
+        
+        
+        tm = time.monotonic()
+        gssuR = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
+        gsuR = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
+        print('Multiplication took ', time.monotonic()-tm)
+        
+        
+        
+        tm = time.monotonic()
+        wL = chol(-gssuR).solve_A(gsuR)
+        print('Solving the system took ', time.monotonic()-tm)
+        
+        # tm = time.monotonic()
+        # wL = sps.linalg.spsolve(-gssuR,gsuR)
+        # print('Solving the system took ', time.monotonic()-tm)
+        
+        wA = iBBd@Cd@iMd@(-r1-KK.T@wL)+iBBd@r2
+        wH = iMd@(-Cd.T@wA-KK.T@wL-r1)
+        w = np.r_[wH,wA,wL]
+        
+        gsu = gs_hybrid(allH,A,H,L)
+        
+        ##########################################################################################
+        
+        
+        
+        norm_w = np.linalg.norm(w)
+        norm_gsu = np.linalg.norm(gsu)
+        
+        if (-(w@gsu)/(norm_w*norm_gsu)<epsangle):
+            angleCondition[i%5] = 1
+            if np.product(angleCondition)>0:
+                w = -gsu
+                print("STEP IN NEGATIVE GRADIENT DIRECTION")
+                break
+        else: angleCondition[i%5]=0
+        
+        alpha = 1
+        
+        # ResidualLineSearch
+        # for k in range(1000):
+            
+        #     HALu = HAL + alpha*w
+        #     Hu = HALu[:sH]
+        #     Au = HALu[sH:sH+sA]
+        #     Lu = HALu[sH+sA:]
+            
+        #     Hxu = phix_d_Hcurl.T@(Hu)
+        #     Hyu = phiy_d_Hcurl.T@(Hu)
+            
+        #     allHu = g_nonlinear_all(Hxu,Hyu)
+            
+        #     if np.linalg.norm(gs_hybrid(allHu,Au,Hu,Lu)) <= np.linalg.norm(gs_hybrid(allH,A,H,L)): break
+        #     else: alpha = alpha*factor_residual
+        
+        # AmijoBacktracking
+        
+        tm = time.monotonic()
+        float_eps = 1e-8 #np.finfo(float).eps
+        for kk in range(1000):
+            
+            HALu = HAL + alpha*w
+            Hu = HALu[:sH]
+            
+            Hxu = phix_d_Hcurl.T@Hu; Hyu = phiy_d_Hcurl.T@Hu;
+            allHu = g_nonlinear_all(Hxu,Hyu)
+            
+            # print(J(allHu,Hu),J(allH,H),J(allHu,Hu)-J(allH,H))
+            
+            if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
+            else: alpha = alpha*factor_residual
+            
+        print('Line search took ', time.monotonic()-tm)
+        
+        HAL = HALu; H = Hu; Hx = Hxu; Hy = Hyu; allH = allHu
+        
+        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs_hybrid(allH,A,H,L),np.inf)+"||alpha: %2e" % (alpha)); print("\n")
+        if(np.linalg.norm(gs_hybrid(allH,A,H,L),np.inf) < eps_newton): break
+
+    elapsed = time.monotonic()-tm1
+    print('Solving took ', elapsed, 'seconds')
     
     ##########################################################################################
     

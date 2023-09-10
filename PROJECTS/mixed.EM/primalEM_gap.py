@@ -270,14 +270,11 @@ for k in range(rots):
         
     if ORDER == 2:
         
-        ident0_edge = MESH.np + np.roll(ident_edges_gap[:,0], -k*rot_speed)
-        ident1_edge = MESH.np + ident_edges_gap[:,1]
-        
-        R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0_edge)
-        R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1_edge)
+        R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = MESH.np + np.roll(ident_edges_gap[:,0], -k*rot_speed))
+        R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = MESH.np + ident_edges_gap[:,1])
         
         if k>0:
-            R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:]
+            R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:] # old
             
         from scipy.sparse import bmat
         R_AL =  bmat([[R_AL], [R_AL2]])

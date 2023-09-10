@@ -26,17 +26,6 @@ cmap = plt.cm.jet
 
 motor_npz = np.load('../meshes/motor_pizza_withslice.npz', allow_pickle = True)
 
-# p = motor_npz['p']
-# e = motor_npz['e']
-# t = motor_npz['t']
-# q = np.empty(0)
-# regions_2d = motor_npz['regions_2d']
-# regions_1d = motor_npz['regions_1d']
-
-# MESH = pde.mesh(p,e,t,q,regions_2d,regions_1d)
-# MESH.refinemesh()
-# MESH.refinemesh()
-
 geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
@@ -44,7 +33,6 @@ j3 = motor_npz['j3']
 
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 
@@ -55,14 +43,6 @@ MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
-
-# a1 = 0.00320570678937734
-# r1 = 0.07863225
-# ind_edges_rotor_outer = np.where(np.isin(e[:,2],593))[0]
-# edges_rotor_outer = e[ind_edges_rotor_outer,0:2]
-# for k in range(edges_rotor_outer.shape[0]):
-#     p[edges_rotor_outer[k,0],0] = r1*np.cos(a1*(k))
-#     p[edges_rotor_outer[k,0],1] = r1*np.sin(a1*(k))
 
 ##########################################################################################
 
@@ -165,7 +145,6 @@ KK = KK[MESH.NonSingle_Edges,:]
 
 ##########################################################################################
 
-# from nonlinLaws import *
 from nonlinLaws import *
 
 sH = phix_d_Hcurl.shape[0]
@@ -215,7 +194,6 @@ for i in range(maxIter):
     
     ##########################################################################################
     Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
-    print(Hx.max(),Hy.max())
     
     tm = time.monotonic()
     allH = g_nonlinear_all(Hx,Hy)
