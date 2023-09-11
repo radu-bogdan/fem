@@ -12,6 +12,7 @@ pio.renderers.default = 'browser'
 # import nonlinear_Algorithms
 import numba as nb
 from scipy.sparse import hstack,vstack
+from sksparse.cholmod import cholesky as chol
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 # Loading mesh
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 
 motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
 
@@ -39,7 +40,7 @@ j3 = motor_npz['j3']
 import ngsolve as ng
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
@@ -47,6 +48,7 @@ MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
+
 ##########################################################################################
 
 def makeIdentifications_nogap(MESH):
@@ -198,121 +200,156 @@ def makeIdentifications(MESH):
 
 ident_points, ident_edges, jumps = makeIdentifications(MESH)
 
+
+EdgeDirection = (-1)*np.r_[np.sign(ident_points[1:jumps[1],:]-ident_points[:jumps[0],:]),
+                           np.sign(ident_points[jumps[1]+1:,:]-ident_points[jumps[1]:-1,:])]
+
+
+EdgeDirectionGap = (-1)*np.sign(ident_points_gap[1:,:].astype(int)-ident_points_gap[:-1,:].astype(int))
+
 ##########################################################################################
 # Order configuration
 ##########################################################################################
+
 if ORDER == 1:
-    polyH = 'N0'
-    polyA = 'P0'
+    space_Vh = 'N0'
+    space_Qh = 'P0'
+    
     order_HH = 2
     order_AA = 0
-    u = np.zeros(MESH.NoEdges)
+    
+    order_H = 1
+    order_A = 0
+    HA = np.zeros(MESH.NoEdges + MESH.nt)
+    
+if ORDER == 1.5:
+    space_Vh = 'NC1'
+    space_Qh = 'P0'
+    
+    order_HH = 2
+    order_AA = 0
+    
+    order_H = 1
+    order_A = 0
+    HA = np.zeros(2*MESH.NoEdges + MESH.nt)
     
 if ORDER == 2:
-    poly = 'P2'
-    dxpoly = 'P1'
-    order_phiphi = 4
-    order_dphidphi = 2
-    u = np.zeros(MESH.np + MESH.NoEdges)
+    space_Vh = 'N1'
+    space_Qh = 'P1'
+    
+    order_HH = 4
+    order_AA = 2
+    
+    order_H = 2
+    order_A = 1
+    HA = np.zeros(2*MESH.NoEdges + 2*MESH.nt + 3*MESH.nt)
 ############################################################################################
 
-# TODO: war grad dabei die ordnungen zu setzen
-
-
-rot_speed = 1
-rots = 305
+rot_speed = 10
+rots = 10
 
 tor = np.zeros(rots)
 energy = np.zeros(rots)
 
 for k in range(rots):
     
+    print("\n")
     print('Step : ', k)
 
     ##########################################################################################
     # Assembling stuff
     ##########################################################################################
     
-    space_Vh = 'N0'
-    space_Qh = 'P0'
-    int_order = 4
-    
     tm = time.monotonic()
     
-    phi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = x)
-    curlphi_Hcurl = lambda x : pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'curlphi', order = x)
-    phi_L2 = lambda x : pde.l2.assemble(MESH, space = space_Qh, matrix = 'M', order = x)
+    phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = order_HH)
+    curlphi_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'curlphi', order = order_AA)
+    phi_L2 = pde.l2.assemble(MESH, space = space_Qh, matrix = 'M', order = order_AA)
     
-    D = lambda x : pde.int.assemble(MESH, order = x)
+    D_order_HH = pde.int.assemble(MESH, order = order_HH)
+    D_order_AA = pde.int.assemble(MESH, order = order_AA)
     
-    Mh = lambda x: phi_Hcurl(x)[0] @ D(x) @ phi_Hcurl(x)[0].T + \
-                   phi_Hcurl(x)[1] @ D(x) @ phi_Hcurl(x)[1].T
-    
-    D1 = D(1); D2 = D(2); D4 = D(4); Mh1 = Mh(1); Mh2 = Mh(2)
-    D_int_order = D(int_order)
-    
-    phi_L2_o1 = phi_L2(1)
-    curlphi_Hcurl_o1 = curlphi_Hcurl(1)
-    
-    phix_Hcurl = phi_Hcurl(int_order)[0]
-    phiy_Hcurl = phi_Hcurl(int_order)[1]
-    
-    
-    C = phi_L2(int_order) @ D(int_order) @ curlphi_Hcurl(int_order).T
-    Z = sps.csc_matrix((C.shape[0],C.shape[0]))
+    C = phi_L2 @ D_order_AA @ curlphi_Hcurl.T
+
+    fem_linear = pde.int.evaluate(MESH, order = order_HH, regions = linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = order_HH, regions = nonlinear).diagonal()
+    fem_rotor = pde.int.evaluate(MESH, order = order_HH, regions = rotor).diagonal()
+    fem_air_gap_rotor = pde.int.evaluate(MESH, order = order_HH, regions = 'air_gap_rotor').diagonal()
     
     Ja = 0; J0 = 0
     for i in range(48):
-        Ja += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
+        Ja += pde.int.evaluate(MESH, order = order_AA, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
         J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
     Ja = 0*Ja; J0 = 0*J0
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0
     for i in range(16):
-        M0 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
-        M1 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
+        M0 += pde.int.evaluate(MESH, order = order_HH, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+        M1 += pde.int.evaluate(MESH, order = order_HH, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
         M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
         M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
     
-    aM = phix_Hcurl@ D(int_order) @(M0) +\
-         phiy_Hcurl@ D(int_order) @(M1)
+    aM = phix_Hcurl@ D_order_HH @(M0) +\
+         phiy_Hcurl@ D_order_HH @(M1)
     
-    aJ = phi_L2(int_order)@ D(int_order) @Ja
+    aJ = phi_L2 @ D_order_AA @ Ja
     
     ##########################################################################################
     
-    R_out, R_int = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'stator_outer,left,right,airR,airL')
+    R_out, R_int = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'stator_outer,left,right,airR,airL')
     
-    R_L, R_LR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'left', listDOF = ident_edges[:,0])
-    R_R, R_RR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'right', listDOF = ident_edges[:,1])
+    if ORDER == 1:
+        ind_per_0 = ident_edges[:,0]
+        ind_per_1 = ident_edges[:,1]
+        
+        ident_edges_gap_0_rolled = np.roll(ident_edges_gap[:,0], -k*rot_speed)
+        
+        EdgeDirectionGap_rolled = np.roll(EdgeDirectionGap[:,0], -k*rot_speed)
+        EdgeDirectionGap_1 = EdgeDirectionGap[:,1]
+        
+        ind_gap_0 = ident_edges_gap_0_rolled
+        ind_gap_1 = ident_edges_gap[:,1]
+        
+    if ORDER > 1:
+        
+        ind_per_0 = np.c_[2*ident_edges[:,0]   -1/2*(EdgeDirection[:,0]-1),
+                          2*ident_edges[:,0]+1 +1/2*(EdgeDirection[:,0]-1)].ravel()
+        
+        ind_per_1 = np.c_[2*ident_edges[:,1]   -1/2*(EdgeDirection[:,1]-1),
+                          2*ident_edges[:,1]+1 +1/2*(EdgeDirection[:,1]-1)].ravel()
+        
+        
+        ident_edges_gap_0_rolled = np.roll(ident_edges_gap[:,0], -k*rot_speed)
+        EdgeDirectionGap_rolled = np.roll(EdgeDirectionGap[:,0], -k*rot_speed)
+        
+        EdgeDirectionGap_1 = np.repeat(EdgeDirectionGap[:,1],2)
+        
+        
+        ind_gap_0 = np.c_[2*ident_edges_gap_0_rolled   -1/2*(EdgeDirectionGap_rolled-1),
+                          2*ident_edges_gap_0_rolled+1 +1/2*(EdgeDirectionGap_rolled-1)].ravel()
+        
+        ind_gap_1 = np.c_[2*ident_edges_gap[:,1]   -1/2*(EdgeDirectionGap[:,1]-1),
+                          2*ident_edges_gap[:,1]+1 +1/2*(EdgeDirectionGap[:,1]-1)].ravel()
+        
+        EdgeDirectionGap_rolled = np.roll(np.repeat(EdgeDirectionGap[:,0],2), -2*k*rot_speed)
+        
+        
+    R_L, R_LR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'left', listDOF = ind_per_0)
+    R_R, R_RR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'right', listDOF = ind_per_1)
     
-    R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airL', listDOF = np.roll(ident_edges_gap[:,0], -k*rot_speed))
-    R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airR', listDOF = ident_edges_gap[:,1])
+    R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airL', listDOF = ind_gap_0); R_AL.data = EdgeDirectionGap_rolled[R_AL.indices]
+    R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airR', listDOF = ind_gap_1); R_AR.data = EdgeDirectionGap_1[R_AR.indices]
     
     if k>0:
-        R_AL[-k*rot_speed+1:,:] = -R_AL[-k*rot_speed+1:,:]
-        R_AL[0,:] = -R_AL[0,:]
-    
-    ##########################################################################################
+        if ORDER == 1:
+            R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
+            
+        if ORDER == 2:
+            R_AL[-2*k*rot_speed:,:] = -R_AL[-2*k*rot_speed:,:]
     
     from scipy.sparse import bmat
     RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-    
-    # SYS = bmat([[Mh2,C.T],\
-    #             [C,None]]).tocsc()
-    # rhs = np.r_[aM,np.zeros(MESH.nt)]
-    
-    # SYS2= bmat([[RS@Mh2@RS.T,RS@C.T],\
-    #             [C@RS.T,None]]).tocsc()
-    
-    # rhs2= np.r_[RS@aM,np.zeros(MESH.nt)]
-    
-    # # tm = time.monotonic(); x = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
-    # tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS2,rhs2); print('mixed: ',time.monotonic()-tm)
-    
-    # A = x2[-MESH.nt:]
-    # H = RS.T@x2[:-MESH.nt]
     
     ##########################################################################################
     # Solving with Newton
@@ -320,35 +357,57 @@ for k in range(rots):
     
     from nonlinLaws import *
 
-    sH = phix_d_Hcurl.shape[0]
-    sA = phi_L2_o1.shape[0]
-    sL = KK.shape[0]
+    sH = phix_Hcurl.shape[0]
+    sA = phi_L2.shape[0]
     
     
     mu0 = (4*np.pi)/10**7
-    H = 1e-2+np.zeros(sH)
-    A = 0+np.zeros(sA)
-    L = 0+np.zeros(sL)
+    
+    # if k>-1:    
+    if k>=0:
+        H = 1e-2+np.zeros(sH)
+        H = RS.T@chol(RS@RS.T).solve_A(RS@H)
+        A = 0+np.zeros(sA)
+    if k<0:
+        H = RS.T@chol(RS@RS.T).solve_A(RS@H)
+        A = 0+np.zeros(sA)
+        
+        stop
 
-    HAL = np.r_[H,A,L]
+    HA = np.r_[H,A]
     
+    def gss(allH):
+        gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6];
+        gxx_H_nl = allH[10]; gxy_H_nl = allH[11]; gyx_H_nl = allH[12]; gyy_H_nl = allH[13];
+        
+        gxx_H_Mxx = phix_Hcurl @ D_order_HH @ sps.diags(gxx_H_nl*fem_nonlinear + gxx_H_l*fem_linear)@ phix_Hcurl.T
+        gyy_H_Myy = phiy_Hcurl @ D_order_HH @ sps.diags(gyy_H_nl*fem_nonlinear + gyy_H_l*fem_linear)@ phiy_Hcurl.T
+        gxy_H_Mxy = phiy_Hcurl @ D_order_HH @ sps.diags(gxy_H_nl*fem_nonlinear + gxy_H_l*fem_linear)@ phix_Hcurl.T
+        gyx_H_Myx = phix_Hcurl @ D_order_HH @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_Hcurl.T
+        
+        M = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
+        
+        # S = bmat([[M,C.T],\
+        #           [C,None]]).tocsc()
+        
+        S= bmat([[RS@M@RS.T,RS@C.T],\
+                 [C@RS.T,None]]).tocsc()
+        
+        return S
     
-    def gs_hybrid(allH,A,H,L):
+    def gs(allH,A,H):
         gx_H_l  = allH[1]; gy_H_l  = allH[2];
         gx_H_nl = allH[8]; gy_H_nl = allH[9];
         
-        r1 = phix_d_Hcurl @ D_int_order @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
-             phiy_d_Hcurl @ D_int_order @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A +KK.T@L
-        r2 = Cd@H
-        r3 = KK@H
-        
-        # r = -KK@iMd@r1 + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
-        
-        return np.r_[r1,r2,r3]
+        r1 = phix_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
+             phiy_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + C.T@A
+             
+        r2 = C@H
+        return np.r_[RS@r1,r2]
 
     def J(allH,H):
         g_H_l = allH[0]; g_H_nl = allH[7];
-        return np.ones(D_int_order.size)@ D_int_order @(g_H_l*fem_linear + g_H_nl*fem_nonlinear) + mu0*aMd@H
+        return np.ones(D_order_HH.size)@ D_order_HH @(g_H_l*fem_linear + g_H_nl*fem_nonlinear) + mu0*aM@H
 
 
     maxIter = 100
@@ -362,68 +421,29 @@ for k in range(rots):
     tm1 = time.monotonic()
     for i in range(maxIter):
         
-        H = HAL[:sH]
-        A = HAL[sH:sH+sA]
-        L = HAL[sH+sA:]
+        H = HA[:sH]
+        A = HA[sH:]
         
         ##########################################################################################
-        Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
-        
+
+        Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H    
+
         tm = time.monotonic()
         allH = g_nonlinear_all(Hx,Hy)
+        gsu = gs(allH,A,H)
+        gssu = gss(allH)
         
         print('Evaluating nonlinearity took ', time.monotonic()-tm)
         
         tm = time.monotonic()
-        gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6];
-        gxx_H_nl = allH[10]; gxy_H_nl = allH[11]; gyx_H_nl = allH[12]; gyy_H_nl = allH[13];
-        
-        gxx_H_Mxx = phix_d_Hcurl @ D_int_order @ sps.diags(gxx_H_nl*fem_nonlinear + gxx_H_l*fem_linear)@ phix_d_Hcurl.T
-        gyy_H_Myy = phiy_d_Hcurl @ D_int_order @ sps.diags(gyy_H_nl*fem_nonlinear + gyy_H_l*fem_linear)@ phiy_d_Hcurl.T
-        gxy_H_Mxy = phiy_d_Hcurl @ D_int_order @ sps.diags(gxy_H_nl*fem_nonlinear + gxy_H_l*fem_linear)@ phix_d_Hcurl.T
-        gyx_H_Myx = phix_d_Hcurl @ D_int_order @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_d_Hcurl.T
-        
-        Md = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
-        
-        gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9];
-        
-        r1 = phix_d_Hcurl @ D_int_order @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
-             phiy_d_Hcurl @ D_int_order @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
-        r2 = Cd@H
-        r3 = KK@H
-        
-        print('Assembling took ', time.monotonic()-tm)
-        
-        
-        # print(sps.linalg.eigs(Md,which = 'LR',k=2)[0])
-        
-        tm = time.monotonic()
-        iMd = inv(Md)
-        iBBd = inv(Cd@iMd@Cd.T)
-        print('Inverting took ', time.monotonic()-tm)
-        
-        
-        
-        tm = time.monotonic()
-        gssuR = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
-        gsuR = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
-        print('Multiplication took ', time.monotonic()-tm)
-        
-        
-        
-        tm = time.monotonic()
-        wL = chol(-gssuR).solve_A(gsuR)
+        w = sps.linalg.spsolve(gssu,-gsu)
         print('Solving the system took ', time.monotonic()-tm)
         
-        # tm = time.monotonic()
-        # wL = sps.linalg.spsolve(-gssuR,gsuR)
-        # print('Solving the system took ', time.monotonic()-tm)
+        # w = np.r_[RS.T@w[:RS.shape[0]],
+        #           w[RS.shape[0]:]]
         
-        wA = iBBd@Cd@iMd@(-r1-KK.T@wL)+iBBd@r2
-        wH = iMd@(-Cd.T@wA-KK.T@wL-r1)
-        w = np.r_[wH,wA,wL]
-        
-        gsu = gs_hybrid(allH,A,H,L)
+        norm_w = np.linalg.norm(w)
+        norm_gsu = np.linalg.norm(gsu)
         
         ##########################################################################################
         
@@ -464,38 +484,56 @@ for k in range(rots):
         float_eps = 1e-8 #np.finfo(float).eps
         for kk in range(1000):
             
-            HALu = HAL + alpha*w
-            Hu = HALu[:sH]
+            w_RS = np.r_[RS.T@w[:RS.shape[0]], w[RS.shape[0]:]]
             
-            Hxu = phix_d_Hcurl.T@Hu; Hyu = phiy_d_Hcurl.T@Hu;
+            HAu = HA + alpha*w_RS
+            Hu = HAu[:sH]; Au = HAu[sH:]
+            Hxu = phix_Hcurl.T@(Hu); Hyu = phiy_Hcurl.T@(Hu);
             allHu = g_nonlinear_all(Hxu,Hyu)
-            
-            # print(J(allHu,Hu),J(allH,H),J(allHu,Hu)-J(allH,H))
             
             if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
             else: alpha = alpha*factor_residual
             
         print('Line search took ', time.monotonic()-tm)
         
-        HAL = HALu; H = Hu; Hx = Hxu; Hy = Hyu; allH = allHu
+        tm = time.monotonic()
         
-        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs_hybrid(allH,A,H,L),np.inf)+"||alpha: %2e" % (alpha)); print("\n")
-        if(np.linalg.norm(gs_hybrid(allH,A,H,L),np.inf) < eps_newton): break
+        HA = HA + alpha*w_RS
+        H = HA[:sH]; A = HA[sH:]
+        Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
+        allH = g_nonlinear_all(Hx,Hy)
+        
+        print('Re-evaluating H took ', time.monotonic()-tm)
+        
+        
+        print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H))+"||alpha: %2e" % (alpha));
+        if(np.linalg.norm(gs(allH,A,H)) < eps_newton): break
 
     elapsed = time.monotonic()-tm1
     print('Solving took ', elapsed, 'seconds')
     
     ##########################################################################################
     
-    Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
+    phix_Hcurl_o1, phiy_Hcurl_o1 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 1)
+    
+    Hx = phix_Hcurl_o1.T@H; Hy = phiy_Hcurl_o1.T@H
+    allH = g_nonlinear_all(Hx,Hy)
+    gx_H_l  = allH[1]; gy_H_l  = allH[2];
+    gx_H_nl = allH[8]; gy_H_nl = allH[9];
+
+    fem_linear = pde.int.evaluate(MESH, order = 1, regions = linear).diagonal()
+    fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal()
+
+    Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear)
+    By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear)
     
     if k == 0:
         fig = plt.figure()
         writer.setup(fig, "writer_test.mp4", 500)
         fig.show()
-        ax1 = fig.add_subplot(111)
-        # ax1 = fig.add_subplot(211)
-        # ax2 = fig.add_subplot(212)
+        # ax1 = fig.add_subplot(111)
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
     
     tm = time.monotonic()
     ax1.cla()
@@ -506,36 +544,61 @@ for k in range(rots):
     Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     # ax1.tricontour(Triang, u[:MESH.np], levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
     
-    # ax2.cla()
-    # ax2.set_aspect(aspect = 'equal')
-    # MESH.pdesurf2(Hx**2+Hy**2, ax = ax2)
-    # # MESH.pdemesh2(ax = ax)
-    # MESH.pdegeom(ax = ax2)
-    # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+    ax2.cla()
+    ax2.set_aspect(aspect = 'equal')
+    MESH.pdesurf2(Bx**2+By**2, ax = ax2)
+    # MESH.pdemesh2(ax = ax)
+    MESH.pdegeom(ax = ax2)
+    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
     writer.grab_frame()
     
     ##########################################################################################
     
-    rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron,air_gap_rotor'
-    
-    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = rotor).diagonal()
-    trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
-    points_rotor = np.unique(trig_rotor)
-    
-    R = lambda x: np.array([[np.cos(x),-np.sin(x)],
-                            [np.sin(x), np.cos(x)]])
-    
-    a1 = 2*np.pi/ident_edges_gap.shape[0]/8
-    
-    p_new = MESH.p.copy(); t_new = MESH.t.copy()
-    p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
-    
-    m_new = R(a1*rot_speed)@m_new
-    
-    MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
-    # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
+    if k != rots-1:
+        
+        rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron,air_gap_rotor'
+        
+        fem_rotor = pde.int.evaluate(MESH, order = 0, regions = rotor).diagonal()
+        trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
+        points_rotor = np.unique(trig_rotor)
+        
+        R = lambda x: np.array([[np.cos(x),-np.sin(x)],
+                                [np.sin(x), np.cos(x)]])
+        
+        a1 = 2*np.pi/ident_edges_gap.shape[0]/8
+        
+        p_new = MESH.p.copy(); t_new = MESH.t.copy()
+        p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
+        
+        m_new = R(a1*rot_speed)@m_new
+        
+        MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
+        # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
     ##########################################################################################
 
     
 writer.finish()
+
+p0 = MESH.p[:,0]
+p1 = MESH.p[:,1]
+t = MESH.t[:,0:3]
+# nt = MESH.nt
+
+p0d = np.c_[p0[t[:,0]],p0[t[:,1]],p0[t[:,2]]].ravel()
+p1d = np.c_[p1[t[:,0]],p1[t[:,1]],p1[t[:,2]]].ravel()
+# td = np.r_[:3*MESH.nt].reshape(MESH.nt,3)
+# Triang = matplotlib.tri.Triangulation(p0d, p1d, td)
+
+# plt.tripcolor(Triang, Hx**2+Hy**2, cmap = plt.cm.jet, lw = 0.1)
+
+
+
+# plt.tripcolor(Triang.x, Triang.y, Triang.x, shading='gouraud' )
+# plt.tripcolor(p0d, p1d, Triang.x, shading='gouraud' )
+
+# f = lambda x,y: x**2+y**2
+
+# f = f(p0d,p1d)
+
+# MESH.pdesurf2(f)

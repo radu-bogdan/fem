@@ -230,6 +230,9 @@ def assembleR(MESH, space, edges = '', listDOF = npy.empty(0)):
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
         
+    if not hasattr(MESH, 'Boundary_EdgeOrientation'):
+        MESH.makeBEO()
+        
     if type(edges) == str:
         if edges == '':
             ind_edges = MESH.Boundary_Region
@@ -243,17 +246,25 @@ def assembleR(MESH, space, edges = '', listDOF = npy.empty(0)):
     
     indices = npy.in1d(MESH.Boundary_Region,ind_edges)
     sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
+    
     LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices])
     LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
     
-    if listDOF.size > 0:
-        LIST_DOF = listDOF
-    
     D = sp.eye(sizeM, format = 'csc')
-    R1 = D[:,LIST_DOF]
-    R2 = D[:,LIST_DOF2]
     
-    return R1.T.tocsc(),R2.T.tocsc()
+    if edges != '':
+        
+        if listDOF.size > 0:
+            LIST_DOF = listDOF
+        
+        R1 = D[:,LIST_DOF]
+        R2 = D[:,LIST_DOF2]
+        
+        # R1.data = R1.data*MESH.Boundary_EdgeOrientation[indices]
+        return R1.T.tocsc(),R2.T.tocsc()
+    else:
+        D.data[MESH.Boundary_Edges] = MESH.Boundary_EdgeOrientation
+        return D
     
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

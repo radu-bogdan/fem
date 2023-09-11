@@ -221,6 +221,11 @@ def spaceInfo(MESH,space):
                                                      MESH.EdgeDirectionTrig[:,2],
                                                      np.ones(MESH.nt),
                                                      np.ones(MESH.nt)]
+        
+        LISTS['N1']['B'] = {}
+        LISTS['N1']['B']['LIST_DOF'] = np.c_[2*MESH.Boundary_Edges,
+                                             2*MESH.Boundary_Edges+1]
+                                             
     ###########################################################################
     
     

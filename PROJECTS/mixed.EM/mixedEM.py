@@ -109,12 +109,12 @@ for i in range(16):
 phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
 curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = int_order)
 
-Md = phix_d_Hcurl @ D(int_order) @ phix_d_Hcurl.T +\
-     phiy_d_Hcurl @ D(int_order) @ phiy_d_Hcurl.T
-iMd = pde.tools.fastBlockInverse(Md)
+# Md = phix_d_Hcurl @ D(int_order) @ phix_d_Hcurl.T +\
+#      phiy_d_Hcurl @ D(int_order) @ phiy_d_Hcurl.T
+# iMd = pde.tools.fastBlockInverse(Md)
 
-iMd.data = iMd.data*(np.abs(iMd.data)>1e-7)
-iMd.eliminate_zeros()
+# iMd.data = iMd.data*(np.abs(iMd.data)>1e-7)
+# iMd.eliminate_zeros()
 
 Cd = phi_L2(int_order) @ D(int_order) @ curlphi_d_Hcurl.T
 

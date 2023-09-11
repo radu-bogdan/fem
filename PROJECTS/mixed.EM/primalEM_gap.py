@@ -303,7 +303,7 @@ for k in range(rots):
         
     D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
     D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
-    D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
+    # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
     
     
     Kxx = dphix_H1 @ D_order_dphidphi @ dphix_H1.T
