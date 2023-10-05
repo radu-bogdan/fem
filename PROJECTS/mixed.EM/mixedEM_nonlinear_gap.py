@@ -40,7 +40,7 @@ j3 = motor_npz['j3']
 import ngsolve as ng
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 
 MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
@@ -212,6 +212,7 @@ EdgeDirectionGap = (-1)*np.sign(ident_points_gap[1:,:].astype(int)-ident_points_
 ##########################################################################################
 
 if ORDER == 1:
+    print('Order is ', ORDER)
     space_Vh = 'N0'
     space_Qh = 'P0'
     
@@ -223,6 +224,7 @@ if ORDER == 1:
     HA = np.zeros(MESH.NoEdges + MESH.nt)
     
 if ORDER == 1.5:
+    print('Order is ', ORDER)
     space_Vh = 'NC1'
     space_Qh = 'P0'
     
@@ -234,6 +236,7 @@ if ORDER == 1.5:
     HA = np.zeros(2*MESH.NoEdges + MESH.nt)
     
 if ORDER == 2:
+    print('Order is ', ORDER)
     space_Vh = 'N1'
     space_Qh = 'P1'
     
@@ -245,7 +248,7 @@ if ORDER == 2:
     HA = np.zeros(2*MESH.NoEdges + 2*MESH.nt + 3*MESH.nt)
 ############################################################################################
 
-rot_speed = 10
+rot_speed = 1
 rots = 10
 
 tor = np.zeros(rots)
@@ -345,7 +348,7 @@ for k in range(rots):
         if ORDER == 1:
             R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
             
-        if ORDER == 2:
+        if ORDER > 1:
             R_AL[-2*k*rot_speed:,:] = -R_AL[-2*k*rot_speed:,:]
     
     from scipy.sparse import bmat
@@ -362,19 +365,6 @@ for k in range(rots):
     
     
     mu0 = (4*np.pi)/10**7
-    
-    # if k>-1:    
-    if k>=0:
-        H = 1e-2+np.zeros(sH)
-        H = RS.T@chol(RS@RS.T).solve_A(RS@H)
-        A = 0+np.zeros(sA)
-    if k<0:
-        H = RS.T@chol(RS@RS.T).solve_A(RS@H)
-        A = 0+np.zeros(sA)
-        
-        stop
-
-    HA = np.r_[H,A]
     
     def gss(allH):
         gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6];
@@ -417,6 +407,30 @@ for k in range(rots):
     eps_newton = 1e-12
     factor_residual = 1/2
     mu = 0.0001
+    
+    # if k>-1:    
+    if k==0:
+        H = 1e-8+np.zeros(sH)
+        H = RS.T@chol(RS@RS.T).solve_A(RS@H)
+        A = 0+np.zeros(sA)
+    if k>0:
+        # H = RS.T@chol(RS@RS.T).solve_A(RS@H)
+        # A = 0+np.zeros(sA)
+        Mxx = phix_Hcurl @ D_order_HH @ phix_Hcurl.T
+        Myy = phiy_Hcurl @ D_order_HH @ phiy_Hcurl.T
+
+        M = Mxx + Myy
+        
+        S= bmat([[RS@M@RS.T,RS@C.T],\
+                 [C@RS.T,None]]).tocsc()
+        r = np.r_[RS@M@RS.T@RS@H,C@H]
+        
+        
+        jj = sps.linalg.spsolve(S,r)
+        s = jj[:RS.shape[0]]
+        H = RS.T@s
+
+    HA = np.r_[H,A]
 
     tm1 = time.monotonic()
     for i in range(maxIter):
@@ -491,8 +505,10 @@ for k in range(rots):
             Hxu = phix_Hcurl.T@(Hu); Hyu = phiy_Hcurl.T@(Hu);
             allHu = g_nonlinear_all(Hxu,Hyu)
             
-            if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: break
-            else: alpha = alpha*factor_residual
+            if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: 
+                break
+            else: 
+                alpha = alpha*factor_residual
             
         print('Line search took ', time.monotonic()-tm)
         
@@ -505,9 +521,12 @@ for k in range(rots):
         
         print('Re-evaluating H took ', time.monotonic()-tm)
         
+        # print('norm cu a: ',  gs(allH,A,H))
         
         print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H))+"||alpha: %2e" % (alpha));
-        if(np.linalg.norm(gs(allH,A,H)) < eps_newton): break
+        
+        if(np.linalg.norm(gs(allH,A,H)) < eps_newton): 
+            break
 
     elapsed = time.monotonic()-tm1
     print('Solving took ', elapsed, 'seconds')
