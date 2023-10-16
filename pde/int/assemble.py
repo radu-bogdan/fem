@@ -93,6 +93,8 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
     if indices.size == 0:
         if regions == '':
             ind_regions = MESH.t[:,-1]
+        elif isinstance(regions, npy.ndarray):
+            ind_regions = regions;
         else:
             ind_regions = MESH.getIndices2d(MESH.regions_2d,regions)
         indices = npy.in1d(MESH.t[:,-1],ind_regions)

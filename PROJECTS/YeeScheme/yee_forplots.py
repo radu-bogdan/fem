@@ -5,7 +5,7 @@ sys.path.insert(0,'../CEM') # adds parent directory
 # import line_profiler
 # profile = line_profiler.LineProfiler()
 
-from sparse_dot_mkl import dot_product_mkl as mult
+# from sparse_dot_mkl import dot_product_mkl as mult
 import numpy as np
 import gc
 import pde
@@ -229,7 +229,7 @@ for i in range(iterations):
         ################################################################################
         # Shift points to the circle
         ################################################################################
-        Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:].flatten())
+        Indices_PointsOnCircle = np.unique(MESH.EdgesToVertices[MESH.Boundary_Edges[MESH.Boundary_Region==5],:2].flatten())
         PointsOnCircle = MESH.p[Indices_PointsOnCircle,:]
         MESH.p[Indices_PointsOnCircle,:] = 0.3*1/np.sqrt(PointsOnCircle[:,0]**2+PointsOnCircle[:,1]**2)[:,None]*PointsOnCircle
         ################################################################################
