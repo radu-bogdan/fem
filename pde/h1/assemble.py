@@ -15,7 +15,6 @@ def assemble(MESH,space,matrix,order=-1):
     t = MESH.t; nt = t.shape[0]
     
     sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
-
     phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
     dphi = MESH.FEMLISTS[space]['TRIG']['dphi']; ldphi = len(dphi)
     
@@ -30,8 +29,8 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'M':
         if order == -1:
-            qp =  MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
-            we =  MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
+            qp = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
+            we = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
         

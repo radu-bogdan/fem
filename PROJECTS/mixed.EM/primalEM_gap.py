@@ -41,10 +41,10 @@ print('loaded geo...')
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 total = 1
-refinements = 2;
-plot = 0;
+refinements = 2
+plot = 0
 
 nu0 = 10**7/(4*np.pi)
 
@@ -58,9 +58,9 @@ nonlinear = 'stator_iron,rotor_iron'
 geoOCC = motor_npz['geoOCC'].tolist()
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
+ngsolvemesh.Refine()
+ngsolvemesh.Refine()
+ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
 MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
@@ -68,10 +68,10 @@ MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
 for m in range(refinements):
     
     # MESH.refinemesh()
-    # MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
+    MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
     
     tm = time.monotonic()
-    
+    # @profile
     def getPoints(MESH):
         airL_index = MESH.getIndices2d(MESH.regions_1d,'airL')[0]
         airR_index = MESH.getIndices2d(MESH.regions_1d,'airR')[0]
@@ -96,16 +96,21 @@ for m in range(refinements):
         edges0 = np.sort(edges0)
         edges1 = np.sort(edges1)
     
-        edgecoord0 = np.zeros(edges0.shape[0],dtype=int)-1
-        edgecoord1 = np.zeros(edges1.shape[0],dtype=int)-1
+        # edgecoord0 = np.zeros(edges0.shape[0],dtype=int)-1
+        # edgecoord1 = np.zeros(edges1.shape[0],dtype=int)-1
         
-        tm3 = time.monotonic()
-        for i in range(edges0.shape[0]):
-            v0 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges0[i,:],axis=1))[0]
-            v1 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges1[i,:],axis=1))[0]
-            edgecoord0[i] = v0
-            edgecoord1[i] = v1
-        print('loop took  ', time.monotonic()-tm3)
+        # tm3 = time.monotonic()
+        # for i in range(edges0.shape[0]):
+        #     v0 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges0[i,:],axis=1))[0]
+        #     v1 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges1[i,:],axis=1))[0]
+        #     edgecoord0[i] = v0
+        #     edgecoord1[i] = v1
+            
+        
+        edgecoord0 = pde.tools.ismember(edges0,MESH.EdgesToVertices[:,:2],'rows')[1]
+        edgecoord1 = pde.tools.ismember(edges1,MESH.EdgesToVertices[:,:2],'rows')[1]    
+            
+        # print('loop took  ', time.monotonic()-tm)
         
         ident_points_gap = np.c_[pointsL_index_sorted,
                                  pointsR_index_sorted]
@@ -115,6 +120,7 @@ for m in range(refinements):
         
         return ident_points_gap, ident_edges_gap
     
+    # @profile
     def getPointsNoEdges(MESH):
         airL_index = MESH.getIndices2d(MESH.regions_1d,'airL')[0]
         airR_index = MESH.getIndices2d(MESH.regions_1d,'airR')[0]
@@ -144,11 +150,12 @@ for m in range(refinements):
         
         return ident_points_gap
     
-    # ident_points_gap, ident_edges_gap = getPoints(MESH)
-    ident_points_gap = getPointsNoEdges(MESH)
+    ident_points_gap, ident_edges_gap = getPoints(MESH)
+    # ident_points_gap = getPointsNoEdges(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
+    # @profile
     def makeIdentifications(MESH):
     
         a = np.array(MESH.geoOCCmesh.GetIdentifications())
@@ -185,18 +192,19 @@ for m in range(refinements):
         edges0 = np.sort(edges0)
         edges1 = np.sort(edges1)
     
-        edgecoord0 = np.zeros(edges0.shape[0],dtype=int)-1
-        edgecoord1 = np.zeros(edges1.shape[0],dtype=int)-1
+        # edgecoord0 = np.zeros(edges0.shape[0],dtype=int)-1
+        # edgecoord1 = np.zeros(edges1.shape[0],dtype=int)-1
         
-        for i in range(edges0.shape[0]):
-            v0 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges0[i,:],axis=1))[0]
-            v1 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges1[i,:],axis=1))[0]
+        # for i in range(edges0.shape[0]):
+        #     v0 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges0[i,:],axis=1))[0] #slow
+        #     v1 =  np.where(np.all(MESH.EdgesToVertices[:,:2]==edges1[i,:],axis=1))[0] #slow
             
-            if v0.size == 1:
-                edgecoord0[i] = v0
-                edgecoord1[i] = v1
-                
-                
+        #     if v0.size == 1:
+        #         edgecoord0[i] = v0
+        #         edgecoord1[i] = v1
+        
+        edgecoord0 = pde.tools.ismember(edges0,MESH.EdgesToVertices[:,:2],'rows')[1]
+        edgecoord1 = pde.tools.ismember(edges1,MESH.EdgesToVertices[:,:2],'rows')[1]
         
         
         identification = np.c_[np.r_[a[ind0,0]-1,MESH.np + edgecoord0],
@@ -206,14 +214,16 @@ for m in range(refinements):
         ident_edges = np.c_[edgecoord0,
                             edgecoord1]
         
-        index = np.argwhere((ident_edges[:,0] == -1)*(ident_edges[:,1] == -1))[0]
-        if index.size ==1:
-            ident_edges = np.delete(ident_edges, index, axis=0)
+        # index = np.argwhere((ident_edges[:,0] == -1)*(ident_edges[:,1] == -1))[0]
+        # if index.size ==1:
+        #     ident_edges = np.delete(ident_edges, index, axis=0)
     
         return ident_points, ident_edges, jumps
     
     ident_points, ident_edges, jumps = makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
+    
+    # stop
     
     print('generated mesh...')
     
@@ -472,7 +482,7 @@ for m in range(refinements):
         
         
         # ax1.cla()
-        ux = dphix_H1_o0.T@u; uy = dphiy_H1_o0.T@u
+        ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
         
         # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
         # fig.show()
@@ -480,10 +490,6 @@ for m in range(refinements):
         # fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
         # fig.show()
         
-        
-        # if k == 0:
-        #     fig = plt.figure()
-        #     ax = fig.add_subplot(111)
         
         # ax.cla()
         # MESH.pdesurf2(u[:MESH.np],ax = ax)
@@ -552,22 +558,39 @@ for m in range(refinements):
         MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
         ##########################################################################################
         
+        
+        
+    # dphix_L2, dphiy_L2 = pde.l2.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
+    # phid_L2 = pde.l2.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
+    # Md = phid_L2 @ D_order_phiphi @ phid_L2
+    # Kdxx = dphix_L2 @ D_order_dphidphi @ dphix_L2.T
+    # Kdyy = dphiy_L2 @ D_order_dphidphi @ dphiy_L2.T
+    
+        
     if (m!=refinements-1):
         print("m is ",m)
-        u_old = u.copy()
-        MESH_old = MESH
+        # ud_old = phi_H1.T@u
+        u_old = u
+        MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
         print(MESH,u.shape)
-        MESH.refinemesh()
-        # ngsolvemesh.ngmesh.Refine()
+        # MESH.refinemesh()
+        ngsolvemesh.ngmesh.Refine()
         print(MESH)
     
     if (m==refinements-1):
-        u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old.EdgesToVertices[:,0]]+1/2*u_old[MESH_old.EdgesToVertices[:,1]]];
+        # ud_new = phi_H1.T@u
+        # ud_old_newmesh = np.r_[ud_old,ud_old,ud_old,ud_old]
+        
+        if ORDER == 1:
+            u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]];
+        if ORDER == 2:
+            u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]];
     
     if plot == 1:
         writer.finish()
 
-err = np.sqrt((u-u_old_newmesh)@(Kxx+Kyy+MASS)@(u-u_old_newmesh));
+err = np.sqrt((u-u_old_newmesh)@(Kxx+Kyy+MASS)@(u-u_old_newmesh))
+
 print(err)
 # MESH_old.refine()
 # u_old_p1 = 
