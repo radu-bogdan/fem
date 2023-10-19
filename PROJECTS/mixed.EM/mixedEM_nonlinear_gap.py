@@ -49,7 +49,7 @@ import ngsolve as ng
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 ngsolvemesh.Refine()
-ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
 for m in range(refinements):
@@ -264,7 +264,7 @@ for m in range(refinements):
         epsangle = 1e-5;
     
         angleCondition = np.zeros(5)
-        eps_newton = 1e-12
+        eps_newton = 1e-8
         factor_residual = 1/2
         mu = 0.0001
         
@@ -458,14 +458,31 @@ for m in range(refinements):
         ##########################################################################################
     
     if (m!=refinements-1):
+        
+        
         A_old = A
+        
+        phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+        Hx_old = phix_Hcurl.T@H
+        Hy_old = phiy_Hcurl.T@H
+        
         # MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
         ngsolvemesh.ngmesh.Refine()
         
         
     
-    if (m==refinements-1):  
+    if (m==refinements-1):
         A_old_newmesh = np.r_[A_old,np.c_[A_old,A_old,A_old].flatten()]
+        
+        
+        phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+        Hx = phix_Hcurl.T@H
+        Hy = phiy_Hcurl.T@H
+        
+        Hx_old_newmesh = np.r_[Hx_old,np.c_[Hx_old,Hx_old,Hx_old].flatten()]
+        Hy_old_newmesh = np.r_[Hy_old,np.c_[Hy_old,Hy_old,Hy_old].flatten()]
+        
+        
         # if ORDER == 1:
         #     u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]]
         # if ORDER == 2:
@@ -475,5 +492,8 @@ for m in range(refinements):
         writer.finish()
     
     
-err = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))
-print(err)
+
+    
+errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
+errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
+print(errA,errH)
