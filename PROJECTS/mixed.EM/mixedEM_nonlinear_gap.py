@@ -30,10 +30,10 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 2
-plot = 0
+refinements = 1
+plot = 1
 rot_speed = 1
-rots = 1
+rots = 10
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -48,7 +48,7 @@ j3 = motor_npz['j3']
 import ngsolve as ng
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
-ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
@@ -391,6 +391,90 @@ for m in range(refinements):
         elapsed = time.monotonic()-tm1
         print('Solving took ', elapsed, 'seconds')
         
+        
+        
+        ##########################################################################################
+        # Torque computation
+        ##########################################################################################
+        
+        int_order = 1
+        
+        D_int_order = pde.int.assemble(MESH, order = int_order)
+        
+        fem_linear = pde.int.evaluate(MESH, order = int_order, regions = linear).diagonal()
+        fem_nonlinear = pde.int.evaluate(MESH, order = int_order, regions = nonlinear).diagonal()
+        
+        #outer radius rotor
+        r_outer = 78.63225*10**(-3);
+        #sliding mesh rotor
+        r_sliding = 78.8354999*10**(-3);
+        #sliding mesh stator
+        r_sliding2 = 79.03874999*10**(-3);
+        #inner radius stator
+        r_inner = 79.242*10**(-3);
+        
+        r1 = r_outer
+        r2 = r_inner
+        
+        # dazwischen = lambda x,y : 
+        scale = lambda x,y : 1*(x**2+y**2<r1**2)+(x**2+y**2-r2**2)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+        scalex = lambda x,y : (2*x)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+        scaley = lambda x,y : (2*y)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+        
+        v = lambda x,y : np.r_[-y,x]*scale(x,y) # v wird nie wirklich gebraucht...
+        
+        v1x = lambda x,y : -y*scalex(x,y)
+        v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
+        v2x = lambda x,y :  scale(x,y)+x*scalex(x,y)
+        v2y = lambda x,y :  x*scaley(x,y)
+        
+        
+        v1x_fem = pde.int.evaluate(MESH, order = int_order, coeff = v1x, regions = '*air_gap').diagonal()
+        v1y_fem = pde.int.evaluate(MESH, order = int_order, coeff = v1y, regions = '*air_gap').diagonal()
+        v2x_fem = pde.int.evaluate(MESH, order = int_order, coeff = v2x, regions = '*air_gap').diagonal()
+        v2y_fem = pde.int.evaluate(MESH, order = int_order, coeff = v2y, regions = '*air_gap').diagonal()
+        
+        scale_fem = pde.int.evaluate(MESH, order = int_order, coeff = scale, regions = '*air_gap,'+rotor).diagonal()
+        one_fem = pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : 1+0*x+0*y, regions = '*air_gap,'+rotor).diagonal()
+        
+        
+        phix_d_Hcurl, phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
+        
+        Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+        gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9]; g_H_l = allH[0]; g_H_nl = allH[7];
+        
+        gHx = gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0
+        gHy = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1
+        
+        gH = g_H_l*fem_linear + g_H_nl*fem_nonlinear
+        
+        # b1 = uy
+        # b2 = -ux
+        # fu = f(ux,uy)+1/2*(M0_dphi*uy-M1_dphi*ux)
+        # fbb1 =  fy(ux,uy)+M0_dphi
+        # fbb2 = -fx(ux,uy)+M1_dphi
+        # a_Pk = u_Pk
+        
+        # term1 = (fu + fbb1*b1 +fbb2*b2 -Ja0*a_Pk)*(v1x_fem + v2y_fem)
+        
+        # term2 = (fbb1*b1)*v1x_fem + \
+        #         (fbb2*b1)*v2x_fem + \
+        #         (fbb1*b2)*v1y_fem + \
+        #         (fbb2*b2)*v2y_fem
+        
+        
+        term1 = (gH +gHx*Hx +gHy*Hy)*(v1x_fem + v2y_fem)
+        term2 = (gHx*Hx)*v1x_fem + \
+                (gHy*Hx)*v2x_fem + \
+                (gHx*Hy)*v1y_fem + \
+                (gHy*Hy)*v2y_fem
+        
+        
+        term_2 = -(term1+term2)
+        tor[k] = one_fem@D_int_order@term_2
+        print('Torque:', tor[k])
+        
+        
         ##########################################################################################
         
         phix_Hcurl_o1, phiy_Hcurl_o1 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 1)
@@ -456,44 +540,45 @@ for m in range(refinements):
             MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
             # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
         ##########################################################################################
+        
+    if refinements>1:
+        if (m!=refinements-1):
+            
+            A_old = A
+            
+            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+            Hx_old = phix_Hcurl.T@H
+            Hy_old = phiy_Hcurl.T@H
+            
+            # MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
+            ngsolvemesh.ngmesh.Refine()
+            
+        if (m==refinements-1):
+            A_old_newmesh = np.r_[A_old,np.c_[A_old,A_old,A_old].flatten()]
+            
+            
+            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+            Hx = phix_Hcurl.T@H
+            Hy = phiy_Hcurl.T@H
+            
+            Hx_old_newmesh = np.r_[Hx_old,np.c_[Hx_old,Hx_old,Hx_old].flatten()]
+            Hy_old_newmesh = np.r_[Hy_old,np.c_[Hy_old,Hy_old,Hy_old].flatten()]
+            
+            
+            # if ORDER == 1:
+            #     u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]]
+            # if ORDER == 2:
+            #     u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
     
-    if (m!=refinements-1):
-        
-        
-        A_old = A
-        
-        phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
-        Hx_old = phix_Hcurl.T@H
-        Hy_old = phiy_Hcurl.T@H
-        
-        # MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
+    if refinements == 0:
         ngsolvemesh.ngmesh.Refine()
         
-        
-    
-    if (m==refinements-1):
-        A_old_newmesh = np.r_[A_old,np.c_[A_old,A_old,A_old].flatten()]
-        
-        
-        phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
-        Hx = phix_Hcurl.T@H
-        Hy = phiy_Hcurl.T@H
-        
-        Hx_old_newmesh = np.r_[Hx_old,np.c_[Hx_old,Hx_old,Hx_old].flatten()]
-        Hy_old_newmesh = np.r_[Hy_old,np.c_[Hy_old,Hy_old,Hy_old].flatten()]
-        
-        
-        # if ORDER == 1:
-        #     u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]]
-        # if ORDER == 2:
-        #     u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
-    
     if plot == 1:
         writer.finish()
     
     
 
-    
-errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
-errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
-print(errA,errH)
+if refinements>1:
+    errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
+    errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
+    print(errA,errH)

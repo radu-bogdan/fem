@@ -43,13 +43,14 @@ print('loaded geo...')
 ##########################################################################################
 
 ORDER = 1
-refinements = 2
+refinements = 1
 plot = 1
 rot_speed = 1
-rots = 10
+rots = 300
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
+rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 
 geoOCC = motor_npz['geoOCC'].tolist()
 geoOCCmesh = geoOCC.GenerateMesh()
@@ -114,16 +115,16 @@ for m in range(refinements):
     
     for k in range(rots):
         
-        print('Step : ', k)
+        print('\n Step : ', k)
         
         ##########################################################################################
         # Assembling stuff
         ##########################################################################################
         
-        if ORDER == 1:
-            u = np.zeros(MESH.np)
-        if ORDER == 2:
-            u = np.zeros(MESH.np + MESH.NoEdges)
+        # if ORDER == 1:
+        #     u = np.zeros(MESH.np)
+        # if ORDER == 2:
+        #     u = np.zeros(MESH.np + MESH.NoEdges)
        
         tm = time.monotonic()
         
@@ -226,8 +227,8 @@ for m in range(refinements):
             M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
             M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
             
-            M0_dphi += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
-            M1_dphi += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
+            M0_dphi += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+            M1_dphi += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
         aJ = phi_H1@ D_order_phiphi @Ja
         
@@ -315,7 +316,7 @@ for m in range(refinements):
             #     else: alpha = alpha*factor_residual
             
             # AmijoBacktracking
-            float_eps = 1e-11; #float_eps = np.finfo(float).eps
+            float_eps = 1e-12; #float_eps = np.finfo(float).eps
             for kk in range(1000):
                 if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
                 else: alpha = alpha*factor_residual
@@ -324,8 +325,11 @@ for m in range(refinements):
             
             print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
             
-            if(np.linalg.norm(RS @ gs(u)) < eps_newton): break
-        
+            if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
+                break
+            
+        # print('im out!!!!!!!!!')
+            
         elapsed = time.monotonic()-tm2
         print('Solving took ', elapsed, 'seconds')
         
@@ -354,8 +358,9 @@ for m in range(refinements):
                 fig = plt.figure()
                 writer.setup(fig, "writer_test.mp4", 500)
                 fig.show()
-                ax1 = fig.add_subplot(211)
-                ax2 = fig.add_subplot(212)
+                ax1 = fig.add_subplot(221)
+                ax2 = fig.add_subplot(222)
+                ax3 = fig.add_subplot(223)
             
             tm = time.monotonic()
             ax1.cla()
@@ -372,7 +377,10 @@ for m in range(refinements):
             # MESH.pdemesh2(ax = ax)
             MESH.pdegeom(ax = ax2)
             Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
-        
+            
+            ax3.cla()
+            # ax3.set_aspect(aspect = 'equal')
+            ax3.plot(tor)
         
         
         
@@ -384,6 +392,74 @@ for m in range(refinements):
             writer.grab_frame()
             print('Grabbing took  ', time.monotonic()-tm)
             # stop
+        
+        
+        ##########################################################################################
+        # Torque computation
+        ##########################################################################################
+        
+        
+        fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = linear).diagonal()
+        fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = nonlinear).diagonal()
+        
+        ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+        f = lambda ux,uy : f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear
+        fx = lambda ux,uy : fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear
+        fy = lambda ux,uy : fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear
+        
+        u_Pk = phi_H1.T@u
+        
+        # r1 = p[edges_rotor_outer[0,0],0]
+        # r2 = r1 + 0.0007
+        # r2 = r1 + 0.00024
+        
+        #outer radius rotor
+        r_outer = 78.63225*10**(-3);
+        #sliding mesh rotor
+        r_sliding = 78.8354999*10**(-3);
+        #sliding mesh stator
+        r_sliding2 = 79.03874999*10**(-3);
+        #inner radius stator
+        r_inner = 79.242*10**(-3);
+        
+        r1 = r_outer
+        r2 = r_inner
+        
+        # dazwischen = lambda x,y : 
+        scale = lambda x,y : 1*(x**2+y**2<r1**2)+(x**2+y**2-r2**2)/(r1**2-r2**2)*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+        scalex = lambda x,y : (2*x)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+        scaley = lambda x,y : (2*y)/(r1**2-r2**2)#*(x**2+y**2>r1**2)*(x**2+y**2<r2**2)
+        
+        v = lambda x,y : np.r_[-y,x]*scale(x,y) # v wird nie wirklich gebraucht...
+        
+        v1x = lambda x,y : -y*scalex(x,y)
+        v1y = lambda x,y : -scale(x,y)-y*scaley(x,y)
+        v2x = lambda x,y :  scale(x,y)+x*scalex(x,y)
+        v2y = lambda x,y :  x*scaley(x,y)
+        
+        
+        v1x_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v1x, regions = '*air_gap').diagonal()
+        v1y_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v1y, regions = '*air_gap').diagonal()
+        v2x_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v2x, regions = '*air_gap').diagonal()
+        v2y_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = v2y, regions = '*air_gap').diagonal()
+        
+        scale_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = scale, regions = '*air_gap,'+rotor).diagonal()
+        one_fem = pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : 1+0*x+0*y, regions = '*air_gap,'+rotor).diagonal()        
+        
+        b1 = uy
+        b2 = -ux
+        fu = f(ux,uy)+1/2*(M0_dphi*uy-M1_dphi*ux)
+        fbb1 =  fy(ux,uy)+M0_dphi
+        fbb2 = -fx(ux,uy)+M1_dphi
+        a_Pk = u_Pk
+        
+        
+        term1 = (fu + fbb1*b1 +fbb2*b2 )*(v1x_fem + v2y_fem)
+        term2 = (fbb1*b1)*v1x_fem + (fbb2*b1)*v2x_fem + (fbb1*b2)*v1y_fem + (fbb2*b2)*v2y_fem
+        
+        term_2 = -(term1+term2)
+        tor[k] = one_fem@D_order_dphidphi@term_2
+        print('Torque:', tor[k])
         
         
         ##########################################################################################
@@ -415,28 +491,32 @@ for m in range(refinements):
     # Kdxx = dphix_L2 @ D_order_dphidphi @ dphix_L2.T
     # Kdyy = dphiy_L2 @ D_order_dphidphi @ dphiy_L2.T
     
+    if refinements>1:
+        if (m!=refinements-1):
+            # print("m is ",m)
+            # ud_old = phi_H1.T@u
+            u_old = u
+            MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
+            # print(MESH,u.shape)
+            # MESH.refinemesh()
+            ngsolvemesh.ngmesh.Refine()
+            # print(MESH)
         
-    if (m!=refinements-1):
-        print("m is ",m)
-        # ud_old = phi_H1.T@u
-        u_old = u
-        MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
-        print(MESH,u.shape)
-        # MESH.refinemesh()
-        ngsolvemesh.ngmesh.Refine()
-        print(MESH)
+        if (m==refinements-1):
+            # ud_new = phi_H1.T@u
+            # ud_old_newmesh = np.r_[ud_old,ud_old,ud_old,ud_old]
+            
+            if ORDER == 1:
+                u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]]
+            if ORDER == 2:
+                u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
     
-    if (m==refinements-1):
-        # ud_new = phi_H1.T@u
-        # ud_old_newmesh = np.r_[ud_old,ud_old,ud_old,ud_old]
-        
-        if ORDER == 1:
-            u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]]
-        if ORDER == 2:
-            u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
+    if refinements == 0:
+        ngsolvemesh.ngmesh.Refine()
     
     if plot == 1:
         writer.finish()
 
-err = np.sqrt((u-u_old_newmesh)@(Kxx+Kyy+MASS)@(u-u_old_newmesh))
-print(err)
+if refinements>1:
+    err = np.sqrt((u-u_old_newmesh)@(Kxx+Kyy+MASS)@(u-u_old_newmesh))/np.sqrt((u)@(Kxx+Kyy+MASS)@(u))
+    print(err)
