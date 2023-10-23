@@ -5,7 +5,7 @@ import scipy as sp
 
 
 
-all_linear = False
+all_linear = 0
 
 ##########################################################################################
 @nb.njit() 
@@ -211,7 +211,8 @@ def g_nonlinear_all(x,y):
 
 
 
-if all_linear == True:
+if all_linear == 1:
+    
     f_nonlinear = lambda x,y : 1/2*nu0*(x**2+y**2)
     fx_nonlinear = lambda x,y : nu0*x
     fy_nonlinear = lambda x,y : nu0*y
@@ -237,6 +238,39 @@ if all_linear == True:
         gxy_nl = lambda x,y : x*0
         gyx_nl = lambda x,y : y*0
         gyy_nl = lambda x,y : 1/nu0 + 0*y
+        
+        return g_l(x,y), gx_l(x,y), gy_l(x,y), gxx_l(x,y), gxy_l(x,y), gyx_l(x,y), gyy_l(x,y),\
+               g_nl(x,y),gx_nl(x,y),gy_nl(x,y),gxx_nl(x,y),gxy_nl(x,y),gyx_nl(x,y),gyy_nl(x,y)
+
+if all_linear == 2:
+    
+    nu = 1;
+    
+    f_nonlinear = lambda x,y : 1/2*nu*(x**2+y**2)
+    fx_nonlinear = lambda x,y : nu*x
+    fy_nonlinear = lambda x,y : nu*y
+    fxx_nonlinear = lambda x,y : nu + 0*x
+    fxy_nonlinear = lambda x,y : x*0
+    fyx_nonlinear = lambda x,y : y*0
+    fyy_nonlinear = lambda x,y : nu + 0*y
+    
+    def g_nonlinear_all(x,y):
+        
+        g_l = lambda x,y : 1/(2*nu0)*(x**2+y**2)
+        gx_l = lambda x,y : 1/nu0*x
+        gy_l = lambda x,y : 1/nu0*y
+        gxx_l = lambda x,y : 1/nu0 + 0*x
+        gxy_l = lambda x,y : x*0
+        gyx_l = lambda x,y : y*0
+        gyy_l = lambda x,y : 1/nu0 + 0*y
+            
+        g_nl = lambda x,y : 1/(2*nu)*(x**2+y**2)
+        gx_nl = lambda x,y : 1/nu*x
+        gy_nl = lambda x,y : 1/nu*y
+        gxx_nl = lambda x,y : 1/nu + 0*x
+        gxy_nl = lambda x,y : x*0
+        gyx_nl = lambda x,y : y*0
+        gyy_nl = lambda x,y : 1/nu + 0*y
         
         return g_l(x,y), gx_l(x,y), gy_l(x,y), gxx_l(x,y), gxy_l(x,y), gyx_l(x,y), gyy_l(x,y),\
                g_nl(x,y),gx_nl(x,y),gy_nl(x,y),gxx_nl(x,y),gxy_nl(x,y),gyx_nl(x,y),gyy_nl(x,y)

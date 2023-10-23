@@ -9,7 +9,7 @@ import scipy.sparse.linalg
 import time
 import plotly.io as pio
 pio.renderers.default = 'browser'
-# import nonlinear_Algorithms
+import ngsolve as ng
 import numba as nb
 from scipy.sparse import hstack,vstack
 from sksparse.cholmod import cholesky as chol
@@ -32,8 +32,13 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ORDER = 1
 refinements = 1
 plot = 1
+rot_speed = (((18*2-1)*2-1)*2-1)*2-1
+rot_speed = ((18*2-1)*2-1)*2-1
+
 rot_speed = 1
-rots = 10
+rots = 600
+
+int_order = 0
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -45,10 +50,9 @@ geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-import ngsolve as ng
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
-# ngsolvemesh.Refine()
+ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
@@ -150,8 +154,8 @@ for m in range(refinements):
             M0 += pde.int.evaluate(MESH, order = order_HH, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
             M1 += pde.int.evaluate(MESH, order = order_HH, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
             
-            M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
-            M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
+            M00 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+            M10 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
         aM = phix_Hcurl@ D_order_HH @(M0) +\
              phiy_Hcurl@ D_order_HH @(M1)
@@ -218,7 +222,8 @@ for m in range(refinements):
         # Solving with Newton
         ##########################################################################################
         
-        from nonlinLaws import *
+        # from nonlinLaws import *
+        from nonlinLaws_bosch import *
     
         sH = phix_Hcurl.shape[0]
         sA = phi_L2.shape[0]
@@ -397,8 +402,6 @@ for m in range(refinements):
         # Torque computation
         ##########################################################################################
         
-        int_order = 1
-        
         D_int_order = pde.int.assemble(MESH, order = int_order)
         
         fem_linear = pde.int.evaluate(MESH, order = int_order, regions = linear).diagonal()
@@ -441,10 +444,11 @@ for m in range(refinements):
         phix_d_Hcurl, phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
         
         Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+        allH = g_nonlinear_all(Hx,Hy)
         gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9]; g_H_l = allH[0]; g_H_nl = allH[7];
         
-        gHx = gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0
-        gHy = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1
+        gHx = gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M00
+        gHy = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M10
         
         gH = g_H_l*fem_linear + g_H_nl*fem_nonlinear
         
@@ -474,30 +478,39 @@ for m in range(refinements):
         tor[k] = one_fem@D_int_order@term_2
         print('Torque:', tor[k])
         
+        # tt1 = one_fem@D_int_order@((gHx*Hx)*v1x_fem)
+        # tt2 = one_fem@D_int_order@((gHy*Hx)*v1y_fem)
+        # tt3 = one_fem@D_int_order@((gHx*Hy)*v2x_fem)
+        # tt4 = one_fem@D_int_order@((gHy*Hy)*v2y_fem)
+        
+        # print(tt1,tt2,tt3,tt4,tt1+tt2+tt3+tt4)
+        
         
         ##########################################################################################
         
-        phix_Hcurl_o1, phiy_Hcurl_o1 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 1)
-        
-        Hx = phix_Hcurl_o1.T@H; Hy = phiy_Hcurl_o1.T@H
-        allH = g_nonlinear_all(Hx,Hy)
-        gx_H_l  = allH[1]; gy_H_l  = allH[2];
-        gx_H_nl = allH[8]; gy_H_nl = allH[9];
-    
-        fem_linear = pde.int.evaluate(MESH, order = 1, regions = linear).diagonal()
-        fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal()
-    
-        Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear)
-        By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear)
-        
         if plot == 1:
+        
+            phix_Hcurl_o1, phiy_Hcurl_o1 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 1)
+            
+            Hx = phix_Hcurl_o1.T@H; Hy = phiy_Hcurl_o1.T@H
+            allH = g_nonlinear_all(Hx,Hy)
+            gx_H_l  = allH[1]; gy_H_l  = allH[2];
+            gx_H_nl = allH[8]; gy_H_nl = allH[9];
+        
+            fem_linear = pde.int.evaluate(MESH, order = 1, regions = linear).diagonal()
+            fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal()
+        
+            Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear) + mu0*M0
+            By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear) + mu0*M1
+            
             if k == 0:
                 fig = plt.figure()
                 writer.setup(fig, "writer_test.mp4", 500)
                 fig.show()
-                # ax1 = fig.add_subplot(111)
-                ax1 = fig.add_subplot(211)
-                ax2 = fig.add_subplot(212)
+                
+                ax1 = fig.add_subplot(221)
+                ax2 = fig.add_subplot(222)
+                ax3 = fig.add_subplot(223)
             
             tm = time.monotonic()
             ax1.cla()
@@ -515,6 +528,10 @@ for m in range(refinements):
             MESH.pdegeom(ax = ax2)
             Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
             
+            ax3.cla()
+            # ax3.set_aspect(aspect = 'equal')
+            ax3.plot(tor,'.')
+            
             writer.grab_frame()
         
         ##########################################################################################
@@ -530,7 +547,7 @@ for m in range(refinements):
             R = lambda x: np.array([[np.cos(x),-np.sin(x)],
                                     [np.sin(x), np.cos(x)]])
             
-            a1 = 2*np.pi/ident_edges_gap.shape[0]/8
+            a1 = 2*np.pi/(ident_points_gap.shape[0]-1)/8
             
             p_new = MESH.p.copy(); t_new = MESH.t.copy()
             p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
@@ -538,7 +555,6 @@ for m in range(refinements):
             m_new = R(a1*rot_speed)@m_new
             
             MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
-            # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
         ##########################################################################################
         
     if refinements>1:
@@ -582,3 +598,18 @@ if refinements>1:
     errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
     errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
     print(errA,errH)
+    
+    
+
+# phix_Hcurl_o0, phiy_Hcurl_o0 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+
+# Hx = phix_Hcurl_o0.T@H; Hy = phiy_Hcurl_o0.T@H
+# allH = g_nonlinear_all(Hx,Hy)
+# gx_H_l  = allH[1]; gy_H_l  = allH[2];
+# gx_H_nl = allH[8]; gy_H_nl = allH[9];
+
+# fem_linear = pde.int.evaluate(MESH, order = 0, regions = linear).diagonal()
+# fem_nonlinear = pde.int.evaluate(MESH, order = 0, regions = nonlinear).diagonal()
+
+# Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear) + mu0*M00
+# By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear) + mu0*M10
