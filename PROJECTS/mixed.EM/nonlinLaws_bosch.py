@@ -83,28 +83,67 @@ else:
 
 
 
-ab = 1
+# ab = 1
 
-mu_KL = B_KL[ab:]/H_KL[ab:]
-nu_KL = H_KL[ab:]/B_KL[ab:]
+# mu_KL = B_KL[ab:]/H_KL[ab:]
+# nu_KL = H_KL[ab:]/B_KL[ab:]
 
-HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural')
+# HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural')
+# coenergy_density = HB_curve.antiderivative()
+# dx_HB_curve = HB_curve.derivative()
+
+# BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural')
+# energy_density = BH_curve.antiderivative()
+
+# dx_BH_curve = BH_curve.derivative()
+
+
+# mu_curve = lambda x : HB_curve(x)/(x+1e-12)
+# nu_curve = lambda x : BH_curve(x)/(x+1e-12)
+
+# dx_mu_curve = lambda x : (dx_HB_curve(x)*x-HB_curve(x))/(x**2+1e-12)
+# dx_nu_curve = lambda x : (dx_BH_curve(x)*x-BH_curve(x))/(x**2+1e-12)
+
+
+
+
+
+nu0 = 10**7/(4*np.pi)
+k1 = 49.4; k2 = 1.46; k3 = 520.6
+
+
+@nb.njit()
+def nu_nl(x):
+    return (k1*np.exp(k2*(x))+k3)
+    
+
+@nb.njit()
+def nu(x):
+    pos = 1/k2*np.log(nu0/(k1*k2))
+    m = pos-1/nu0*nu_nl(pos)
+    return (k1*np.exp(k2*(x))+k3)*(x<pos)+nu0*(x-m)*(x>pos)
+
+
+B_KL = np.linspace(0,8,100)
+H_KL = nu(B_KL)
+H_KL = H_KL.astype(float)
+
+
+HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural', extrapolate=True)
 coenergy_density = HB_curve.antiderivative()
 dx_HB_curve = HB_curve.derivative()
 
-BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural')
+BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural', extrapolate=True)
 energy_density = BH_curve.antiderivative()
-
 dx_BH_curve = BH_curve.derivative()
 
 
-mu_curve = lambda x : HB_curve(x)/(x+1e-12)
-nu_curve = lambda x : BH_curve(x)/(x+1e-12)
+ab = 1
+nu_curve = interpolate.CubicSpline(B_KL[ab:]**2, H_KL[ab:]/B_KL[ab:], bc_type='natural', extrapolate=True)
+dx_nu_curve = nu_curve.derivative()
 
-dx_mu_curve = lambda x : (dx_HB_curve(x)*x-HB_curve(x))/(x**2+1e-12)
-dx_nu_curve = lambda x : (dx_BH_curve(x)*x-BH_curve(x))/(x**2+1e-12)
-
-
+mu_curve = interpolate.CubicSpline(H_KL[ab:]**2, B_KL[ab:]/H_KL[ab:], bc_type='natural', extrapolate=True)
+dx_mu_curve = nu_curve.derivative()
 
 
 
@@ -219,8 +258,8 @@ def g_nonlinear_all(x,y):
 
 # plt.cla()
 
-# xx = np.exp(np.linspace(0,40,100_000_00))
-# plt.plot(xx,mu_curve(xx),'-')
+xx = np.exp(np.linspace(0,40,100_000_00))
+plt.plot(xx,nu_curve(xx),'-')
 # plt.loglog(xx,-dx_mu_curve(xx))
 
 # # plt.loglog(H_KL[1:]**2, mu_KL, '--')
