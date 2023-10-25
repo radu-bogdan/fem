@@ -139,10 +139,10 @@ dx_BH_curve = BH_curve.derivative()
 
 
 ab = 1
-nu_curve = interpolate.CubicSpline(B_KL[ab:]**2, H_KL[ab:]/B_KL[ab:], bc_type='natural', extrapolate=True)
+nu_curve = interpolate.CubicSpline(B_KL[ab:]**2, H_KL[ab:]/B_KL[ab:])
 dx_nu_curve = nu_curve.derivative()
 
-mu_curve = interpolate.CubicSpline(H_KL[ab:]**2, B_KL[ab:]/H_KL[ab:], bc_type='natural', extrapolate=True)
+mu_curve = interpolate.CubicSpline(H_KL[ab:]**2, B_KL[ab:]/H_KL[ab:])
 dx_mu_curve = nu_curve.derivative()
 
 
@@ -258,8 +258,10 @@ def g_nonlinear_all(x,y):
 
 # plt.cla()
 
-xx = np.exp(np.linspace(0,40,100_000_00))
+xx = np.exp(np.linspace(0,5,100_000_00))
+plt.plot(B_KL[ab:], H_KL[ab:]/B_KL[ab:],'.')
 plt.plot(xx,nu_curve(xx),'-')
+plt.plot(xx,dx_nu_curve(xx),'-')
 # plt.loglog(xx,-dx_mu_curve(xx))
 
 # # plt.loglog(H_KL[1:]**2, mu_KL, '--')
