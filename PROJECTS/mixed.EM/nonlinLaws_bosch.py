@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import interpolate
 import numba as nb
 
-bosch = False
+bosch = True
 
 mu0 = 4*np.pi*10**-7
 
@@ -105,9 +105,6 @@ else:
 # dx_nu_curve = lambda x : (dx_BH_curve(x)*x-BH_curve(x))/(x**2+1e-12)
 
 
-
-
-
 nu0 = 10**7/(4*np.pi)
 k1 = 49.4; k2 = 1.46; k3 = 520.6
 
@@ -124,97 +121,124 @@ def nu(x):
     return (k1*np.exp(k2*(x))+k3)*(x<pos)+nu0*(x-m)*(x>pos)
 
 
+
+
 B_KL = np.exp(np.linspace(0,3,100))-1
 # B_KL = np.linspace(0,3,1000)
 H_KL = nu(B_KL)
 H_KL = H_KL.astype(float)
 
 
-HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural')
+
+
+
+
+HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural') # nu
 coenergy_density = HB_curve.antiderivative()
-dx_HB_curve = HB_curve.derivative()
-
-BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural')
-energy_density = BH_curve.antiderivative()
-dx_BH_curve = BH_curve.derivative()
-
-ab = 1
-nu_curve = interpolate.CubicSpline(B_KL[ab:]**2, H_KL[ab:]/B_KL[ab:], bc_type=[[2,0],[2,0]], extrapolate=True)
-dx_nu_curve = nu_curve.derivative()
-
-mu_curve = interpolate.CubicSpline(H_KL[ab:]**2, B_KL[ab:]/H_KL[ab:], bc_type=[[2,0],[2,0]], extrapolate=True)
-dx_mu_curve = nu_curve.derivative()
-
-
-
-
+dx_HB_curve = HB_curve.derivative() #nus
+# dx_HB_curve_fix = lambda x : dx_HB_curve(x)*(dx_HB_curve(x)>0)
 
 def f_nonlinear(x,y):
-    return energy_density(x**2+y**2)
-
-def nu(x,y):
-    return nu_curve(x**2+y**2)
-
-def nux(x,y):
-    return 2*x*dx_nu_curve(x**2+y**2)
-
-def nuy(x,y):
-    return 2*y*dx_nu_curve(x**2+y**2)
+    return 1/2*coenergy_density(x**2+y**2)
 
 def fx_nonlinear(x,y):
-    return nu(x,y)*x
+    return HB_curve(x**2+y**2)*x
 
 def fy_nonlinear(x,y):
-    return nu(x,y)*y
+    return HB_curve(x**2+y**2)*y
 
 def fxx_nonlinear(x,y):
-    return nu(x,y) + x*nux(x,y)
+    return HB_curve(x**2+y**2)+2*x*dx_HB_curve(x**2+y**2)*x #nu(x,y) + x*nux(x,y)
 
 def fxy_nonlinear(x,y):
-    return x*nuy(x,y)
+    return 2*x*y*dx_HB_curve(x**2+y**2)
 
 def fyx_nonlinear(x,y):
-    return y*nux(x,y)
+    return 2*x*y*dx_HB_curve(x**2+y**2)
 
 def fyy_nonlinear(x,y):
-    return nu(x,y) + y*nuy(x,y)
+    return HB_curve(x**2+y**2)+2*y*dx_HB_curve(x**2+y**2)*y
+
+
+
+BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural') # mu
+energy_density = BH_curve.antiderivative()
+dx_BH_curve = BH_curve.derivative() #mus
 
 
 
 
 
-def g_nonlinear(x,y):
-    return coenergy_density(x**2+y**2)
-
-def mu(x,y):
-    return mu_curve(x**2+y**2)
-
-def mux(x,y):
-    return 2*x*dx_mu_curve(x**2+y**2)
-
-def muy(x,y):
-    return 2*y*dx_mu_curve(x**2+y**2)
-
-def gx_nonlinear(x,y):
-    return mu(x,y)*x
-
-def gy_nonlinear(x,y):
-    return mu(x,y)*y
-
-def gxx_nonlinear(x,y):
-    return mu(x,y) + x*mux(x,y)
-
-def gxy_nonlinear(x,y):
-    return x*muy(x,y)
-
-def gyx_nonlinear(x,y):
-    return y*mux(x,y)
-
-def gyy_nonlinear(x,y):
-    return mu(x,y) + y*muy(x,y)
 
 
-nu0 = 10**7/(4*np.pi)
+
+
+# def f_nonlinear(x,y):
+#     return energy_density(x**2+y**2)
+
+# def nu(x,y):
+#     return nu_curve(x**2+y**2)
+
+# def nux(x,y):
+#     return 2*x*dx_nu_curve(x**2+y**2)
+
+# def nuy(x,y):
+#     return 2*y*dx_nu_curve(x**2+y**2)
+
+# def fx_nonlinear(x,y):
+#     return nu(x,y)*x
+
+# def fy_nonlinear(x,y):
+#     return nu(x,y)*y
+
+# def fxx_nonlinear(x,y):
+#     return nu(x,y) + x*nux(x,y)
+
+# def fxy_nonlinear(x,y):
+#     return x*nuy(x,y)
+
+# def fyx_nonlinear(x,y):
+#     return y*nux(x,y)
+
+# def fyy_nonlinear(x,y):
+#     return nu(x,y) + y*nuy(x,y)
+
+
+
+
+
+# def g_nonlinear(x,y):
+#     return coenergy_density(x**2+y**2)
+
+# def mu(x,y):
+#     return mu_curve(x**2+y**2)
+
+# def mux(x,y):
+#     return 2*x*dx_mu_curve(x**2+y**2)
+
+# def muy(x,y):
+#     return 2*y*dx_mu_curve(x**2+y**2)
+
+# def gx_nonlinear(x,y):
+#     return mu(x,y)*x
+
+# def gy_nonlinear(x,y):
+#     return mu(x,y)*y
+
+# def gxx_nonlinear(x,y):
+#     return mu(x,y) + x*mux(x,y)
+
+# def gxy_nonlinear(x,y):
+#     return x*muy(x,y)
+
+# def gyx_nonlinear(x,y):
+#     return y*mux(x,y)
+
+# def gyy_nonlinear(x,y):
+#     return mu(x,y) + y*muy(x,y)
+
+
+# nu0 = 10**7/(4*np.pi)
 
 f_linear = lambda x,y : 1/2*nu0*(x**2+y**2)
 fx_linear = lambda x,y : nu0*x
@@ -224,52 +248,52 @@ fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
 fyy_linear = lambda x,y : nu0 + 0*y
 
-g_linear = lambda x,y : 1/(2*nu0)*(x**2+y**2)
-gx_linear = lambda x,y : 1/nu0*x
-gy_linear = lambda x,y : 1/nu0*y
-gxx_linear = lambda x,y : 1/nu0 + 0*x
-gxy_linear = lambda x,y : x*0
-gyx_linear = lambda x,y : y*0
-gyy_linear = lambda x,y : 1/nu0 + 0*y
+# g_linear = lambda x,y : 1/(2*nu0)*(x**2+y**2)
+# gx_linear = lambda x,y : 1/nu0*x
+# gy_linear = lambda x,y : 1/nu0*y
+# gxx_linear = lambda x,y : 1/nu0 + 0*x
+# gxy_linear = lambda x,y : x*0
+# gyx_linear = lambda x,y : y*0
+# gyy_linear = lambda x,y : 1/nu0 + 0*y
 
 
 
-def g_nonlinear_all(x,y):
-    g_nl = g_nonlinear(x,y)
-    gx_nl = gx_nonlinear(x,y)
-    gy_nl = gy_nonlinear(x,y)
+# def g_nonlinear_all(x,y):
+#     g_nl = g_nonlinear(x,y)
+#     gx_nl = gx_nonlinear(x,y)
+#     gy_nl = gy_nonlinear(x,y)
     
-    gxx_nl = gxx_nonlinear(x,y); gxy_nl = gxy_nonlinear(x,y)
-    gyx_nl = gyx_nonlinear(x,y); gyy_nl = gyy_nonlinear(x,y)
+#     gxx_nl = gxx_nonlinear(x,y); gxy_nl = gxy_nonlinear(x,y)
+#     gyx_nl = gyx_nonlinear(x,y); gyy_nl = gyy_nonlinear(x,y)
     
-    g_l = g_linear(x,y)
-    gx_l = gx_linear(x,y)
-    gy_l = gy_linear(x,y)
+#     g_l = g_linear(x,y)
+#     gx_l = gx_linear(x,y)
+#     gy_l = gy_linear(x,y)
     
-    gxx_l = gxx_linear(x,y)
-    gxy_l = gxy_linear(x,y)
-    gyx_l = gyx_linear(x,y)
-    gyy_l = gyy_linear(x,y)
+#     gxx_l = gxx_linear(x,y)
+#     gxy_l = gxy_linear(x,y)
+#     gyx_l = gyx_linear(x,y)
+#     gyy_l = gyy_linear(x,y)
     
-    return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
-           g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
+#     return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
+#            g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
 
 
 
-# plt.cla()
+# # plt.cla()
 
-xx = np.exp(np.linspace(0,5,100_000_00))
-plt.plot(B_KL[ab:], H_KL[ab:]/B_KL[ab:],'.')
-plt.plot(xx,nu_curve(xx),'-')
-plt.plot(xx,dx_nu_curve(xx),'-')
-# plt.loglog(xx,-dx_mu_curve(xx))
+# xx = np.exp(np.linspace(0,5,100_000_00))
+# plt.plot(B_KL[ab:], H_KL[ab:]/B_KL[ab:],'.')
+# plt.plot(xx,nu_curve(xx),'-')
+# plt.plot(xx,dx_nu_curve(xx),'-')
+# # plt.loglog(xx,-dx_mu_curve(xx))
 
-# # plt.loglog(H_KL[1:]**2, mu_KL, '--')
-# # plt.loglog(H_KL_sat[1:]**2, mu_KL_sat, '*')
-# # plt.plot(xx,coenergy_density(xx))
+# # # plt.loglog(H_KL[1:]**2, mu_KL, '--')
+# # # plt.loglog(H_KL_sat[1:]**2, mu_KL_sat, '*')
+# # # plt.plot(xx,coenergy_density(xx))
 
-# xx = np.linspace(0,5,10_000_000)
-# plt.cla();
-# plt.plot(xx,nu_curve(xx))
-# plt.plot(B_KL[ab:]**2,H_KL[ab:]/B_KL[ab:],'.')
-# plt.plot(xx,dx_nu_curve(xx))
+# # xx = np.linspace(0,5,10_000_000)
+# # plt.cla();
+# # plt.plot(xx,nu_curve(xx))
+# # plt.plot(B_KL[ab:]**2,H_KL[ab:]/B_KL[ab:],'.')
+# # plt.plot(xx,dx_nu_curve(xx))

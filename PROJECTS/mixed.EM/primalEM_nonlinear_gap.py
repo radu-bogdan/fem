@@ -31,9 +31,9 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ORDER = 1
 refinements = 1
 plot = 1
-rot_speed = (((18*2-1)*2-1)*2-1)*2-1
-# rot_speed = 2
-rots = 2
+# rot_speed = (((18*2-1)*2-1)*2-1)*2-1
+rot_speed = 1
+rots = 306*2*2*2
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -48,8 +48,8 @@ j3 = motor_npz['j3']
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
+ngsolvemesh.Refine()
+ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
 for m in range(refinements):
@@ -114,10 +114,10 @@ for m in range(refinements):
         # Assembling stuff
         ##########################################################################################
         
-        if ORDER == 1:
-            u = np.zeros(MESH.np)+1e-2
-        if ORDER == 2:
-            u = np.zeros(MESH.np + MESH.NoEdges)
+        # if ORDER == 1:
+        #     u = np.zeros(MESH.np)
+        # if ORDER == 2:
+        #     u = np.zeros(MESH.np + MESH.NoEdges)
        
         tm = time.monotonic()
         
