@@ -124,25 +124,25 @@ def nu(x):
     return (k1*np.exp(k2*(x))+k3)*(x<pos)+nu0*(x-m)*(x>pos)
 
 
-B_KL = np.linspace(0,8,100)
+B_KL = np.exp(np.linspace(0,3,100))-1
+# B_KL = np.linspace(0,3,1000)
 H_KL = nu(B_KL)
 H_KL = H_KL.astype(float)
 
 
-HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural', extrapolate=True)
+HB_curve = interpolate.CubicSpline(H_KL, B_KL, bc_type='natural')
 coenergy_density = HB_curve.antiderivative()
 dx_HB_curve = HB_curve.derivative()
 
-BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural', extrapolate=True)
+BH_curve = interpolate.CubicSpline(B_KL, H_KL, bc_type='natural')
 energy_density = BH_curve.antiderivative()
 dx_BH_curve = BH_curve.derivative()
 
-
 ab = 1
-nu_curve = interpolate.CubicSpline(B_KL[ab:]**2, H_KL[ab:]/B_KL[ab:])
+nu_curve = interpolate.CubicSpline(B_KL[ab:]**2, H_KL[ab:]/B_KL[ab:], bc_type=[[2,0],[2,0]], extrapolate=True)
 dx_nu_curve = nu_curve.derivative()
 
-mu_curve = interpolate.CubicSpline(H_KL[ab:]**2, B_KL[ab:]/H_KL[ab:])
+mu_curve = interpolate.CubicSpline(H_KL[ab:]**2, B_KL[ab:]/H_KL[ab:], bc_type=[[2,0],[2,0]], extrapolate=True)
 dx_mu_curve = nu_curve.derivative()
 
 
