@@ -275,7 +275,7 @@ for m in range(refinements):
         
         # if k>-1:    
         if k==0:
-            H = 1e-8+np.zeros(sH)
+            H = 0*1e-8+np.zeros(sH)
             H = RS.T@chol(RS@RS.T).solve_A(RS@H)
             A = 0+np.zeros(sA)
         if k>0:

@@ -33,7 +33,7 @@ refinements = 1
 plot = 1
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
-rots = 306*2*2*2
+rots = 306*2*2#*2
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -49,7 +49,7 @@ geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 ngsolvemesh.Refine()
 ngsolvemesh.Refine()
-ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
 for m in range(refinements):
@@ -354,6 +354,7 @@ for m in range(refinements):
                 ax1 = fig.add_subplot(221)
                 ax2 = fig.add_subplot(222)
                 ax3 = fig.add_subplot(223)
+                ax4 = fig.add_subplot(224)
             
             tm = time.monotonic()
             ax1.cla()
@@ -374,6 +375,11 @@ for m in range(refinements):
             ax3.cla()
             # ax3.set_aspect(aspect = 'equal')
             ax3.plot(tor)
+            ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
+            
+            ax4.cla()
+            # ax3.set_aspect(aspect = 'equal')
+            ax4.plot(energy)
         
         
         
@@ -386,6 +392,12 @@ for m in range(refinements):
             print('Grabbing took  ', time.monotonic()-tm)
             # stop
         
+        
+        ##########################################################################################
+        # Magnetic energy
+        ##########################################################################################
+        
+        energy[k] = J(u)
         
         ##########################################################################################
         # Torque computation
@@ -449,7 +461,7 @@ for m in range(refinements):
                 (fbb1*b2)*v1y_fem +\
                 (fbb2*b2)*v2y_fem
         
-        term_2 = -(term1+term2)
+        term_2 = (term1+term2)
         tor[k] = one_fem@D_order_dphidphi@term_2
         print('Torque:', tor[k])
         
