@@ -23,7 +23,7 @@ import matplotlib.tri as tri
 class mesh:
     # @profile       
     
-    def __init__(self, p,e,t,q,r2d = npy.empty(0),r1d = npy.empty(0)):
+    def __init__(self, p,e,t,q,r2d = npy.empty(0),r1d = npy.empty(0), identifications = npy.empty(0)):
         
         if t.size != 0:
             edges_trigs = npy.r_[npy.c_[t[:,1],t[:,2]],
@@ -123,6 +123,7 @@ class mesh:
         self.mp = npy.r_[mp_trig,mp_quad]
         self.regions_2d = list(r2d)
         self.regions_1d = list(r1d)
+        self.identifications = identifications
         
         self.FEMLISTS = {}
         #############################################################################################################
@@ -230,14 +231,15 @@ class mesh:
         for i in range(max_rg_index):
             regions_2d_np += [geoOCCmesh.GetMaterial(i+1)]
         
-        return p, e, t, q, regions_2d_np, regions_1d_np
+        identifications = npy.array(geoOCCmesh.GetIdentifications())
+        
+        return p, e, t, q, regions_2d_np, regions_1d_np, identifications
     
     @classmethod
     def netgen(cls, geoOCCmesh):
-        cls.geoOCCmesh = geoOCCmesh
-        p, e, t, q, regions_2d_np, regions_1d_np = cls.from_netgen(cls,geoOCCmesh)
-        
-        return cls(p, e, t, q, regions_2d_np, regions_1d_np)
+        # cls.geoOCCmesh = geoOCCmesh
+        p, e, t, q, regions_2d_np, regions_1d_np, identifications = cls.from_netgen(cls,geoOCCmesh)
+        return cls(p, e, t, q, regions_2d_np, regions_1d_np, identifications)
         # self.__init__(self, p,e,t,q,r2d = regions_2d_np,r1d = regions_1d_np)
     
     # @profile

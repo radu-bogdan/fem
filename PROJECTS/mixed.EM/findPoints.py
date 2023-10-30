@@ -88,7 +88,7 @@ def getPointsNoEdges(MESH):
 
 def makeIdentifications_nogap(MESH):
 
-    a = np.array(MESH.geoOCCmesh.GetIdentifications())
+    a = MESH.identifications
 
     c0 = np.zeros(a.shape[0])
     c1 = np.zeros(a.shape[0])
@@ -131,7 +131,7 @@ def makeIdentifications_nogap(MESH):
 
 def makeIdentifications(MESH):
 
-    a = np.array(MESH.geoOCCmesh.GetIdentifications())
+    a = MESH.identifications
 
     c0 = np.zeros(a.shape[0])
     c1 = np.zeros(a.shape[0])

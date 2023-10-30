@@ -11,6 +11,8 @@ import time
 from sksparse.cholmod import cholesky as chol
 import plotly.io as pio
 pio.renderers.default = 'browser'
+import dill
+import pickle
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -40,24 +42,27 @@ linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 
-motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 
-geoOCC = motor_npz['geoOCC'].tolist()
+# geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-geoOCCmesh = geoOCC.GenerateMesh()
-ngsolvemesh = ng.Mesh(geoOCCmesh)
-ngsolvemesh.Refine()
-ngsolvemesh.Refine()
-ngsolvemesh.Refine()
-ngsolvemesh.Refine()
+# geoOCCmesh = geoOCC.GenerateMesh()
+# ngsolvemesh = ng.Mesh(geoOCCmesh)
+# ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
 
 for m in range(refinements):
     
     # MESH.refinemesh()
-    MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
+    # MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
     
+    open_file = open('mesh'+str(m)+'.pkl', "rb")
+    MESH = dill.load(open_file)[0]
+    open_file.close()
     
     from findPoints import *
     
