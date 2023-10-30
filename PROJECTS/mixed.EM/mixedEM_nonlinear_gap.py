@@ -30,13 +30,14 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 1
-plot = 1
-rot_speed = (((18*2-1)*2-1)*2-1)*2-1
-rot_speed = ((18*2-1)*2-1)*2-1
+refinements = 2
+plot = 0
+# rot_speed = (((18*2-1)*2-1)*2-1)*2-1
+# rot_speed = ((18*2-1)*2-1)*2-1
 
 rot_speed = 1
-rots = 600
+rots = 306
+rots = 1
 
 int_order = 0
 
@@ -52,7 +53,8 @@ j3 = motor_npz['j3']
 
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
-ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
+# ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
@@ -82,10 +84,10 @@ for m in range(refinements):
         space_Vh = 'N0'
         space_Qh = 'P0'
         
-        order_HH = 2
+        order_HH = 4
         order_AA = 0
         
-        order_H = 1
+        order_H = 2
         order_A = 0
         HA = np.zeros(MESH.NoEdges + MESH.nt)
         
@@ -149,13 +151,19 @@ for m in range(refinements):
             J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
         Ja = 0*Ja; J0 = 0*J0
         
-        M0 = 0; M1 = 0; M00 = 0; M10 = 0
+        M0 = 0; M1 = 0; M00 = 0; M10 = 0; M11 = 0; M01 = 0; M100 = 0; M000 = 0
         for i in range(16):
             M0 += pde.int.evaluate(MESH, order = order_HH, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
             M1 += pde.int.evaluate(MESH, order = order_HH, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
             
             M00 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
             M10 += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
+            
+            M000 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+            M100 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
+            
+            M01 += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+            M11 += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
         
         aM = phix_Hcurl@ D_order_HH @(M0) +\
              phiy_Hcurl@ D_order_HH @(M1)
@@ -222,8 +230,8 @@ for m in range(refinements):
         # Solving with Newton
         ##########################################################################################
         
-        # from nonlinLaws import *
-        from nonlinLaws_bosch import *
+        from nonlinLaws import *
+        # from nonlinLaws_bosch import *
     
         sH = phix_Hcurl.shape[0]
         sA = phi_L2.shape[0]
@@ -273,9 +281,9 @@ for m in range(refinements):
         factor_residual = 1/2
         mu = 0.0001
         
-        # if k>-1:    
+        # if k>-1:
         if k==0:
-            H = 0*1e-8+np.zeros(sH)
+            H = 1e-8+np.zeros(sH)
             H = RS.T@chol(RS@RS.T).solve_A(RS@H)
             A = 0+np.zeros(sA)
         if k>0:
@@ -396,7 +404,11 @@ for m in range(refinements):
         elapsed = time.monotonic()-tm1
         print('Solving took ', elapsed, 'seconds')
         
+        ##########################################################################################
+        # Magnetic energy
+        ##########################################################################################
         
+        energy[k] = -J(allH,H)
         
         ##########################################################################################
         # Torque computation
@@ -474,9 +486,10 @@ for m in range(refinements):
                 (gHy*Hy)*v2y_fem
         
         
-        term_2 = -(term1+term2)
+        term_2 = (term1+term2)
         tor[k] = one_fem@D_int_order@term_2
         print('Torque:', tor[k])
+        print('Energy:', energy[k])
         
         # tt1 = one_fem@D_int_order@((gHx*Hx)*v1x_fem)
         # tt2 = one_fem@D_int_order@((gHy*Hx)*v1y_fem)
@@ -500,8 +513,8 @@ for m in range(refinements):
             fem_linear = pde.int.evaluate(MESH, order = 1, regions = linear).diagonal()
             fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal()
         
-            Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear) + mu0*M0
-            By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear) + mu0*M1
+            Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear) + mu0*M01
+            By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear) + mu0*M11
             
             if k == 0:
                 fig = plt.figure()
@@ -511,6 +524,7 @@ for m in range(refinements):
                 ax1 = fig.add_subplot(221)
                 ax2 = fig.add_subplot(222)
                 ax3 = fig.add_subplot(223)
+                ax4 = fig.add_subplot(224)
             
             tm = time.monotonic()
             ax1.cla()
@@ -530,7 +544,12 @@ for m in range(refinements):
             
             ax3.cla()
             # ax3.set_aspect(aspect = 'equal')
-            ax3.plot(tor,'.')
+            ax3.plot(tor)
+            ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
+            
+            ax4.cla()
+            # ax3.set_aspect(aspect = 'equal')
+            ax4.plot(energy)
             
             writer.grab_frame()
         
@@ -562,9 +581,14 @@ for m in range(refinements):
             
             A_old = A
             
-            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
             Hx_old = phix_Hcurl.T@H
             Hy_old = phiy_Hcurl.T@H
+            
+            allH = g_nonlinear_all(Hx_old,Hy_old)
+            gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9]; g_H_l = allH[0]; g_H_nl = allH[7];
+            gHx_old = gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M00
+            gHy_old = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M10
             
             # MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
             ngsolvemesh.ngmesh.Refine()
@@ -573,12 +597,20 @@ for m in range(refinements):
             A_old_newmesh = np.r_[A_old,np.c_[A_old,A_old,A_old].flatten()]
             
             
-            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
+            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
             Hx = phix_Hcurl.T@H
             Hy = phiy_Hcurl.T@H
             
             Hx_old_newmesh = np.r_[Hx_old,np.c_[Hx_old,Hx_old,Hx_old].flatten()]
             Hy_old_newmesh = np.r_[Hy_old,np.c_[Hy_old,Hy_old,Hy_old].flatten()]
+            
+            allH = g_nonlinear_all(Hx,Hy)
+            gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9]; g_H_l = allH[0]; g_H_nl = allH[7];
+            gHx = gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M00
+            gHy = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M10
+            
+            gHx_old_newmesh = np.r_[gHx_old,np.c_[gHx_old,gHx_old,gHx_old].flatten()]
+            gHy_old_newmesh = np.r_[gHy_old,np.c_[gHy_old,gHy_old,gHy_old].flatten()]
             
             
             # if ORDER == 1:
@@ -596,8 +628,12 @@ for m in range(refinements):
 
 if refinements>1:
     errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
-    errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
-    print(errA,errH)
+    errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + \
+           np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
+    errB = np.sqrt((gHx-gHx_old_newmesh)@(M_L2)@(gHx-gHx_old_newmesh))/np.sqrt((gHx)@(M_L2)@(gHx)) + \
+           np.sqrt((gHy-gHy_old_newmesh)@(M_L2)@(gHy-gHy_old_newmesh))/np.sqrt((gHy)@(M_L2)@(gHy))
+           
+    print(errA,errH,errB)
     
     
 

@@ -33,7 +33,8 @@ refinements = 1
 plot = 1
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
-rots = 306*2*2#*2
+rots = 306#*2*2#*2
+rots = 1
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -49,8 +50,8 @@ geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 ngsolvemesh.Refine()
 ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
+ngsolvemesh.Refine()
+ngsolvemesh.Refine()
 
 for m in range(refinements):
     
@@ -98,8 +99,8 @@ for m in range(refinements):
     ############################################################################################
     
     sys.path.insert(1,'../mixed.EM')
-    # from nonlinLaws import *
-    from nonlinLaws_bosch import *
+    from nonlinLaws import *
+    # from nonlinLaws_bosch import *
                            
     ############################################################################################
     
@@ -464,6 +465,7 @@ for m in range(refinements):
         term_2 = (term1+term2)
         tor[k] = one_fem@D_order_dphidphi@term_2
         print('Torque:', tor[k])
+        print('Torque:', energy[k])
         
         
         ##########################################################################################

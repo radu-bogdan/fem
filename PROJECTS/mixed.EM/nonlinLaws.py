@@ -8,47 +8,47 @@ import scipy as sp
 all_linear = 0
 
 ##########################################################################################
-@nb.njit() 
+@nb.njit()
 def f_nonlinear(x,y):
     k1 = 49.4; k2 = 1.46; k3 = 520.6
     return k1/(2*k2)*(np.exp(k2*(x**2+y**2))-1) + 1/2*k3*(x**2+y**2)
 
-@nb.njit() 
+@nb.njit()
 def nu(x,y):
     k1 = 49.4; k2 = 1.46; k3 = 520.6
     return k1*np.exp(k2*(x**2+y**2))+k3
 
-@nb.njit() 
+@nb.njit()
 def nux(x,y):
     k1 = 49.4; k2 = 1.46; k3 = 520.6
     return 2*x*k1*k2*np.exp(k2*(x**2+y**2))
 
-@nb.njit() 
+@nb.njit()
 def nuy(x,y):
     k1 = 49.4; k2 = 1.46; k3 = 520.6
     return 2*y*k1*k2*np.exp(k2*(x**2+y**2))
 
-@nb.njit() 
+@nb.njit()
 def fx_nonlinear(x,y):
     return nu(x,y)*x
 
-@nb.njit() 
+@nb.njit()
 def fy_nonlinear(x,y):
     return nu(x,y)*y
 
-@nb.njit() 
+@nb.njit()
 def fxx_nonlinear(x,y):
     return nu(x,y) + x*nux(x,y)
 
-@nb.njit() 
+@nb.njit()
 def fxy_nonlinear(x,y):
     return x*nuy(x,y)
 
-@nb.njit() 
+@nb.njit()
 def fyx_nonlinear(x,y):
     return y*nux(x,y)
 
-@nb.njit() 
+@nb.njit()
 def fyy_nonlinear(x,y):
     return nu(x,y) + y*nuy(x,y)
 ##########################################################################################
@@ -207,6 +207,7 @@ def g_nonlinear_all(x,y):
     
     return g_l, gx_l, gy_l, gxx_l, gxy_l, gyx_l, gyy_l,\
            g_nl,gx_nl,gy_nl,gxx_nl,gxy_nl,gyx_nl,gyy_nl
+           
 ##########################################################################################
 
 
