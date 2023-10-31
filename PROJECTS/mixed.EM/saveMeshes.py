@@ -16,17 +16,18 @@ j3 = motor_npz['j3']
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 
-nums = 4
+nums = 5
 MESH = []
 
 for i in range(nums):
-    ngsolvemesh.Refine()
+    # ngsolvemesh.Refine()
+    ngsolvemesh.ngmesh.Refine()
 
 MESH.append(pde.mesh.netgen(ngsolvemesh.ngmesh))
 
 
 open_file = open('mesh'+str(nums)+'.pkl', "wb")
-dill.dump(MESH, open_file, protocol = pickle.HIGHEST_PROTOCOL)
+dill.dump(MESH, open_file)
 open_file.close()
 
 m = motor_npz['m']; m_new = m
@@ -42,7 +43,7 @@ import dill
 import pickle
 import pde
 
-nums = 4
+nums = 0
 open_file = open('mesh'+str(nums)+'.pkl', "rb")
 MESH_LOADED = dill.load(open_file)
 open_file.close()

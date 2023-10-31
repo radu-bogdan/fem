@@ -31,8 +31,8 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 1
-plot = 1
+refinements = 2
+plot = 0
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
 rots = 306#*2*2#*2
@@ -54,13 +54,16 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
+# ngsolvemesh.ngmesh.Refine()
+
+level = 1
 
 for m in range(refinements):
     
     # MESH.refinemesh()
     # MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
     
-    open_file = open('mesh'+str(m)+'.pkl', "rb")
+    open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
     open_file.close()
     
@@ -495,6 +498,9 @@ for m in range(refinements):
             
             MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
         ##########################################################################################
+        
+    # MESH.pdesurf2(u)
+    # MESH.pdemesh2()
     
     if refinements>1:
         if (m!=refinements-1):
@@ -504,7 +510,8 @@ for m in range(refinements):
             MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
             # print(MESH,u.shape)
             # MESH.refinemesh()
-            ngsolvemesh.ngmesh.Refine()
+            # ngsolvemesh.ngmesh.Refine()
+            level = level + 1
             # print(MESH)
         
         if (m==refinements-1):
@@ -517,11 +524,13 @@ for m in range(refinements):
                 u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
     
     if refinements == 0:
-        ngsolvemesh.ngmesh.Refine()
+        # ngsolvemesh.ngmesh.Refine()
+        level = level + 1
     
     if plot == 1:
         writer.finish()
 
 if refinements>1:
-    err = np.sqrt((u-u_old_newmesh)@(Kxx+Kyy+MASS)@(u-u_old_newmesh))/np.sqrt((u)@(Kxx+Kyy+MASS)@(u))
-    print(err)
+    err = np.sqrt((u-u_old_newmesh)@(MASS)@(u-u_old_newmesh))/np.sqrt((u)@(MASS)@(u))
+    err2= np.sqrt((u-u_old_newmesh)@(Kxx+Kyy)@(u-u_old_newmesh))/np.sqrt((u)@(Kxx+Kyy)@(u))
+    print(err,err2)

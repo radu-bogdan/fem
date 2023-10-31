@@ -13,6 +13,8 @@ import ngsolve as ng
 import numba as nb
 from scipy.sparse import hstack,vstack
 from sksparse.cholmod import cholesky as chol
+import dill
+import pickle
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -45,22 +47,29 @@ linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
     
-motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
+# motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
 
-geoOCC = motor_npz['geoOCC'].tolist()
+# geoOCC = motor_npz['geoOCC'].tolist()
+
+motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-geoOCCmesh = geoOCC.GenerateMesh()
-ngsolvemesh = ng.Mesh(geoOCCmesh)
+# geoOCCmesh = geoOCC.GenerateMesh()
+# ngsolvemesh = ng.Mesh(geoOCCmesh)
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
+level = 0
+
 for m in range(refinements):
     
-    MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
+    # MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
+    open_file = open('mesh'+str(level)+'.pkl', "rb")
+    MESH = dill.load(open_file)[0]
+    open_file.close()
     
     from findPoints import *
     
@@ -591,7 +600,8 @@ for m in range(refinements):
             gHy_old = gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M10
             
             # MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
-            ngsolvemesh.ngmesh.Refine()
+            # ngsolvemesh.ngmesh.Refine()
+            level = level + 1
             
         if (m==refinements-1):
             A_old_newmesh = np.r_[A_old,np.c_[A_old,A_old,A_old].flatten()]
@@ -619,7 +629,8 @@ for m in range(refinements):
             #     u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
     
     if refinements == 0:
-        ngsolvemesh.ngmesh.Refine()
+        # ngsolvemesh.ngmesh.Refine()
+        level = level + 1
         
     if plot == 1:
         writer.finish()
