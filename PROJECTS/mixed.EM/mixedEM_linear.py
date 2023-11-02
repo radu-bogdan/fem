@@ -12,11 +12,14 @@ pio.renderers.default = 'browser'
 # import nonlinear_Algorithms
 import numba as nb
 from scipy.sparse import hstack,vstack
+from sksparse.cholmod import cholesky as chol
 
 
 import matplotlib.pyplot as plt
 import matplotlib
 cmap = plt.cm.jet
+import dill
+import pickle
 
 ##########################################################################################
 # Loading mesh
@@ -41,23 +44,39 @@ cmap = plt.cm.jet
 # regions_2d_rotor = motor_rotor_npz['regions_2d']
 # regions_1d_rotor = motor_rotor_npz['regions_1d']
 
-motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
+# motor_npz = np.load('../meshes/motor_pizza.npz', allow_pickle = True)
 
-geoOCC = motor_npz['geoOCC'].tolist()
-m = motor_npz['m']; m_new = m
-j3 = motor_npz['j3']
+# geoOCC = motor_npz['geoOCC'].tolist()
+# m = motor_npz['m']; m_new = m
+# j3 = motor_npz['j3']
 
-import ngsolve as ng
-geoOCCmesh = geoOCC.GenerateMesh()
-ngsolve_mesh = ng.Mesh(geoOCCmesh)
+# import ngsolve as ng
+# geoOCCmesh = geoOCC.GenerateMesh()
+# ngsolve_mesh = ng.Mesh(geoOCCmesh)
 # ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
-
-MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
+# ngsolve_mesh.Refine()
+# ngsolve_mesh.Refine()
+# MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
+
+
+motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
+m = motor_npz['m']; m_new = m
+j3 = motor_npz['j3']
+
+level = 1
+
+# MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
+open_file = open('mesh'+str(level)+'.pkl', "rb")
+MESH = dill.load(open_file)[0]
+open_file.close()
+
+print(MESH)
+
 ##########################################################################################
 
 
@@ -155,9 +174,9 @@ SYS = bmat([[Mh2,C.T],\
 
 rhs = np.r_[aM,np.zeros(MESH.nt)]
 
-tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
-y2 = x2[MESH.NoEdges:]
-MESH.pdesurf2(y2)
+# tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
+# y2 = x2[MESH.NoEdges:]
+# MESH.pdesurf2(y2)
 
 
 ##########################################################################################
@@ -202,33 +221,41 @@ SYS2 = bmat([[Md,Cd.T,KK.T],\
 
 rhs2 = np.r_[aMd,np.zeros(sA+sL)]
 
-tm = time.monotonic(); x3 = sps.linalg.spsolve(SYS2,rhs2); print('mixed with decoupling: ',time.monotonic()-tm)
-
-H = x3[:sH]
-A = x3[sH:sH+sA]
-L = x3[sH+sA:]
+# tm = time.monotonic(); x3 = sps.linalg.spsolve(SYS2,rhs2); print('mixed with decoupling: ',time.monotonic()-tm)
+# H = x3[:sH]
+# A = x3[sH:sH+sA]
+# L = x3[sH+sA:]
 
 ##########################################################################################
 
-phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'phi', order = 1)
+# phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = spaceVh, matrix = 'phi', order = 1)
 
-Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+# Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
 
-fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0',controls = 1), A, u_height = 0)
+# fig = MESH.pdesurf_hybrid(dict(trig = 'P0', quad = 'Q0',controls = 1), A, u_height = 0)
 # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), Hx**2+Hy**2, u_height = 0)
-fig.show()
+# fig.show()
 
 ##########################################################################################
 
-# iMd = pde.tools.fastBlockInverse(Md)
-# iBBd = pde.tools.fastBlockInverse(Cd@iMd@Cd.T)
+iMd = pde.tools.fastBlockInverse(Md)
+iBBd = pde.tools.fastBlockInverse(Cd@iMd@Cd.T)
 
 
-# SYS3 = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
-# rhs3 = -KK@iMd@aMd + KK@iMd@Cd.T@iBBd@Cd@iMd@aMd
+SYS3 = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
+rhs3 = -KK@iMd@aMd + KK@iMd@Cd.T@iBBd@Cd@iMd@aMd
 
 
-# tm = time.monotonic(); x4 = sps.linalg.spsolve(SYS3,rhs3); print('reduced hybrid stuff: ',time.monotonic()-tm)
+tm = time.monotonic(); x4 = sps.linalg.spsolve(SYS3,rhs3); print('reduced hybrid stuff: ',time.monotonic()-tm)
+tm = time.monotonic(); x4 = chol(-SYS3).solve_A(-rhs3); print('reduced hybrid stuff2: ',time.monotonic()-tm)
+
+print(SYS3.shape,SYS3.nnz)
+
+tm = time.monotonic();
+for i in range(100):
+    x4 = chol(-SYS3).solve_A(-rhs3); 
+print('reduced hybrid stuff: ',time.monotonic()-tm)
+
 # lam4 = x4
 # y4 = iBBd@Cd@iMd@(aMd-KK.T@lam4)
 # u4 = iMd@(-Cd.T@y4-KK.T@lam4+aMd)

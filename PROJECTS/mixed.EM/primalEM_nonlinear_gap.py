@@ -31,12 +31,12 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 2
+refinements = 1
 plot = 0
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
 rots = 306#*2*2#*2
-rots = 1
+rots = 2
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -56,7 +56,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.ngmesh.Refine()
 
-level = 1
+level = 3
 
 for m in range(refinements):
     
@@ -534,3 +534,5 @@ if refinements>1:
     err = np.sqrt((u-u_old_newmesh)@(MASS)@(u-u_old_newmesh))/np.sqrt((u)@(MASS)@(u))
     err2= np.sqrt((u-u_old_newmesh)@(Kxx+Kyy)@(u-u_old_newmesh))/np.sqrt((u)@(Kxx+Kyy)@(u))
     print(err,err2)
+    
+print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))

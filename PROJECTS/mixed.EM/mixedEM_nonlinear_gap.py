@@ -32,14 +32,14 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 2
+refinements = 1
 plot = 0
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 # rot_speed = ((18*2-1)*2-1)*2-1
 
 rot_speed = 1
 rots = 306
-rots = 1
+rots = 2
 
 int_order = 0
 
@@ -62,7 +62,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 0
+level = 5
 
 for m in range(refinements):
     
@@ -646,7 +646,7 @@ if refinements>1:
            
     print(errA,errH,errB)
     
-    
+print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
 
 # phix_Hcurl_o0, phiy_Hcurl_o0 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
 
