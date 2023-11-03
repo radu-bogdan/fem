@@ -117,7 +117,7 @@ if found == True:
         
         block_ends = np.r_[0,block_ends+1]
         
-        elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
+        # elapsed = time.time()-tm; print('Preparing lists {:4.8f} seconds.'.format(elapsed))
         #####################################################################################
         
         
@@ -148,7 +148,7 @@ if found == True:
         tm = time.time()
         data_iN,indices_iN,indptr_iN = createIndicesInversion(N.data,N.indices,N.indptr,block_ends)
         iN = sps.csc_matrix((data_iN, indices_iN, indptr_iN), shape = N.shape)
-        elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
+        # elapsed = time.time()-tm; print('Took {:4.8f} seconds.'.format(elapsed))
         
         iMh = P.T@(iN.T@iN)@P
         return iMh

@@ -253,7 +253,7 @@ print(SYS3.shape,SYS3.nnz)
 
 tm = time.monotonic();
 for i in range(100):
-    x4 = chol(-SYS3).solve_A(-rhs3); 
+    x4 = chol(-SYS3).solve_A(-rhs3)
 print('reduced hybrid stuff: ',time.monotonic()-tm)
 
 # lam4 = x4

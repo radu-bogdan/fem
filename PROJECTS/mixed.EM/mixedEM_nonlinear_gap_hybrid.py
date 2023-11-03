@@ -62,7 +62,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 5
+level = 2
 
 for m in range(refinements):
     
@@ -91,7 +91,9 @@ for m in range(refinements):
     if ORDER == 1:
         print('Order is ', ORDER)
         space_Vh = 'N0'
+        space_Vhd = 'N0d'
         space_Qh = 'P0'
+        space_Lh = 'P0'
         
         order_HH = 4
         order_AA = 0
@@ -132,7 +134,7 @@ for m in range(refinements):
         
         print("\n")
         print('Step : ', k)
-    
+        
         ##########################################################################################
         # Assembling stuff
         ##########################################################################################
@@ -148,7 +150,7 @@ for m in range(refinements):
         
         C = phi_L2 @ D_order_AA @ curlphi_Hcurl.T
         M_L2 = phi_L2 @ D_order_AA @ phi_L2.T
-    
+        
         fem_linear = pde.int.evaluate(MESH, order = order_HH, regions = linear).diagonal()
         fem_nonlinear = pde.int.evaluate(MESH, order = order_HH, regions = nonlinear).diagonal()
         fem_rotor = pde.int.evaluate(MESH, order = order_HH, regions = rotor).diagonal()
@@ -178,6 +180,37 @@ for m in range(refinements):
              phiy_Hcurl@ D_order_HH @(M1)
         
         aJ = phi_L2 @ D_order_AA @ Ja
+        
+        ##########################################################################################
+        
+        phix_d_Hcurl,phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = order_HH)
+        curlphi_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'curlphi', order = order_AA)
+        
+        # Md = phix_d_Hcurl @ D(int_order) @ phix_d_Hcurl.T +\
+        #      phiy_d_Hcurl @ D(int_order) @ phiy_d_Hcurl.T
+        # iMd = pde.tools.fastBlockInverse(Md)
+        
+        # iMd.data = iMd.data*(np.abs(iMd.data)>1e-7)
+        # iMd.eliminate_zeros()
+        
+        Cd = phi_L2 @ D_order_AA @ curlphi_d_Hcurl.T
+        
+        aMd = phix_d_Hcurl @ D_order_HH @ (M0) +\
+              phiy_d_Hcurl @ D_order_HH @ (M1)
+              
+        R0,R1,R2 = pde.hcurl.assembleE(MESH, space = space_Vhd, matrix = 'M', order = order_HH)
+        
+        phi_e = pde.l2.assembleE(MESH, space = space_Lh, matrix = 'M', order = order_HH)
+        
+        De = pde.int.assembleE(MESH, order = order_HH)
+        KK = phi_e @ De @ (R0+R1+R2).T
+        
+        inv = lambda x : pde.tools.fastBlockInverse(x)
+        
+        # KK = KK[np.r_[2*MESH.NonSingle_Edges,\
+        #               2*MESH.NonSingle_Edges+1],:]
+        
+        # KK = KK[MESH.NonSingle_Edges,:]
         
         ##########################################################################################
         
@@ -242,40 +275,60 @@ for m in range(refinements):
         from nonlinLaws import *
         # from nonlinLaws_bosch import *
     
-        sH = phix_Hcurl.shape[0]
+        sH = phix_d_Hcurl.shape[0]
         sA = phi_L2.shape[0]
-        
+        sL = KK.shape[0]
         
         mu0 = (4*np.pi)/10**7
         
-        def gss(allH):
-            gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6];
-            gxx_H_nl = allH[10]; gxy_H_nl = allH[11]; gyx_H_nl = allH[12]; gyy_H_nl = allH[13];
+        def gss(allH,A,H,L):
             
-            gxx_H_Mxx = phix_Hcurl @ D_order_HH @ sps.diags(gxx_H_nl*fem_nonlinear + gxx_H_l*fem_linear)@ phix_Hcurl.T
-            gyy_H_Myy = phiy_Hcurl @ D_order_HH @ sps.diags(gyy_H_nl*fem_nonlinear + gyy_H_l*fem_linear)@ phiy_Hcurl.T
-            gxy_H_Mxy = phiy_Hcurl @ D_order_HH @ sps.diags(gxy_H_nl*fem_nonlinear + gxy_H_l*fem_linear)@ phix_Hcurl.T
-            gyx_H_Myx = phix_Hcurl @ D_order_HH @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_Hcurl.T
-            
-            M = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
-            
-            # S = bmat([[M,C.T],\
-            #           [C,None]]).tocsc()
-            
-            S= bmat([[RS@M@RS.T,RS@C.T],\
-                     [C@RS.T,None]]).tocsc()
-            
-            return S
-        
-        def gs(allH,A,H):
             gx_H_l  = allH[1]; gy_H_l  = allH[2];
             gx_H_nl = allH[8]; gy_H_nl = allH[9];
             
-            r1 = phix_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
-                 phiy_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + C.T@A
+            gxx_H_l  = allH[3];  gxy_H_l  = allH[4];  gyx_H_l  = allH[5];  gyy_H_l  = allH[6];
+            gxx_H_nl = allH[10]; gxy_H_nl = allH[11]; gyx_H_nl = allH[12]; gyy_H_nl = allH[13];
+            
+            gxx_H_Mxx = phix_d_Hcurl @ D_order_HH @ sps.diags(gxx_H_nl*fem_nonlinear + gxx_H_l*fem_linear)@ phix_d_Hcurl.T
+            gyy_H_Myy = phiy_d_Hcurl @ D_order_HH @ sps.diags(gyy_H_nl*fem_nonlinear + gyy_H_l*fem_linear)@ phiy_d_Hcurl.T
+            gxy_H_Mxy = phiy_d_Hcurl @ D_order_HH @ sps.diags(gxy_H_nl*fem_nonlinear + gxy_H_l*fem_linear)@ phix_d_Hcurl.T
+            gyx_H_Myx = phix_d_Hcurl @ D_order_HH @ sps.diags(gyx_H_nl*fem_nonlinear + gyx_H_l*fem_linear)@ phiy_d_Hcurl.T
+            
+            Md = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
+            
+            tm = time.monotonic()
+            iMd = inv(Md)
+            iBBd = inv(Cd@iMd@Cd.T)
+            print('Inverting took ', time.monotonic()-tm)
+            
+            r1 = phix_d_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
+                 phiy_d_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
                  
-            r2 = C@H
-            return np.r_[RS@r1,r2]
+            r2 = Cd@H
+            r3 = KK@H
+            
+            # print(r1.shape,r2.shape,r3.shape)
+            
+            tm = time.monotonic()
+            gssu = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
+            
+            # print(gssu.shape)
+            
+            # print((RS@KK@iMd@r1).shape,r3.shape)
+            gsu = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
+            
+            
+            print('Multiplication took ', time.monotonic()-tm)
+            
+            gssu_mod = RS@gssu@RS.T
+            gsu_rhs = RS@gsu
+            
+            wL = sps.linalg.spsolve(gssu_mod,-gsu_rhs)
+            wA = iBBd@Cd@iMd@(-r1-KK.T@RS.T@wL)+iBBd@r2
+            wH = iMd@(-Cd.T@wA-KK.T@RS.T@wL-r1)
+            w = np.r_[wH,wA,RS.T@wL]
+            
+            return gssu_mod, gsu_rhs, w
     
         def J(allH,H):
             g_H_l = allH[0]; g_H_nl = allH[7];
@@ -290,50 +343,32 @@ for m in range(refinements):
         factor_residual = 1/2
         mu = 0.0001
         
-        # if k>-1:
-        if k==0:
-            H = 1e-8+np.zeros(sH)
-            H = RS.T@chol(RS@RS.T).solve_A(RS@H)
-            A = 0+np.zeros(sA)
-        if k>0:
-            # H = RS.T@chol(RS@RS.T).solve_A(RS@H)
-            # A = 0+np.zeros(sA)
-            Mxx = phix_Hcurl @ D_order_HH @ phix_Hcurl.T
-            Myy = phiy_Hcurl @ D_order_HH @ phiy_Hcurl.T
+        H = 1e-8+np.zeros(sH)
+        A = 0+np.zeros(sA)
+        L = 0+np.zeros(sL)
     
-            M = Mxx + Myy
-            
-            S= bmat([[RS@M@RS.T,RS@C.T],\
-                     [C@RS.T,None]]).tocsc()
-            
-            r = np.r_[RS@M@RS.T@RS@H,C@H]
-            
-            
-            jj = sps.linalg.spsolve(S,r)
-            s = jj[:RS.shape[0]]
-            H = RS.T@s
-    
-        HA = np.r_[H,A]
+        HAL = np.r_[H,A,L]
     
         tm1 = time.monotonic()
         for i in range(maxIter):
             
-            H = HA[:sH]
-            A = HA[sH:]
+            H = HAL[:sH]
+            A = HAL[sH:sH+sA]
+            L = HAL[sH+sA:]
             
             ##########################################################################################
     
-            Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H    
-    
+            Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
+            
             tm = time.monotonic()
             allH = g_nonlinear_all(Hx,Hy)
-            gsu = gs(allH,A,H)
-            gssu = gss(allH)
+            # gsu = gs(allH,A,H)
+            gssu, gsu, w = gss(allH,A,H,L)
             
             print('Evaluating nonlinearity took ', time.monotonic()-tm)
             
             tm = time.monotonic()
-            w = sps.linalg.spsolve(gssu,-gsu)
+            
             print('Solving the system took ', time.monotonic()-tm)
             
             # w = np.r_[RS.T@w[:RS.shape[0]],
@@ -349,13 +384,13 @@ for m in range(refinements):
             norm_w = np.linalg.norm(w)
             norm_gsu = np.linalg.norm(gsu)
             
-            if (-(w@gsu)/(norm_w*norm_gsu)<epsangle):
-                angleCondition[i%5] = 1
-                if np.product(angleCondition)>0:
-                    w = -gsu
-                    print("STEP IN NEGATIVE GRADIENT DIRECTION")
-                    break
-            else: angleCondition[i%5]=0
+            # if (-(w@gsu)/(norm_w*norm_gsu)<epsangle):
+            #     angleCondition[i%5] = 1
+            #     if np.product(angleCondition)>0:
+            #         w = -gsu
+            #         print("STEP IN NEGATIVE GRADIENT DIRECTION")
+            #         break
+            # else: angleCondition[i%5]=0
             
             alpha = 1
             
@@ -378,19 +413,19 @@ for m in range(refinements):
             # AmijoBacktracking
             
             tm = time.monotonic()
-            float_eps = 1e-8 #np.finfo(float).eps
+            float_eps = 1e-8 # np.finfo(float).eps
             for kk in range(1000):
                 
-                w_RS = np.r_[RS.T@w[:RS.shape[0]], w[RS.shape[0]:]]
+                # w_RS = np.r_[RS.T@w[:RS.shape[0]], w[RS.shape[0]:]]
                 
-                HAu = HA + alpha*w_RS
-                Hu = HAu[:sH]; Au = HAu[sH:]
-                Hxu = phix_Hcurl.T@(Hu); Hyu = phiy_Hcurl.T@(Hu);
+                HALu = HAL + alpha*w
+                Hu = HALu[:sH]; Au = HALu[sH:sH+sA]; Lu = HALu[sH+sA:]
+                Hxu = phix_d_Hcurl.T@(Hu); Hyu = phiy_d_Hcurl.T@(Hu);
                 allHu = g_nonlinear_all(Hxu,Hyu)
                 
                 if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: 
                     break
-                else: 
+                else:
                     alpha = alpha*factor_residual
                 
             print('Line search took ', time.monotonic()-tm)
