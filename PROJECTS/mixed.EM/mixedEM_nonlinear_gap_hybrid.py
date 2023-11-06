@@ -41,7 +41,7 @@ rot_speed = 1
 rots = 306
 rots = 1
 
-int_order = 2
+int_order = 1
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -62,7 +62,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 0
+level = 1
 
 for m in range(refinements):
     
@@ -685,18 +685,18 @@ for m in range(refinements):
 if refinements>1:
     
     
-    phi_L2 = pde.l2.assemble(MESH, space = space_Qh, matrix = 'M', order = int_order)
+    phi_L2 = pde.l2.assemble(MESH, space = 'P1', matrix = 'M', order = int_order)
     D_int_order = pde.int.assemble(MESH, order = int_order)
     M_L2 = phi_L2 @ D_int_order @ phi_L2.T
     
     
-    errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
-    errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + \
-           np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
+    # errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
+    # errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + \
+    #        np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
     errB = np.sqrt((gHx-gHx_old_newmesh)@(M_L2)@(gHx-gHx_old_newmesh))/np.sqrt((gHx)@(M_L2)@(gHx)) + \
            np.sqrt((gHy-gHy_old_newmesh)@(M_L2)@(gHy-gHy_old_newmesh))/np.sqrt((gHy)@(M_L2)@(gHy))
            
-    print(errA,errH,errB)
+    print(errB)
     
 # print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
 
