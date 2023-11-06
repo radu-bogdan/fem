@@ -56,7 +56,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.ngmesh.Refine()
 
-level = 3
+level = 4
 
 for m in range(refinements):
     
@@ -552,4 +552,4 @@ if refinements>1:
            np.sqrt((By_old_newmesh-By)@(M_L2)@(By_old_newmesh-By))/np.sqrt((By)@(M_L2)@(By))
     print(err,err2,errB)
     
-print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
+# print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))

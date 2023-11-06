@@ -62,7 +62,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 1
+level = 3
 
 for m in range(refinements):
     
