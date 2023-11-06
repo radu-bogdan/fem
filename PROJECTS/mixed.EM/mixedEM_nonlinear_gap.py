@@ -32,14 +32,14 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 1
+refinements = 2
 plot = 0
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 # rot_speed = ((18*2-1)*2-1)*2-1
 
 rot_speed = 1
 rots = 306
-rots = 2
+rots = 1
 
 int_order = 0
 
@@ -48,7 +48,6 @@ nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
     
 # motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
-
 # geoOCC = motor_npz['geoOCC'].tolist()
 
 motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
@@ -62,7 +61,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 5
+level = 0
 
 for m in range(refinements):
     
@@ -584,6 +583,8 @@ for m in range(refinements):
             m_new = R(a1*rot_speed)@m_new
             
             MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
+            
+            print('idk sth')
         ##########################################################################################
         
     if refinements>1:
@@ -647,7 +648,10 @@ if refinements>1:
            
     print(errA,errH,errB)
     
-print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
+# print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
+
+
+
 
 # phix_Hcurl_o0, phiy_Hcurl_o0 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
 

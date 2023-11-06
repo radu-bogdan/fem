@@ -32,16 +32,16 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 1
+refinements = 2
 plot = 0
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 # rot_speed = ((18*2-1)*2-1)*2-1
 
 rot_speed = 1
 rots = 306
-rots = 2
+rots = 1
 
-int_order = 0
+int_order = 2
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -62,7 +62,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 2
+level = 0
 
 for m in range(refinements):
     
@@ -255,8 +255,8 @@ for m in range(refinements):
         R_L, R_LR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'left', listDOF = ind_per_0)
         R_R, R_RR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'right', listDOF = ind_per_1)
         
-        R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airL', listDOF = ind_gap_0); R_AL.data = EdgeDirectionGap_rolled[R_AL.indices]
-        R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airR', listDOF = ind_gap_1); R_AR.data = EdgeDirectionGap_1[R_AR.indices]
+        R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airL', listDOF = ind_gap_0); #R_AL.data = EdgeDirectionGap_rolled[R_AL.indices]
+        R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airR', listDOF = ind_gap_1); #R_AR.data = EdgeDirectionGap_1[R_AR.indices]
         
         if k>0:
             if ORDER == 1:
@@ -281,6 +281,17 @@ for m in range(refinements):
         
         mu0 = (4*np.pi)/10**7
         
+        def gs(allH,A,H,L):
+            gx_H_l  = allH[1]; gy_H_l  = allH[2];
+            gx_H_nl = allH[8]; gy_H_nl = allH[9];
+            
+            r1 = phix_d_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
+                 phiy_d_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
+                 
+            r2 = Cd@H
+            r3 = RS@KK@H
+            return np.r_[r1,r2,r3]
+        
         def gss(allH,A,H,L):
             
             gx_H_l  = allH[1]; gy_H_l  = allH[2];
@@ -296,10 +307,6 @@ for m in range(refinements):
             
             Md = gxx_H_Mxx + gyy_H_Myy + gxy_H_Mxy + gyx_H_Myx
             
-            tm = time.monotonic()
-            iMd = inv(Md)
-            iBBd = inv(Cd@iMd@Cd.T)
-            print('Inverting took ', time.monotonic()-tm)
             
             r1 = phix_d_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
                  phiy_d_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
@@ -307,23 +314,25 @@ for m in range(refinements):
             r2 = Cd@H
             r3 = KK@H
             
-            # print(r1.shape,r2.shape,r3.shape)
+            tm = time.monotonic()
+            iMd = inv(Md)
+            iBBd = inv(Cd@iMd@Cd.T)
+            print('Inverting took ', time.monotonic()-tm)
             
             tm = time.monotonic()
             gssu = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
-            
-            # print(gssu.shape)
-            
-            # print((RS@KK@iMd@r1).shape,r3.shape)
             gsu = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
-            
-            
             print('Multiplication took ', time.monotonic()-tm)
             
             gssu_mod = RS@gssu@RS.T
             gsu_rhs = RS@gsu
             
-            wL = sps.linalg.spsolve(gssu_mod,-gsu_rhs)
+            
+            tm = time.monotonic()
+            wL = chol(-gssu_mod).solve_A(gsu_rhs)
+            # wL = sps.linalg.spsolve(gssu_mod,-gsu_rhs)
+            print('Solving the system took ', time.monotonic()-tm)
+            
             wA = iBBd@Cd@iMd@(-r1-KK.T@RS.T@wL)+iBBd@r2
             wH = iMd@(-Cd.T@wA-KK.T@RS.T@wL-r1)
             w = np.r_[wH,wA,RS.T@wL]
@@ -332,7 +341,7 @@ for m in range(refinements):
     
         def J(allH,H):
             g_H_l = allH[0]; g_H_nl = allH[7];
-            return np.ones(D_order_HH.size)@ D_order_HH @(g_H_l*fem_linear + g_H_nl*fem_nonlinear) + mu0*aM@H
+            return np.ones(D_order_HH.size)@ D_order_HH @(g_H_l*fem_linear + g_H_nl*fem_nonlinear) + mu0*aMd@H
     
     
         maxIter = 100
@@ -344,6 +353,7 @@ for m in range(refinements):
         mu = 0.0001
         
         H = 1e-8+np.zeros(sH)
+        # H = RS.T@chol(RS@RS.T).solve_A(RS@H)
         A = 0+np.zeros(sA)
         L = 0+np.zeros(sL)
     
@@ -364,12 +374,9 @@ for m in range(refinements):
             allH = g_nonlinear_all(Hx,Hy)
             # gsu = gs(allH,A,H)
             gssu, gsu, w = gss(allH,A,H,L)
+            # gsu2 = gs_full(allH,A,H)
             
             print('Evaluating nonlinearity took ', time.monotonic()-tm)
-            
-            tm = time.monotonic()
-            
-            print('Solving the system took ', time.monotonic()-tm)
             
             # w = np.r_[RS.T@w[:RS.shape[0]],
             #           w[RS.shape[0]:]]
@@ -423,7 +430,7 @@ for m in range(refinements):
                 Hxu = phix_d_Hcurl.T@(Hu); Hyu = phiy_d_Hcurl.T@(Hu);
                 allHu = g_nonlinear_all(Hxu,Hyu)
                 
-                if J(allHu,Hu)-J(allH,H) <= alpha*mu*(gsu@w) + np.abs(J(allH,H))*float_eps: 
+                if J(allHu,Hu)-J(allH,H) <= alpha*mu*((RS.T@gsu)@w[sH+sA:]) + np.abs(J(allH,H))*float_eps:
                     break
                 else:
                     alpha = alpha*factor_residual
@@ -432,18 +439,18 @@ for m in range(refinements):
             
             tm = time.monotonic()
             
-            HA = HA + alpha*w_RS
-            H = HA[:sH]; A = HA[sH:]
-            Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
+            HAL = HAL + alpha*w
+            H = HAL[:sH]; A = HAL[sH:sH+sA]; L = HAL[sH+sA:]
+            Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
             allH = g_nonlinear_all(Hx,Hy)
             
             print('Re-evaluating H took ', time.monotonic()-tm)
             
             # print('norm cu a: ',  gs(allH,A,H))
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H))+"||alpha: %2e" % (alpha));
+            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H,L))+"||alpha: %2e" % (alpha));
             
-            if(np.linalg.norm(gs(allH,A,H)) < eps_newton): 
+            if(np.linalg.norm(gs(allH,A,H,L)) < eps_newton): 
                 break
     
         elapsed = time.monotonic()-tm1
@@ -498,7 +505,7 @@ for m in range(refinements):
         one_fem = pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : 1+0*x+0*y, regions = '*air_gap,'+rotor).diagonal()
         
         
-        phix_d_Hcurl, phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
+        phix_d_Hcurl, phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
         
         Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
         allH = g_nonlinear_all(Hx,Hy)
@@ -619,16 +626,18 @@ for m in range(refinements):
             m_new = R(a1*rot_speed)@m_new
             
             MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
+            
+            print('idk sth')
         ##########################################################################################
-        
+    
     if refinements>1:
         if (m!=refinements-1):
             
             A_old = A
             
-            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
-            Hx_old = phix_Hcurl.T@H
-            Hy_old = phiy_Hcurl.T@H
+            phix_d_Hcurl, phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
+            Hx_old = phix_d_Hcurl.T@H
+            Hy_old = phiy_d_Hcurl.T@H
             
             allH = g_nonlinear_all(Hx_old,Hy_old)
             gx_H_l  = allH[1]; gy_H_l  = allH[2]; gx_H_nl = allH[8]; gy_H_nl = allH[9]; g_H_l = allH[0]; g_H_nl = allH[7];
@@ -643,9 +652,9 @@ for m in range(refinements):
             A_old_newmesh = np.r_[A_old,np.c_[A_old,A_old,A_old].flatten()]
             
             
-            phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = int_order)
-            Hx = phix_Hcurl.T@H
-            Hy = phiy_Hcurl.T@H
+            phix_d_Hcurl, phiy_d_Hcurl = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = int_order)
+            Hx = phix_d_Hcurl.T@H
+            Hy = phiy_d_Hcurl.T@H
             
             Hx_old_newmesh = np.r_[Hx_old,np.c_[Hx_old,Hx_old,Hx_old].flatten()]
             Hy_old_newmesh = np.r_[Hy_old,np.c_[Hy_old,Hy_old,Hy_old].flatten()]
@@ -674,6 +683,13 @@ for m in range(refinements):
     
 
 if refinements>1:
+    
+    
+    phi_L2 = pde.l2.assemble(MESH, space = space_Qh, matrix = 'M', order = int_order)
+    D_int_order = pde.int.assemble(MESH, order = int_order)
+    M_L2 = phi_L2 @ D_int_order @ phi_L2.T
+    
+    
     errA = np.sqrt((A-A_old_newmesh)@(M_L2)@(A-A_old_newmesh))/np.sqrt((A)@(M_L2)@(A))
     errH = np.sqrt((Hx-Hx_old_newmesh)@(M_L2)@(Hx-Hx_old_newmesh))/np.sqrt((Hx)@(M_L2)@(Hx)) + \
            np.sqrt((Hy-Hy_old_newmesh)@(M_L2)@(Hy-Hy_old_newmesh))/np.sqrt((Hy)@(M_L2)@(Hy))
@@ -682,7 +698,10 @@ if refinements>1:
            
     print(errA,errH,errB)
     
-print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
+# print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
+
+
+
 
 # phix_Hcurl_o0, phiy_Hcurl_o0 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 0)
 

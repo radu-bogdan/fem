@@ -71,6 +71,7 @@ def assemble(MESH,space,matrix,order=-1):
         BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
         BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)
         return BKx, BKy
+    
 def assembleE(MESH,space,matrix,order=0):
         
     if not space in MESH.FEMLISTS.keys():
@@ -111,6 +112,7 @@ def assembleE(MESH,space,matrix,order=0):
         for j in range(lphi):
             for i in range(nqp):
                 ellmatsB[i*ne:(i+1)*ne,j] = phi[j](qp[i])
+                # ellmatsB[i*ne:(i+1)*ne,j] = phi[j](qp[i])*MESH.EdgeDirectionTrig ???
         
         B = sparse(im,jm,ellmatsB,sizeM,nqp*ne)
         return B

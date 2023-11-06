@@ -31,12 +31,12 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 1
+refinements = 2
 plot = 0
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
 rots = 306#*2*2#*2
-rots = 2
+rots = 1
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -56,7 +56,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.ngmesh.Refine()
 
-level = 4
+level = 3
 
 for m in range(refinements):
     
@@ -507,6 +507,12 @@ for m in range(refinements):
             # print("m is ",m)
             # ud_old = phi_H1.T@u
             u_old = u
+            
+            dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
+            Bx_old = dphix_H1.T@u
+            By_old = dphiy_H1.T@u
+            
+            
             MESH_old_EdgesToVertices = MESH.EdgesToVertices.copy()
             # print(MESH,u.shape)
             # MESH.refinemesh()
@@ -522,7 +528,14 @@ for m in range(refinements):
                 u_old_newmesh = np.r_[u_old,1/2*u_old[MESH_old_EdgesToVertices[:,0]]+1/2*u_old[MESH_old_EdgesToVertices[:,1]]]
             if ORDER == 2:
                 u_old_newmesh = np.r_[u_old,1/2*u_old[MESH.EdgesToVertices[:,0]]+1/2*u_old[MESH.EdgesToVertices[:,1]]]
-    
+            
+            dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
+            Bx = dphix_H1.T@u
+            By = dphiy_H1.T@u
+            
+            Bx_old_newmesh = np.r_[Bx_old,np.c_[Bx_old,Bx_old,Bx_old].flatten()]
+            By_old_newmesh = np.r_[By_old,np.c_[By_old,By_old,By_old].flatten()]
+            
     if refinements == 0:
         # ngsolvemesh.ngmesh.Refine()
         level = level + 1
@@ -533,6 +546,10 @@ for m in range(refinements):
 if refinements>1:
     err = np.sqrt((u-u_old_newmesh)@(MASS)@(u-u_old_newmesh))/np.sqrt((u)@(MASS)@(u))
     err2= np.sqrt((u-u_old_newmesh)@(Kxx+Kyy)@(u-u_old_newmesh))/np.sqrt((u)@(Kxx+Kyy)@(u))
-    print(err,err2)
+    
+    M_L2 = phi_L2 @ D_order_dphidphi @ phi_L2.T
+    errB = np.sqrt((Bx_old_newmesh-Bx)@(M_L2)@(Bx_old_newmesh-Bx))/np.sqrt((Bx)@(M_L2)@(Bx)) + \
+           np.sqrt((By_old_newmesh-By)@(M_L2)@(By_old_newmesh-By))/np.sqrt((By)@(M_L2)@(By))
+    print(err,err2,errB)
     
 print('tor by energy diff ', (energy[1]-energy[0])*(ident_points_gap.shape[0]))
