@@ -56,7 +56,13 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.ngmesh.Refine()
 
-level = 4
+if len(sys.argv) > 1:
+    # if sys.argv[0]!='':
+    level = int(sys.argv[1])
+else:
+    level = 0
+    
+print("LEVEL " , level)
 
 for m in range(refinements):
     
@@ -322,12 +328,15 @@ for m in range(refinements):
             for kk in range(1000):
                 if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
                 else: alpha = alpha*factor_residual
-                
+            
+            u_oldi = u
             u = u + alpha*w
             
             print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
             
-            if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
+            # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
+                # break
+            if (np.abs(J(u)-J(u_oldi)) < 1e-5):
                 break
             
         # print('im out!!!!!!!!!')
