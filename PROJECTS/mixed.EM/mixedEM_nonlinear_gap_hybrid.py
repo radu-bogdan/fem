@@ -62,7 +62,7 @@ j3 = motor_npz['j3']
 # ngsolvemesh.Refine()
 # ngsolvemesh.Refine()
 
-level = 3
+level = 0
 
 for m in range(refinements):
     
@@ -160,7 +160,7 @@ for m in range(refinements):
         for i in range(48):
             Ja += pde.int.evaluate(MESH, order = order_AA, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
             J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-        Ja = 0*Ja; J0 = 0*J0
+        # Ja = 0*Ja; J0 = 0*J0
         
         M0 = 0; M1 = 0; M00 = 0; M10 = 0; M11 = 0; M01 = 0; M100 = 0; M000 = 0
         for i in range(16):

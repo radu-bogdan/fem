@@ -33,7 +33,7 @@ j3 = motor_npz['j3']
 
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
+ngsolve_mesh.Refine()
 # ngsolve_mesh.Refine()
 
 

@@ -218,8 +218,8 @@ for m in range(refinements):
         for i in range(48):
             Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
             J0 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-        Ja = 0*Ja
-        J0 = 0*J0
+        # Ja = 0*Ja
+        # J0 = 0*J0
         
         M0 = 0; M1 = 0; M00 = 0; M10 = 0; M1_dphi = 0; M0_dphi = 0
         for i in range(16):
