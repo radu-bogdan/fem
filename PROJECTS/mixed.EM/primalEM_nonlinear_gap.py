@@ -64,6 +64,8 @@ else:
     
 print("LEVEL " , level)
 
+
+
 for m in range(refinements):
     
     # MESH.refinemesh()
@@ -329,14 +331,14 @@ for m in range(refinements):
                 if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
                 else: alpha = alpha*factor_residual
             
-            u_oldi = u
+            u_old_i = u
             u = u + alpha*w
             
             print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
             
             # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
                 # break
-            if (np.abs(J(u)-J(u_oldi)) < 1e-5):
+            if (np.abs(J(u)-J(u_old_i)) < 1e-5):
                 break
             
         # print('im out!!!!!!!!!')
