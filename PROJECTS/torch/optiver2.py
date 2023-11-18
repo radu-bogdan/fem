@@ -6,6 +6,9 @@ f1 = lambda x,y : 1*(x<20)*(y<20)*(x>-20)*(y>-20)
 # Test case from question 3
 f2 = lambda x,y : 1*(((x-2.5)/30)**2+((y-2.5)/40)**2<1)
 
+# Test case from question 2
+f3 = lambda x,y : 1*(x+y-10<0)
+
 def go(point,f):
     
     length = 0
@@ -24,7 +27,7 @@ def go(point,f):
         if f(*point)==0:
             return length
 
-tries = 10_000 
+tries = 1000
 cumsum = 0
 start = np.r_[0,0]
 
@@ -36,3 +39,10 @@ cumsum = 0
 for i in range(tries):
     cumsum = cumsum + go(start,f2)
 print('Question 3, expected value approx: ', cumsum/tries)
+
+
+# ranges = np.zeros(tries)
+# for i in range(tries):
+#     run = go(start,f3)
+#     if run<tries:
+#         ranges[run]+=1

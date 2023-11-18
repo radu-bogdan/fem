@@ -16,21 +16,69 @@ def gen_nu(x):
     pos = np.sqrt(1/k2*np.log(1/k1*(nu0-k3)))
     return nu_nl(x)*(x<pos)+nu0*(x>pos)
 
-# @nb.njit()
+@nb.njit()
 def gen_dx_f(x):
     nu_nl  = lambda x : (k1*np.exp(k2*x**2)+k3)*x
-    nu_ext = lambda x : nu0*(x-m)
-    
-    pos = 2.18666 #np.sqrt(1/k2*np.log(1/k1*(nu0-k3)))
-    
-    # nu_nl(pos) != nu_ext(pos) = nu0*(pos-m) -> pos-m = 1/nu0*nu_nl(pos)
-    
-    m = nu_nl(pos)/nu0
-    return nu_nl(x)*(x<pos)+nu_ext(x)*(x>pos)
+    pos = 2.18666 # wolfram : k_3 + e^(k_2 x^2)*k_1*(1 + 2 k_2 x^2) = 10**7/(4*pi) for k_1 = 49.4; k_2 = 1.46; k_3 = 520.6
+    m = pos-nu_nl(pos)/nu0
+    return nu_nl(x)*(x<pos)+nu0*(x-m)*(x>pos)
 
-xx = np.linspace(0,4,300)
 
-plt.plot(xx,gen_dx_f(xx),'*')
+xx = np.linspace(0,6,3000)
+dx_f = interpolate.CubicSpline(xx, gen_dx_f(xx), bc_type = 'natural')
+dx_g = interpolate.CubicSpline(gen_dx_f(xx), xx, bc_type = 'natural')
+
+dxx_f = dx_f.derivative(1)
+dxx_g = dx_g.derivative(1)
+
+f = dx_f.antiderivative(1)
+g = dx_g.antiderivative(1)
+
+plt.close('all')
+
+xx = np.linspace(0,6,30)
+plt.figure()
+plt.loglog(xx,dx_f.derivative(1)(xx),'.')
+plt.loglog(xx,dx_f.antiderivative(1)(xx),'.')
+plt.loglog(xx,dx_f(xx),'*')
+plt.loglog(xx,nu0+0*xx)
+
+xx = np.exp(np.linspace(0,np.log(1e6),30))
+plt.figure()
+plt.loglog(xx,dx_g.derivative(1)(xx),'.')
+plt.loglog(xx,dx_g.antiderivative(1)(xx),'.')
+plt.loglog(xx,dx_g(xx),'*')
+plt.loglog(xx,1/nu0+0*xx)
+
+@nb.njit()
+def f_nonlinear(x,y):
+    return 0
+
+@nb.njit() 
+def fx_nonlinear(x,y):
+    return nu(x**2+y**2)*x
+
+@nb.njit() 
+def fy_nonlinear(x,y):
+    return nu(x**2+y**2)*y
+
+@nb.njit() 
+def fxx_nonlinear(x,y):
+    return nu(x**2+y**2) + 2*x*dx_nu(x**2+y**2)*x
+
+@nb.njit() 
+def fxy_nonlinear(x,y):
+    return 2*x*y*dx_nu(x**2+y**2)
+
+@nb.njit() 
+def fyx_nonlinear(x,y):
+    return 2*x*y*dx_nu(x**2+y**2)
+
+@nb.njit() 
+def fyy_nonlinear(x,y):
+    return nu(x**2+y**2) + 2*y*dx_nu(x**2+y**2)*y
+
+
 
 # nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'natural')
 # spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
@@ -63,7 +111,7 @@ plt.plot(xx,gen_dx_f(xx),'*')
 
 
 # plt.figure()
-xx = np.linspace(0,4,3000)
+# xx = np.linspace(0,4,3000)
 # plt.plot(xx,nu(xx),'.')
 # plt.plot(1/2*(xx[1:]+xx[:-1]), nu_spline(xx[1:])-nu_spline(xx[:-1]),'.')
 # plt.plot(xx, nu_spline.derivative()(xx),'.')
@@ -78,7 +126,7 @@ xx = np.linspace(0,4,3000)
 
 # yy = interpolate.CubicSpline(1/2*(xx[1:]+xx[:-1]), nu(xx[1:])-nu(xx[:-1]), bc_type='natural')
 
-xx = np.linspace(0,4,400)
+# xx = np.linspace(0,4,400)
 # plt.plot(xx,nu_spline(xx),'*')
 # plt.plot(1/2*(xx[1:]+xx[:-1]), nu_spline(xx[1:])-nu_spline(xx[:-1]),'+')
 # plt.plot(xx, nu_spline.derivative()(xx),'+')
