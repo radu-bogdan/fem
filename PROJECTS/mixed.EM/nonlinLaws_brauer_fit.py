@@ -11,19 +11,37 @@ k1 = 49.4; k2 = 1.46; k3 = 520.6
 pos = np.sqrt(1/k2*np.log(1/k1*(nu0-k3)))
 
 @nb.njit()
-def nu(x):
+def gen_nu(x):
     nu_nl = lambda x : (k1*np.exp(k2*x**2)+k3)
     pos = np.sqrt(1/k2*np.log(1/k1*(nu0-k3)))
-    return nu_nl(x)*(x<pos)+nu0*(x>pos)+0*(np.exp(-(x-pos))**10)*(x>pos)
+    return nu_nl(x)*(x<pos)+nu0*(x>pos)
+
+# @nb.njit()
+def gen_dx_f(x):
+    nu_nl  = lambda x : (k1*np.exp(k2*x**2)+k3)*x
+    nu_ext = lambda x : nu0*(x-m)
+    
+    pos = 2.18666 #np.sqrt(1/k2*np.log(1/k1*(nu0-k3)))
+    
+    # nu_nl(pos) != nu_ext(pos) = nu0*(pos-m) -> pos-m = 1/nu0*nu_nl(pos)
+    
+    m = nu_nl(pos)/nu0
+    return nu_nl(x)*(x<pos)+nu_ext(x)*(x>pos)
 
 xx = np.linspace(0,4,300)
-nu_spline = interpolate.CubicSpline(xx, nu(xx), bc_type = 'natural')
-spl = interpolate.make_smoothing_spline(xx, nu_spline.derivative()(xx))
-nu_derivative_spline = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=3)
 
-xx = np.linspace(0,4,3000)
-# plt.plot(xx,nu(xx),'.')
-plt.plot(xx,nu_derivative_spline.antiderivative(0)(xx),'.')
+plt.plot(xx,gen_dx_f(xx),'*')
+
+# nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'natural')
+# spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
+# dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
+
+# xx = np.linspace(0,4,30000)
+# plt.plot(xx,dx_nu.antiderivative(0)(xx),'.')
+# plt.plot(xx,dx_nu.antiderivative(1)(xx),'.')
+# plt.plot(nu(xx)*xx,xx,'*')
+# plt.plot(xx,dx_nu.antiderivative(2)(xx),'.')
+# plt.plot(xx,nu0+0*xx)
 
 
 
