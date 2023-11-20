@@ -271,20 +271,20 @@ for m in range(refinements):
         def gss(u):
             ux = dphix_H1.T@u; uy = dphiy_H1.T@u
             
-            gxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(gxx_linear(Hjx+ux,Hjy+uy)*fem_linear + gxx_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphix_H1.T
-            gyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(gyy_linear(Hjx+ux,Hjy+uy)*fem_linear + gyy_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphiy_H1.T
-            gxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(gxy_linear(Hjx+ux,Hjy+uy)*fem_linear + gxy_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphix_H1.T
-            gyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(gyx_linear(Hjx+ux,Hjy+uy)*fem_linear + gyx_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphiy_H1.T
+            gxx_grad_u_Kxx = phi_L2 @ D_order_dphidphi @ sps.diags(fxx_linear(ux,uy)*fem_linear + fxx_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
+            gyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy_linear(ux,uy)*fem_linear + fyy_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
+            gxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy_linear(ux,uy)*fem_linear + fxy_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
+            gyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx_linear(ux,uy)*fem_linear + fyx_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
             return (gxx_grad_u_Kxx + gyy_grad_u_Kyy + gxy_grad_u_Kxy + gyx_grad_u_Kyx)
             
         def gs(u):
             ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-            return dphix_H1 @ D_order_dphidphi @ (gx_linear(Hjx+ux,Hjy+uy)*fem_linear + gx_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear) +\
-                   dphiy_H1 @ D_order_dphidphi @ (gy_linear(Hjx+ux,Hjy+uy)*fem_linear + gy_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear) - 1/nu0*aM
+            return dphix_H1 @ D_order_dphidphi @ (fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear) +\
+                   dphiy_H1 @ D_order_dphidphi @ (fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear) - 1/nu0*aM
         
         def J(u):
             ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx+ux,Hjy+uy)*fem_linear + g_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)
+            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear)
         
         tm = time.monotonic()
         if k>0:

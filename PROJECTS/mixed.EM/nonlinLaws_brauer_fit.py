@@ -33,28 +33,28 @@ mu = interpolate.CubicSpline(yy[1:]**2, gen_gs(yy[1:])/yy[1:], bc_type = 'natura
 dx_mu = mu.derivative(1)
 
 
-plt.close('all')
+# plt.close('all')
 
-xx = np.linspace(0,8,3000)
-plt.figure()
-plt.plot(xx,dx_nu.antiderivative(0)(xx),'.')
-plt.plot(xx,dx_nu.antiderivative(1)(xx),'.')
-plt.plot(xx,dx_nu.antiderivative(2)(xx),'.')
-plt.plot(xx,nu0+0*xx)
+# xx = np.linspace(0,8,3000)
+# plt.figure()
+# plt.plot(xx,dx_nu.antiderivative(0)(xx),'.')
+# plt.plot(xx,dx_nu.antiderivative(1)(xx),'.')
+# plt.plot(xx,dx_nu.antiderivative(2)(xx),'.')
+# plt.plot(xx,nu0+0*xx)
 
 
-yy = np.exp(np.linspace(0,np.log(1e8),300))-1
-plt.figure()
-plt.plot(yy,mu(yy),'*')
-plt.plot(yy,mu.derivative()(yy),'*')
-plt.plot(yy,1/nu0+0*yy)
-plt.plot(xx,dx_nu.antiderivative(0)(xx)*xx,'.')
+# yy = np.exp(np.linspace(0,np.log(1e8),300))-1
+# plt.figure()
+# plt.plot(yy,mu(yy),'*')
+# plt.plot(yy,mu.derivative()(yy),'*')
+# plt.plot(yy,1/nu0+0*yy)
+# plt.plot(xx,dx_nu.antiderivative(0)(xx)*xx,'.')
 
-# check inverse!
+# # check inverse!
 
-plt.figure()
-plt.plot(mu(yy**2)*nu(mu(yy**2)**2*yy**2))
-plt.plot(nu(xx**2)*mu(nu(xx**2)**2*xx**2))
+# plt.figure()
+# plt.plot(mu(yy**2)*nu(mu(yy**2)**2*yy**2))
+# plt.plot(nu(xx**2)*mu(nu(xx**2)**2*xx**2))
 
 ##########################################################################################
 
