@@ -60,7 +60,7 @@ if len(sys.argv) > 1:
     # if sys.argv[0]!='':
     level = int(sys.argv[1])
 else:
-    level = 0
+    level = 3
     
 print("LEVEL " , level)
 

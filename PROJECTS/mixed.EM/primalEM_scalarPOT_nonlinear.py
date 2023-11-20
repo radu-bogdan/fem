@@ -60,7 +60,7 @@ if len(sys.argv) > 1:
     # if sys.argv[0]!='':
     level = int(sys.argv[1])
 else:
-    level = 2
+    level = 3
     
 print("LEVEL " , level)
 
@@ -153,7 +153,8 @@ for m in range(refinements):
         
         i0 = ident[:,0]; i1 = ident[:,1]
         
-        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
+        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'left,right,airL,airR')
+        # R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
         R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
         R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
        
