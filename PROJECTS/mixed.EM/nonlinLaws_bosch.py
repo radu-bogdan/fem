@@ -141,7 +141,7 @@ gyy_linear = lambda x,y : 1/nu0 + 0*y
 # def g_nonlinear_all(x,y):
     
 #     g_nl = g_nonlinear(x,y)
-#     gx_nl = gx_nonlinear(x,y)
+    # gx_nl = gx_nonlinear(x,y)
 #     gy_nl = gy_nonlinear(x,y)
     
 #     gxx_nl = gxx_nonlinear(x,y)

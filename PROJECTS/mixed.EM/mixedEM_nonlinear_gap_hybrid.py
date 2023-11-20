@@ -32,8 +32,8 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 2
-plot = 0
+refinements = 1
+plot = 1
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 # rot_speed = ((18*2-1)*2-1)*2-1
 
@@ -160,7 +160,7 @@ for m in range(refinements):
         for i in range(48):
             Ja += pde.int.evaluate(MESH, order = order_AA, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
             J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-        # Ja = 0*Ja; J0 = 0*J0
+        Ja = 0*Ja; J0 = 0*J0
         
         M0 = 0; M1 = 0; M00 = 0; M10 = 0; M11 = 0; M01 = 0; M100 = 0; M000 = 0
         for i in range(16):
@@ -272,7 +272,8 @@ for m in range(refinements):
         # Solving with Newton
         ##########################################################################################
         
-        from nonlinLaws import *
+        # from nonlinLaws import *
+        from nonlinLaws_brauer_fit import *
         # from nonlinLaws_bosch import *
     
         sH = phix_d_Hcurl.shape[0]
@@ -288,8 +289,9 @@ for m in range(refinements):
             r1 = phix_d_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
                  phiy_d_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
                  
-            r2 = Cd@H
-            r3 = RS@KK@H
+            r2 = 0*Cd@H
+            
+            r3 = RS@KK@H 
             return np.r_[r1,r2,r3]
         
         def gss(allH,A,H,L):
@@ -311,7 +313,8 @@ for m in range(refinements):
             r1 = phix_d_Hcurl @ D_order_HH @ (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear + mu0*M0) +\
                  phiy_d_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
                  
-            r2 = Cd@H
+            
+            r2 = 0*Cd@H
             r3 = KK@H
             
             tm = time.monotonic()
@@ -352,10 +355,51 @@ for m in range(refinements):
         factor_residual = 1/2
         mu = 0.0001
         
-        H = 1e-8+np.zeros(sH)
-        # H = RS.T@chol(RS@RS.T).solve_A(RS@H)
-        A = 0+np.zeros(sA)
-        L = 0+np.zeros(sL)
+        
+        #########################################################################################        
+        
+        
+        Md_LIN = phix_d_Hcurl @ D_order_HH @ phix_d_Hcurl.T + \
+                 phiy_d_Hcurl @ D_order_HH @ phiy_d_Hcurl.T
+            
+        iMd_LIN = inv(Md_LIN)
+        iBBd = inv(Cd@iMd_LIN@Cd.T)
+        
+        r1 = phix_d_Hcurl @ D_order_HH @ (mu0*M0) +\
+             phiy_d_Hcurl @ D_order_HH @ (mu0*M1)
+        r2 = aJ
+        r3 = np.zeros(sL)
+        
+        
+        gssu = -KK@iMd_LIN@KK.T + KK@iMd_LIN@Cd.T@iBBd@Cd@iMd_LIN@KK.T
+        gsu = -(KK@iMd_LIN@r1-r3) + KK@iMd_LIN@Cd.T@iBBd@(Cd@iMd_LIN@r1-r2)
+        print('Multiplication took ', time.monotonic()-tm)
+        
+        gssu_mod = RS@gssu@RS.T
+        gsu_rhs = RS@gsu
+        
+        wL = chol(-gssu_mod).solve_A(gsu_rhs)
+        
+        A_init = iBBd@Cd@iMd_LIN@(-r1-KK.T@RS.T@wL)+iBBd@r2
+        H_init = iMd_LIN@(-Cd.T@A_init-KK.T@RS.T@wL-r1)
+        L_init = RS.T@wL
+            
+        # SYS = bmat([[Md_LIN,Cd.T,KK.T],\
+        #              [Cd,None,None],
+        #              [KK,None,None]]).tocsc()
+
+        # rhs = np.r_[aM,aJ,np.zeros(sA+sL)]
+
+        # tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
+        # H_init = x2[:MESH.NoEdges]
+        # A_init = x2[MESH.NoEdges:]
+        
+        H = H_init + 0*1e-8+np.zeros(sH)
+        A = A_init + 0+np.zeros(sA)
+        L = L_init + np.zeros(sL)
+        
+        #########################################################################################
+        
     
         HAL = np.r_[H,A,L]
     
@@ -439,6 +483,7 @@ for m in range(refinements):
             
             tm = time.monotonic()
             
+            HAL_old_i = HAL
             HAL = HAL + alpha*w
             H = HAL[:sH]; A = HAL[sH:sH+sA]; L = HAL[sH+sA:]
             Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
@@ -555,7 +600,7 @@ for m in range(refinements):
         
         if plot == 1:
         
-            phix_Hcurl_o1, phiy_Hcurl_o1 = pde.hcurl.assemble(MESH, space = space_Vh, matrix = 'phi', order = 1)
+            phix_Hcurl_o1, phiy_Hcurl_o1 = pde.hcurl.assemble(MESH, space = space_Vhd, matrix = 'phi', order = 1)
             
             Hx = phix_Hcurl_o1.T@H; Hy = phiy_Hcurl_o1.T@H
             allH = g_nonlinear_all(Hx,Hy)

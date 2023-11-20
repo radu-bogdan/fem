@@ -60,16 +60,11 @@ if len(sys.argv) > 1:
     # if sys.argv[0]!='':
     level = int(sys.argv[1])
 else:
-    level = 0
+    level = 2
     
 print("LEVEL " , level)
 
-
-
 for m in range(refinements):
-    
-    # MESH.refinemesh()
-    # MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
     
     open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
@@ -142,10 +137,7 @@ for m in range(refinements):
         phi_H1  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = order_phiphi)
         phi_H1_o0  = pde.h1.assemble(MESH, space = poly, matrix = 'M', order = 0)
         dphix_H1, dphiy_H1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_dphidphi)
-        dphix_H1_o0, dphiy_H1_o0 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
-        dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 1)
         dphix_H1_order_phiphi, dphiy_H1_order_phiphi = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_phiphi)
-        phi_H1b = pde.h1.assembleB(MESH, space = poly, matrix = 'M', shape = phi_H1.shape, order = order_phiphi)
         phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
         
         R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
@@ -174,8 +166,6 @@ for m in range(refinements):
         ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
         R_R = R_R[ind1,:]
         
-        
-        
         ident0 = np.roll(ident_points_gap[:,0], -k*rot_speed)
         ident1 = ident_points_gap[:,1]
         
@@ -200,23 +190,23 @@ for m in range(refinements):
         
         from scipy.sparse import bmat
         RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-        ##########################################################################################
         
-        
-            
         D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
         # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
         
+        
+        ##########################################################################################
+        
+            
+        D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
+        D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
         
         MASS = phi_H1 @ D_order_phiphi @ phi_H1.T
         Kxx = dphix_H1 @ D_order_dphidphi @ dphix_H1.T
         Kyy = dphiy_H1 @ D_order_dphidphi @ dphiy_H1.T
         Cx = phi_L2 @ D_order_dphidphi @ dphix_H1.T
         Cy = phi_L2 @ D_order_dphidphi @ dphiy_H1.T
-        
-        D_stator_outer = pde.int.evaluateB(MESH, order = order_phiphi, edges = 'stator_outer')
-        B_stator_outer = phi_H1b@ D_stator_outer @ phi_H1b.T
     
         fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = linear).diagonal()
         fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = nonlinear).diagonal()
@@ -243,8 +233,8 @@ for m in range(refinements):
         
         aJ = phi_H1@ D_order_phiphi @Ja
         
-        aM = dphix_H1_order_phiphi@ D_order_phiphi @(-M1) +\
-             dphiy_H1_order_phiphi@ D_order_phiphi @(+M0)
+        aM = dphix_H1_order_phiphi@ D_order_phiphi @(M0) +\
+             dphiy_H1_order_phiphi@ D_order_phiphi @(M1)
         
         aMnew = aM
         
@@ -256,14 +246,21 @@ for m in range(refinements):
         ##########################################################################################
         
         
+        ##########################################################################################
+        # Importing Hj
+        ##########################################################################################
+        
+        from mixedEM_linear_gap import H as Hj
+        phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = 'N0', matrix = 'phi', order = order_dphidphi)
+        Hjx = phix_Hcurl.T@Hj
+        Hjy = phiy_Hcurl.T@Hj
         
         ##########################################################################################
         # Solving with Newton
         ##########################################################################################
         
-        
         maxIter = 100
-        epsangle = 1e-5;
+        epsangle = 1e-5
         
         angleCondition = np.zeros(5)
         eps_newton = 1e-8
@@ -273,20 +270,20 @@ for m in range(refinements):
         def gss(u):
             ux = dphix_H1.T@u; uy = dphiy_H1.T@u
             
-            fxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(fxx_linear(ux,uy)*fem_linear + fxx_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
-            fyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy_linear(ux,uy)*fem_linear + fyy_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-            fxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy_linear(ux,uy)*fem_linear + fxy_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
-            fyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx_linear(ux,uy)*fem_linear + fyx_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-            return (fxx_grad_u_Kxx + fyy_grad_u_Kyy + fxy_grad_u_Kxy + fyx_grad_u_Kyx) #+ penalty*B_stator_outer
+            gxx_grad_u_Kxx = dphix_H1 @ D_order_dphidphi @ sps.diags(gxx_linear(Hjx+ux,Hjy+uy)*fem_linear + gxx_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphix_H1.T
+            gyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(gyy_linear(Hjx+ux,Hjy+uy)*fem_linear + gyy_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphiy_H1.T
+            gxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(gxy_linear(Hjx+ux,Hjy+uy)*fem_linear + gxy_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphix_H1.T
+            gyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(gyx_linear(Hjx+ux,Hjy+uy)*fem_linear + gyx_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)@ dphiy_H1.T
+            return (gxx_grad_u_Kxx + gyy_grad_u_Kyy + gxy_grad_u_Kxy + gyx_grad_u_Kyx)
             
         def gs(u):
             ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-            return dphix_H1 @ D_order_dphidphi @ (fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear) +\
-                   dphiy_H1 @ D_order_dphidphi @ (fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear) - aJ + aM #+ penalty*B_stator_outer@u 
+            return dphix_H1 @ D_order_dphidphi @ (gx_linear(Hjx+ux,Hjy+uy)*fem_linear + gx_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear) +\
+                   dphiy_H1 @ D_order_dphidphi @ (gy_linear(Hjx+ux,Hjy+uy)*fem_linear + gy_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear) - 1/nu0*aM
         
         def J(u):
             ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear) -(aJ-aM)@u #+ 1/2*penalty*u@B_stator_outer@u
+            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx+ux,Hjy+uy)*fem_linear + g_nonlinear(Hjx+ux,Hjy+uy)*fem_nonlinear)
         
         tm = time.monotonic()
         if k>0:
@@ -349,7 +346,21 @@ for m in range(refinements):
         
         
         # ax1.cla()
+        dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
         ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
+        
+        Hx = Hjx + ux
+        Hy = Hjy + uy
+        
+        allH = g_nonlinear_all(Hx,Hy)
+        gx_H_l  = allH[1]; gy_H_l  = allH[2];
+        gx_H_nl = allH[8]; gy_H_nl = allH[9];
+    
+        fem_linear = pde.int.evaluate(MESH, order = 0, regions = linear).diagonal()
+        fem_nonlinear = pde.int.evaluate(MESH, order = 0, regions = nonlinear).diagonal()
+    
+        Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear) + 1/nu0*M00
+        By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear) + 1/nu0*M10
         
         # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
         # fig.show()
@@ -388,7 +399,8 @@ for m in range(refinements):
             
             ax2.cla()
             ax2.set_aspect(aspect = 'equal')
-            MESH.pdesurf2(ux**2+uy**2, ax = ax2)
+            MESH.pdesurf2((Bx)**2+(By)**2, ax = ax2)
+            # MESH.pdesurf2((Hjx+ux)**2+(Hjy+uy)**2, ax = ax2)
             # MESH.pdemesh2(ax = ax)
             MESH.pdegeom(ax = ax2)
             # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])

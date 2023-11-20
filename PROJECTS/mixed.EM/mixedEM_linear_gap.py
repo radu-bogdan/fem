@@ -20,6 +20,8 @@ import matplotlib.animation as animation
 from matplotlib.animation import FFMpegWriter
 # cmap = matplotlib.colors.ListedColormap("limegreen")
 cmap = plt.cm.jet
+import dill
+import pickle
 
 metadata = dict(title = 'Motor')
 writer = FFMpegWriter(fps = 50, metadata = metadata)
@@ -28,19 +30,26 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 # Loading mesh
 ##########################################################################################
 
-motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
+# motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
 
-geoOCC = motor_npz['geoOCC'].tolist()
+# geoOCC = motor_npz['geoOCC'].tolist()
+# m = motor_npz['m']; m_new = m
+# j3 = motor_npz['j3']
+
+# import ngsolve as ng
+# geoOCCmesh = geoOCC.GenerateMesh()
+# ngsolve_mesh = ng.Mesh(geoOCCmesh)
+
+motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-import ngsolve as ng
-geoOCCmesh = geoOCC.GenerateMesh()
-ngsolve_mesh = ng.Mesh(geoOCCmesh)
-# ngsolve_mesh.Refine()
-# ngsolve_mesh.Refine()
+plot = 0
+level = 2
 
-MESH = pde.mesh.netgen(ngsolve_mesh.ngmesh)
+open_file = open('mesh'+str(level)+'.pkl', "rb")
+MESH = dill.load(open_file)[0]
+open_file.close()
 
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
@@ -50,13 +59,11 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 from findPoints import *
 
 # ident_points, ident_edges = makeIdentifications_nogap(MESH)
-
 ident_points_gap, ident_edges_gap = getPoints(MESH)
-
 ident_points, ident_edges, jumps = makeIdentifications(MESH)
 
 rot_speed = 1
-rots = 305
+rots = 1
 
 tor = np.zeros(rots)
 energy = np.zeros(rots)
@@ -101,7 +108,7 @@ for k in range(rots):
     for i in range(48):
         Ja += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
         J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-    Ja = 0*Ja; J0 = 0*J0
+    # Ja = 0*Ja; J0 = 0*J0
     
     M0 = 0; M1 = 0; M00 = 0; M10 = 0
     for i in range(16):
@@ -142,7 +149,7 @@ for k in range(rots):
     SYS2= bmat([[RS@Mh2@RS.T,RS@C.T],\
                 [C@RS.T,None]]).tocsc()
     
-    rhs2= np.r_[RS@aM,np.zeros(MESH.nt)]
+    rhs2= np.r_[RS@aM,aJ+np.zeros(MESH.nt)]
     
     # tm = time.monotonic(); x = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
     tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS2,rhs2); print('mixed: ',time.monotonic()-tm)
@@ -155,22 +162,23 @@ for k in range(rots):
     
     Hx = phix_Hcurl.T@H; Hy = phiy_Hcurl.T@H
     
-    if k == 0:
-        fig = plt.figure()
-        writer.setup(fig, "writer_test.mp4", 500)
-        fig.show()
-        ax1 = fig.add_subplot(111)
-        # ax1 = fig.add_subplot(211)
-        # ax2 = fig.add_subplot(212)
-    
-    tm = time.monotonic()
-    ax1.cla()
-    ax1.set_aspect(aspect = 'equal')
-    MESH.pdesurf2(A, ax = ax1)
-    # MESH.pdemesh2(ax = ax)
-    MESH.pdegeom(ax = ax1)
-    Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
-    # ax1.tricontour(Triang, u[:MESH.np], levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+    if plot == 1:
+        if k == 0:
+            fig = plt.figure()
+            writer.setup(fig, "writer_test.mp4", 500)
+            fig.show()
+            ax1 = fig.add_subplot(111)
+            # ax1 = fig.add_subplot(211)
+            # ax2 = fig.add_subplot(212)
+        
+        tm = time.monotonic()
+        ax1.cla()
+        ax1.set_aspect(aspect = 'equal')
+        MESH.pdesurf2(A, ax = ax1)
+        # MESH.pdemesh2(ax = ax)
+        MESH.pdegeom(ax = ax1)
+        Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+        # ax1.tricontour(Triang, u[:MESH.np], levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
     
     # ax2.cla()
     # ax2.set_aspect(aspect = 'equal')
@@ -179,29 +187,30 @@ for k in range(rots):
     # MESH.pdegeom(ax = ax2)
     # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
     
-    writer.grab_frame()
+        writer.grab_frame()
     
     ##########################################################################################
     
-    rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron,air_gap_rotor'
-    
-    fem_rotor = pde.int.evaluate(MESH, order = 0, regions = rotor).diagonal()
-    trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
-    points_rotor = np.unique(trig_rotor)
-    
-    R = lambda x: np.array([[np.cos(x),-np.sin(x)],
-                            [np.sin(x), np.cos(x)]])
-    
-    a1 = 2*np.pi/ident_edges_gap.shape[0]/8
-    
-    p_new = MESH.p.copy(); t_new = MESH.t.copy()
-    p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
-    
-    m_new = R(a1*rot_speed)@m_new
-    
-    MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
-    # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
+    if rots > 1:
+        rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron,air_gap_rotor'
+        
+        fem_rotor = pde.int.evaluate(MESH, order = 0, regions = rotor).diagonal()
+        trig_rotor = MESH.t[np.where(fem_rotor)[0],0:3]
+        points_rotor = np.unique(trig_rotor)
+        
+        R = lambda x: np.array([[np.cos(x),-np.sin(x)],
+                                [np.sin(x), np.cos(x)]])
+        
+        a1 = 2*np.pi/ident_edges_gap.shape[0]/8
+        
+        p_new = MESH.p.copy(); t_new = MESH.t.copy()
+        p_new[points_rotor,:] = (R(a1*rot_speed)@MESH.p[points_rotor,:].T).T
+        
+        m_new = R(a1*rot_speed)@m_new
+        
+        MESH = pde.mesh(p_new,MESH.e,MESH.t,np.empty(0),MESH.regions_2d,MESH.regions_1d)
+        # MESH.p[points_rotor,:] = (R(a1*rt)@MESH.p[points_rotor,:].T).T
     ##########################################################################################
 
-    
-writer.finish()
+if plot == 1:    
+    writer.finish()

@@ -142,8 +142,8 @@ Ja = 0; J0 = 0
 for i in range(48):
     Ja += pde.int.evaluate(MESH, order = int_order, coeff = lambda x,y : j3[i], regions ='coil'+str(i+1)).diagonal()
     J0 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-Ja = 0*Ja
-J0 = 0*J0
+# Ja = 0*Ja
+# J0 = 0*J0
 
 M0 = 0; M1 = 0; M00 = 0; M10 = 0
 for i in range(16):
@@ -156,6 +156,7 @@ for i in range(16):
 aM = phix_Hcurl@ D(int_order) @(M0) +\
      phiy_Hcurl@ D(int_order) @(M1)
 
+aM = aM;
 aJ = phi_L2(int_order)@ D(int_order) @Ja
 
 # iMh = pde.tools.fastBlockInverse(Mh1)
@@ -172,11 +173,11 @@ from scipy.sparse import bmat
 SYS = bmat([[Mh2,C.T],\
             [C,None]]).tocsc()
 
-rhs = np.r_[aM,np.zeros(MESH.nt)]
+rhs = np.r_[aM,aJ]
 
-# tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
-# y2 = x2[MESH.NoEdges:]
-# MESH.pdesurf2(y2)
+tm = time.monotonic(); x2 = sps.linalg.spsolve(SYS,rhs); print('mixed: ',time.monotonic()-tm)
+y2 = x2[MESH.NoEdges:]
+MESH.pdesurf2(y2)
 
 
 ##########################################################################################
