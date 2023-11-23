@@ -7,6 +7,8 @@ import ngsolve as ng
 import dill
 import pickle
 
+from netgen import gui
+
 motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
 
 geoOCC = motor_npz['geoOCC'].tolist()

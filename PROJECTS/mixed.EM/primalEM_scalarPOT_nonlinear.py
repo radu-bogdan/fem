@@ -1,30 +1,7 @@
-import sys
-sys.path.insert(0,'../../') # adds parent directory
-sys.path.insert(0,'../mixed.EM') # adds parent directory
-# sys.path.insert(0,'../CEM') # adds parent directory
+from imports import *
+from imports import np,pde,sps
 
-import numpy as np
-import pde
-import scipy.sparse as sps
-import scipy.sparse.linalg
-import time
-from sksparse.cholmod import cholesky as chol
-import plotly.io as pio
-pio.renderers.default = 'browser'
-import dill
-import pickle
-
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.animation as animation
-from matplotlib.animation import FFMpegWriter
-import ngsolve as ng
-# cmap = matplotlib.colors.ListedColormap("limegreen")
-cmap = plt.cm.jet
-
-metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 50, metadata = metadata)
+writer = FFMpegWriter(fps = 50, metadata = dict(title = 'Motor'))
 
 ##########################################################################################
 # Parameters
@@ -48,19 +25,11 @@ motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-# geoOCCmesh = geoOCC.GenerateMesh()
-# ngsolvemesh = ng.Mesh(geoOCCmesh)
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.ngmesh.Refine()
-
 if len(sys.argv) > 1:
-    # if sys.argv[0]!='':
     level = int(sys.argv[1])
 else:
     level = 0
+    
     
 print("LEVEL " , level)
 
@@ -140,60 +109,12 @@ for m in range(refinements):
         dphix_H1_order_phiphi, dphiy_H1_order_phiphi = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_phiphi)
         phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
         
-        R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-        
-        ##########################################################################################
-        # Identifications
-        ##########################################################################################
-        
-        if ORDER == 1:
-            ident = ident_points
-        if ORDER == 2:
-            ident = np.r_[ident_points, MESH.np + ident_edges]
-        
-        i0 = ident[:,0]; i1 = ident[:,1]
-        
-        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'left,right,airL,airR')
-        # R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
-        R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
-        R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
-       
-        # manual stuff: (removing the point in the three corners...)
-        corners = np.r_[0,jumps,ident_points.shape[0]-1]
-        ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
-        R_L = R_L[ind1,:]
-        
-        corners = np.r_[0,jumps,ident_points.shape[0]-1]
-        ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
-        R_R = R_R[ind1,:]
-        
-        ident0 = np.roll(ident_points_gap[:,0], -k*rot_speed)
-        ident1 = ident_points_gap[:,1]
-        
-        R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0)
-        R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1)
-            
-        if k>0:
-            R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
-            
-        if ORDER == 2:
-            
-            R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = MESH.np + np.roll(ident_edges_gap[:,0], -k*rot_speed))
-            R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = MESH.np + ident_edges_gap[:,1])
-            
-            if k>0:
-                R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:] # old
-                
-            from scipy.sparse import bmat
-            R_AL =  bmat([[R_AL], [R_AL2]])
-            R_AR =  bmat([[R_AR], [R_AR2]])
-            
-        
-        from scipy.sparse import bmat
-        RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-        
         D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
+        # R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
+        
+        getRS(k)
+        
         # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
         
         
