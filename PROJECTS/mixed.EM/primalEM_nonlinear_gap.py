@@ -31,7 +31,7 @@ writer = FFMpegWriter(fps = 50, metadata = metadata)
 ##########################################################################################
 
 ORDER = 1
-refinements = 1
+refinements = 2
 plot = 1
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
@@ -44,32 +44,19 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 
 motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 
-# geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-# geoOCCmesh = geoOCC.GenerateMesh()
-# ngsolvemesh = ng.Mesh(geoOCCmesh)
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.ngmesh.Refine()
-
 if len(sys.argv) > 1:
-    # if sys.argv[0]!='':
     level = int(sys.argv[1])
 else:
-    level = 3
+    level = 1
     
 print("LEVEL " , level)
 
 
 
 for m in range(refinements):
-    
-    # MESH.refinemesh()
-    # MESH = pde.mesh.netgen(ngsolvemesh.ngmesh)
     
     open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
@@ -78,12 +65,11 @@ for m in range(refinements):
     from findPoints import *
     
     tm = time.monotonic()
-    ident_points_gap, ident_edges_gap = getPoints(MESH)
-    # ident_points_gap = getPointsNoEdges(MESH)
+    getPoints(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
-    ident_points, ident_edges, jumps = makeIdentifications(MESH)
+    makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
     
@@ -131,11 +117,6 @@ for m in range(refinements):
         ##########################################################################################
         # Assembling stuff
         ##########################################################################################
-        
-        # if ORDER == 1:
-        #     u = np.zeros(MESH.np)
-        # if ORDER == 2:
-        #     u = np.zeros(MESH.np + MESH.NoEdges)
        
         tm = time.monotonic()
         
@@ -148,66 +129,9 @@ for m in range(refinements):
         phi_H1b = pde.h1.assembleB(MESH, space = poly, matrix = 'M', shape = phi_H1.shape, order = order_phiphi)
         phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
         
-        R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
         
-        ##########################################################################################
-        # Identifications
-        ##########################################################################################
-        
-        if ORDER == 1:
-            ident = ident_points
-        if ORDER == 2:
-            ident = np.r_[ident_points, MESH.np + ident_edges]
-        
-        i0 = ident[:,0]; i1 = ident[:,1]
-        
-        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
-        R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
-        R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
-       
-        # manual stuff: (removing the point in the three corners...)
-        corners = np.r_[0,jumps,ident_points.shape[0]-1]
-        ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
-        R_L = R_L[ind1,:]
-        
-        corners = np.r_[0,jumps,ident_points.shape[0]-1]
-        ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
-        R_R = R_R[ind1,:]
-        
-        
-        
-        ident0 = np.roll(ident_points_gap[:,0], -k*rot_speed)
-        ident1 = ident_points_gap[:,1]
-        
-        R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0)
-        R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1)
-            
-        if k>0:
-            R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
-            
-        if ORDER == 2:
-            
-            R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = MESH.np + np.roll(ident_edges_gap[:,0], -k*rot_speed))
-            R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = MESH.np + ident_edges_gap[:,1])
-            
-            if k>0:
-                R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:] # old
-                
-            from scipy.sparse import bmat
-            R_AL =  bmat([[R_AL], [R_AL2]])
-            R_AR =  bmat([[R_AR], [R_AR2]])
-            
-        
-        from scipy.sparse import bmat
-        RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-        ##########################################################################################
-        
-        
-            
         D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
-        # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
-        
         
         MASS = phi_H1 @ D_order_phiphi @ phi_H1.T
         Kxx = dphix_H1 @ D_order_dphidphi @ dphix_H1.T
@@ -221,14 +145,21 @@ for m in range(refinements):
         fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = linear).diagonal()
         fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = nonlinear).diagonal()
         
+        # Identification of "freeDofs"
+        R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
+        RS = getRS(MESH,ORDER,poly,k,rot_speed)
+        
+        ##########################################################################################
+        # Assembling J,M
+        ##########################################################################################
+        
         penalty = 1e10
         
         Ja = 0; J0 = 0
         for i in range(48):
             Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
             J0 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-        # Ja = 0*Ja
-        # J0 = 0*J0
+        # Ja = 0*Ja; J0 = 0*J0
         
         M0 = 0; M1 = 0; M00 = 0; M10 = 0; M1_dphi = 0; M0_dphi = 0
         for i in range(16):
@@ -247,12 +178,6 @@ for m in range(refinements):
              dphiy_H1_order_phiphi@ D_order_phiphi @(+M0)
         
         aMnew = aM
-        
-        
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P0',quad = 'Q0',controls = 1), M00, u_height=0)
-        # fig.show()
-        
-        # print('Assembling + stuff ', time.monotonic()-tm)
         ##########################################################################################
         
         
@@ -294,10 +219,11 @@ for m in range(refinements):
         print('Initial guess compute took  ', time.monotonic()-tm)
             # stop
             
+        fig = plt.figure()
+        fig.show()
+        
         tm2 = time.monotonic()
         for i in range(maxIter):
-            # gssu = gss(u)
-            # gsu = gs(u)
             
             gssu = RS @ gss(u) @ RS.T
             gsu = RS @ gs(u)
@@ -332,8 +258,18 @@ for m in range(refinements):
                 if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
                 else: alpha = alpha*factor_residual
             
+            
+            ax = fig.add_subplot(111)
+            ax.cla()
+            MESH.pdesurf2(u,ax = ax)
+            MESH.pdegeom(ax = ax)
+            MESH.pdemesh2(ax = ax)
+            plt.pause(0.01)
+            
             u_old_i = u
             u = u + alpha*w
+            
+            input()
             
             print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
             
@@ -342,30 +278,11 @@ for m in range(refinements):
             if (np.abs(J(u)-J(u_old_i)) < 1e-5):
                 break
             
-        # print('im out!!!!!!!!!')
-            
         elapsed = time.monotonic()-tm2
         print('Solving took ', elapsed, 'seconds')
         
         
-        # ax1.cla()
         ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
-        
-        # fig = MESH.pdesurf((ux-1/nu0*M1_dphi)**2+(uy+1/nu0*M0_dphi)**2, u_height = 0, cmax = 5)
-        # fig.show()
-        
-        # fig = MESH.pdesurf_hybrid(dict(trig = 'P1',quad = 'Q0',controls = 1), u[0:MESH.np], u_height=1)
-        # fig.show()
-        
-        
-        # ax.cla()
-        # MESH.pdesurf2(u[:MESH.np],ax = ax)
-        
-        # fig.canvas.draw()
-        # fig.canvas.flush_events()
-        # time.sleep(0.1)
-        
-        # input()
         
         if plot == 1:
             if k == 0:
@@ -396,7 +313,7 @@ for m in range(refinements):
             ax3.cla()
             # ax3.set_aspect(aspect = 'equal')
             ax3.plot(tor)
-            ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
+            ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
             
             ax4.cla()
             # ax3.set_aspect(aspect = 'equal')
@@ -408,8 +325,8 @@ for m in range(refinements):
             print('Plotting took  ', time.monotonic()-tm)
             
             tm = time.monotonic()
-            # writer.grab_frame()
             writer.grab_frame()
+            # writer.grab_frame()
             print('Grabbing took  ', time.monotonic()-tm)
             # stop
         
@@ -549,7 +466,6 @@ for m in range(refinements):
             By_old_newmesh = np.r_[By_old,np.c_[By_old,By_old,By_old].flatten()]
             
     if refinements == 0:
-        # ngsolvemesh.ngmesh.Refine()
         level = level + 1
     
     if plot == 1:
