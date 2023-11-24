@@ -434,23 +434,25 @@ class mesh:
             aspect = kwargs["aspect"] if "aspect" in kwargs else 1.0
             ax.set_aspect(aspect)
             # ax.set_axis_off()
-        else:
-            ax = kwargs["ax"]
-            # ax.clear()
+        else: ax = kwargs["ax"]
         
+        
+        if "cmap" not in kwargs: cmap = plt.cm.jet
+        else: cmap = kwargs["cmap"]
         
         
         if (fun.size==self.np):
             Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
-            chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1, shading='gouraud')
+            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, shading='gouraud')
             
             # refiner = tri.UniformTriRefiner(Triang)
             # tri_refi, z_test_refi = refiner.refine_field(fun, subdiv=3)
             # chip = ax.tricontour(tri_refi, z_test_refi, colors = 'k')
             # chip = ax.tricontour(Triang, fun, colors='k')
+            
         if (fun.size==self.nt):
             Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
-            chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1)
+            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1)
             
         if (fun.size==3*self.nt):
             p0 = self.p[:,0]; p1 = self.p[:,1]
@@ -460,7 +462,8 @@ class mesh:
             p1d = npy.c_[p1[t[:,0]],p1[t[:,1]],p1[t[:,2]]].ravel()
             td = npy.r_[:3*nt].reshape(nt,3)
             Triang = matplotlib.tri.Triangulation(p0d, p1d, td)
-            chip = ax.tripcolor(Triang, fun, cmap = plt.cm.jet, lw = 0.1, shading='gouraud')
+            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, shading='gouraud')
+        return ax
     
     def pdemesh2(self,**kwargs):
         if "ax" not in kwargs:

@@ -1,5 +1,6 @@
 import numpy as np
 import pde
+from scipy.sparse import bmat
 
 # @profile
 
@@ -199,7 +200,7 @@ def makeIdentifications(MESH):
     # return ident_points, ident_edges, jumps
     
     
-def getRS(MESH,ORDER,poly,k,rot_speed):
+def getRS_H1(MESH,ORDER,poly,k,rot_speed):
     if ORDER == 1:
         ident = MESH.ident_points
     if ORDER == 2:
@@ -239,12 +240,75 @@ def getRS(MESH,ORDER,poly,k,rot_speed):
         if k>0:
             R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:] # old
             
-        from scipy.sparse import bmat
+        
         R_AL =  bmat([[R_AL], [R_AL2]])
         R_AR =  bmat([[R_AR], [R_AR2]])
         
     
-    from scipy.sparse import bmat
+    RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
+    
+    return RS
+
+
+def getRS_Hcurl(MESH,ORDER,poly,k,rot_speed):
+    R_out, R_int = pde.hcurl.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airR,airL')
+    
+    
+    EdgeDirection = (-1)*np.r_[np.sign(MESH.ident_points[1:MESH.jumps[1],:]-MESH.ident_points[:MESH.jumps[0],:]),
+                               np.sign(MESH.ident_points[MESH.jumps[1]+1:,:]-MESH.ident_points[MESH.jumps[1]:-1,:])]
+    
+    
+    EdgeDirectionGap = (-1)*np.sign(MESH.ident_points_gap[1:,:].astype(int)-MESH.ident_points_gap[:-1,:].astype(int))
+    
+    if ORDER == 1:
+        ind_per_0 = MESH.ident_edges[:,0]
+        ind_per_1 = MESH.ident_edges[:,1]
+        
+        ident_edges_gap_0_rolled = np.roll(MESH.ident_edges_gap[:,0], -k*rot_speed)
+        
+        EdgeDirectionGap_rolled = np.roll(EdgeDirectionGap[:,0], -k*rot_speed)
+        EdgeDirectionGap_1 = EdgeDirectionGap[:,1]
+        
+        ind_gap_0 = ident_edges_gap_0_rolled
+        ind_gap_1 = MESH.ident_edges_gap[:,1]
+        
+    if ORDER > 1:
+        
+        ind_per_0 = np.c_[2*MESH.ident_edges[:,0]   -1/2*(EdgeDirection[:,0]-1),
+                          2*MESH.ident_edges[:,0]+1 +1/2*(EdgeDirection[:,0]-1)].ravel()
+        
+        ind_per_1 = np.c_[2*MESH.ident_edges[:,1]   -1/2*(EdgeDirection[:,1]-1),
+                          2*MESH.ident_edges[:,1]+1 +1/2*(EdgeDirection[:,1]-1)].ravel()
+        
+        
+        ident_edges_gap_0_rolled = np.roll(MESH.ident_edges_gap[:,0], -k*rot_speed)
+        EdgeDirectionGap_rolled = np.roll(EdgeDirectionGap[:,0], -k*rot_speed)
+        
+        EdgeDirectionGap_1 = np.repeat(EdgeDirectionGap[:,1],2)
+        
+        
+        ind_gap_0 = np.c_[2*ident_edges_gap_0_rolled   -1/2*(EdgeDirectionGap_rolled-1),
+                          2*ident_edges_gap_0_rolled+1 +1/2*(EdgeDirectionGap_rolled-1)].ravel()
+        
+        ind_gap_1 = np.c_[2*MESH.ident_edges_gap[:,1]   -1/2*(EdgeDirectionGap[:,1]-1),
+                          2*MESH.ident_edges_gap[:,1]+1 +1/2*(EdgeDirectionGap[:,1]-1)].ravel()
+        
+        EdgeDirectionGap_rolled = np.roll(np.repeat(EdgeDirectionGap[:,0],2), -2*k*rot_speed)
+        
+        
+    R_L, R_LR = pde.hcurl.assembleR(MESH, space = poly, edges = 'left', listDOF = ind_per_0)
+    R_R, R_RR = pde.hcurl.assembleR(MESH, space = poly, edges = 'right', listDOF = ind_per_1)
+    
+    R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = poly, edges = 'airL', listDOF = ind_gap_0); #R_AL.data = EdgeDirectionGap_rolled[R_AL.indices]
+    R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = poly, edges = 'airR', listDOF = ind_gap_1); #R_AR.data = EdgeDirectionGap_1[R_AR.indices]
+    
+    if k>0:
+        if ORDER == 1:
+            R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
+            
+        if ORDER > 1:
+            R_AL[-2*k*rot_speed:,:] = -R_AL[-2*k*rot_speed:,:]
+    
     RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
     
     return RS

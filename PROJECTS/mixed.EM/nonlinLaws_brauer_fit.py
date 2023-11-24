@@ -20,8 +20,8 @@ def gen_nu(x):
     pos = 1/k2*np.log(1/k1*(nu0-k3))
     return nu_nl(x)*(x<pos)+nu0*(x>pos)
 
-xx = np.linspace(0,8,3000)
-yy = np.exp(np.linspace(0,np.log(5*1e8),3000))-1
+xx = np.linspace(0,8,300)
+yy = np.exp(np.linspace(0,np.log(5*1e8),300))-1
 
 nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'natural')
 # spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))

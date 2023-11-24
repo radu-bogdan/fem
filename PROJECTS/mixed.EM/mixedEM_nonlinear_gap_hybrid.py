@@ -1,31 +1,7 @@
-import sys
-sys.path.insert(0,'../../') # adds parent directory
+from imports import *
+from imports import np,pde,sps
 
-import numpy as np
-import gmsh
-import pde
-import scipy.sparse as sps
-import scipy.sparse.linalg
-import time
-import plotly.io as pio
-pio.renderers.default = 'browser'
-import ngsolve as ng
-import numba as nb
-from scipy.sparse import hstack,vstack
-from sksparse.cholmod import cholesky as chol
-import dill
-import pickle
-
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.animation as animation
-from matplotlib.animation import FFMpegWriter
-# cmap = matplotlib.colors.ListedColormap("limegreen")
-cmap = plt.cm.jet
-
-metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 50, metadata = metadata)
+writer = FFMpegWriter(fps = 50, metadata = dict(title = 'Motor'))
 
 ##########################################################################################
 # Parameters
@@ -46,23 +22,12 @@ int_order = 1
 linear = '*air,*magnet,shaft_iron,*coil'
 nonlinear = 'stator_iron,rotor_iron'
 rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
-    
-# motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
-
-# geoOCC = motor_npz['geoOCC'].tolist()
 
 motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-# geoOCCmesh = geoOCC.GenerateMesh()
-# ngsolvemesh = ng.Mesh(geoOCCmesh)
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-
-level = 2
+level = 1
 
 for m in range(refinements):
     
@@ -73,16 +38,13 @@ for m in range(refinements):
     
     from findPoints import *
     
-    # ident_points, ident_edges = makeIdentifications_nogap(MESH)
-    ident_points_gap, ident_edges_gap = getPoints(MESH)
-    ident_points, ident_edges, jumps = makeIdentifications(MESH)
+    tm = time.monotonic()
+    getPoints(MESH)
+    print('getPoints%.2f | ' % (time.monotonic()-tm), end="")
     
-    
-    EdgeDirection = (-1)*np.r_[np.sign(ident_points[1:jumps[1],:]-ident_points[:jumps[0],:]),
-                               np.sign(ident_points[jumps[1]+1:,:]-ident_points[jumps[1]:-1,:])]
-    
-    
-    EdgeDirectionGap = (-1)*np.sign(ident_points_gap[1:,:].astype(int)-ident_points_gap[:-1,:].astype(int))
+    tm = time.monotonic()
+    makeIdentifications(MESH)
+    print('makeIdentifications %.2f | ' % (time.monotonic()-tm))
     
     ##########################################################################################
     # Order configuration
@@ -214,59 +176,7 @@ for m in range(refinements):
         
         ##########################################################################################
         
-        R_out, R_int = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'stator_outer,left,right,airR,airL')
-        
-        if ORDER == 1:
-            ind_per_0 = ident_edges[:,0]
-            ind_per_1 = ident_edges[:,1]
-            
-            ident_edges_gap_0_rolled = np.roll(ident_edges_gap[:,0], -k*rot_speed)
-            
-            EdgeDirectionGap_rolled = np.roll(EdgeDirectionGap[:,0], -k*rot_speed)
-            EdgeDirectionGap_1 = EdgeDirectionGap[:,1]
-            
-            ind_gap_0 = ident_edges_gap_0_rolled
-            ind_gap_1 = ident_edges_gap[:,1]
-            
-        if ORDER > 1:
-            
-            ind_per_0 = np.c_[2*ident_edges[:,0]   -1/2*(EdgeDirection[:,0]-1),
-                              2*ident_edges[:,0]+1 +1/2*(EdgeDirection[:,0]-1)].ravel()
-            
-            ind_per_1 = np.c_[2*ident_edges[:,1]   -1/2*(EdgeDirection[:,1]-1),
-                              2*ident_edges[:,1]+1 +1/2*(EdgeDirection[:,1]-1)].ravel()
-            
-            
-            ident_edges_gap_0_rolled = np.roll(ident_edges_gap[:,0], -k*rot_speed)
-            EdgeDirectionGap_rolled = np.roll(EdgeDirectionGap[:,0], -k*rot_speed)
-            
-            EdgeDirectionGap_1 = np.repeat(EdgeDirectionGap[:,1],2)
-            
-            
-            ind_gap_0 = np.c_[2*ident_edges_gap_0_rolled   -1/2*(EdgeDirectionGap_rolled-1),
-                              2*ident_edges_gap_0_rolled+1 +1/2*(EdgeDirectionGap_rolled-1)].ravel()
-            
-            ind_gap_1 = np.c_[2*ident_edges_gap[:,1]   -1/2*(EdgeDirectionGap[:,1]-1),
-                              2*ident_edges_gap[:,1]+1 +1/2*(EdgeDirectionGap[:,1]-1)].ravel()
-            
-            EdgeDirectionGap_rolled = np.roll(np.repeat(EdgeDirectionGap[:,0],2), -2*k*rot_speed)
-            
-            
-        R_L, R_LR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'left', listDOF = ind_per_0)
-        R_R, R_RR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'right', listDOF = ind_per_1)
-        
-        R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airL', listDOF = ind_gap_0); #R_AL.data = EdgeDirectionGap_rolled[R_AL.indices]
-        R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = space_Vh, edges = 'airR', listDOF = ind_gap_1); #R_AR.data = EdgeDirectionGap_1[R_AR.indices]
-        
-        if k>0:
-            if ORDER == 1:
-                R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
-                
-            if ORDER > 1:
-                R_AL[-2*k*rot_speed:,:] = -R_AL[-2*k*rot_speed:,:]
-        
-        from scipy.sparse import bmat
-        RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
+        RS = getRS_Hcurl(MESH, ORDER, space_Vh, k, rot_speed)
         
         ##########################################################################################
         # Solving with Newton
@@ -296,6 +206,7 @@ for m in range(refinements):
         
         def gss(allH,A,H,L):
             
+            tm = time.monotonic()
             gx_H_l  = allH[1]; gy_H_l  = allH[2];
             gx_H_nl = allH[8]; gy_H_nl = allH[9];
             
@@ -314,18 +225,19 @@ for m in range(refinements):
                  phiy_d_Hcurl @ D_order_HH @ (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear + mu0*M1) + Cd.T@A + KK.T@L
                  
             
-            r2 = 0*Cd@H
+            r2 = Cd@H+aJ
             r3 = KK@H
+            print('MAT PREP %.2f | ' % (time.monotonic()-tm), end="")
             
             tm = time.monotonic()
             iMd = inv(Md)
             iBBd = inv(Cd@iMd@Cd.T)
-            print('Inverting took ', time.monotonic()-tm)
+            print('Inv %.2f | ' % (time.monotonic()-tm), end="")
             
             tm = time.monotonic()
             gssu = -KK@iMd@KK.T + KK@iMd@Cd.T@iBBd@Cd@iMd@KK.T
             gsu = -(KK@iMd@r1-r3) + KK@iMd@Cd.T@iBBd@(Cd@iMd@r1-r2)
-            print('Multiplication took ', time.monotonic()-tm)
+            print('Mult %.2f | ' % (time.monotonic()-tm), end="")
             
             gssu_mod = RS@gssu@RS.T
             gsu_rhs = RS@gsu
@@ -334,11 +246,13 @@ for m in range(refinements):
             tm = time.monotonic()
             wL = chol(-gssu_mod).solve_A(gsu_rhs)
             # wL = sps.linalg.spsolve(gssu_mod,-gsu_rhs)
-            print('Solving the system took ', time.monotonic()-tm)
+            print('Solve %.2f | ' % (time.monotonic()-tm), end="")
             
+            tm = time.monotonic()
             wA = iBBd@Cd@iMd@(-r1-KK.T@RS.T@wL)+iBBd@r2
             wH = iMd@(-Cd.T@wA-KK.T@RS.T@wL-r1)
             w = np.r_[wH,wA,RS.T@wL]
+            print('Restore %.2f | ' % (time.monotonic()-tm), end="")
             
             return gssu_mod, gsu_rhs, w
     
@@ -353,16 +267,17 @@ for m in range(refinements):
         angleCondition = np.zeros(5)
         eps_newton = 1e-8
         factor_residual = 1/2
-        mu = 0.0001
+        mu = 0.25
+        # mu = 0.0001
         
         
         #########################################################################################        
         
         
-        Md_LIN = phix_d_Hcurl @ D_order_HH @ phix_d_Hcurl.T + \
-                 phiy_d_Hcurl @ D_order_HH @ phiy_d_Hcurl.T
+        Md_LIN = mu0*(phix_d_Hcurl @ D_order_HH @ phix_d_Hcurl.T + \
+                      phiy_d_Hcurl @ D_order_HH @ phiy_d_Hcurl.T)
             
-        iMd_LIN = inv(Md_LIN)
+        iMd_LIN = mu0*inv(Md_LIN)
         iBBd = inv(Cd@iMd_LIN@Cd.T)
         
         r1 = phix_d_Hcurl @ D_order_HH @ (mu0*M0) +\
@@ -373,7 +288,7 @@ for m in range(refinements):
         
         gssu = -KK@iMd_LIN@KK.T + KK@iMd_LIN@Cd.T@iBBd@Cd@iMd_LIN@KK.T
         gsu = -(KK@iMd_LIN@r1-r3) + KK@iMd_LIN@Cd.T@iBBd@(Cd@iMd_LIN@r1-r2)
-        print('Multiplication took ', time.monotonic()-tm)
+        print('Mult %.2f  | ' % (time.monotonic()-tm))
         
         gssu_mod = RS@gssu@RS.T
         gsu_rhs = RS@gsu
@@ -399,7 +314,6 @@ for m in range(refinements):
         L = L_init + np.zeros(sL)
         
         #########################################################################################
-        
     
         HAL = np.r_[H,A,L]
     
@@ -416,11 +330,12 @@ for m in range(refinements):
             
             tm = time.monotonic()
             allH = g_nonlinear_all(Hx,Hy)
+            print('NL %.2f | ' % (time.monotonic()-tm), end="")
+            
             # gsu = gs(allH,A,H)
             gssu, gsu, w = gss(allH,A,H,L)
             # gsu2 = gs_full(allH,A,H)
             
-            print('Evaluating nonlinearity took ', time.monotonic()-tm)
             
             # w = np.r_[RS.T@w[:RS.shape[0]],
             #           w[RS.shape[0]:]]
@@ -429,8 +344,6 @@ for m in range(refinements):
             norm_gsu = np.linalg.norm(gsu)
             
             ##########################################################################################
-            
-            
             
             norm_w = np.linalg.norm(w)
             norm_gsu = np.linalg.norm(gsu)
@@ -479,7 +392,7 @@ for m in range(refinements):
                 else:
                     alpha = alpha*factor_residual
                 
-            print('Line search took ', time.monotonic()-tm)
+            print('LS %.2f | ' % (time.monotonic()-tm), end="")
             
             tm = time.monotonic()
             
@@ -489,17 +402,17 @@ for m in range(refinements):
             Hx = phix_d_Hcurl.T@H; Hy = phiy_d_Hcurl.T@H
             allH = g_nonlinear_all(Hx,Hy)
             
-            print('Re-evaluating H took ', time.monotonic()-tm)
+            print('evalH %.2f | ' % (time.monotonic()-tm), end="")
             
             # print('norm cu a: ',  gs(allH,A,H))
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(allH,H)+"|| ||grad||: %2e" %np.linalg.norm(gs(allH,A,H,L))+"||alpha: %2e" % (alpha));
+            print("NEWTON: It: %2d " %(i+1)+"||obj: %2.2e" %J(allH,H)+"|| ||grad||: %2.2e" %np.linalg.norm(gs(allH,A,H,L))+"||alpha: %2.2e" % (alpha));
             
             if(np.linalg.norm(gs(allH,A,H,L)) < eps_newton): 
                 break
     
         elapsed = time.monotonic()-tm1
-        print('Solving took ', elapsed, 'seconds')
+        print('Solving took %.2f seconds' % elapsed)
         
         ##########################################################################################
         # Magnetic energy
@@ -642,7 +555,7 @@ for m in range(refinements):
             ax3.cla()
             # ax3.set_aspect(aspect = 'equal')
             ax3.plot(tor)
-            ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
+            ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
             
             ax4.cla()
             # ax3.set_aspect(aspect = 'equal')

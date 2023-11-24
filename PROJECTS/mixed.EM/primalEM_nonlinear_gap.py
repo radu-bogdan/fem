@@ -1,37 +1,14 @@
-import sys
-sys.path.insert(0,'../../') # adds parent directory
-sys.path.insert(0,'../mixed.EM') # adds parent directory
-# sys.path.insert(0,'../CEM') # adds parent directory
+from imports import *
+from imports import np,pde,sps
 
-import numpy as np
-import pde
-import scipy.sparse as sps
-import scipy.sparse.linalg
-import time
-from sksparse.cholmod import cholesky as chol
-import plotly.io as pio
-pio.renderers.default = 'browser'
-import dill
-import pickle
-
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.animation as animation
-from matplotlib.animation import FFMpegWriter
-import ngsolve as ng
-# cmap = matplotlib.colors.ListedColormap("limegreen")
-cmap = plt.cm.jet
-
-metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 50, metadata = metadata)
+writer = FFMpegWriter(fps = 50, metadata = dict(title = 'Motor'))
 
 ##########################################################################################
 # Parameters
 ##########################################################################################
 
 ORDER = 1
-refinements = 2
+refinements = 1
 plot = 1
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
 rot_speed = 1
@@ -50,9 +27,22 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 1
+    level = 2
     
 print("LEVEL " , level)
+
+
+
+############################################################################################
+## Brauer/Nonlinear laws ... ?
+############################################################################################
+
+sys.path.insert(1,'../mixed.EM')
+# from nonlinLaws import *
+from nonlinLaws_brauer_fit import *
+# from nonlinLaws_bosch import *
+                       
+############################################################################################
 
 
 
@@ -72,9 +62,6 @@ for m in range(refinements):
     makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
-    
-    print('generated mesh...')
-    
     ##########################################################################################
     # Order configuration
     ##########################################################################################
@@ -92,19 +79,6 @@ for m in range(refinements):
         order_phiphi = 4
         order_dphidphi = 2
         u = np.zeros(MESH.np + MESH.NoEdges)
-    ############################################################################################
-    
-    
-    
-    ############################################################################################
-    ## Brauer/Nonlinear laws ... ?
-    ############################################################################################
-    
-    sys.path.insert(1,'../mixed.EM')
-    # from nonlinLaws import *
-    from nonlinLaws_brauer_fit import *
-    # from nonlinLaws_bosch import *
-                           
     ############################################################################################
     
     tor = np.zeros(rots)
@@ -147,7 +121,7 @@ for m in range(refinements):
         
         # Identification of "freeDofs"
         R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-        RS = getRS(MESH,ORDER,poly,k,rot_speed)
+        RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
         
         ##########################################################################################
         # Assembling J,M
@@ -217,10 +191,6 @@ for m in range(refinements):
         if k>0:
             u = RS.T@chol(RS@RS.T).solve_A(RS@u)
         print('Initial guess compute took  ', time.monotonic()-tm)
-            # stop
-            
-        fig = plt.figure()
-        fig.show()
         
         tm2 = time.monotonic()
         for i in range(maxIter):
@@ -233,7 +203,6 @@ for m in range(refinements):
             # wS = sps.linalg.spsolve(gssu,-gsu)
             print('Solving took ', time.monotonic()-tm)
             
-            # w = wS
             w = RS.T@wS
             
             # norm_w = np.linalg.norm(w,np.inf)
@@ -259,17 +228,17 @@ for m in range(refinements):
                 else: alpha = alpha*factor_residual
             
             
-            ax = fig.add_subplot(111)
-            ax.cla()
-            MESH.pdesurf2(u,ax = ax)
-            MESH.pdegeom(ax = ax)
-            MESH.pdemesh2(ax = ax)
-            plt.pause(0.01)
+            # ax = fig.add_subplot(111)
+            # ax.cla()
+            # MESH.pdesurf2(u,ax = ax)
+            # MESH.pdegeom(ax = ax)
+            # MESH.pdemesh2(ax = ax)
+            # plt.pause(0.01)
+            # input()
             
             u_old_i = u
             u = u + alpha*w
             
-            input()
             
             print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
             
@@ -289,10 +258,10 @@ for m in range(refinements):
                 fig = plt.figure()
                 writer.setup(fig, "writer_test.mp4", 500)
                 fig.show()
-                ax1 = fig.add_subplot(221)
-                ax2 = fig.add_subplot(222)
-                ax3 = fig.add_subplot(223)
-                ax4 = fig.add_subplot(224)
+                ax1 = fig.add_subplot(121)
+                ax2 = fig.add_subplot(122)
+                # ax3 = fig.add_subplot(223)
+                # ax4 = fig.add_subplot(224)
             
             tm = time.monotonic()
             ax1.cla()
@@ -310,14 +279,14 @@ for m in range(refinements):
             MESH.pdegeom(ax = ax2)
             # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
             
-            ax3.cla()
-            # ax3.set_aspect(aspect = 'equal')
-            ax3.plot(tor)
-            ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
+            # ax3.cla()
+            # # ax3.set_aspect(aspect = 'equal')
+            # ax3.plot(tor)
+            # ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
             
-            ax4.cla()
-            # ax3.set_aspect(aspect = 'equal')
-            ax4.plot(energy)
+            # ax4.cla()
+            # # ax3.set_aspect(aspect = 'equal')
+            # ax4.plot(energy)
         
         
         
