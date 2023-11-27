@@ -28,7 +28,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 0
+    level = 3
     
     
 print("LEVEL " , level)
@@ -112,7 +112,7 @@ for m in range(refinements):
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
         # R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
         
-        RS = getRS(MESH,ORDER,k)
+        RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
         
         # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
         
@@ -329,7 +329,7 @@ for m in range(refinements):
             ax3.cla()
             # ax3.set_aspect(aspect = 'equal')
             ax3.plot(tor)
-            ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
+            ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
             
             ax4.cla()
             # ax3.set_aspect(aspect = 'equal')

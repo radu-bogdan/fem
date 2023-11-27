@@ -59,8 +59,8 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 from findPoints import *
 
 # ident_points, ident_edges = makeIdentifications_nogap(MESH)
-ident_points_gap, ident_edges_gap = getPoints(MESH)
-ident_points, ident_edges, jumps = makeIdentifications(MESH)
+getPoints(MESH)
+makeIdentifications(MESH)
 
 rot_speed = 1
 rots = 1
@@ -127,11 +127,11 @@ for k in range(rots):
     
     R_out, R_int = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'stator_outer,left,right,airR,airL')
     
-    R_L, R_LR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'left', listDOF = ident_edges[:,0])
-    R_R, R_RR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'right', listDOF = ident_edges[:,1])
+    R_L, R_LR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'left', listDOF = MESH.ident_edges[:,0])
+    R_R, R_RR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'right', listDOF = MESH.ident_edges[:,1])
     
-    R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airL', listDOF = np.roll(ident_edges_gap[:,0], -k*rot_speed))
-    R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airR', listDOF = ident_edges_gap[:,1])
+    R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airL', listDOF = np.roll(MESH.ident_edges_gap[:,0], -k*rot_speed))
+    R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airR', listDOF = MESH.ident_edges_gap[:,1])
     
     if k>0:
         R_AL[-k*rot_speed+1:,:] = -R_AL[-k*rot_speed+1:,:]

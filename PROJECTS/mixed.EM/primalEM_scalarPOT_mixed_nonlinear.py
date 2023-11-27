@@ -1,30 +1,7 @@
-import sys
-sys.path.insert(0,'../../') # adds parent directory
-sys.path.insert(0,'../mixed.EM') # adds parent directory
-# sys.path.insert(0,'../CEM') # adds parent directory
+from imports import *
+from imports import np,pde,sps
 
-import numpy as np
-import pde
-import scipy.sparse as sps
-import scipy.sparse.linalg
-import time
-from sksparse.cholmod import cholesky as chol
-import plotly.io as pio
-pio.renderers.default = 'browser'
-import dill
-import pickle
-
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.animation as animation
-from matplotlib.animation import FFMpegWriter
-import ngsolve as ng
-# cmap = matplotlib.colors.ListedColormap("limegreen")
-cmap = plt.cm.jet
-
-metadata = dict(title = 'Motor')
-writer = FFMpegWriter(fps = 50, metadata = metadata)
+writer = FFMpegWriter(fps = 50, metadata = dict(title = 'Motor'))
 
 ##########################################################################################
 # Parameters
@@ -48,19 +25,11 @@ motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-# geoOCCmesh = geoOCC.GenerateMesh()
-# ngsolvemesh = ng.Mesh(geoOCCmesh)
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.Refine()
-# ngsolvemesh.ngmesh.Refine()
-
 if len(sys.argv) > 1:
-    # if sys.argv[0]!='':
     level = int(sys.argv[1])
 else:
     level = 0
+    
     
 print("LEVEL " , level)
 
@@ -73,12 +42,12 @@ for m in range(refinements):
     from findPoints import *
     
     tm = time.monotonic()
-    ident_points_gap, ident_edges_gap = getPoints(MESH)
+    getPoints(MESH)
     # ident_points_gap = getPointsNoEdges(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
-    ident_points, ident_edges, jumps = makeIdentifications(MESH)
+    makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
     
@@ -92,15 +61,16 @@ for m in range(refinements):
         dxpoly = 'P0'
         order_phiphi = 2
         order_dphidphi = 0
-        # u = np.random.rand(MESH.np) * 0.005
-        u = np.zeros(MESH.np)#+0.01
+        psi = np.zeros(MESH.np)
+        b = np.zeros(2*MESH.nt)
         
     if ORDER == 2:
         poly = 'P2'
         dxpoly = 'P1'
         order_phiphi = 4
         order_dphidphi = 2
-        u = np.zeros(MESH.np + MESH.NoEdges)
+        psi = np.zeros(MESH.np + MESH.NoEdges)
+        b = np.zeros(6*MESH.nt)
     ############################################################################################
     
     
@@ -110,8 +80,8 @@ for m in range(refinements):
     ############################################################################################
     
     sys.path.insert(1,'../mixed.EM')
-    # from nonlinLaws import *
-    from nonlinLaws_brauer_fit import *
+    from nonlinLaws import *
+    # from nonlinLaws_brauer_fit import *
     # from nonlinLaws_bosch import *
                            
     ############################################################################################
@@ -141,64 +111,10 @@ for m in range(refinements):
         phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
         
         R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
+        # RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
+        RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
         
         ##########################################################################################
-        # Identifications
-        ##########################################################################################
-        
-        if ORDER == 1:
-            ident = ident_points
-        if ORDER == 2:
-            ident = np.r_[ident_points, MESH.np + ident_edges]
-        
-        i0 = ident[:,0]; i1 = ident[:,1]
-        
-        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'left,right,airL,airR')
-        # R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer,left,right,airL,airR')
-        R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
-        R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
-       
-        # manual stuff: (removing the point in the three corners...)
-        corners = np.r_[0,jumps,ident_points.shape[0]-1]
-        ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
-        R_L = R_L[ind1,:]
-        
-        corners = np.r_[0,jumps,ident_points.shape[0]-1]
-        ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
-        R_R = R_R[ind1,:]
-        
-        ident0 = np.roll(ident_points_gap[:,0], -k*rot_speed)
-        ident1 = ident_points_gap[:,1]
-        
-        R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0)
-        R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1)
-            
-        if k>0:
-            R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
-            
-        if ORDER == 2:
-            
-            R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = MESH.np + np.roll(ident_edges_gap[:,0], -k*rot_speed))
-            R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = MESH.np + ident_edges_gap[:,1])
-            
-            if k>0:
-                R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:] # old
-                
-            from scipy.sparse import bmat
-            R_AL =  bmat([[R_AL], [R_AL2]])
-            R_AR =  bmat([[R_AR], [R_AR2]])
-            
-        
-        from scipy.sparse import bmat
-        RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-        
-        D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
-        D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
-        # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
-        
-        
-        ##########################################################################################
-        
             
         D_order_dphidphi = pde.int.assemble(MESH, order = order_dphidphi)
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
@@ -268,54 +184,59 @@ for m in range(refinements):
         factor_residual = 1/2
         mu = 0.0001
         
-        def gss(u):
-            ux = dphix_H1.T@u; uy = dphiy_H1.T@u
+        def gss(b):
+            bx = b[:len(b)//2]; by = b[len(b)//2:]
             
-            gxx_grad_u_Kxx = phi_L2 @ D_order_dphidphi @ sps.diags(fxx_linear(ux,uy)*fem_linear + fxx_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
-            gyy_grad_u_Kyy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fyy_linear(ux,uy)*fem_linear + fyy_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-            gxy_grad_u_Kxy = dphiy_H1 @ D_order_dphidphi @ sps.diags(fxy_linear(ux,uy)*fem_linear + fxy_nonlinear(ux,uy)*fem_nonlinear)@ dphix_H1.T
-            gyx_grad_u_Kyx = dphix_H1 @ D_order_dphidphi @ sps.diags(fyx_linear(ux,uy)*fem_linear + fyx_nonlinear(ux,uy)*fem_nonlinear)@ dphiy_H1.T
-            return (gxx_grad_u_Kxx + gyy_grad_u_Kyy + gxy_grad_u_Kxy + gyx_grad_u_Kyx)
+            fxx_u_Kxx = phi_L2 @ D_order_dphidphi @ sps.diags(fxx_linear(bx,by)*fem_linear + fxx_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
+            fyy_u_Kyy = phi_L2 @ D_order_dphidphi @ sps.diags(fyy_linear(bx,by)*fem_linear + fyy_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
+            fxy_u_Kxy = phi_L2 @ D_order_dphidphi @ sps.diags(fxy_linear(bx,by)*fem_linear + fxy_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
+            fyx_u_Kyx = phi_L2 @ D_order_dphidphi @ sps.diags(fyx_linear(bx,by)*fem_linear + fyx_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
             
-        def gs(u):
-            ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-            return dphix_H1 @ D_order_dphidphi @ (fx_linear(ux,uy)*fem_linear + fx_nonlinear(ux,uy)*fem_nonlinear) +\
-                   dphiy_H1 @ D_order_dphidphi @ (fy_linear(ux,uy)*fem_linear + fy_nonlinear(ux,uy)*fem_nonlinear) - 1/nu0*aM
+            R = bmat([[fxx_u_Kxx,fxy_u_Kxy],
+                      [fyx_u_Kyx,fyy_u_Kyy]])
+            
+            C = bmat([[Cx],[Cy]])
+            
+            return R,C
+            
+        def gs(b,psi):
+            bx = b[:len(b)//2]; by = b[len(b)//2:]
+            
+            r1 =  np.r_[phi_L2 @ D_order_dphidphi @ (-Hjx + fx_linear(bx,by)*fem_linear + fx_nonlinear(bx,by)*fem_nonlinear) + Cx @ psi,
+                        phi_L2 @ D_order_dphidphi @ (-Hjy + fx_linear(bx,by)*fem_linear + fx_nonlinear(bx,by)*fem_nonlinear) + Cy @ psi]
+            r2 = dphix_H1 @ D_order_dphidphi @ bx + dphiy_H1 @ D_order_dphidphi @ by
+            
+            return r1,r2
         
-        def J(u):
-            ux = dphix_H1.T@u; uy = dphiy_H1.T@u
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(ux,uy)*fem_linear + f_nonlinear(ux,uy)*fem_nonlinear)
+        def J(b):
+            bx = b[:len(b)//2]; by = b[len(b)//2:]
+            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(bx,by)*fem_linear + f_nonlinear(bx,by)*fem_nonlinear)
         
         tm = time.monotonic()
-        if k>0:
-            u = RS.T@chol(RS@RS.T).solve_A(RS@u)
+        
         print('Initial guess compute took  ', time.monotonic()-tm)
             # stop
             
         tm2 = time.monotonic()
         for i in range(maxIter):
-            # gssu = gss(u)
-            # gsu = gs(u)
             
-            gssu = RS @ gss(u) @ RS.T
-            gsu = RS @ gs(u)
+            R,C = gss(b)
+            r1,r2 = gs(b,psi)
+            
+            iR = pde.tools.fastBlockInverse(R)
+            
+            A = RS@C.T@iR@C@RS.T
+            rhs = RS@(C.T@iR@r1-r2)
             
             tm = time.monotonic()
-            wS = chol(gssu).solve_A(-gsu)
+            wS = chol(A).solve_A(-rhs)
             # wS = sps.linalg.spsolve(gssu,-gsu)
             print('Solving took ', time.monotonic()-tm)
             
             # w = wS
-            w = RS.T@wS
             
-            # norm_w = np.linalg.norm(w,np.inf)
-            # norm_gsu = np.linalg.norm(gsu,np.inf)
-            # if (-(wS@gsu)/(norm_w*norm_gsu)<epsangle):
-            #     angleCondition[i%5] = 1
-            #     if np.product(angleCondition)>0:
-            #         w = -gsu
-            #         print("STEP IN NEGATIVE GRADIENT DIRECTION")
-            # else: angleCondition[i%5]=0
+            wpsi = RS.T@wS
+            wb = iR@(r1-C@wpsi)
             
             alpha = 1
             
@@ -327,17 +248,22 @@ for m in range(refinements):
             # AmijoBacktracking
             float_eps = 1e-12; #float_eps = np.finfo(float).eps
             for kk in range(1000):
-                if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
+                
+                # r1,r2 = gs(b+alpha*wb,psi+alpha*wpsi)
+                
+                if J(b+alpha*wb)-J(b) <= alpha*mu*(r1@wb+r2@wpsi) + np.abs(J(b))*float_eps: break
                 else: alpha = alpha*factor_residual
             
-            u_old_i = u
-            u = u + alpha*w
+            b_old_i = b
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
+            b = b + alpha*wb
+            psi = psi + alpha*wpsi
+            
+            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(b)+"|| ||grad||: %2e" %(r1@b+r2@psi)+"||alpha: %2e" % (alpha))
             
             # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
                 # break
-            if (np.abs(J(u)-J(u_old_i)) < 1e-5):
+            if (np.abs(J(b)-J(b_old_i)) < 1e-10):
                 break
             
         # print('im out!!!!!!!!!')
@@ -345,6 +271,7 @@ for m in range(refinements):
         elapsed = time.monotonic()-tm2
         print('Solving took ', elapsed, 'seconds')
         
+        stop
         
         # ax1.cla()
         dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)

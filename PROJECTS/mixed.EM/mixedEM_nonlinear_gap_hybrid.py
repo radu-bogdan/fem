@@ -27,7 +27,7 @@ motor_npz = np.load('../meshes/data.npz', allow_pickle = True)
 m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
-level = 1
+level = 3
 
 for m in range(refinements):
     

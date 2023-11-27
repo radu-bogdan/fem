@@ -312,3 +312,54 @@ def getRS_Hcurl(MESH,ORDER,poly,k,rot_speed):
     RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
     
     return RS
+    
+def getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed):
+    if ORDER == 1:
+        ident = MESH.ident_points
+    if ORDER == 2:
+        ident = np.r_[MESH.ident_points, MESH.np + MESH.ident_edges]
+    
+    i0 = ident[:,0]; i1 = ident[:,1]
+    
+    R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'left,right,airL,airR')
+    R_L, R_LR = pde.h1.assembleR(MESH, space = poly, edges = 'left', listDOF = i1)
+    R_R, R_RR = pde.h1.assembleR(MESH, space = poly, edges = 'right', listDOF = i0)
+   
+    # manual stuff: (removing the point in the three corners...)
+    corners = np.r_[0,MESH.jumps]
+    # corners = np.r_[0,MESH.jumps,MESH.ident_points.shape[0]-1]
+    ind1 = np.setdiff1d(np.r_[0:R_L.shape[0]], corners)
+    R_L = R_L[ind1,:]
+    
+    corners = np.r_[0,MESH.jumps]
+    # corners = np.r_[0,MESH.jumps,MESH.ident_points.shape[0]-1]
+    ind1 = np.setdiff1d(np.r_[0:R_R.shape[0]], corners)
+    R_R = R_R[ind1,:]
+    
+    
+    
+    ident0 = np.roll(MESH.ident_points_gap[:,0], -k*rot_speed)
+    ident1 = MESH.ident_points_gap[:,1]
+    
+    R_AL, R_ALR = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = ident0)
+    R_AR, R_ARR = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = ident1)
+        
+    if k>0:
+        R_AL[-k*rot_speed:,:] = -R_AL[-k*rot_speed:,:]
+        
+    if ORDER == 2:
+        
+        R_AL2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airL', listDOF = MESH.np + np.roll(MESH.ident_edges_gap[:,0], -k*rot_speed))
+        R_AR2, _ = pde.h1.assembleR(MESH, space = poly, edges = 'airR', listDOF = MESH.np + MESH.ident_edges_gap[:,1])
+        
+        if k>0:
+            R_AL2[-k*rot_speed:,:] = -R_AL2[-k*rot_speed:,:] # old
+            
+        
+        R_AL =  bmat([[R_AL], [R_AL2]])
+        R_AR =  bmat([[R_AR], [R_AR2]])
+        
+    
+    RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
+    
+    return RS
