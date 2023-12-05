@@ -239,6 +239,8 @@ for m in range(refinements):
             
             alpha = 1
             
+            # print(gsu@wS,J(u),J(u+w))
+            
             # ResidualLineSearch
             # for k in range(1000):
             #     if np.linalg.norm(gs(u+alpha*w),np.inf) <= np.linalg.norm(gs(u),np.inf): break

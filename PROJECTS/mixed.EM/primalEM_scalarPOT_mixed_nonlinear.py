@@ -245,6 +245,8 @@ for m in range(refinements):
             wb = w[:sb]
             wpsi = RS.T@w[sb:]
             
+            print(r@w,J(psi),J(psi+wpsi),np.linalg.norm(RS@C.T@b,np.inf))
+            
             
             # MESH.pdesurf2(wpsi,cbar=1)
             # stop
