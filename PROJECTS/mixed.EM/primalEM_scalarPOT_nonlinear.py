@@ -28,7 +28,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 3
+    level = 0
     
     
 print("LEVEL " , level)
@@ -131,15 +131,12 @@ for m in range(refinements):
     
         fem_linear = pde.int.evaluate(MESH, order = order_dphidphi, regions = linear).diagonal()
         fem_nonlinear = pde.int.evaluate(MESH, order = order_dphidphi, regions = nonlinear).diagonal()
-        
-        penalty = 1e10
-        
+                
         Ja = 0; J0 = 0
         for i in range(48):
             Ja += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
             J0 += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : j3[i], regions = 'coil'+str(i+1)).diagonal()
-        # Ja = 0*Ja
-        # J0 = 0*J0
+        # Ja = 0*Ja; J0 = 0*J0
         
         M0 = 0; M1 = 0; M00 = 0; M10 = 0; M1_dphi = 0; M0_dphi = 0
         for i in range(16):
@@ -173,6 +170,7 @@ for m in range(refinements):
         
         from mixedEM_linear_gap import H as Hj
         phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = 'N0', matrix = 'phi', order = order_dphidphi)
+        # Hj = 0*Hj
         Hjx = phix_Hcurl.T@Hj
         Hjy = phiy_Hcurl.T@Hj
         

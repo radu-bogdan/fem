@@ -87,6 +87,7 @@ fxy_linear = lambda x,y : x*0
 fyx_linear = lambda x,y : y*0
 fyy_linear = lambda x,y : nu0 + 0*y
 
+##########################################################################################
 
 def g_nonlinear(x,y):
     return 1/2*mu.antiderivative(1)(x**2+y**2)
