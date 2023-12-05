@@ -225,6 +225,8 @@ for m in range(refinements):
             
             # w = wS
             w = RS.T@wS
+            # MESH.pdesurf2(w,cbar=1)
+            # stop
             
             # norm_w = np.linalg.norm(w,np.inf)
             # norm_gsu = np.linalg.norm(gsu,np.inf)
@@ -245,17 +247,20 @@ for m in range(refinements):
             # AmijoBacktracking
             float_eps = 1e-12; #float_eps = np.finfo(float).eps
             for kk in range(1000):
+                
+                # print(J(u+alpha*w),J(u),alpha*mu*(gsu@wS))
+                
                 if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
                 else: alpha = alpha*factor_residual
             
             u_old_i = u
             u = u + alpha*w
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
+            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(u))
             
             # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
-                # break
-            if (np.abs(J(u)-J(u_old_i)) < 1e-5):
+            #     break
+            if (np.abs(J(u)-J(u_old_i)) < 1e-1):
                 break
             
         # print('im out!!!!!!!!!')
@@ -310,7 +315,7 @@ for m in range(refinements):
             tm = time.monotonic()
             ax1.cla()
             ax1.set_aspect(aspect = 'equal')
-            MESH.pdesurf2(u[:MESH.np], ax = ax1)
+            MESH.pdesurf2(u[:MESH.np], ax = ax1, cbar = 1)
             # MESH.pdemesh2(ax = ax)
             MESH.pdegeom(ax = ax1)
             Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])

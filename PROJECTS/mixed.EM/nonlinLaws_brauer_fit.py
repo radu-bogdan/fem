@@ -54,7 +54,7 @@ dx_mu = mu.derivative(1)
 
 # plt.figure()
 # plt.plot(mu(yy**2)*nu(mu(yy**2)**2*yy**2))
-# plt.plot(nu(xx**2)*mu(nu(xx**2)**2*xx**2))
+# # plt.plot(nu(xx**2)*mu(nu(xx**2)**2*xx**2))
 
 ##########################################################################################
 

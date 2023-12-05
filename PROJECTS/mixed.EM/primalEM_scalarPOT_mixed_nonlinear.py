@@ -111,8 +111,8 @@ for m in range(refinements):
         phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
         
         R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-        # RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
-        RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
+        RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
+        # RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
         
         ##########################################################################################
             
@@ -165,7 +165,7 @@ for m in range(refinements):
         ##########################################################################################
         
         from mixedEM_linear_gap import H as Hj
-        Hj = 0*Hj
+        # Hj = 0*Hj
         phix_Hcurl, phiy_Hcurl = pde.hcurl.assemble(MESH, space = 'N0', matrix = 'phi', order = order_dphidphi)
         Hjx = phix_Hcurl.T@Hj
         Hjy = phiy_Hcurl.T@Hj
@@ -183,7 +183,7 @@ for m in range(refinements):
         angleCondition = np.zeros(5)
         eps_newton = 1e-8
         factor_residual = 1/2
-        mu = 1/2 #0.0001
+        mu = 0.0001
         
         def gss(b):
             bx = b[:len(b)//2]; by = b[len(b)//2:]
@@ -203,21 +203,17 @@ for m in range(refinements):
         def gs(b,psi):
             bx = b[:len(b)//2]; by = b[len(b)//2:]
             
-            r1 =  np.r_[phi_L2 @ D_order_dphidphi @ (-Hjx - M0_dphi + fx_linear(bx,by)*fem_linear + fx_nonlinear(bx,by)*fem_nonlinear) - Cx @ psi,
-                        phi_L2 @ D_order_dphidphi @ (-Hjy - M1_dphi + fy_linear(bx,by)*fem_linear + fy_nonlinear(bx,by)*fem_nonlinear) - Cy @ psi]
+            r1 =  np.r_[phi_L2 @ D_order_dphidphi @ (fx_linear(bx,by)*fem_linear + fx_nonlinear(bx,by)*fem_nonlinear -Hjx -M0_dphi) - Cx @ psi,
+                        phi_L2 @ D_order_dphidphi @ (fy_linear(bx,by)*fem_linear + fy_nonlinear(bx,by)*fem_nonlinear -Hjy -M1_dphi) - Cy @ psi]
             
             r2 = dphix_H1 @ D_order_dphidphi @ bx +\
                  dphiy_H1 @ D_order_dphidphi @ by
             
             return r1,r2
         
-        def Jd(b):
-            bx = b[:len(b)//2]; by = b[len(b)//2:]
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(bx,by)*fem_linear + f_nonlinear(bx,by)*fem_nonlinear)
-        
         def J(psi):
             psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx+psix,Hjy+psiy)*fem_linear + g_nonlinear(Hjx+psix,Hjy+psiy)*fem_nonlinear)
+            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx +psix,Hjy +psiy)*fem_linear + g_nonlinear(Hjx +psix,Hjy +psiy)*fem_nonlinear)
         
         tm = time.monotonic()
         
@@ -232,7 +228,7 @@ for m in range(refinements):
             
             
             A = bmat([[R,-C@RS.T],
-                      [RS@C.T,None]])
+                      [RS@C.T,None]]).tocsc()
             
             r = np.r_[r1,0*RS@r2]
             
@@ -240,15 +236,18 @@ for m in range(refinements):
             # A = -RS@C.T@iR@C@RS.T
             # rhs = RS@(C.T@iR@r1-r2)
             
-            
             tm = time.monotonic()
             # wS = chol(A).solve_A(-rhs)
             # wS = sps.linalg.spsolve(A,-rhs)
-            w = sps.linalg.spsolve(A,r)
+            w = sps.linalg.spsolve(A,-r)
             print('Solving took ', time.monotonic()-tm)
             
             wb = w[:sb]
             wpsi = RS.T@w[sb:]
+            
+            
+            # MESH.pdesurf2(wpsi,cbar=1)
+            # stop
             
             # w = wS
             
@@ -270,8 +269,12 @@ for m in range(refinements):
             # AmijoBacktracking
             float_eps = 1e-12; #float_eps = np.finfo(float).eps
             for kk in range(1000):
+            
+                # print(J(psi+alpha*wpsi),J(psi),w@r,alpha*mu*(r@w))
                 
-                if J(psi+alpha*wpsi)-J(psi) <= alpha*mu*(r@w): break
+                # if kk == 0: stop
+                
+                if J(psi+alpha*wpsi)-J(psi) <= alpha*mu*(r@w)+ np.abs(J(psi))*float_eps: break
                 else: alpha = alpha*factor_residual
             
             b_old_i = b
@@ -280,12 +283,12 @@ for m in range(refinements):
             b = b + alpha*wb
             psi = psi + alpha*wpsi
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(psi)+"|| ||grad||: %2e" %np.linalg.norm(np.r_[gs(b,psi)],np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(psi))            
+            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(psi)+"|| ||grad||: %2e" %np.linalg.norm(r,np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(psi))
                         
-            if ( np.linalg.norm(r,np.inf) < eps_newton):
-                break
-            # if (np.abs(J(psi)-J(psi_old_i)) < 1e-10):
+            # if ( np.linalg.norm(r,np.inf) < eps_newton):
             #     break
+            if (np.abs(J(psi)-J(psi_old_i)) < 1e-1):
+                break
             
         # print('im out!!!!!!!!!')
             

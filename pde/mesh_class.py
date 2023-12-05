@@ -427,6 +427,13 @@ class mesh:
         return ax
     
     def pdesurf2(self,fun,**kwargs):
+        
+        vmin = npy.min(fun)
+        vmax = npy.max(fun)
+        
+        if 'cmin' in kwargs.keys(): vmin = kwargs['cmin']
+        if 'cmax' in kwargs.keys(): vmax = kwargs['cmax']
+        
         if "ax" not in kwargs:
             # create new figure
             fig = plt.figure(**{k: v for k, v in kwargs.items() if k in ['figsize']})
@@ -443,7 +450,7 @@ class mesh:
         
         if (fun.size==self.np):
             Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
-            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, shading='gouraud')
+            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, shading='gouraud', vmin = vmin, vmax = vmax)
             
             # refiner = tri.UniformTriRefiner(Triang)
             # tri_refi, z_test_refi = refiner.refine_field(fun, subdiv=3)
@@ -452,7 +459,7 @@ class mesh:
             
         if (fun.size==self.nt):
             Triang = matplotlib.tri.Triangulation(self.p[:,0], self.p[:,1], self.t[:,0:3])
-            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1)
+            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, vmin = vmin, vmax = vmax)
             
         if (fun.size==3*self.nt):
             p0 = self.p[:,0]; p1 = self.p[:,1]
@@ -462,7 +469,10 @@ class mesh:
             p1d = npy.c_[p1[t[:,0]],p1[t[:,1]],p1[t[:,2]]].ravel()
             td = npy.r_[:3*nt].reshape(nt,3)
             Triang = matplotlib.tri.Triangulation(p0d, p1d, td)
-            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, shading='gouraud')
+            chip = ax.tripcolor(Triang, fun, cmap = cmap, lw = 0.1, shading='gouraud', vmin = vmin, vmax = vmax)
+        
+        if "cbar" in kwargs.keys() and kwargs["cbar"]==1:
+            plt.colorbar(chip)
         return ax
     
     def pdemesh2(self,**kwargs):
