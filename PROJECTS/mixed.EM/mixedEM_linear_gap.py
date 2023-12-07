@@ -47,7 +47,8 @@ j3 = motor_npz['j3']
 plot = 0
 level = 0
 
-open_file = open('mesh'+str(level)+'.pkl', "rb")
+open_file = open('mesh_full'+str(level)+'.pkl', "rb")
+# open_file = open('mesh'+str(level)+'.pkl', "rb")
 MESH = dill.load(open_file)[0]
 open_file.close()
 
@@ -58,9 +59,8 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 
 from findPoints import *
 
-# ident_points, ident_edges = makeIdentifications_nogap(MESH)
-getPoints(MESH)
-makeIdentifications(MESH)
+# getPoints(MESH)
+# makeIdentifications(MESH)
 
 rot_speed = 1
 rots = 1
@@ -124,23 +124,9 @@ for k in range(rots):
     aJ = phi_L2(int_order)@ D(int_order) @Ja
     
     ##########################################################################################
-    
-    R_out, R_int = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'stator_outer,left,right,airR,airL')
-    
-    R_L, R_LR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'left', listDOF = MESH.ident_edges[:,0])
-    R_R, R_RR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'right', listDOF = MESH.ident_edges[:,1])
-    
-    R_AL, R_ALR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airL', listDOF = np.roll(MESH.ident_edges_gap[:,0], -k*rot_speed))
-    R_AR, R_ARR = pde.hcurl.assembleR(MESH, space = 'N0', edges = 'airR', listDOF = MESH.ident_edges_gap[:,1])
-    
-    if k>0:
-        R_AL[-k*rot_speed+1:,:] = -R_AL[-k*rot_speed+1:,:]
-        R_AL[0,:] = -R_AL[0,:]
+    # RS = getRS_Hcurl(MESH, 1, 'N0', k, rot_speed)
+    RS = sps.eye(MESH.NoEdges)
     ##########################################################################################
-    
-    from scipy.sparse import bmat
-    RS =  bmat([[R_int], [R_L-R_R], [R_AL+R_AR]])
-    # RS =  bmat([[R_int], [R_L-R_R]])
     
     SYS = bmat([[Mh2,C.T],\
                 [C,None]]).tocsc()

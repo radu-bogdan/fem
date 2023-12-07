@@ -35,18 +35,19 @@ print("LEVEL " , level)
 
 for m in range(refinements):
     
-    open_file = open('mesh'+str(level)+'.pkl', "rb")
+    open_file = open('mesh_full'+str(level)+'.pkl', "rb")
+    # open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
     open_file.close()
     
     from findPoints import *
     
     tm = time.monotonic()
-    getPoints(MESH)
+    # getPoints(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
-    makeIdentifications(MESH)
+    # makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
     
@@ -112,7 +113,11 @@ for m in range(refinements):
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
         # R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
         
-        RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
+        # RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
+        
+        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
+        RS = bmat([[R_int[1:]],[R_out]])
+        # RS = sps.eye(MESH.np)
         
         # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
         
@@ -309,15 +314,15 @@ for m in range(refinements):
                 fig = plt.figure()
                 # writer.setup(fig, "writer_test.mp4", 500)
                 fig.show()
-                ax1 = fig.add_subplot(221)
-                ax2 = fig.add_subplot(222)
-                ax3 = fig.add_subplot(223)
-                ax4 = fig.add_subplot(224)
+                ax1 = fig.add_subplot(121)
+                ax2 = fig.add_subplot(122)
+                # ax3 = fig.add_subplot(223)
+                # ax4 = fig.add_subplot(224)
             
             tm = time.monotonic()
             ax1.cla()
             ax1.set_aspect(aspect = 'equal')
-            MESH.pdesurf2(u[:MESH.np], ax = ax1, cbar = 1)
+            MESH.pdesurf2(u[:MESH.np], ax = ax1)
             # MESH.pdemesh2(ax = ax)
             MESH.pdegeom(ax = ax1)
             Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
@@ -331,14 +336,14 @@ for m in range(refinements):
             MESH.pdegeom(ax = ax2)
             # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
             
-            ax3.cla()
-            # ax3.set_aspect(aspect = 'equal')
-            ax3.plot(tor)
-            ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
+            # ax3.cla()
+            # # ax3.set_aspect(aspect = 'equal')
+            # ax3.plot(tor)
+            # ax3.plot((energy[2:]-energy[1:-1])*(MESH.ident_points_gap.shape[0]))
             
-            ax4.cla()
-            # ax3.set_aspect(aspect = 'equal')
-            ax4.plot(energy)
+            # ax4.cla()
+            # # ax3.set_aspect(aspect = 'equal')
+            # ax4.plot(energy)
         
         
         

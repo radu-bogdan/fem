@@ -35,19 +35,20 @@ print("LEVEL " , level)
 
 for m in range(refinements):
     
-    open_file = open('mesh'+str(level)+'.pkl', "rb")
+    open_file = open('mesh_full'+str(level)+'.pkl', "rb")
+    # open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
     open_file.close()
     
     from findPoints import *
     
     tm = time.monotonic()
-    getPoints(MESH)
+    # getPoints(MESH)
     # ident_points_gap = getPointsNoEdges(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
-    makeIdentifications(MESH)
+    # makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
     
@@ -110,9 +111,10 @@ for m in range(refinements):
         dphix_H1_order_phiphi, dphiy_H1_order_phiphi = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = order_phiphi)
         phi_L2 = pde.l2.assemble(MESH, space = dxpoly, matrix = 'M', order = order_dphidphi)
         
-        R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-        RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
-        # RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
+        # RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
+        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
+        RS = bmat([[R_int[1:]],[R_out]])
+        
         
         ##########################################################################################
             
@@ -193,8 +195,8 @@ for m in range(refinements):
             fxy_u_Kxy = phi_L2 @ D_order_dphidphi @ sps.diags(fxy_linear(bx,by)*fem_linear + fxy_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
             fyx_u_Kyx = phi_L2 @ D_order_dphidphi @ sps.diags(fyx_linear(bx,by)*fem_linear + fyx_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
             
-            R = bmat([[fxx_u_Kxx,fxy_u_Kxy],
-                      [fyx_u_Kyx,fyy_u_Kyy]])
+            R = bmat([[fxx_u_Kxx,fyx_u_Kyx],
+                      [fxy_u_Kxy,fyy_u_Kyy]])
             
             C = bmat([[Cx],[Cy]])
             
@@ -237,7 +239,7 @@ for m in range(refinements):
             # rhs = RS@(C.T@iR@r1-r2)
             
             tm = time.monotonic()
-            # wS = chol(A).solve_A(-rhs)
+            # wS = chol(A).solve_A(-r)
             # wS = sps.linalg.spsolve(A,-rhs)
             w = sps.linalg.spsolve(A,-r)
             print('Solving took ', time.monotonic()-tm)
@@ -245,7 +247,7 @@ for m in range(refinements):
             wb = w[:sb]
             wpsi = RS.T@w[sb:]
             
-            print(r@w,J(psi),J(psi+wpsi),np.linalg.norm(RS@C.T@b,np.inf))
+            print("RESIDUAL SHIT: ", r@w,J(psi),J(psi+wpsi),np.linalg.norm(RS@C.T@b,np.inf))
             
             
             # MESH.pdesurf2(wpsi,cbar=1)
@@ -264,20 +266,20 @@ for m in range(refinements):
             alpha = 1
             
             # ResidualLineSearch
-            # for k in range(1000):
-            #     if np.linalg.norm(np.r_[gs(b+alpha*wb,psi+alpha*wpsi)],np.inf) <= np.linalg.norm(np.r_[gs(b,psi)],np.inf): break
-            #     else: alpha = alpha*factor_residual
+            for k in range(1000):
+                if np.linalg.norm(np.r_[gs(b+alpha*wb,psi+alpha*wpsi)],np.inf) <= np.linalg.norm(np.r_[gs(b,psi)],np.inf): break
+                else: alpha = alpha*factor_residual
             
             # AmijoBacktracking
-            float_eps = 1e-12; #float_eps = np.finfo(float).eps
-            for kk in range(1000):
+            # float_eps = 1e-12; #float_eps = np.finfo(float).eps
+            # for kk in range(1000):
             
-                # print(J(psi+alpha*wpsi),J(psi),w@r,alpha*mu*(r@w))
+            #     # print(J(psi+alpha*wpsi),J(psi),w@r,alpha*mu*(r@w))
                 
-                # if kk == 0: stop
+            #     # if kk == 0: stop
                 
-                if J(psi+alpha*wpsi)-J(psi) <= alpha*mu*(r@w)+ np.abs(J(psi))*float_eps: break
-                else: alpha = alpha*factor_residual
+            #     if J(psi+alpha*wpsi)-J(psi) <= alpha*mu*(r@w)+ np.abs(J(psi))*float_eps: break
+            #     else: alpha = alpha*factor_residual
             
             b_old_i = b
             psi_old_i = psi
@@ -297,14 +299,14 @@ for m in range(refinements):
         elapsed = time.monotonic()-tm2
         print('Solving took ', elapsed, 'seconds')
         
-        stop
+        # stop
         
         # ax1.cla()
         dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
-        ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
+        psix = dphix_H1_o1.T@psi; psiy = dphiy_H1_o1.T@psi
         
-        Hx = Hjx + ux
-        Hy = Hjy + uy
+        Hx = Hjx + psix
+        Hy = Hjy + psiy
         
         allH = g_nonlinear_all(Hx,Hy)
         gx_H_l  = allH[1]; gy_H_l  = allH[2];
@@ -337,19 +339,19 @@ for m in range(refinements):
                 fig = plt.figure()
                 # writer.setup(fig, "writer_test.mp4", 500)
                 fig.show()
-                ax1 = fig.add_subplot(221)
-                ax2 = fig.add_subplot(222)
-                ax3 = fig.add_subplot(223)
-                ax4 = fig.add_subplot(224)
+                ax1 = fig.add_subplot(121)
+                ax2 = fig.add_subplot(122)
+                # ax3 = fig.add_subplot(223)
+                # ax4 = fig.add_subplot(224)
             
             tm = time.monotonic()
             ax1.cla()
             ax1.set_aspect(aspect = 'equal')
-            MESH.pdesurf2(u[:MESH.np], ax = ax1)
+            MESH.pdesurf2(psi[:MESH.np], ax = ax1)
             # MESH.pdemesh2(ax = ax)
             MESH.pdegeom(ax = ax1)
-            Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
-            ax1.tricontour(Triang, u[:MESH.np], levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
+            # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
+            # ax1.tricontour(Triang, u[:MESH.np], levels = 25, colors = 'k', linewidths = 0.5, linestyles = 'solid')
             
             ax2.cla()
             ax2.set_aspect(aspect = 'equal')
@@ -359,14 +361,14 @@ for m in range(refinements):
             MESH.pdegeom(ax = ax2)
             # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])
             
-            ax3.cla()
-            # ax3.set_aspect(aspect = 'equal')
-            ax3.plot(tor)
-            ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
+            # ax3.cla()
+            # # ax3.set_aspect(aspect = 'equal')
+            # ax3.plot(tor)
+            # ax3.plot((energy[2:]-energy[1:-1])*(ident_points_gap.shape[0]))
             
-            ax4.cla()
-            # ax3.set_aspect(aspect = 'equal')
-            ax4.plot(energy)
+            # ax4.cla()
+            # # ax3.set_aspect(aspect = 'equal')
+            # ax4.plot(energy)
         
         
         

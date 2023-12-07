@@ -7,9 +7,10 @@ import ngsolve as ng
 import dill
 import pickle
 
-from netgen import gui
+# from netgen import gui
 
-motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
+# motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m
@@ -18,7 +19,7 @@ j3 = motor_npz['j3']
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 
-nums = 5
+nums = 2
 MESH = []
 
 for i in range(nums):
@@ -28,7 +29,7 @@ for i in range(nums):
 MESH.append(pde.mesh.netgen(ngsolvemesh.ngmesh))
 
 
-open_file = open('mesh'+str(nums)+'.pkl', "wb")
+open_file = open('mesh_full'+str(nums)+'.pkl', "wb")
 dill.dump(MESH, open_file)
 open_file.close()
 
@@ -46,7 +47,7 @@ import pickle
 import pde
 
 nums = 0
-open_file = open('mesh'+str(nums)+'.pkl', "rb")
+open_file = open('mesh_full'+str(nums)+'.pkl', "rb")
 MESH_LOADED = dill.load(open_file)
 open_file.close()
 

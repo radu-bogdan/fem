@@ -27,7 +27,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 0
+    level = 2
     
 print("LEVEL " , level)
 
@@ -48,18 +48,19 @@ from nonlinLaws_brauer_fit import *
 
 for m in range(refinements):
     
-    open_file = open('mesh'+str(level)+'.pkl', "rb")
+    open_file = open('mesh_full'+str(level)+'.pkl', "rb")
+    # open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
     open_file.close()
     
     from findPoints import *
     
     tm = time.monotonic()
-    getPoints(MESH)
+    # getPoints(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
-    makeIdentifications(MESH)
+    # makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
     ##########################################################################################
@@ -121,7 +122,9 @@ for m in range(refinements):
         
         # Identification of "freeDofs"
         R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-        RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
+        
+        # RS = getRS_H1(MESH,ORDER,poly,k,rot_speed)
+        RS = RSS
         
         ##########################################################################################
         # Assembling J,M
