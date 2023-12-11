@@ -205,8 +205,8 @@ for m in range(refinements):
         def gs(b,psi):
             bx = b[:len(b)//2]; by = b[len(b)//2:]
             
-            r1 =  np.r_[phi_L2 @ D_order_dphidphi @ (fx_linear(bx,by)*fem_linear + fx_nonlinear(bx,by)*fem_nonlinear -Hjx -M0_dphi) - Cx @ psi,
-                        phi_L2 @ D_order_dphidphi @ (fy_linear(bx,by)*fem_linear + fy_nonlinear(bx,by)*fem_nonlinear -Hjy -M1_dphi) - Cy @ psi]
+            r1 =  np.r_[phi_L2 @ D_order_dphidphi @ (fx_linear(bx,by)*fem_linear + fx_nonlinear(bx,by)*fem_nonlinear -Hjx +M0_dphi) - Cx @ psi,
+                        phi_L2 @ D_order_dphidphi @ (fy_linear(bx,by)*fem_linear + fy_nonlinear(bx,by)*fem_nonlinear -Hjy +M1_dphi) - Cy @ psi]
             
             r2 = dphix_H1 @ D_order_dphidphi @ bx +\
                  dphiy_H1 @ D_order_dphidphi @ by
@@ -216,6 +216,11 @@ for m in range(refinements):
         def J(psi):
             psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi
             return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx +psix,Hjy +psiy)*fem_linear + g_nonlinear(Hjx +psix,Hjy +psiy)*fem_nonlinear)
+        
+        def J2(psi):
+            psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi
+            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(   g_linear(Hjx +psix -M0_dphi,Hjy +psiy -M1_dphi)*fem_linear +\
+                                                                      g_nonlinear(Hjx +psix -M0_dphi,Hjy +psiy -M1_dphi)*fem_nonlinear)
         
         tm = time.monotonic()
         
@@ -228,15 +233,16 @@ for m in range(refinements):
             R,C = gss(b)
             r1,r2 = gs(b,psi)
             
+            iR = pde.tools.fastBlockInverse(R)
             
             A = bmat([[R,-C@RS.T],
                       [RS@C.T,None]]).tocsc()
             
             r = np.r_[r1,0*RS@r2]
             
-            # iR = pde.tools.fastBlockInverse(R)            
+            
             # A = -RS@C.T@iR@C@RS.T
-            # rhs = RS@(C.T@iR@r1-r2)
+            rhs = RS@(C.T@iR@r1)
             
             tm = time.monotonic()
             # wS = chol(A).solve_A(-r)
@@ -247,7 +253,7 @@ for m in range(refinements):
             wb = w[:sb]
             wpsi = RS.T@w[sb:]
             
-            print("RESIDUAL SHIT: ", r@w,J(psi),J(psi+wpsi),np.linalg.norm(RS@C.T@b,np.inf))
+            # print("RESIDUAL SHIT: ", r@w,J(psi),J(psi+wpsi),np.linalg.norm(RS@C.T@b,np.inf))
             
             
             # MESH.pdesurf2(wpsi,cbar=1)
@@ -266,20 +272,18 @@ for m in range(refinements):
             alpha = 1
             
             # ResidualLineSearch
-            for k in range(1000):
-                if np.linalg.norm(np.r_[gs(b+alpha*wb,psi+alpha*wpsi)],np.inf) <= np.linalg.norm(np.r_[gs(b,psi)],np.inf): break
-                else: alpha = alpha*factor_residual
+            # for k in range(1000):
+            #     if np.linalg.norm(np.r_[gs(b+alpha*wb,psi+alpha*wpsi)],np.inf) <= np.linalg.norm(np.r_[gs(b,psi)],np.inf): break
+            #     else: alpha = alpha*factor_residual
+                
+            # print("RESIDUAL SHIT: ", J2(psi+alpha*wpsi),J2(psi),J2(psi+alpha*wpsi)-J2(psi),alpha*mu*(rhs@(RS@wpsi)),alpha*mu*(r@w))
             
             # AmijoBacktracking
-            # float_eps = 1e-12; #float_eps = np.finfo(float).eps
-            # for kk in range(1000):
-            
-            #     # print(J(psi+alpha*wpsi),J(psi),w@r,alpha*mu*(r@w))
-                
-            #     # if kk == 0: stop
-                
-            #     if J(psi+alpha*wpsi)-J(psi) <= alpha*mu*(r@w)+ np.abs(J(psi))*float_eps: break
-            #     else: alpha = alpha*factor_residual
+            float_eps = 1e-12; #float_eps = np.finfo(float).eps
+            for kk in range(1000):
+                print("RESIDUAL SHIT: ", J2(psi+alpha*wpsi),J2(psi),J2(psi+alpha*wpsi)-J2(psi),alpha*mu*(rhs@(RS@wpsi)),alpha*mu*(r@w))
+                if J2(psi+alpha*wpsi)-J2(psi) <= alpha*mu*(rhs@(-RS@wpsi))+ np.abs(J2(psi))*float_eps: break
+                else: alpha = alpha*factor_residual
             
             b_old_i = b
             psi_old_i = psi
@@ -287,12 +291,12 @@ for m in range(refinements):
             b = b + alpha*wb
             psi = psi + alpha*wpsi
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(psi)+"|| ||grad||: %2e" %np.linalg.norm(r,np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(psi))
+            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(psi)+"|| ||grad||: %2e" %np.linalg.norm(r,np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(psi)+"|| J2(u) : %2e" %J2(psi))
                         
-            # if ( np.linalg.norm(r,np.inf) < eps_newton):
-            #     break
-            if (np.abs(J(psi)-J(psi_old_i)) < 1e-1):
+            if ( np.linalg.norm(r,np.inf) < eps_newton):
                 break
+            # if (np.abs(J(psi)-J(psi_old_i)) < 1e-1):
+            #     break
             
         # print('im out!!!!!!!!!')
             
@@ -347,7 +351,7 @@ for m in range(refinements):
             tm = time.monotonic()
             ax1.cla()
             ax1.set_aspect(aspect = 'equal')
-            MESH.pdesurf2(psi[:MESH.np], ax = ax1)
+            MESH.pdesurf2(psi[:MESH.np], ax = ax1, cbar=1)
             # MESH.pdemesh2(ax = ax)
             MESH.pdegeom(ax = ax1)
             # Triang = matplotlib.tri.Triangulation(MESH.p[:,0], MESH.p[:,1], MESH.t[:,0:3])

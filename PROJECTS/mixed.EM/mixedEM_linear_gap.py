@@ -120,6 +120,8 @@ for k in range(rots):
     
     aM = phix_Hcurl@ D(int_order) @(M0) +\
          phiy_Hcurl@ D(int_order) @(M1)
+         
+    aM = 0*aM
     
     aJ = phi_L2(int_order)@ D(int_order) @Ja
     

@@ -11,7 +11,7 @@ found = spam_spec is not None
 
 from scipy.sparse.linalg import splu
 
-# found = False
+found = False
 
 if found == False:
     # @profile()
