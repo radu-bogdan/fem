@@ -24,9 +24,9 @@ xx = np.linspace(0,8,5000)
 yy = np.exp(np.linspace(0,np.log(5*1e8),5000))-1
 
 nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'natural')
-# spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
-# dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
-dx_nu = nu.derivative(1)
+spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
+dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
+# dx_nu = nu.derivative(1)
 
 gen_gs = interpolate.CubicSpline(xx*nu(xx**2), xx, bc_type = 'natural')
 mu = interpolate.CubicSpline(yy[1:]**2, gen_gs(yy[1:])/yy[1:], bc_type = 'natural')

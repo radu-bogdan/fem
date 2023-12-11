@@ -45,7 +45,7 @@ m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 plot = 0
-level = 0
+level = 2
 
 open_file = open('mesh_full'+str(level)+'.pkl', "rb")
 # open_file = open('mesh'+str(level)+'.pkl', "rb")
@@ -121,7 +121,7 @@ for k in range(rots):
     aM = phix_Hcurl@ D(int_order) @(M0) +\
          phiy_Hcurl@ D(int_order) @(M1)
          
-    aM = 0*aM
+    aM = aM
     
     aJ = phi_L2(int_order)@ D(int_order) @Ja
     

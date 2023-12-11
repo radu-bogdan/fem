@@ -28,7 +28,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 0
+    level = 2
     
     
 print("LEVEL " , level)
@@ -195,8 +195,8 @@ for m in range(refinements):
             fxy_u_Kxy = phi_L2 @ D_order_dphidphi @ sps.diags(fxy_linear(bx,by)*fem_linear + fxy_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
             fyx_u_Kyx = phi_L2 @ D_order_dphidphi @ sps.diags(fyx_linear(bx,by)*fem_linear + fyx_nonlinear(bx,by)*fem_nonlinear)@ phi_L2.T
             
-            R = bmat([[fxx_u_Kxx,fyx_u_Kyx],
-                      [fxy_u_Kxy,fyy_u_Kyy]])
+            R = bmat([[fxx_u_Kxx,fxy_u_Kxy],
+                      [fyx_u_Kyx,fyy_u_Kyy]])
             
             C = bmat([[Cx],[Cy]])
             
@@ -213,14 +213,15 @@ for m in range(refinements):
             
             return r1,r2
         
-        def J(psi):
-            psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx +psix,Hjy +psiy)*fem_linear + g_nonlinear(Hjx +psix,Hjy +psiy)*fem_nonlinear)
+        # def J(psi):
+        #     psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi
+        #     return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(g_linear(Hjx +psix,Hjy +psiy)*fem_linear + g_nonlinear(Hjx +psix,Hjy +psiy)*fem_nonlinear)
         
-        def J2(psi):
+        def J(b,psi):
+            bx = b[:len(b)//2]; by = b[len(b)//2:]
             psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi
-            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(   g_linear(Hjx +psix -M0_dphi,Hjy +psiy -M1_dphi)*fem_linear +\
-                                                                      g_nonlinear(Hjx +psix -M0_dphi,Hjy +psiy -M1_dphi)*fem_nonlinear)
+            return np.ones(D_order_dphidphi.size)@ D_order_dphidphi @(f_linear(bx,by)*fem_linear + f_nonlinear(bx,by)*fem_nonlinear +(-Hjx+M0_dphi)*bx +(-Hjy+M1_dphi)*by -psix*bx -psiy*by)        
+        
         
         tm = time.monotonic()
         
@@ -231,27 +232,32 @@ for m in range(refinements):
         for i in range(maxIter):
             
             R,C = gss(b)
-            r1,r2 = gs(b,psi)
             
-            iR = pde.tools.fastBlockInverse(R)
+            r1,r2 = gs(b,psi)
             
             A = bmat([[R,-C@RS.T],
                       [RS@C.T,None]]).tocsc()
             
             r = np.r_[r1,0*RS@r2]
             
+            # tm = time.monotonic()
+            # # wS = chol(AA).solve_A(-rr)
+            # w = sps.linalg.spsolve(A,-r)
+            # wb = w[:sb]
+            # wpsi = RS.T@w[sb:]
+            # print('Solving took ', time.monotonic()-tm)
             
-            # A = -RS@C.T@iR@C@RS.T
-            rhs = RS@(C.T@iR@r1)
             
             tm = time.monotonic()
-            # wS = chol(A).solve_A(-r)
-            # wS = sps.linalg.spsolve(A,-rhs)
-            w = sps.linalg.spsolve(A,-r)
+            iR = pde.tools.fastBlockInverse(R)
+            AA = RS@C.T@iR@C@RS.T
+            rr = RS@(-C.T@iR@r1+0*r2)
+            wpsi = RS.T@chol(AA).solve_A(-rr)
+            wb = iR@(C@wpsi-r1)
+            w = np.r_[RS@wpsi,wb]
             print('Solving took ', time.monotonic()-tm)
             
-            wb = w[:sb]
-            wpsi = RS.T@w[sb:]
+            # print('dif:',np.linalg.norm(wb-wb2),np.linalg.norm(wpsi-wpsi2))
             
             # print("RESIDUAL SHIT: ", r@w,J(psi),J(psi+wpsi),np.linalg.norm(RS@C.T@b,np.inf))
             
@@ -273,16 +279,16 @@ for m in range(refinements):
             
             # ResidualLineSearch
             # for k in range(1000):
+            #     print("RESIDUAL: ", J2(psi+alpha*wpsi),J2(psi),J2(psi+alpha*wpsi)-J2(psi),alpha*mu*(rhs@(RS@wpsi)),alpha*mu*(r@w))
             #     if np.linalg.norm(np.r_[gs(b+alpha*wb,psi+alpha*wpsi)],np.inf) <= np.linalg.norm(np.r_[gs(b,psi)],np.inf): break
             #     else: alpha = alpha*factor_residual
                 
-            # print("RESIDUAL SHIT: ", J2(psi+alpha*wpsi),J2(psi),J2(psi+alpha*wpsi)-J2(psi),alpha*mu*(rhs@(RS@wpsi)),alpha*mu*(r@w))
+            # print("RESIDUAL: ", J2(psi+alpha*wpsi),J2(psi),J2(psi+alpha*wpsi)-J2(psi),alpha*mu*(rhs@(RS@wpsi)),alpha*mu*(r@w))
             
             # AmijoBacktracking
             float_eps = 1e-12; #float_eps = np.finfo(float).eps
             for kk in range(1000):
-                print("RESIDUAL SHIT: ", J2(psi+alpha*wpsi),J2(psi),J2(psi+alpha*wpsi)-J2(psi),alpha*mu*(rhs@(RS@wpsi)),alpha*mu*(r@w))
-                if J2(psi+alpha*wpsi)-J2(psi) <= alpha*mu*(rhs@(-RS@wpsi))+ np.abs(J2(psi))*float_eps: break
+                if J(b+alpha*wb,psi+alpha*wpsi)-J(b,psi) <= alpha*mu*(r@w)+ np.abs(J(b,psi))*float_eps: break
                 else: alpha = alpha*factor_residual
             
             b_old_i = b
@@ -291,12 +297,12 @@ for m in range(refinements):
             b = b + alpha*wb
             psi = psi + alpha*wpsi
             
-            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(psi)+"|| ||grad||: %2e" %np.linalg.norm(r,np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(psi)+"|| J2(u) : %2e" %J2(psi))
+            print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(b,psi)+"|| ||grad||: %2e" %np.linalg.norm(r,np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(b,psi))
                         
-            if ( np.linalg.norm(r,np.inf) < eps_newton):
-                break
-            # if (np.abs(J(psi)-J(psi_old_i)) < 1e-1):
+            # if ( np.linalg.norm(r,np.inf) < eps_newton):
             #     break
+            if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-5):
+                break
             
         # print('im out!!!!!!!!!')
             
