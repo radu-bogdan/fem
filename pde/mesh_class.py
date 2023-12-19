@@ -1012,7 +1012,7 @@ def intersect2d(X, Y):
 
 
 class mesh3:
-    def __init__(self, p, e, t, r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
+    def __init__(self, p, e, f, t, r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
         
         # erst t sortieren anscheinend ...
         
@@ -1033,24 +1033,22 @@ class mesh3:
         
         mp_tet = 1/3*(p[t[:,0],:] + p[t[:,1],:] + p[t[:,2],:] + p[t[:,3],:])
         
-        e_new = npy.sort(e[:,:2])
+        f_new = npy.sort(f[:,:2])
             
         nt = t.shape[0]
         
         #############################################################################################################
-        edges = npy.r_[npy.sort(edges_trigs),
-                       npy.sort(edges_quads)].astype(int)
+        edges = npy.sort(edges_tets).astype(int)
         EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
         # EdgesToVertices, je = unique_rows(edges, return_inverse = True)
         
         NoEdges = EdgesToVertices.shape[0]
-        TriangleToEdges = je[0:3*nt].reshape(nt,3, order = 'F').astype(npy.int64)
-        QuadToEdges = je[3*nt:].reshape(nq,4, order = 'F')
-        BoundaryEdges = intersect2d(EdgesToVertices,e_new)
+        TetsToEdges = je[0:4*nt].reshape(nt,4, order = 'F').astype(npy.int64)
+        BoundaryEdges = intersect2d(EdgesToVertices,f_new)
         # InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
         
         EdgesToVertices = npy.c_[EdgesToVertices,npy.zeros(EdgesToVertices.shape[0],dtype = npy.int64)-1]
-        EdgesToVertices[BoundaryEdges,2] = e[:,-1]
+        EdgesToVertices[BoundaryEdges,2] = f[:,-1]
         #############################################################################################################
         
         
