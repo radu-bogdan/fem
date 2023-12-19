@@ -23,7 +23,7 @@ import matplotlib.tri as tri
 class mesh:
     # @profile       
     
-    def __init__(self, p,e,t,q,r2d = npy.empty(0),r1d = npy.empty(0), identifications = npy.empty(0)):
+    def __init__(self, p, e, t, q, r2d = npy.empty(0),r1d = npy.empty(0), identifications = npy.empty(0)):
         
         if t.size != 0:
             edges_trigs = npy.r_[npy.c_[t[:,1],t[:,2]],
@@ -1012,21 +1012,30 @@ def intersect2d(X, Y):
 
 
 class mesh3:
-    def __init__(self, p,e,t,r2d = npy.empty(0),r1d = npy.empty(0), identifications = npy.empty(0)):
+    def __init__(self, p, e, t, r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
         
-        edges_trigs = npy.r_[npy.c_[t[:,1],t[:,2]],
-                             npy.c_[t[:,2],t[:,0]],
-                             npy.c_[t[:,0],t[:,1]]]
-        EdgeDirectionTrig = npy.sign(npy.c_[t[:,1]-t[:,2],
-                                            t[:,2]-t[:,0],
-                                            t[:,0]-t[:,1]].astype(int))*(-1)
-        mp_trig = 1/3*(p[t[:,0],:] + p[t[:,1],:] + p[t[:,2],:])
-            
-        # e_new = e[:,0:2].copy()
+        # erst t sortieren anscheinend ...
+        
+        t = npy.c_[npy.sort(t[:,:4]),t[:,4]]
+        
+        
+        edges_tets = npy.r_[npy.c_[t[:,0],t[:,1]],
+                            npy.c_[t[:,0],t[:,2]],
+                            npy.c_[t[:,0],t[:,3]],
+                            npy.c_[t[:,1],t[:,2]],
+                            npy.c_[t[:,1],t[:,3]],
+                            npy.c_[t[:,2],t[:,3]]]
+        
+        face_tets = npy.r_[npy.c_[t[:,1],t[:,2],t[:,3]],
+                           npy.c_[t[:,0],t[:,2],t[:,3]],
+                           npy.c_[t[:,0],t[:,1],t[:,3]],
+                           npy.c_[t[:,0],t[:,1],t[:,2]]]
+        
+        mp_tet = 1/3*(p[t[:,0],:] + p[t[:,1],:] + p[t[:,2],:] + p[t[:,3],:])
+        
         e_new = npy.sort(e[:,:2])
             
         nt = t.shape[0]
-        nq = q.shape[0]
         
         #############################################################################################################
         edges = npy.r_[npy.sort(edges_trigs),
@@ -1077,7 +1086,6 @@ class mesh3:
         self.QuadToEdges = QuadToEdges
         self.NoEdges = NoEdges
         self.EdgeDirectionTrig = EdgeDirectionTrig
-        self.EdgeDirectionQuad = EdgeDirectionQuad
         self.Boundary_Region = e[:,-1]
         self.Boundary_Edges = BoundaryEdges
         self.Boundary_NoEdges = BoundaryEdges.shape[0]

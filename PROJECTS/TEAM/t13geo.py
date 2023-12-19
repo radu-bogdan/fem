@@ -9,6 +9,7 @@ box2 = occ.Box(occ.Pnt(-75,-75,-50), occ.Pnt(75,75,50))
 ##########################################################################
 # Rounding corners ...
 ##########################################################################
+
 corner1_ext = occ.Box(occ.Pnt(75,75,-50), occ.Pnt(100,100,50))
 cyl1_ext = occ.Cylinder(occ.Pnt(75,75,-50), occ.Z, r=25, h=100)
 corner1_int = occ.Box(occ.Pnt(50,50,-50), occ.Pnt(75,75,50))
@@ -136,13 +137,13 @@ all_but_ambient = [i for i, x in enumerate(regions_2d_np) if x != "ambient_face"
 
 def getIndices2d(liste, name):
     regions = npy.char.split(name,',').tolist()
-    ind = npy.empty(shape=(0,),dtype=npy.int64)
+    ind = npy.empty(shape=(0,),dtype = npy.int64)
     for k in regions:
         if k[0] == '*':
             n = npy.flatnonzero(npy.char.find(liste,k[1:])!=-1)
         else:
             n = npy.flatnonzero(npy.char.equal(liste,k))
-        ind = npy.append(ind,n,axis=0)
+        ind = npy.append(ind, n, axis = 0)
     return npy.unique(ind)
 
 import plotly.graph_objects as go
@@ -193,6 +194,6 @@ fig.add_trace(go.Scatter3d(name = 'Trig traces',
 fig.show()
 
 
-# import sys
-# sys.path.insert(0,'../../') # adds parent directory
-# import pde
+import sys
+sys.path.insert(0,'../../') # adds parent directory
+import pde
