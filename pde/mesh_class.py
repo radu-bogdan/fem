@@ -1012,173 +1012,165 @@ def intersect2d(X, Y):
 
 
 class mesh3:
-    def __init__(self, p, e, f, t, r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
+    def __init__(self, p, e, f, t, r3d = npy.empty(0), r2d = npy.empty(0), identifications = npy.empty(0)):
         
         # erst t sortieren anscheinend ...
-        
+
         t = npy.c_[npy.sort(t[:,:4]),t[:,4]]
-        
-        
+
+
         edges_tets = npy.r_[npy.c_[t[:,0],t[:,1]],
                             npy.c_[t[:,0],t[:,2]],
                             npy.c_[t[:,0],t[:,3]],
                             npy.c_[t[:,1],t[:,2]],
                             npy.c_[t[:,1],t[:,3]],
                             npy.c_[t[:,2],t[:,3]]]
-        
-        face_tets = npy.r_[npy.c_[t[:,1],t[:,2],t[:,3]],
-                           npy.c_[t[:,0],t[:,2],t[:,3]],
-                           npy.c_[t[:,0],t[:,1],t[:,3]],
-                           npy.c_[t[:,0],t[:,1],t[:,2]]]
-        
+
+        faces_tets = npy.r_[npy.c_[t[:,1],t[:,2],t[:,3]],
+                            npy.c_[t[:,0],t[:,2],t[:,3]],
+                            npy.c_[t[:,0],t[:,1],t[:,3]],
+                            npy.c_[t[:,0],t[:,1],t[:,2]]]
+
         mp_tet = 1/3*(p[t[:,0],:] + p[t[:,1],:] + p[t[:,2],:] + p[t[:,3],:])
-        
-        f_new = npy.sort(f[:,:2])
+
+        e_new = npy.sort(e[:,:2])
+        f_new = npy.sort(f[:,:3])
             
         nt = t.shape[0]
-        
+
         #############################################################################################################
         edges = npy.sort(edges_tets).astype(int)
         EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
-        # EdgesToVertices, je = unique_rows(edges, return_inverse = True)
-        
+
         NoEdges = EdgesToVertices.shape[0]
-        TetsToEdges = je[0:4*nt].reshape(nt,4, order = 'F').astype(npy.int64)
-        BoundaryEdges = intersect2d(EdgesToVertices,f_new)
+        TetsToEdges = je[:6*nt].reshape(nt,6, order = 'F').astype(npy.int64)
+        BoundaryEdges = intersect2d(EdgesToVertices,e_new)
         # InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
-        
+
         EdgesToVertices = npy.c_[EdgesToVertices,npy.zeros(EdgesToVertices.shape[0],dtype = npy.int64)-1]
-        EdgesToVertices[BoundaryEdges,2] = f[:,-1]
+        EdgesToVertices[BoundaryEdges,2] = e[:,-1]
         #############################################################################################################
-        
-        
-        
+
+
+
         #############################################################################################################
-        tte_flat = npy.argsort(TriangleToEdges.flatten())
-        tte_sort = npy.sort(TriangleToEdges.flatten())
-        _,c = npy.unique(tte_sort, return_counts = True)
-        indices_single = npy.argwhere(c==1)[:,0]
-        
-        all_indices_pos = npy.arange(tte_flat.size)
-        indices_single_pos = 2*indices_single-npy.arange(indices_single.size)
-        
-        indices_double_pos = npy.setdiff1d(all_indices_pos, indices_single_pos)
-        
-        tte_sort_ind = tte_sort[indices_double_pos]
-        tte_flat_ind = tte_flat[indices_double_pos]
-        
-        IntEdgesToTriangles = npy.c_[npy.reshape(tte_flat_ind,(tte_flat_ind.size//2,2))//3, npy.unique(tte_sort_ind)]
+        faces = npy.sort(faces_tets).astype(int)
+        FacesToVertices, je = npy.unique(faces, axis = 0, return_inverse = True)
+
+        NoFaces = FacesToVertices.shape[0]
+        TetsToFaces = je[:4*nt].reshape(nt,4, order = 'F').astype(npy.int64)
+        BoundaryFaces = intersect2d(FacesToVertices,f_new)
+        # InteriorFaces = npy.setdiff1d(npy.arange(NoFaces),BoundaryFaces)
+
+        FacesToVertices = npy.c_[FacesToVertices,npy.zeros(FacesToVertices.shape[0],dtype = npy.int64)-1]
+        FacesToVertices[BoundaryFaces,3] = f[:,-1]
         #############################################################################################################
-        
-        if t.shape[1]==7:
-            maxp = t[:,:3].max()
-            pm = p.copy()
-            p = p[:maxp+1,:]
-        else:
-            pm = p.copy()
+
+
+        if (t.shape[1] == 5): # linear mapping
+            t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]; t3 = t[:,3]
+            C00 = p[t0,0]; C01 = p[t1,0]; C02 = p[t2,0]; C03 = p[t3,0];
+            C10 = p[t0,1]; C11 = p[t1,1]; C12 = p[t2,1]; C13 = p[t3,1];
+            C20 = p[t0,2]; C21 = p[t1,2]; C22 = p[t2,2]; C23 = p[t3,2];
             
+            Fx = lambda x,y,z : C00*(1-x-y-z) +C01*x +C02*y +C03*z
+            Fy = lambda x,y,z : C10*(1-x-y-z) +C11*x +C12*y +C13*z
+            Fz = lambda x,y,z : C20*(1-x-y-z) +C21*x +C22*y +C23*z
+            
+            JF00 = lambda x,y,z : C01-C00
+            JF01 = lambda x,y,z : C02-C00
+            JF02 = lambda x,y,z : C03-C00
+            
+            JF10 = lambda x,y,z : C11-C10
+            JF11 = lambda x,y,z : C12-C10
+            JF12 = lambda x,y,z : C13-C10
+            
+            JF20 = lambda x,y,z : C21-C20
+            JF21 = lambda x,y,z : C22-C20
+            JF22 = lambda x,y,z : C23-C20
+
+
+        # A00.*(A11.*A22-A12.*A21) - A01.*(A10.*A22-A12.*A20) + A02.*(A10.*A21-A11.*A20);
+
+        detA = lambda x,y,z : +JF00(x,y,z)*(JF11(x,y,z)*JF22(x,y,z)-JF12(x,y,z)*JF21(x,y,z)) \
+                              -JF01(x,y,z)*(JF10(x,y,z)*JF22(x,y,z)-JF12(x,y,z)*JF20(x,y,z)) \
+                              +JF02(x,y,z)*(JF10(x,y,z)*JF21(x,y,z)-JF11(x,y,z)*JF20(x,y,z))
+
+        # iA11=  (A33.*A22-A32.*A23)./detA;  iA12= -(A33.*A12-A32.*A13)./detA;  iA13=  (A23.*A12-A22.*A13)./detA;
+        # iA21= -(A33.*A21-A31.*A23)./detA;  iA22=  (A33.*A11-A31.*A13)./detA;  iA23= -(A23.*A11-A21.*A13)./detA;
+        # iA31=  (A32.*A21-A31.*A22)./detA;  iA32= -(A32.*A11-A31.*A12)./detA;  iA33=  (A22.*A11-A21.*A12)./detA;
+
+        iJF00 = lambda x,y,z:  1/detA(x,y,z)*(JF22(x,y,z)*JF11(x,y,z)-JF21(x,y,z)*JF12(x,y,z))
+        iJF10 = lambda x,y,z: -1/detA(x,y,z)*(JF22(x,y,z)*JF10(x,y,z)-JF20(x,y,z)*JF12(x,y,z))
+        iJF20 = lambda x,y,z:  1/detA(x,y,z)*(JF21(x,y,z)*JF10(x,y,z)-JF20(x,y,z)*JF11(x,y,z))
+
+        iJF01 = lambda x,y,z: -1/detA(x,y,z)*(JF22(x,y,z)*JF01(x,y,z)-JF21(x,y,z)*JF02(x,y,z))
+        iJF11 = lambda x,y,z:  1/detA(x,y,z)*(JF22(x,y,z)*JF00(x,y,z)-JF20(x,y,z)*JF02(x,y,z))
+        iJF21 = lambda x,y,z: -1/detA(x,y,z)*(JF21(x,y,z)*JF00(x,y,z)-JF20(x,y,z)*JF01(x,y,z))
+
+        iJF02 = lambda x,y,z:  1/detA(x,y,z)*(JF12(x,y,z)*JF01(x,y,z)-JF11(x,y,z)*JF02(x,y,z))
+        iJF12 = lambda x,y,z: -1/detA(x,y,z)*(JF12(x,y,z)*JF00(x,y,z)-JF10(x,y,z)*JF02(x,y,z))
+        iJF22 = lambda x,y,z:  1/detA(x,y,z)*(JF11(x,y,z)*JF00(x,y,z)-JF10(x,y,z)*JF01(x,y,z))
+
         #############################################################################################################
 
         self.EdgesToVertices = EdgesToVertices
-        self.TriangleToEdges = TriangleToEdges
-        self.QuadToEdges = QuadToEdges
+        self.TetsToEdges = TetsToEdges
         self.NoEdges = NoEdges
-        self.EdgeDirectionTrig = EdgeDirectionTrig
-        self.Boundary_Region = e[:,-1]
+        
+        self.FacesToVertices = FacesToVertices
+        self.TetsToFaces = TetsToFaces
+        self.NoFaces = NoFaces
+        
+        self.BoundaryEdges_Region = e[:,-1]
         self.Boundary_Edges = BoundaryEdges
         self.Boundary_NoEdges = BoundaryEdges.shape[0]
-        self.IntEdgesToTriangles = IntEdgesToTriangles[:,0:2]
-        self.NonSingle_Edges = IntEdgesToTriangles[:,2]
+        
+        self.BoundaryFaces_Region = f[:,-1]
+        self.Boundary_Faces= BoundaryFaces
+        self.Boundary_NoFaces = BoundaryFaces.shape[0]
 
         self.p = p; self.np = p.shape[0]
         self.e = npy.c_[e_new,e[:,-1]]; self.ne = e_new.shape[0]
-        self.t = t[:,npy.r_[:3,-1]]; self.nt = nt
-        self.q = q; self.nq = nq
-        self.mp = npy.r_[mp_trig,mp_quad]
+        self.f = npy.c_[f_new,f[:,-1]]; self.nf = f_new.shape[0]
+        # self.t = t[:,npy.r_[:3,-1]]; self.nt = nt
+        self.t = t; self.nt = nt
+        
+        self.regions_3d = list(r3d)
         self.regions_2d = list(r2d)
-        self.regions_1d = list(r1d)
         self.identifications = identifications
         
         self.FEMLISTS = {}
         #############################################################################################################
         
-        if t.shape[1]==4:
-            t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
-            C00 = pm[t0,0]; C01 = pm[t1,0]; C02 = pm[t2,0];
-            C10 = pm[t0,1]; C11 = pm[t1,1]; C12 = pm[t2,1];
-            
-            self.Fx = lambda x,y : C00*(1-x-y) + C01*x + C02*y
-            self.Fy = lambda x,y : C10*(1-x-y) + C11*x + C12*y
-            
-            self.JF00 = lambda x,y : C01-C00
-            self.JF01 = lambda x,y : C02-C00
-            self.JF10 = lambda x,y : C11-C10
-            self.JF11 = lambda x,y : C12-C10
+        self.Fx = Fx; self.Fy = Fy; self.Fz = Fz;
+        self.detA = detA
         
-        if t.shape[1]==7:
-            t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]; t3 = t[:,3]; t4 = t[:,4]; t5 = t[:,5]
-            C00 = pm[t0,0]; C01 = pm[t1,0]; C02 = pm[t2,0]; C03 = pm[t3,0]; C04 = pm[t4,0]; C05 = pm[t5,0];
-            C10 = pm[t0,1]; C11 = pm[t1,1]; C12 = pm[t2,1]; C13 = pm[t3,1]; C14 = pm[t4,1]; C15 = pm[t5,1];
-            
-            self.Fx = lambda x,y : C00*(1-x-y)*(1-2*x-2*y) + C01*x*(2*x-1) + C02*y*(2*y-1) + C03*4*x*y + C04*4*y*(1-x-y) + C05*4*x*(1-x-y)
-            self.Fy = lambda x,y : C10*(1-x-y)*(1-2*x-2*y) + C11*x*(2*x-1) + C12*y*(2*y-1) + C13*4*x*y + C14*4*y*(1-x-y) + C15*4*x*(1-x-y)
-            
-            self.JF00 = lambda x,y : C00*(4*x+4*y-3) + C01*(4*x-1) + C02*(0*x)   + C03*(4*y) + C04*(-4*y)         + C05*(-4*(2*x+y-1))
-            self.JF01 = lambda x,y : C00*(4*x+4*y-3) + C01*(0*x)   + C02*(4*y-1) + C03*(4*x) + C04*(-4*(x+2*y-1)) + C05*(-4*x)
-            self.JF10 = lambda x,y : C10*(4*x+4*y-3) + C11*(4*x-1) + C12*(0*x)   + C13*(4*y) + C14*(-4*y)         + C15*(-4*(2*x+y-1))
-            self.JF11 = lambda x,y : C10*(4*x+4*y-3) + C11*(0*x)   + C12*(4*y-1) + C13*(4*x) + C14*(-4*(x+2*y-1)) + C15*(-4*x)
+        self.JF00 = JF00; self.JF10 = JF10; self.JF20 = JF20;
+        self.JF01 = JF01; self.JF11 = JF11; self.JF21 = JF21;
+        self.JF02 = JF02; self.JF12 = JF12; self.JF22 = JF22;
         
-            
-        self.detA = lambda x,y : self.JF00(x,y)*self.JF11(x,y)-self.JF01(x,y)*self.JF10(x,y)
-        
-        self.iJF00 = lambda x,y:  1/self.detA(x,y)*self.JF11(x,y)
-        self.iJF01 = lambda x,y: -1/self.detA(x,y)*self.JF01(x,y)
-        self.iJF10 = lambda x,y: -1/self.detA(x,y)*self.JF10(x,y)
-        self.iJF11 = lambda x,y:  1/self.detA(x,y)*self.JF00(x,y)
-        
-        #############################################################################################################
-        
-        t0 = self.t[:,0]; t1 = self.t[:,1]; t2 = self.t[:,2]
-        A00 = self.p[t1,0]-self.p[t0,0]; A01 = self.p[t2,0]-self.p[t0,0]
-        A10 = self.p[t1,1]-self.p[t0,1]; A11 = self.p[t2,1]-self.p[t0,1]
-        # self.detA = A00*A11-A01*A10
-        
-        
-        nor1 = npy.r_[1,1]; nor2 = npy.r_[-1,0]; nor3 = npy.r_[0,-1]
-        
-        # normal times the size of the edge
-        normal_e0_0 = (A11*nor1[0]-A10*nor1[1]); normal_e0_1 = -A01*nor1[0]+A00*nor1[1]
-        normal_e1_0 = (A11*nor2[0]-A10*nor2[1]); normal_e1_1 = -A01*nor2[0]+A00*nor2[1]
-        normal_e2_0 = (A11*nor3[0]-A10*nor3[1]); normal_e2_1 = -A01*nor3[0]+A00*nor3[1]
-        
-        tan1 = npy.r_[1,-1]; tan2 = npy.r_[0,1]; tan3 = npy.r_[-1,0]
-        
-        # tangent times the size of the edge
-        tangent_e0_0 = A00*tan1[0]+A01*tan1[1]; tangent_e0_1 = A10*tan1[0]+A11*tan1[1] 
-        tangent_e1_0 = A00*tan2[0]+A01*tan2[1]; tangent_e1_1 = A10*tan2[0]+A11*tan2[1]
-        tangent_e2_0 = A00*tan3[0]+A01*tan3[1]; tangent_e2_1 = A10*tan3[0]+A11*tan3[1]
-        
-        # normalization
-        len_e0 = npy.sqrt(tangent_e0_0**2+tangent_e0_1**2)
-        len_e1 = npy.sqrt(tangent_e1_0**2+tangent_e1_1**2)
-        len_e2 = npy.sqrt(tangent_e2_0**2+tangent_e2_1**2)
-        
-        self.A00 = A00
-        self.A10 = A10
-        self.A01 = A01
-        self.A11 = A11
-        
-        self.tangent0 = npy.c_[tangent_e0_0/len_e0,tangent_e1_0/len_e1,tangent_e2_0/len_e2]
-        self.tangent1 = npy.c_[tangent_e0_1/len_e0,tangent_e1_1/len_e1,tangent_e2_1/len_e2]
-        
-        self.normal0 = npy.c_[normal_e0_0/len_e0,normal_e1_0/len_e1,normal_e2_0/len_e2]
-        self.normal1 = npy.c_[normal_e0_1/len_e0,normal_e1_1/len_e1,normal_e2_1/len_e2]
-        
-        self.len_e = npy.c_[len_e0,len_e1,len_e2]
-        
+        self.iJF00 = iJF00; self.iJF10 = iJF10; self.iJF20 = iJF20;
+        self.iJF01 = iJF01; self.iJF11 = iJF11; self.iJF21 = iJF21;
+        self.iJF02 = iJF02; self.iJF12 = iJF12; self.iJF22 = iJF22;
         
         #############################################################################################################
 
+    def __repr__(self):
+        return f"np:{self.np}, nt:{self.nt}, nf:{self.nf}, ne:{self.ne}, nf_all:{self.NoFaces}, ne_all:{self.NoEdges}"
+    
+    def getIndices2d(self, liste, name):
+        regions = npy.char.split(name,',').tolist()
+        ind = npy.empty(shape=(0,),dtype=npy.int64)
+        for k in regions:
+            if k[0] == '*':
+                n = npy.flatnonzero(npy.char.find(liste,k[1:])!=-1)
+            else:
+                n = npy.flatnonzero(npy.char.equal(liste,k))
+            ind = npy.append(ind,n,axis=0)
+        return npy.unique(ind)
+    
+    
 # def refinemesh(p,e,t):
     
     

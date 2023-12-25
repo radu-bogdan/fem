@@ -27,7 +27,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 2
+    level = 1
     
 print("LEVEL " , level)
 
@@ -259,7 +259,7 @@ for m in range(refinements):
         if plot == 1:
             if k == 0:
                 fig = plt.figure()
-                writer.setup(fig, "writer_test.mp4", 500)
+                # writer.setup(fig, "writer_test.mp4", 500)
                 fig.show()
                 ax1 = fig.add_subplot(121)
                 ax2 = fig.add_subplot(122)

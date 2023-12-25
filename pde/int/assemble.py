@@ -88,6 +88,8 @@ def assembleE(MESH,order):
     D = sparse(iD,iD,ellmatsD,nqp*ne,nqp*ne)
     return D
 
+
+
 def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = npy.empty(0)):
     
     if indices.size == 0:
@@ -103,14 +105,6 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
     t = MESH.t[indices,:]; nt = t.shape[0]
     
     #####################################################################################
-    # Mappings
-    #####################################################################################
-
-    t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]
-    A00 = p[t1,0]-p[t0,0]; A01 = p[t2,0]-p[t0,0]
-    A10 = p[t1,1]-p[t0,1]; A11 = p[t2,1]-p[t0,1]
-    
-    #####################################################################################
     # Custom config matrix
     #####################################################################################
     
@@ -121,8 +115,8 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
     iD = iD[:,indices]
     
     for i in range(nqp):
-        qpT_i_1 = A00*qp[0,i]+A01*qp[1,i]+p[t0,0]
-        qpT_i_2 = A10*qp[0,i]+A11*qp[1,i]+p[t0,1]
+        qpT_i_1 = MESH.Fx(qp[0,i],qp[1,i])[indices]
+        qpT_i_2 = MESH.Fy(qp[0,i],qp[1,i])[indices]
         ellmatsD[i*nt:(i+1)*nt] = coeff(qpT_i_1,qpT_i_2)
     
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)

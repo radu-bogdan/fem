@@ -121,11 +121,17 @@ def quadrule(order):
     return qp,we
 
 def keast(order):
-    if order == 1:
+    if order == 0:
         qp = np.array([[1/4],
                        [1/4],
                        [1/4]])
         we = np.r_[1]
+    
+    if order == 1:
+        qp = np.array([[0,1,0,0],
+                       [0,0,1,0],
+                       [0,0,0,1]])
+        we = np.r_[1/4,1/4,1/4,1/4]
     
     if order == 2:
         v1 = 1/20*(5+3*np.sqrt(5))
@@ -136,6 +142,12 @@ def keast(order):
         we = np.r_[1/4,1/4,1/4,1/4]
     
     if order == 3:
+        qp = np.array([[0,1,0,0,1/3,1/3,  0,1/3],
+                       [0,0,1,0,1/3,  0,1/3,1/3],
+                       [0,0,0,1,  0,1/3,1/3,1/3]])
+        we = np.r_[1/40,1/40,1/40,1/40,9/40,9/40,9/40,9/40]
+    
+    if order == 3.5:
         qp = np.array([[1/4,1/2,1/6,1/6,1/6],
                        [1/4,1/6,1/6,1/6,1/2],
                        [1/4,1/6,1/6,1/2,1/6]])
@@ -152,7 +164,7 @@ def keast(order):
                        [v2,v2,v1,v2,1/2,1/2,  0,  0,  0,1/2]])
         we = np.r_[w1,w1,w1,w1,w2,w2,w2,w2,w2,w2]
         
-        
+    return qp,we
 
 # qp,we = dunavant(order=6)
 # print(qp.shape)

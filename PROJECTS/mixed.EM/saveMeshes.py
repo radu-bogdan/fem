@@ -19,7 +19,7 @@ j3 = motor_npz['j3']
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 
-nums = 2
+nums = 3
 MESH = []
 
 for i in range(nums):
