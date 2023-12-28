@@ -2,6 +2,7 @@
 from scipy import sparse as sp
 import numpy as npy
 from .spaces3 import spaceInfo
+from ..tools import getIndices
 from .. import basis
 from .. import quadrature
 
@@ -215,12 +216,12 @@ def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
         if faces == '':
             ind_faces = MESH.MESH.BoundaryFaces_Region
         else:
-            ind_faces = MESH.getIndices2d(MESH.regions_2d,faces)
+            ind_faces = getIndices(MESH.regions_2d,faces)
     else:
         if MESH.regions_2d == []:
             ind_faces = faces
         else:
-            ind_faces = MESH.getIndices2d(MESH.regions_2d,faces)
+            ind_faces = getIndices(MESH.regions_2d,faces)
             
     
     indices = npy.in1d(MESH.BoundaryFaces_Region,ind_faces)

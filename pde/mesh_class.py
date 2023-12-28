@@ -6,6 +6,9 @@ npy.set_printoptions(edgeitems=10, linewidth = 1000000)
 # npy.set_printoptions(precision=2)
 
 # import pandas as pd
+import plotly.io as pio
+pio.renderers.default = "browser"
+
 import plotly.graph_objects as go
 # import plotly.colors as plyc
 from scipy.interpolate import griddata
@@ -13,6 +16,8 @@ from . import lists as femlists
 # import numba as jit
 # from .tools import *
 # from .tools import unique_rows
+
+from .tools import getIndices
 
 # import plotly.figure_factory as ff
 
@@ -1159,16 +1164,109 @@ class mesh3:
     def __repr__(self):
         return f"np:{self.np}, nt:{self.nt}, nf:{self.nf}, ne:{self.ne}, nf_all:{self.NoFaces}, ne_all:{self.NoEdges}"
     
-    def getIndices2d(self, liste, name):
-        regions = npy.char.split(name,',').tolist()
-        ind = npy.empty(shape=(0,),dtype=npy.int64)
-        for k in regions:
-            if k[0] == '*':
-                n = npy.flatnonzero(npy.char.find(liste,k[1:])!=-1)
-            else:
-                n = npy.flatnonzero(npy.char.equal(liste,k))
-            ind = npy.append(ind,n,axis=0)
-        return npy.unique(ind)
+    def pdesurf(self, u, faces, **kwargs):
+        
+        cmin = npy.min(u)
+        cmax = npy.max(u)
+        
+        if 'cmin' in kwargs.keys():
+            cmin = kwargs['cmin']
+        if 'cmax' in kwargs.keys():
+            cmax = kwargs['cmax']
+            
+        ind_regions = getIndices(self.regions_2d, faces)
+        indices = npy.in1d(self.f[:,-1],ind_regions)
+        
+        nt = self.nt; p = self.p; t = self.t[:,:3]; np = self.np; 
+        f = self.f[indices,:3]; nf = f.shape[0]
+        
+        xx_trig = npy.c_[p[f[:,0],0],p[f[:,1],0],p[f[:,2],0]]
+        yy_trig = npy.c_[p[f[:,0],1],p[f[:,1],1],p[f[:,2],1]]
+        zz_trig = npy.c_[p[f[:,0],2],p[f[:,1],2],p[f[:,2],2]]
+        
+        # if u.size == 3*nt:
+        #     zz = u[:3*nt].reshape(nt,3)
+        # if u.size == nt:
+        #     zz = npy.tile(u[:nt],(3,1)).T
+        if u.size == np:
+            zz = u[f]
+        
+        fig = go.Figure()
+        
+        ii, jj, kk = npy.r_[:3*nf].reshape((nf, 3)).T
+        fig.add_trace(go.Mesh3d(
+            name = 'Trig values',
+            x = xx_trig.flatten(),
+            y = yy_trig.flatten(),
+            z = zz_trig.flatten(),
+            i = ii, j = jj, k = kk, intensity = zz.flatten(),
+            colorscale = 'Jet',
+            intensitymode = 'vertex',
+            lighting = dict(ambient = 1),
+            contour_width = 1, contour_color = "#000000", contour_show = True,
+            # xaxis = dict(range())
+        ))
+
+        xxx_trig = npy.c_[xx_trig,xx_trig[:,0],npy.nan*xx_trig[:,0]]
+        yyy_trig = npy.c_[yy_trig,yy_trig[:,0],npy.nan*yy_trig[:,0]]
+        zzz_trig = npy.c_[zz_trig,zz_trig[:,0],npy.nan*zz_trig[:,0]]
+
+        fig.add_trace(go.Scatter3d(name = 'Trig traces',
+                                    mode = 'lines',
+                                    x = xxx_trig.flatten(),
+                                    y = yyy_trig.flatten(),
+                                    z = zzz_trig.flatten(),
+                                    line = go.scatter3d.Line(color = 'black', width = 1.5),
+                                    showlegend = False))
+
+        color_scales_3D = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd']
+        list_color_scales = list(map(lambda x: dict(args=["colorscale", x],label=x,method="restyle"),color_scales_3D))
+                            
+        fig.update_layout(
+        updatemenus = [
+            dict(
+                buttons = list_color_scales,
+                direction = "down",
+                showactive = False,
+                xanchor = "left",
+                yanchor = "top"),
+            dict(
+                buttons = list([
+                    dict(
+                        args = ["scene.camera.projection.type", "orthographic"],
+                        label = "Orthographic",
+                        method = "relayout"
+                    ),
+                    dict(
+                        args = ["scene.camera.projection.type", "perspective"],
+                        label = "Perspective",
+                        method = "relayout"
+                    ),
+                ]),
+                direction="down",
+                showactive=True,
+                xanchor="left",
+                yanchor="bottom")],
+                      margin_l=0,
+                      margin_t=0,
+                      margin_r=0,
+                      margin_b=0,)
+        
+        
+        fig.show()
+        return fig
+    
+    
+    # def getIndices(self, liste, name):
+    #     regions = npy.char.split(name,',').tolist()
+    #     ind = npy.empty(shape=(0,),dtype=npy.int64)
+    #     for k in regions:
+    #         if k[0] == '*':
+    #             n = npy.flatnonzero(npy.char.find(liste,k[1:])!=-1)
+    #         else:
+    #             n = npy.flatnonzero(npy.char.equal(liste,k))
+    #         ind = npy.append(ind,n,axis=0)
+    #     return npy.unique(ind)
     
     
 # def refinemesh(p,e,t):
