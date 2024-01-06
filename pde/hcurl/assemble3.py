@@ -2,6 +2,7 @@
 from scipy import sparse as sp
 import numpy as npy
 from .spaces3 import spaceInfo
+from ..tools import getIndices
 from .. import basis
 from .. import quadrature
 
@@ -245,37 +246,37 @@ def assemble3(MESH,space,matrix,order=-1):
         
 #         return B0,B1,B2
 
-# def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
+def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
     
-#     if not space in MESH.FEMLISTS.keys():
-#         spaceInfo(MESH,space)
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
         
-#     if type(faces) == str:
-#         if faces == '':
-#             ind_faces = MESH.BoundaryEdges_Region
-#         else:
-#             ind_faces = MESH.getIndices2d(MESH.regions_2d,faces)
-#     else:
-#         if MESH.regions_2d == []:
-#             ind_faces = edges
-#         else:
-#             ind_faces = MESH.getIndices2d(MESH.regions_2d,faces)
+    if type(faces) == str:
+        if faces == '':
+            ind_faces = MESH.BoundaryEdges_Region
+        else:
+            ind_faces = getIndices(MESH.regions_2d,faces)
+    else:
+        if MESH.regions_2d == []:
+            ind_faces = edges
+        else:
+            ind_faces = getIndices(MESH.regions_2d,faces)
     
-#     indices = npy.in1d(MESH.BoundaryEdges_Region,ind_edges)
-#     sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
+    indices = npy.in1d(MESH.BoundaryEdges_Region,ind_edges)
+    sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
     
-#     LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices])
-#     LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
+    LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices])
+    LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
     
-#     D = sp.eye(sizeM, format = 'csc')
+    D = sp.eye(sizeM, format = 'csc')
     
-#     if listDOF.size > 0:
-#         LIST_DOF = listDOF
+    if listDOF.size > 0:
+        LIST_DOF = listDOF
     
-#     R1 = D[:,LIST_DOF]
-#     R2 = D[:,LIST_DOF2]
+    R1 = D[:,LIST_DOF]
+    R2 = D[:,LIST_DOF2]
     
-#     return R1.T.tocsc(),R2.T.tocsc()
+    return R1.T.tocsc(),R2.T.tocsc()
     
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))
