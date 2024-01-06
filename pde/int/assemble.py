@@ -2,6 +2,7 @@
 from scipy import sparse as sp
 import numpy as npy
 from .. import quadrature
+from ..tools import getIndices
 # import numba as nb
 
 
@@ -98,7 +99,7 @@ def evaluate(MESH, order, coeff = lambda x,y : 1+0*x*y, regions = '', indices = 
         elif isinstance(regions, npy.ndarray):
             ind_regions = regions;
         else:
-            ind_regions = MESH.getIndices2d(MESH.regions_2d,regions)
+            ind_regions = getIndices(MESH.regions_2d,regions)
         indices = npy.in1d(MESH.t[:,-1],ind_regions)
     
     p = MESH.p;
@@ -141,7 +142,7 @@ def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = '', like = 0):
         if edges == '':
             ind_edges = MESH.Boundary_Region
         else:
-            ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+            ind_edges = getIndices(MESH.regions_1d,edges)
     else:
         if MESH.regions_1d == []:
             ind_edges = edges

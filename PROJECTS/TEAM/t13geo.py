@@ -1,7 +1,8 @@
 import ngsolve as ng
 import netgen.occ as occ
+
 # import netgen.gui
-from netgen.webgui import Draw as DrawGeo
+# from netgen.webgui import Draw as DrawGeo
 
 box1 = occ.Box(occ.Pnt(-100,-100,-50), occ.Pnt(100,100,50))
 box2 = occ.Box(occ.Pnt(-75,-75,-50), occ.Pnt(75,75,50))
@@ -74,63 +75,17 @@ coil.mat("coil")
 r_steel.mat("r_steel")
 l_steel.mat("l_steel")
 mid_steel.mat("mid_steel")
-    
-##########################################################################
-# "Fancy" coloring cuz why not I got a bit bored :)
-##########################################################################
-
-coil.faces.col=(1,0.5,0)
-l_steel.faces.col=(1,0.5,1)
-r_steel.faces.col=(1,0.5,1)
-mid_steel.faces.col=(1,0.5,1)
-ambient.faces.col=(1,1,1)
-
-DrawGeo(full, clipping={"z":-1, "dist":64});
 
 ##########################################################################
 # Generating mesh...
 ##########################################################################
 
 geoOCC = occ.OCCGeometry(full)
-ng.Draw(geoOCC)
+# ng.Draw(geoOCC)
 
 geoOCCmesh = geoOCC.GenerateMesh()
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
-    
-##########################################################################
-# Extracting info from the mesh
-##########################################################################
-
-import numpy as np
-import numpy as npy
-
-npoints2D = geoOCCmesh.Elements2D().NumPy()['np'].max()
-npoints3D = geoOCCmesh.Elements3D().NumPy()['np'].max()
-
-p = geoOCCmesh.Coordinates()
-
-t = np.c_[geoOCCmesh.Elements3D().NumPy()['nodes'].astype(np.uint64)[:,:npoints3D],
-          geoOCCmesh.Elements3D().NumPy()['index'].astype(np.uint64)]-1
-
-f = np.c_[geoOCCmesh.Elements2D().NumPy()['nodes'].astype(np.uint64)[:,:npoints2D],
-          geoOCCmesh.Elements2D().NumPy()['index'].astype(np.uint64)]-1
-
-e = np.c_[geoOCCmesh.Elements1D().NumPy()['nodes'].astype(np.uint64)[:,:((npoints2D+1)//2)],
-          geoOCCmesh.Elements1D().NumPy()['index'].astype(np.uint64)]-1
-
-max_bc_index = geoOCCmesh.Elements2D().NumPy()['index'].astype(np.uint64).max()
-max_rg_index = geoOCCmesh.Elements3D().NumPy()['index'].astype(np.uint64).max()
-
-regions_2d_np = []
-for i in range(max_bc_index):
-    regions_2d_np += [geoOCCmesh.GetBCName(i)]
-
-regions_3d_np = []
-for i in range(max_rg_index):
-    regions_3d_np += [geoOCCmesh.GetMaterial(i+1)]
-
-identifications = np.array(geoOCCmesh.GetIdentifications())
 
 
 

@@ -374,7 +374,7 @@ class mesh:
         return npy.r_[f,f,f,f]
     
     def trianglesFromPoints(self, points):
-        return npy.unique(npy.where(npy.in1d(self.t[:,0:3].flatten(),points))[0]//3)
+        return npy.unique(npy.where(npy.in1d(self.t[:,0:3].ravel(),points))[0]//3)
         
     def __ismember(self,a_vec, b_vec):
         """ MATLAB equivalent ismember function """
@@ -384,29 +384,6 @@ class mesh:
         b_unique, b_ind = npy.unique(b_vec, return_index=True)  # b_unique = b_vec[b_ind]
         common_ind = b_ind[npy.isin(b_unique, common_unique, assume_unique=True)]
         return bool_ind, common_ind[common_inv]
-    
-    def getIndices2d_old(self, liste, name, exact = 0, return_index = False):
-        if exact == 0:
-            ind = npy.flatnonzero(npy.core.defchararray.find(list(liste),name)!=-1)
-        else:
-            ind = [i for i, x in enumerate(list(liste)) if x == name]
-        elem = npy.where(npy.isin(self.t[:,3],ind))[0]
-        mask = npy.zeros(self.nt); mask[elem] = 1
-        if return_index:
-            return ind, mask
-        else:
-            return mask
-        
-    def getIndices2d(self, liste, name):
-        regions = npy.char.split(name,',').tolist()
-        ind = npy.empty(shape=(0,),dtype=npy.int64)
-        for k in regions:
-            if k[0] == '*':
-                n = npy.flatnonzero(npy.char.find(liste,k[1:])!=-1)
-            else:
-                n = npy.flatnonzero(npy.char.equal(liste,k))
-            ind = npy.append(ind,n,axis=0)
-        return npy.unique(ind)
         
     def pdegeom(self,**kwargs):
         if "ax" not in kwargs:
@@ -499,8 +476,8 @@ class mesh:
         yyy_trig = npy.c_[yy_trig, yy_trig[:,0], npy.nan*yy_trig[:,0]]
         
         ax.plot(
-            xxx_trig.flatten(), 
-            yyy_trig.flatten(),
+            xxx_trig.ravel(), 
+            yyy_trig.ravel(),
             color = 'k',
             linewidth = 0.1
             # kwargs['color'] if 'color' in kwargs else 'k',
@@ -586,8 +563,8 @@ class mesh:
                                    name='TrigTraces',
                                    # x=x,
                                    # y=y,
-                                   x=xxx_trig.flatten(),
-                                   y=yyy_trig.flatten(),
+                                   x=xxx_trig.ravel(),
+                                   y=yyy_trig.ravel(),
                                    line=dict(color='blue', 
                                              width=2)))
         if info == 1:
@@ -612,8 +589,8 @@ class mesh:
         
         p = self.p; q = self.q
         
-        x = npy.c_[p[q[:,0],0],p[q[:,1],0],p[q[:,2],0],p[q[:,3],0],p[q[:,0],0],npy.nan*p[q[:,0],0]].flatten().tolist()
-        y = npy.c_[p[q[:,0],1],p[q[:,1],1],p[q[:,2],1],p[q[:,3],1],p[q[:,0],1],npy.nan*p[q[:,0],1]].flatten().tolist()                
+        x = npy.c_[p[q[:,0],0],p[q[:,1],0],p[q[:,2],0],p[q[:,3],0],p[q[:,0],0],npy.nan*p[q[:,0],0]].ravel().tolist()
+        y = npy.c_[p[q[:,0],1],p[q[:,1],1],p[q[:,2],1],p[q[:,3],1],p[q[:,0],1],npy.nan*p[q[:,0],1]].ravel().tolist()                
         
         fig.add_trace(go.Scattergl(mode='lines', 
                                  name='QuadTraces',
@@ -667,8 +644,8 @@ class mesh:
         ii, jj, kk = npy.r_[:3*nt].reshape((nt, 3)).T
         fig.add_trace(go.Mesh3d(
             name = 'Trig values',
-            x = xx_trig.flatten(), y = yy_trig.flatten(), z = 0*zz.flatten(),
-            i = ii, j = jj, k = kk, intensity = zz.flatten(), 
+            x = xx_trig.ravel(), y = yy_trig.ravel(), z = 0*zz.ravel(),
+            i = ii, j = jj, k = kk, intensity = zz.ravel(), 
             colorscale = 'Jet',
             cmin = cmin,
             cmax = cmax,
@@ -683,9 +660,9 @@ class mesh:
         
         fig.add_trace(go.Scatter3d(name = 'Trig traces',
                                     mode = 'lines',
-                                    x = xxx_trig.flatten(),
-                                    y = yyy_trig.flatten(),
-                                    z = 0*zzz_trig.flatten(),
+                                    x = xxx_trig.ravel(),
+                                    y = yyy_trig.ravel(),
+                                    z = 0*zzz_trig.ravel(),
                                     line = go.scatter3d.Line(color = 'black', 
                                                             width = 1.5),
                                     showlegend = False))
@@ -713,7 +690,7 @@ class mesh:
                                           borderwidth = 2),
                           )
         fig.update_traces(showlegend = True)
-        color_scales_3D = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd']
+        color_scales_3D = ['Blackbody','Bluered','Blues','Cividis','Earth','Electric','Greens','Greys','Hot','Jet','Picnic','Portland','Rainbow','RdBu','Reds','Viridis','YlGnBu','YlOrRd','Brwnyl']
         list_color_scales = list(map(lambda x: dict(args=["colorscale", x],label=x,method="restyle"),color_scales_3D))
                     
         fig.update_layout(
@@ -869,8 +846,8 @@ class mesh:
         ii, jj, kk = npy.r_[:3*nt].reshape((nt, 3)).T
         fig.add_trace(go.Mesh3d(
             name = 'Trig values',
-            x = xx_trig.flatten(), y = yy_trig.flatten(), z = u_height*zz.flatten(),
-            i = ii, j = jj, k = kk, intensity = zz.flatten(), 
+            x = xx_trig.ravel(), y = yy_trig.ravel(), z = u_height*zz.ravel(),
+            i = ii, j = jj, k = kk, intensity = zz.ravel(), 
             colorscale = 'Rainbow',
             cmin = npy.min(u),
             # hoverinfo = 'skip',
@@ -896,9 +873,9 @@ class mesh:
         
         fig.add_trace(go.Scatter3d(name = 'Trig traces',
                                     mode = 'lines',
-                                    x = xxx_trig.flatten(),
-                                    y = yyy_trig.flatten(),
-                                    z = u_height*zzz_trig.flatten(),
+                                    x = xxx_trig.ravel(),
+                                    y = yyy_trig.ravel(),
+                                    z = u_height*zzz_trig.ravel(),
                                     line = go.scatter3d.Line(color = 'black', 
                                                             width = 1.5),
                                     showlegend = False))
@@ -976,8 +953,8 @@ class mesh:
         ii, jj, kk = npy.r_[:3*nq+3*nq].reshape((nq+nq, 3)).T
         fig.add_trace(go.Mesh3d(
             name = 'Quad values',
-            x = xx_quad.flatten(), y = yy_quad.flatten(), z = u_height*zz_quad.flatten(),
-            i = ii, j = jj, k = kk, intensity = zz_quad.flatten(), 
+            x = xx_quad.ravel(), y = yy_quad.ravel(), z = u_height*zz_quad.ravel(),
+            i = ii, j = jj, k = kk, intensity = zz_quad.ravel(), 
             colorscale = 'Rainbow',
             cmin = npy.min(u),
             # hoverinfo = 'skip',
@@ -992,9 +969,9 @@ class mesh:
         
         fig.add_trace(go.Scatter3d(name = 'Quad traces',
                                    mode = 'lines',
-                                   x = xxx_quad.flatten(),
-                                   y = yyy_quad.flatten(),
-                                   z = u_height*zzz_quad.flatten(),
+                                   x = xxx_quad.ravel(),
+                                   y = yyy_quad.ravel(),
+                                   z = u_height*zzz_quad.ravel(),
                                    line = go.scatter3d.Line(color = 'black', width = 1.5),
                                    showlegend = False))
         return fig
@@ -1017,7 +994,7 @@ def intersect2d(X, Y):
 
 
 class mesh3:
-    def __init__(self, p, e, f, t, r3d = npy.empty(0), r2d = npy.empty(0), identifications = npy.empty(0)):
+    def __init__(self, p, e, f, t, r3d = npy.empty(0), r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
         
         # erst t sortieren anscheinend ...
 
@@ -1143,6 +1120,7 @@ class mesh3:
         
         self.regions_3d = list(r3d)
         self.regions_2d = list(r2d)
+        self.regions_1d = list(r1d)
         self.identifications = identifications
         
         self.FEMLISTS = {}
@@ -1164,6 +1142,46 @@ class mesh3:
     def __repr__(self):
         return f"np:{self.np}, nt:{self.nt}, nf:{self.nf}, ne:{self.ne}, nf_all:{self.NoFaces}, ne_all:{self.NoEdges}"
     
+    def from_netgen(self,geoOCCmesh):
+        npoints2D = geoOCCmesh.Elements2D().NumPy()['np'].max()
+        npoints3D = geoOCCmesh.Elements3D().NumPy()['np'].max()
+
+        p = geoOCCmesh.Coordinates()
+
+        t = npy.c_[geoOCCmesh.Elements3D().NumPy()['nodes'].astype(npy.uint64)[:,:npoints3D],
+                   geoOCCmesh.Elements3D().NumPy()['index'].astype(npy.uint64)]-1
+
+        f = npy.c_[geoOCCmesh.Elements2D().NumPy()['nodes'].astype(npy.uint64)[:,:npoints2D],
+                   geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64)]-1
+
+        e = npy.c_[geoOCCmesh.Elements1D().NumPy()['nodes'].astype(npy.uint64)[:,:((npoints2D+1)//2)],
+                   geoOCCmesh.Elements1D().NumPy()['index'].astype(npy.uint64)]-1
+
+        max_ed_index = geoOCCmesh.Elements1D().NumPy()['index'].astype(npy.uint64).max()
+        max_bc_index = geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64).max()
+        max_rg_index = geoOCCmesh.Elements3D().NumPy()['index'].astype(npy.uint64).max()
+
+        regions_1d_np = []
+        for i in range(max_ed_index):
+            regions_1d_np += [geoOCCmesh.GetCD2Name(i)]
+            
+        regions_2d_np = []
+        for i in range(max_bc_index):
+            regions_2d_np += [geoOCCmesh.GetBCName(i)]
+
+        regions_3d_np = []
+        for i in range(max_rg_index):
+            regions_3d_np += [geoOCCmesh.GetMaterial(i+1)]
+
+        identifications = npy.array(geoOCCmesh.GetIdentifications())
+        
+        return p, e, f, t, regions_3d_np, regions_2d_np, regions_1d_np, identifications
+    
+    @classmethod
+    def netgen(cls, geoOCCmesh):
+        p, e, f, t, regions_3d_np, regions_2d_np, regions_1d_np, identifications = cls.from_netgen(cls,geoOCCmesh)
+        return cls(p, e, f, t, regions_3d_np, regions_2d_np, regions_1d_np, identifications)
+    
     def pdesurf(self, u, faces, **kwargs):
         
         cmin = npy.min(u)
@@ -1184,8 +1202,8 @@ class mesh3:
         yy_trig = npy.c_[p[f[:,0],1],p[f[:,1],1],p[f[:,2],1]]
         zz_trig = npy.c_[p[f[:,0],2],p[f[:,1],2],p[f[:,2],2]]
         
-        # if u.size == 3*nt:
-        #     zz = u[:3*nt].reshape(nt,3)
+        # if u.size == 3*nf:
+        #     zz = u[:3*nf].reshape(nf,3)
         # if u.size == nt:
         #     zz = npy.tile(u[:nt],(3,1)).T
         if u.size == np:
@@ -1196,10 +1214,10 @@ class mesh3:
         ii, jj, kk = npy.r_[:3*nf].reshape((nf, 3)).T
         fig.add_trace(go.Mesh3d(
             name = 'Trig values',
-            x = xx_trig.flatten(),
-            y = yy_trig.flatten(),
-            z = zz_trig.flatten(),
-            i = ii, j = jj, k = kk, intensity = zz.flatten(),
+            x = xx_trig.ravel(),
+            y = yy_trig.ravel(),
+            z = zz_trig.ravel(),
+            i = ii, j = jj, k = kk, intensity = zz.ravel(),
             colorscale = 'Jet',
             intensitymode = 'vertex',
             lighting = dict(ambient = 1),
@@ -1213,9 +1231,9 @@ class mesh3:
 
         fig.add_trace(go.Scatter3d(name = 'Trig traces',
                                     mode = 'lines',
-                                    x = xxx_trig.flatten(),
-                                    y = yyy_trig.flatten(),
-                                    z = zzz_trig.flatten(),
+                                    x = xxx_trig.ravel(),
+                                    y = yyy_trig.ravel(),
+                                    z = zzz_trig.ravel(),
                                     line = go.scatter3d.Line(color = 'black', width = 1.5),
                                     showlegend = False))
 

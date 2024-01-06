@@ -4,6 +4,7 @@ import numpy as npy
 from .spaces import spaceInfo
 from .. import basis
 from .. import quadrature
+from ..tools import getIndices
 
 
 def assemble(MESH,space,matrix,order=-1):
@@ -213,12 +214,12 @@ def assembleR(MESH, space, edges = '', listDOF = npy.empty(0)):
         if edges == '':
             ind_edges = MESH.Boundary_Region
         else:
-            ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+            ind_edges = getIndices(MESH.regions_1d,edges)
     else:
         if MESH.regions_1d == []:
             ind_edges = edges
         else:
-            ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
+            ind_edges = getIndices(MESH.regions_1d,edges)
             
     
     indices = npy.in1d(MESH.Boundary_Region,ind_edges)

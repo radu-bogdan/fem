@@ -18,7 +18,7 @@ def pcg(Afuns, f, tol = 1e-5, maxit = 100, pfuns = 1, output = False):
     maxit = int(maxit)
     
     if not callable(pfuns):
-        pfun = lambda x : pfuns@x
+        pfun = lambda x : x
         # splu_pfun = sp.linalg.splu(pfuns,permc_spec='COLAMD')
         # pfun = lambda x : splu_pfun.solve(x)
     else:

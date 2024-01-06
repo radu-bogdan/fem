@@ -28,7 +28,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 2
+    level = 0
     
     
 print("LEVEL " , level)

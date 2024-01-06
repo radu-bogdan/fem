@@ -5,8 +5,8 @@ from scipy.sparse import bmat
 # @profile
 
 def getPoints(MESH):
-    airL_index = MESH.getIndices2d(MESH.regions_1d,'airL')[0]
-    airR_index = MESH.getIndices2d(MESH.regions_1d,'airR')[0]
+    airL_index = pde.tools.getIndices(MESH.regions_1d,'airL')[0]
+    airR_index = pde.tools.getIndices(MESH.regions_1d,'airR')[0]
     
     pointsL_index = np.unique(MESH.e[np.argwhere(MESH.e[:,2] == airL_index)[:,0],:2])
     pointsR_index = np.unique(MESH.e[np.argwhere(MESH.e[:,2] == airR_index)[:,0],:2])
@@ -57,8 +57,8 @@ def getPoints(MESH):
 
 # @profile
 def getPointsNoEdges(MESH):
-    airL_index = MESH.getIndices2d(MESH.regions_1d,'airL')[0]
-    airR_index = MESH.getIndices2d(MESH.regions_1d,'airR')[0]
+    airL_index = pde.tools.getIndices(MESH.regions_1d,'airL')[0]
+    airR_index = pde.tools.getIndices(MESH.regions_1d,'airR')[0]
     
     pointsL_index = np.unique(MESH.e[np.argwhere(MESH.e[:,2] == airL_index)[:,0],:2])
     pointsR_index = np.unique(MESH.e[np.argwhere(MESH.e[:,2] == airR_index)[:,0],:2])
