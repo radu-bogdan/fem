@@ -1023,6 +1023,8 @@ class mesh3:
         #############################################################################################################
         edges = npy.sort(edges_tets).astype(int)
         EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
+        # print((edges_tets-edges).min())
+        print("HEY!", EdgesToVertices.shape,edges.shape)
 
         NoEdges = EdgesToVertices.shape[0]
         TetsToEdges = je[:6*nt].reshape(nt,6, order = 'F').astype(npy.int64)

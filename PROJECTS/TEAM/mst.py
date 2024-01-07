@@ -91,11 +91,11 @@ class Graph:
             # Else discard the edge 
             
         minimumCost = 0
-        print("Edges in the constructed MST") 
-        for u, v, weight in result: 
-            minimumCost += weight 
-            print("%d -- %d == %d" % (u, v, weight)) 
-        print("Minimum Spanning Tree", minimumCost)
+        # print("Edges in the constructed MST") 
+        # for u, v, weight in result: 
+        #     minimumCost += weight 
+        #     print("%d -- %d == %d" % (u, v, weight)) 
+        # print("Minimum Spanning Tree", minimumCost)
         self.MST = result
   
   

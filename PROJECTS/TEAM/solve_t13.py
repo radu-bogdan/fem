@@ -4,6 +4,8 @@ import sys
 sys.path.insert(0,'../../') # adds parent directory
 import pde
 from sksparse.cholmod import cholesky as chol
+from scipy import sparse as sp
+import numpy as npy
 
 order = 1
 
@@ -112,18 +114,32 @@ indices = np.array(g.MST)[:,2]
 
 
 
-a = pde.tools.getIndices(MESH.regions_2d,'ambient_face')
-corresponding_faces = MESH.f[np.argwhere(np.in1d(MESH.f[:,-1],a))[:,0],:]
+
+
+regions_indices = pde.tools.getIndices(MESH.regions_2d,'ambient_face,r_steel_face,l_steel_face')
+face_indices = np.where(np.in1d(MESH.f[:,-1],regions_indices))
+faces = MESH.f[face_indices]
+
+edges_trigs = npy.r_[npy.c_[faces[:,0],faces[:,1]],
+                     npy.c_[faces[:,0],faces[:,2]],
+                     npy.c_[faces[:,1],faces[:,2]]]
+
+edges_trigs_unique, je = npy.unique(edges_trigs, axis = 0, return_inverse = True)
+
+edge_indices = pde.intersect2d(MESH.EdgesToVertices[:,:2],edges_trigs_unique)
+
+print(edge_indices.shape)
+
 
 # LIST_DOF  = np.unique(MESH.FEMLISTS['N0']['B']['LIST_DOF'][indices])
-# LIST_DOF2 = np.setdiff1d(npy.arange(sizeM),LIST_DOF)
+LIST_DOF2 = np.setdiff1d(np.r_[:MESH.NoEdges],np.union1d(indices,edge_indices))
 
-# D = sp.eye(sizeM, format = 'csc')
+D = sp.eye(MESH.NoEdges, format = 'csc')
 
 # if listDOF.size > 0:
 #     LIST_DOF = listDOF
 
 # R1 = D[:,LIST_DOF]
-# R2 = D[:,LIST_DOF2]
+R2 = D[:,LIST_DOF2]
 
 # return R1.T.tocsc(),R2.T.tocsc()
