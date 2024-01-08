@@ -82,64 +82,92 @@ B = np.array([0, 0.0025, 0.0050, 0.0125, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0
 H = np.array([0, 16, 30, 54, 93, 143, 191, 210, 222, 233, 247, 258, 272, 289, 313, 342, 377, 433, 509, 648, 933, 1228, 1934, 2913, 4993, 7189, 9423])
 
 
-# MST
-# import pandas as pd 
-# nPoints = MESH.np
-# newListOfEdges = MESH.EdgesToVertices[:,:2]
-
-# listOfEdges = []
-# for i in range(MESH.NoEdges):
-#     tempNewListOfEdges = np.delete(newListOfEdges, i - len(listOfEdges), axis=0)
-#     newPoints = pd.unique(tempNewListOfEdges.ravel()).size
-#     if newPoints == nPoints:
-#         listOfEdges.append(i)
-#         newListOfEdges = tempNewListOfEdges
-
-
-
-
-
+##########################################################################
+# Tree/Cotree gauging
+##########################################################################
 
 from mst import *
 
 newListOfEdges = MESH.EdgesToVertices[:,:2]
-g = Graph(MESH.np) 
 
-for i in range(MESH.NoEdges):
+g = Graph(MESH.np)
+
+for i in range(newListOfEdges.shape[0]):
     g.addEdge(newListOfEdges[i,0],newListOfEdges[i,1],i)
     
 g.KruskalMST()
 indices = np.array(g.MST)[:,2]
 
-
-
-
-
-
-regions_indices = pde.tools.getIndices(MESH.regions_2d,'ambient_face,r_steel_face,l_steel_face')
-face_indices = np.where(np.in1d(MESH.f[:,-1],regions_indices))
-faces = MESH.f[face_indices]
-
-edges_trigs = npy.r_[npy.c_[faces[:,0],faces[:,1]],
-                     npy.c_[faces[:,0],faces[:,2]],
-                     npy.c_[faces[:,1],faces[:,2]]]
-
-edges_trigs_unique, je = npy.unique(edges_trigs, axis = 0, return_inverse = True)
-
-edge_indices = pde.intersect2d(MESH.EdgesToVertices[:,:2],edges_trigs_unique)
-
-print(edge_indices.shape)
-
-
-# LIST_DOF  = np.unique(MESH.FEMLISTS['N0']['B']['LIST_DOF'][indices])
-LIST_DOF2 = np.setdiff1d(np.r_[:MESH.NoEdges],np.union1d(indices,edge_indices))
+LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],indices)
 
 D = sp.eye(MESH.NoEdges, format = 'csc')
 
-# if listDOF.size > 0:
-#     LIST_DOF = listDOF
+R = D[:,LIST_DOF]
 
-# R1 = D[:,LIST_DOF]
-R2 = D[:,LIST_DOF2]
+KR = R.T@K_Hcurl@R
 
-# return R1.T.tocsc(),R2.T.tocsc()
+##############################################################################
+
+J1 = lambda x,y,z : np.c_[ 1+0*x, 0*y, 0*z]
+J2 = lambda x,y,z : np.c_[ 0*x, 1+0*y, 0*z]
+J3 = lambda x,y,z : np.c_[-1+0*x, 0*y, 0*z]
+J4 = lambda x,y,z : np.c_[ 0*x,-1+0*y, 0*z]
+
+
+J = lambda x,y,z : np.tile(((x<75)*(x>-75)*(y>-95)*(y<-75)),(3,1)).T*J1(x,y,z) +\
+                   np.tile(((x<75)*(x>-75)*(y> 75)*(y< 95)),(3,1)).T*J3(x,y,z) +\
+                   np.tile(((x<-75)*(x>-95)*(y<75)*(y>-75)),(3,1)).T*J4(x,y,z) +\
+                   np.tile(((x> 75)*(x< 95)*(y<75)*(y>-75)),(3,1)).T*J2(x,y,z)
+                   
+##############################################################################
+
+
+
+import vtk
+
+points = vtk.vtkPoints()
+grid = vtk.vtkUnstructuredGrid()
+
+for i in range(MESH.np):
+    points.InsertPoint(i, (MESH.p[i,0], MESH.p[i,1], MESH.p[i,2]))
+    
+def create_cell(i):
+    tetra = vtk.vtkTetra()
+    ids = tetra.GetPointIds()
+    ids.SetId(0, MESH.t[i,0])
+    ids.SetId(1, MESH.t[i,1])
+    ids.SetId(2, MESH.t[i,2])
+    ids.SetId(3, MESH.t[i,3])
+    return tetra
+
+elems = [create_cell(i) for i in range(MESH.nt)]
+grid.Allocate(MESH.nt, 1)
+grid.SetPoints(points)
+
+for elem in elems:
+    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+
+
+scalars = MESH.t[:,-1]
+pdata = grid.GetCellData()
+data = vtk.vtkDoubleArray()
+data.SetNumberOfValues(MESH.nt)
+for i,p in enumerate(scalars): data.SetValue(i,p)
+pdata.SetScalars(data)
+
+vec = vtk.vtkFloatArray()
+vec.SetNumberOfComponents(3)
+
+for i in range(MESH.nt):
+    Je = J(MESH.mp_tet[i,0],MESH.mp_tet[i,1],MESH.mp_tet[i,2])[0]
+    vec.InsertNextTuple([Je[0],Je[1],Je[2]])
+pdata.SetVectors(vec)
+
+
+
+
+writer = vtk.vtkXMLUnstructuredGridWriter()
+writer.SetFileName("whatever.vkt")
+writer.SetInputData(grid)
+writer.Write()

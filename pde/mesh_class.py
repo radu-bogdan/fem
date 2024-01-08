@@ -1023,8 +1023,6 @@ class mesh3:
         #############################################################################################################
         edges = npy.sort(edges_tets).astype(int)
         EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
-        # print((edges_tets-edges).min())
-        print("HEY!", EdgesToVertices.shape,edges.shape)
 
         NoEdges = EdgesToVertices.shape[0]
         TetsToEdges = je[:6*nt].reshape(nt,6, order = 'F').astype(npy.int64)
@@ -1038,7 +1036,7 @@ class mesh3:
 
 
         #############################################################################################################
-        faces = npy.sort(faces_tets)
+        faces = npy.sort(faces_tets).astype(int)
         FacesToVertices, je = npy.unique(faces, axis = 0, return_inverse = True)
 
         NoFaces = FacesToVertices.shape[0]
@@ -1130,6 +1128,7 @@ class mesh3:
         
         self.Fx = Fx; self.Fy = Fy; self.Fz = Fz;
         self.detA = detA
+        self.mp_tet = mp_tet
         
         self.JF00 = JF00; self.JF10 = JF10; self.JF20 = JF20;
         self.JF01 = JF01; self.JF11 = JF11; self.JF21 = JF21;
