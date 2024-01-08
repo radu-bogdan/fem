@@ -1038,7 +1038,7 @@ class mesh3:
 
 
         #############################################################################################################
-        faces = npy.sort(faces_tets).astype(int)
+        faces = npy.sort(faces_tets)
         FacesToVertices, je = npy.unique(faces, axis = 0, return_inverse = True)
 
         NoFaces = FacesToVertices.shape[0]

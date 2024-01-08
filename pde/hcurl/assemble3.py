@@ -96,6 +96,7 @@ def assemble3(MESH,space,matrix,order=-1):
                 
                 ellmatsBx[i*nt:(i+1)*nt,j] = 1/detA*(JF00*curlphii[0]+JF01*curlphii[1]+JF02*curlphii[2])
                 ellmatsBy[i*nt:(i+1)*nt,j] = 1/detA*(JF10*curlphii[0]+JF11*curlphii[1]+JF12*curlphii[2])
+                ellmatsBz[i*nt:(i+1)*nt,j] = 1/detA*(JF20*curlphii[0]+JF21*curlphii[1]+JF22*curlphii[2])
         
         Bx = sparse(im,jm,ellmatsBx,sizeM,nqp*nt)
         By = sparse(im,jm,ellmatsBy,sizeM,nqp*nt)

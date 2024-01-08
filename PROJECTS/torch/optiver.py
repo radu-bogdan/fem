@@ -167,8 +167,8 @@ def divisors(x):
     # print(x,int(x**0.5)+6)
     prod = 1
     xold = x
-    # for i in range(3,x+1,2):
-    for i in range(3,int(xold**0.5),2):
+    for i in range(3,x+1,2):
+    # for i in range(3,int(x**0.5),2):
     # for i in range(3,x+1,2):
         count = 0
         while (x%i==0) and (x>1):
@@ -180,7 +180,7 @@ def divisors(x):
         if (x<=1): break
     
     # prod = prod * 2
-    if prod == 1: prod = prod*2
+    # if prod == 1: prod = prod*2
     
     # print(xi,pow2,count,prod,'\n')
     return pow2*prod
@@ -190,7 +190,7 @@ def divisors2(n):
     
     if (n%2==1): return 0
     
-    for i in range(1,n+1):
+    for i in range(1,int(n**0.5)+2):
         if (n%i==0) and (i%2==0):
             count = count + 1
     return count

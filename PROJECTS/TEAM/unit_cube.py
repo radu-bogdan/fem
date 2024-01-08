@@ -25,9 +25,9 @@ full.mat("full")
 geoOCC = occ.OCCGeometry(full)
 ng.Draw(geoOCC)
 
-geoOCCmesh = geoOCC.GenerateMesh(maxh = 25)
-# geoOCCmesh.Refine()
-# geoOCCmesh.Refine()
+geoOCCmesh = geoOCC.GenerateMesh(maxh = 100)
+geoOCCmesh.Refine()
+geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
 
 mesh = ng.Mesh(geoOCCmesh)
@@ -37,11 +37,13 @@ mesh = ng.Mesh(geoOCCmesh)
 # NGSOVLE STUFF...
 ##########################################################################
 
-# fes = ng.HCurl(mesh, order=0)
-fes = ng.HCurl(mesh, order=0, nograds=True)
+# fes = ng.H1(mesh, order = 0)
+fes = ng.HCurl(mesh, order = 0)
 print ("Hx dofs:", fes.ndof)
 u,v = fes.TnT()
 
+# bfa = ng.BilinearForm(ng.grad(u)*ng.grad(v)*ng.dx).Assemble()
+# bfa = ng.BilinearForm(u*v*ng.dx).Assemble()
 bfa = ng.BilinearForm(ng.curl(u)*ng.curl(v)*ng.dx).Assemble()
 
 rows,cols,vals = bfa.mat.COO()
@@ -55,12 +57,14 @@ sys.path.insert(0,'../../') # adds parent directory
 import pde
 from sksparse.cholmod import cholesky as chol
 
+order = 2
+
 MESH = pde.mesh3.netgen(geoOCCmesh)
 print(MESH)
 
-phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = 4)
-dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = 4)
-D = pde.int.assemble3(MESH, order = 4)
+phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
+dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
+D = pde.int.assemble3(MESH, order = order)
 
 M = phi_H1 @ D @ phi_H1.T
 
@@ -77,8 +81,8 @@ Kn = RSS @ K @ RSS.T
 
 
 
-phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = 4)
-curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = 4)
+phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
+curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
 M_Hcurl = phix_Hcurl @ D @ phix_Hcurl.T +\
           phiy_Hcurl @ D @ phiy_Hcurl.T +\
@@ -113,25 +117,25 @@ noPoints_interior = np.unique(MESH.EdgesToVertices[other_edge_indices,:2]).size
 
 print(edge_indices.shape)
 
-LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],edge_indices)
-D = sp.eye(MESH.NoEdges, format = 'csc')
-R = D[:,LIST_DOF]
+# LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],edge_indices)
+# D = sp.eye(MESH.NoEdges, format = 'csc')
+# R = D[:,LIST_DOF]
 
-K_noEdges = R.T@K_Hcurl@R
-print(K_noEdges.shape,np.linalg.matrix_rank(K_noEdges.A,tol=1e-12))
+# K_noEdges = R.T@K_Hcurl@R
+# print(K_noEdges.shape,np.linalg.matrix_rank(K_noEdges.A,tol=1e-12))
 
 
 from mst import *
 
-# newListOfEdges = MESH.EdgesToVertices[:,:2]
-newListOfEdges = np.r_[MESH.EdgesToVertices[edge_indices,:2],
-                        MESH.EdgesToVertices[np.setdiff1d(np.r_[:MESH.NoEdges], edge_indices),:2]]
+newListOfEdges = MESH.EdgesToVertices[:,:2]
+# newListOfEdges = np.r_[MESH.EdgesToVertices[edge_indices,:2],
+#                         MESH.EdgesToVertices[np.setdiff1d(np.r_[:MESH.NoEdges], edge_indices),:2]]
 # newListOfEdges = np.r_[MESH.EdgesToVertices[np.setdiff1d(np.r_[:MESH.NoEdges], edge_indices),:2],
 #                         MESH.EdgesToVertices[edge_indices,:2]]
 
 # newListOfEdges = MESH.EdgesToVertices[np.setdiff1d(np.r_[:MESH.NoEdges], edge_indices),:2]
 
-g = Graph(MESH.np) 
+g = Graph(MESH.np)
 
 for i in range(newListOfEdges.shape[0]):
     g.addEdge(newListOfEdges[i,0],newListOfEdges[i,1],i)
@@ -142,7 +146,7 @@ indices = np.array(g.MST)[:,2]
 
 # LIST_DOF  = np.unique(MESH.FEMLISTS['N0']['B']['LIST_DOF'][indices])
 # LIST_DOF2 = np.setdiff1d(np.r_[:MESH.NoEdges],indices)
-LIST_DOF2 = np.setdiff1d(np.r_[:MESH.NoEdges],np.union1d(indices,edge_indices))
+LIST_DOF2 = np.setdiff1d(np.r_[:MESH.NoEdges],indices)
 
 D = sp.eye(MESH.NoEdges, format = 'csc')
 
@@ -154,7 +158,7 @@ R2 = D[:,LIST_DOF2]
 
 KR = R2.T@K_Hcurl@R2
 
-print(KR.shape,np.linalg.matrix_rank(KR.A, tol=1e-10))
-print(K_Hcurl.shape,np.linalg.matrix_rank(K_Hcurl.A, tol=1e-10))
+# print(KR.shape,np.linalg.matrix_rank(KR.A, tol=1e-10))
+# print(K_Hcurl.shape,np.linalg.matrix_rank(K_Hcurl.A, tol=1e-10))
 # return R1.T.tocsc(),R2.T.tocsc()
     
