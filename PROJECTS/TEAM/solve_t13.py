@@ -71,7 +71,7 @@ uz = phiz_Hcurl_P0.T @ u
 
 normu = ux**2+uy**2+uz**2
 
-MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
+# MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
 
 
 
@@ -108,16 +108,22 @@ KR = R.T@K_Hcurl@R
 
 ##############################################################################
 
-J1 = lambda x,y,z : np.c_[ 1+0*x, 0*y, 0*z]
-J2 = lambda x,y,z : np.c_[ 0*x, 1+0*y, 0*z]
-J3 = lambda x,y,z : np.c_[-1+0*x, 0*y, 0*z]
-J4 = lambda x,y,z : np.c_[ 0*x,-1+0*y, 0*z]
+J1 = lambda x,y,z : np.c_[ 1+0*x,   0*y, 0*z]
+J2 = lambda x,y,z : np.c_[   0*x, 1+0*y, 0*z]
+J3 = lambda x,y,z : np.c_[-1+0*x,   0*y, 0*z]
+J4 = lambda x,y,z : np.c_[   0*x,-1+0*y, 0*z]
+JR = lambda x,y,z : np.c_[    -y,     x, 0*z]
 
 
-J = lambda x,y,z : np.tile(((x<75)*(x>-75)*(y>-95)*(y<-75)),(3,1)).T*J1(x,y,z) +\
-                   np.tile(((x<75)*(x>-75)*(y> 75)*(y< 95)),(3,1)).T*J3(x,y,z) +\
-                   np.tile(((x<-75)*(x>-95)*(y<75)*(y>-75)),(3,1)).T*J4(x,y,z) +\
-                   np.tile(((x> 75)*(x< 95)*(y<75)*(y>-75)),(3,1)).T*J2(x,y,z)
+J = lambda x,y,z : np.tile(((x<= 75)*(x>=- 75)*(y>=-100)*(y<-75))*(z>-50)*(z<50),(3,1)).T*J1(x,y,z) +\
+                   np.tile(((x<= 75)*(x>= -75)*(y>=  75)*(y< 100)*(z>-50)*(z<50)),(3,1)).T*J3(x,y,z) +\
+                   np.tile(((x<=-75)*(x>=-100)*(y<=  75)*(y> -75)*(z>-50)*(z<50)),(3,1)).T*J4(x,y,z) +\
+                   np.tile(((x>= 75)*(x<= 100)*(y<=  75)*(y> -75)*(z>-50)*(z<50)),(3,1)).T*J2(x,y,z) +\
+                       
+                   np.tile(((x>= 75)*(x<= 100)*(y<=  75)*(y> -75)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z)
+                   
+                   
+                    
                    
 ##############################################################################
 
@@ -160,8 +166,10 @@ vec = vtk.vtkFloatArray()
 vec.SetNumberOfComponents(3)
 
 for i in range(MESH.nt):
+    # Je = J(MESH.p[i,0],MESH.p[i,1],MESH.p[i,2])[0]
     Je = J(MESH.mp_tet[i,0],MESH.mp_tet[i,1],MESH.mp_tet[i,2])[0]
     vec.InsertNextTuple([Je[0],Je[1],Je[2]])
+vec.SetName('omg')
 pdata.SetVectors(vec)
 
 
