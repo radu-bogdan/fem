@@ -12,6 +12,7 @@ box2 = occ.Box(occ.Pnt(-75,-75,-50), occ.Pnt(75,75,50))
 ##########################################################################
 
 corner1_ext = occ.Box(occ.Pnt(75,75,-50), occ.Pnt(100,100,50))
+# cyl1_ext = occ.Cylinder(occ.Pnt(50,50,-50), occ.Z, r=75, h=100)
 cyl1_ext = occ.Cylinder(occ.Pnt(75,75,-50), occ.Z, r=25, h=100)
 corner1_int = occ.Box(occ.Pnt(50,50,-50), occ.Pnt(75,75,50))
 cyl1_int = occ.Cylinder(occ.Pnt(50,50,-50), occ.Z, r=25, h=100)

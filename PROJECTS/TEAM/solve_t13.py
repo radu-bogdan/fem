@@ -71,7 +71,7 @@ uz = phiz_Hcurl_P0.T @ u
 
 normu = ux**2+uy**2+uz**2
 
-# MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
+MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
 
 
 
@@ -112,18 +112,20 @@ J1 = lambda x,y,z : np.c_[ 1+0*x,   0*y, 0*z]
 J2 = lambda x,y,z : np.c_[   0*x, 1+0*y, 0*z]
 J3 = lambda x,y,z : np.c_[-1+0*x,   0*y, 0*z]
 J4 = lambda x,y,z : np.c_[   0*x,-1+0*y, 0*z]
-JR = lambda x,y,z : np.c_[    -y,     x, 0*z]
+JR = lambda x,y,z,m,n : np.c_[-(y-n),(x-m), 0*z]*1/np.sqrt((x-m)**2+(y-n)**2)
 
 
-J = lambda x,y,z : np.tile(((x<= 75)*(x>=- 75)*(y>=-100)*(y<-75))*(z>-50)*(z<50),(3,1)).T*J1(x,y,z) +\
-                   np.tile(((x<= 75)*(x>= -75)*(y>=  75)*(y< 100)*(z>-50)*(z<50)),(3,1)).T*J3(x,y,z) +\
-                   np.tile(((x<=-75)*(x>=-100)*(y<=  75)*(y> -75)*(z>-50)*(z<50)),(3,1)).T*J4(x,y,z) +\
-                   np.tile(((x>= 75)*(x<= 100)*(y<=  75)*(y> -75)*(z>-50)*(z<50)),(3,1)).T*J2(x,y,z) +\
-                       
-                   np.tile(((x>= 75)*(x<= 100)*(y<=  75)*(y> -75)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z)
+m = 50
+
+J = lambda x,y,z : np.tile(((x<= m)*(x>=  -m)*(y< -m)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*J1(x,y,z) +\
+                   np.tile(((x<= m)*(x>=  -m)*(y>= m)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*J3(x,y,z) +\
+                   np.tile(((x<=-m)*(x>=-100)*(y<= m)*(y>=  -m)*(z>-50)*(z<50)),(3,1)).T*J4(x,y,z) +\
+                   np.tile(((x>= m)*(x<= 100)*(y<= m)*(y>=  -m)*(z>-50)*(z<50)),(3,1)).T*J2(x,y,z) +\
+                   np.tile(((x>= m)*(x<= 100)*(y>= m)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*(JR(x,y,z, 50, 50)*(x+y-100)/50 + JR(x,y,z, 75, 75)*(x+y-150)/50) +\
+                   np.tile(((x<=-m)*(x>=-100)*(y<=-m)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50,-50) +\
+                   np.tile(((x<=-m)*(x>=-100)*(y>= m)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50, 50) +\
+                   np.tile(((x>= m)*(x<= 100)*(y<=-m)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50,-50)
                    
-                   
-                    
                    
 ##############################################################################
 
