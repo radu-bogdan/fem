@@ -85,7 +85,7 @@ geoOCC = occ.OCCGeometry(full)
 # ng.Draw(geoOCC)
 
 geoOCCmesh = geoOCC.GenerateMesh()
-# geoOCCmesh.Refine()
+geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
 
 

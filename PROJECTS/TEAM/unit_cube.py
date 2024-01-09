@@ -31,6 +31,7 @@ geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
 
 mesh = ng.Mesh(geoOCCmesh)
+# mesh.Refine()
 
 
 ##########################################################################
@@ -38,7 +39,7 @@ mesh = ng.Mesh(geoOCCmesh)
 ##########################################################################
 
 # fes = ng.H1(mesh, order = 0)
-fes = ng.HCurl(mesh, order = 0)
+fes = ng.HCurl(mesh, order = 1)
 print ("Hx dofs:", fes.ndof)
 u,v = fes.TnT()
 
@@ -88,7 +89,15 @@ M_Hcurl = phix_Hcurl @ D @ phix_Hcurl.T +\
 K_Hcurl = curlphix_Hcurl @ D @ curlphix_Hcurl.T +\
           curlphiy_Hcurl @ D @ curlphiy_Hcurl.T +\
           curlphiz_Hcurl @ D @ curlphiz_Hcurl.T
+          
+C_Hcurl_H1 = phix_Hcurl @ D @ dphix_H1.T +\
+             phiy_Hcurl @ D @ dphiy_H1.T +\
+             phiz_Hcurl @ D @ dphiz_H1.T
 
+from scipy.sparse import bmat
+
+AA = bmat([[K_Hcurl, C_Hcurl_H1], 
+           [C_Hcurl_H1.T, None]])
 
 ##########################################################################
 # Tree/Cotree gauging
