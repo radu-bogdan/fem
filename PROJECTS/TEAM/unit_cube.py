@@ -174,4 +174,3 @@ print(edge_indices.shape)
 # print(KR.shape,np.linalg.matrix_rank(KR.A, tol=1e-10))
 # print(K_Hcurl.shape,np.linalg.matrix_rank(K_Hcurl.A, tol=1e-10))
 # return R1.T.tocsc(),R2.T.tocsc()
-    
