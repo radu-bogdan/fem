@@ -117,6 +117,8 @@ eJz0 = pde.int.evaluate3(MESH, order = 0, coeff = lambda x,y,z : J(x,y,z)[:,2], 
 r = eJx @ D @ phix_Hcurl.T +\
     eJy @ D @ phiy_Hcurl.T +\
     eJz @ D @ phiz_Hcurl.T
+
+# MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
     
 ##############################################################################
 # Only coil stuff...
@@ -141,16 +143,71 @@ K_Hcurl_coil = K_Hcurl_coil[non_zero_rows_K,:]
 
 C_Hcurl_H1_coil = C_Hcurl_H1_coil_full[non_zero_rows_K,:]
 C_Hcurl_H1_coil = C_Hcurl_H1_coil[:,non_zero_rows_C]
+C_Hcurl_H1_coil_eich = C_Hcurl_H1_coil[:,:-1]
 
-AA = bmat([[K_Hcurl_coil, C_Hcurl_H1_coil], 
-           [C_Hcurl_H1_coil.T, None]]).tocsc()
+# Eliminate harmonic? seems to work but what do I kno 
+K_Hcurl_coil_eich = K_Hcurl_coil[:,:-1]
+K_Hcurl_coil_eich = K_Hcurl_coil_eich[:-1,:]
+C_Hcurl_H1_coil_eich = C_Hcurl_H1_coil_eich[:-1,:]
 
-          
-# MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
+AA = bmat([[K_Hcurl_coil_eich, C_Hcurl_H1_coil_eich], 
+           [C_Hcurl_H1_coil_eich.T, None]]).tocsc()
+
+r_coil = r[non_zero_rows_K]
+r_coil_eich = r_coil[:-1]
+
+bb = np.r_[r_coil_eich,np.zeros(non_zero_rows_C.size-1)]
+
+tm = time.monotonic()
+xxx = sp.linalg.spsolve(AA,bb)
+print('Solving saddle point took ... ',time.monotonic()-tm)
+
+xxx = xxx[-non_zero_rows_C.size+1:]
+xxx = np.r_[xxx,0] # readding the last entry
+
+xx = np.zeros(MESH.np)
+xx[non_zero_rows_C] = xxx
 
 ##############################################################################
 # Solving stuff...
 ##############################################################################
+
+
+# C_Hcurl_H1_eich = C_Hcurl_H1[:,:-1] # removing last entry
+
+# AA = bmat([[K_Hcurl, C_Hcurl_H1_eich], 
+#            [C_Hcurl_H1_eich.T, None]]).tocsc()
+
+# bb = np.r_[r,np.zeros(MESH.np-1)]
+
+
+# tm = time.monotonic()
+# xx = sp.linalg.spsolve(AA,bb)
+# print('Solving saddle point took ... ',time.monotonic()-tm)
+
+
+# xx = xx[-MESH.np+1:]
+# xx = np.r_[xx,0] # readding the last entry
+
+##############################################################################
+
+dx_xx = dphix_H1.T@xx
+dy_xx = dphiy_H1.T@xx
+dz_xx = dphiz_H1.T@xx
+
+eJx_new = eJx - dx_xx
+eJy_new = eJy - dy_xx
+eJz_new = eJz - dz_xx
+
+r = eJx_new @ D @ phix_Hcurl.T +\
+    eJy_new @ D @ phiy_Hcurl.T +\
+    eJz_new @ D @ phiz_Hcurl.T
+
+##############################################################################
+
+# r = eJx @ D @ phix_Hcurl.T +\
+#     eJy @ D @ phiy_Hcurl.T +\
+#     eJz @ D @ phiz_Hcurl.T
     
 cholKR = chol(KR)
 x = cholKR.solve_A(R.T@r)
@@ -159,33 +216,6 @@ x = R@x
 ux = curlphix_Hcurl_P0.T @ x
 uy = curlphiy_Hcurl_P0.T @ x
 uz = curlphiz_Hcurl_P0.T @ x
-# stop
-
-
-
-C_Hcurl_H1_eich = C_Hcurl_H1[:,:-1] # removing last entry
-
-AA = bmat([[K_Hcurl, C_Hcurl_H1_eich], 
-           [C_Hcurl_H1_eich.T, None]]).tocsc()
-
-bb = np.r_[r,np.zeros(MESH.np-1)]
-
-
-tm = time.monotonic()
-xx = sp.linalg.spsolve(AA,bb)
-print('Solving saddle point took ... ',time.monotonic()-tm)
-
-
-xx = xx[-MESH.np+1:]
-xx = np.r_[xx,0] # readding the last entry
-
-dx_xx = dphix_H1_P0.T@xx
-dy_xx = dphiy_H1_P0.T@xx
-dz_xx = dphiz_H1_P0.T@xx
-
-eJx0_new = eJx0 - dx_xx
-eJy0_new = eJy0 - dy_xx
-eJz0_new = eJz0 - dz_xx
 
 ##############################################################################
 # Storing to vtk
@@ -234,6 +264,9 @@ vecJ.SetName('omg')
 pdata.AddArray(vecJ)
 
 
+
+dx_xx = dphix_H1_P0.T@xx; dy_xx = dphiy_H1_P0.T@xx; dz_xx = dphiz_H1_P0.T@xx
+eJx0_new = eJx0 - dx_xx; eJy0_new = eJy0 - dy_xx; eJz0_new = eJz0 - dz_xx
 vecJ = vtk.vtkFloatArray()
 vecJ.SetNumberOfComponents(3)
 for i in range(MESH.nt):
@@ -250,11 +283,11 @@ for i in range(MESH.nt):
     vec.InsertNextTuple([ux[i],uy[i],uz[i]])
 vec.SetName('lel')
 # pdata.SetVectors([vec,vecJ])
-pdata.AddArray(vecJ)
+pdata.AddArray(vec)
 print('Time needed to prepare file ... ',time.monotonic()-tm)
 
 writer = vtk.vtkXMLUnstructuredGridWriter()
-writer.SetFileName("whatever.vkt")
+writer.SetFileName("whatever.vtk")
 writer.SetInputData(grid)
 writer.Write()
 print('Time needed to write to file ... ',time.monotonic()-tm)
