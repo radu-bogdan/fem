@@ -25,9 +25,7 @@ full.mat("full")
 geoOCC = occ.OCCGeometry(full)
 ng.Draw(geoOCC)
 
-geoOCCmesh = geoOCC.GenerateMesh(maxh = 100)
-geoOCCmesh.Refine()
-geoOCCmesh.Refine()
+geoOCCmesh = geoOCC.GenerateMesh(maxh = 50)
 # geoOCCmesh.Refine()
 
 mesh = ng.Mesh(geoOCCmesh)
@@ -39,13 +37,15 @@ mesh = ng.Mesh(geoOCCmesh)
 ##########################################################################
 
 # fes = ng.H1(mesh, order = 0)
-fes = ng.HCurl(mesh, order = 1)
+fes = ng.HCurl(mesh, order = 0)
+# fes = ng.HDiv(mesh, order = 0)
 print ("Hx dofs:", fes.ndof)
 u,v = fes.TnT()
 
 # bfa = ng.BilinearForm(ng.grad(u)*ng.grad(v)*ng.dx).Assemble()
 # bfa = ng.BilinearForm(u*v*ng.dx).Assemble()
 bfa = ng.BilinearForm(ng.curl(u)*ng.curl(v)*ng.dx).Assemble()
+# bfa = ng.BilinearForm(ng.div(u)*ng.div(v)*ng.dx).Assemble()
 
 rows,cols,vals = bfa.mat.COO()
 A = sp.csr_matrix((vals,(rows,cols)))
@@ -96,7 +96,7 @@ C_Hcurl_H1 = phix_Hcurl @ D @ dphix_H1.T +\
 
 from scipy.sparse import bmat
 
-AA = bmat([[K_Hcurl, C_Hcurl_H1], 
+AA = bmat([[K_Hcurl, C_Hcurl_H1],
            [C_Hcurl_H1.T, None]])
 
 ##########################################################################
