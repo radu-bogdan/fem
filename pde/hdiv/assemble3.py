@@ -85,61 +85,55 @@ def assemble3(MESH,space,matrix,order=-1):
         return B
     
 
-# def assembleB(MESH,space,matrix,shape,order = -1, edges = npy.empty(0)):
-    
-#     if not space in MESH.FEMLISTS.keys():
-#         spaceInfo(MESH,space)
-    
-#     if not hasattr(MESH, 'Boundary_EdgeOrientation'):
-#         MESH.makeBEO()
-    
-#     p = MESH.p
-#     e = MESH.e; ne = e.shape[0]
-    
-#     phi = MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
-    
-#     if edges.size == 0:
-#         e = MESH.e
-#     else:
-#         e = MESH.EdgesToVertices[edges,:]
-        
-#     ne = e.shape[0]
-#     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
-    
-#     if order != -1:
-#         qp,we = quadrature.one_d(order); nqp = len(we)
-            
-#     #####################################################################################
-#     # Mappings
-#     #####################################################################################
-        
-#     e0 = e[:,0]; e1 = e[:,1]
-#     A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
-#     detA = npy.sqrt(A0**2+A1**2)
-    
-#     if edges.size == 0:
-#         detA = detA*MESH.Boundary_EdgeOrientation
-    
-#     #####################################################################################
-#     # Mass matrix (over the edge)
-#     #####################################################################################
 
-#     if matrix == 'M':
-#         if order == -1:
-#             qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]; 
-#             we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
+# ACHTUNG! Nur outer faces nach außen orietiert!
+# def assembleB3(MESH, space, matrix, shape, order = -1, faces = npy.empty(0)):
+def assembleB3(MESH, space, matrix, shape, order = -1):
+    
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
+    
+    p = MESH.p
+    f = MESH.f;
+    
+    phi = MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
+    
+    # if faces.size == 0:
+    #     f = MESH.f
+    # else:
+    #     f = MESH.FacesToVertices[faces,:]
         
-#         ellmatsB = npy.zeros((nqp*ne,lphi))
+    nf = f.shape[0]
+    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
+    
+    if order != -1:
+        qp,we = quadrature.dunavant(order); nqp = len(we)
+    
+    #####################################################################################
+    # Mass matrix (over the edge)
+    #####################################################################################
+
+    if matrix == 'M':
+        if order == -1:
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]; 
+            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
         
-#         im = npy.tile(LIST_DOF,(nqp,1))
-#         jm = npy.tile(npy.c_[0:ne*nqp].reshape(ne,nqp).T.flatten(),(lphi,1)).T
+        ellmatsB = npy.zeros((nqp*nf,lphi))
         
-#         for j in range(lphi):
-#             for i in range(nqp):
-#                 ellmatsB[i*ne:(i+1)*ne,j] = 1/npy.abs(detA)*phi[j](qp[i])
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[:nf*nqp].reshape(nf,nqp).T.flatten(),(lphi,1)).T
         
-#         B = sparse(im,jm,ellmatsB,shape,nqp*ne)
-#         return B
+        for j in range(lphi):
+            for i in range(nqp):
+                detB = MESH.detB(qp[0,i],qp[1,i])
+                print(j,i,abs(detB).max(),abs(detB).min())
+                ellmatsB[i*nf:(i+1)*nf,j] = 1/npy.abs(detB)*phi[j](qp[0,i],qp[1,i])
+        
+        print(im.shape,jm.shape,ellmatsB.shape,nqp,nf,shape)
+        B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
+        return B
+    
+    
 
 # def assembleE(MESH,space,matrix,order=1):
     

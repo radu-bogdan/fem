@@ -80,48 +80,40 @@ def assemble3(MESH,space,matrix,order=-1):
         
 
 # # @nb.jit(cache=True)
-# def assembleB(MESH,space,matrix,shape,order=-1):
+def assembleB3(MESH, space, matrix, shape, order=-1):
     
-#     if not space in MESH.FEMLISTS.keys():
-#         spaceInfo(MESH,space)
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
     
-#     p = MESH.p;
-#     e = MESH.e; ne = e.shape[0]
+    p = MESH.p;
+    f = MESH.f; nf = f.shape[0]
     
-#     phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
-#     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
+    phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
+    LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
     
-#     if order != -1:
-#         qp,we = quadrature.one_d(order); nqp = len(we)
-            
-#     #####################################################################################
-#     # Mappings
-#     #####################################################################################
-        
-#     e0 = e[:,0]; e1 = e[:,1]
-#     A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
-#     detA = npy.sqrt(A0**2+A1**2)
+    if order != -1:
+        qp,we = quadrature.dunavant(order); nqp = len(we)
     
-#     #####################################################################################
-#     # Mass matrix (over the edge)
-#     #####################################################################################
+    #####################################################################################
+    # Mass matrix (over the edge)
+    #####################################################################################
 
-#     if matrix == 'M':
-#         if order == -1:
-#             qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0];
-#             we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
+    if matrix == 'M':
+        if order == -1:
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0];
+            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
         
-#         ellmatsB = npy.zeros((nqp*ne,lphi))
+        ellmatsB = npy.zeros((nqp*nf,lphi))
         
-#         im = npy.tile(LIST_DOF,(nqp,1))
-#         jm = npy.tile(npy.c_[0:ne*nqp].reshape(ne,nqp).T.flatten(),(lphi,1)).T
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[0:nf*nqp].reshape(nf,nqp).T.flatten(),(lphi,1)).T
         
-#         for j in range(lphi):
-#             for i in range(nqp):
-#                 ellmatsB[i*ne:(i+1)*ne,j] = phi[j](qp[i])
+        for j in range(lphi):
+            for i in range(nqp):
+                ellmatsB[i*nf:(i+1)*nf,j] = phi[j](qp[0,i],qp[1,i])
         
-#         B = sparse(im,jm,ellmatsB,shape[0],nqp*ne)
-#         return B
+        B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
+        return B
     
 # def assembleE(MESH,space,matrix,order=1):
     

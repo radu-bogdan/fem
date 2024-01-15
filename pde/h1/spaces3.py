@@ -31,7 +31,7 @@ def spaceInfo(MESH,space):
         
         LISTS['P1']['B'] = {}
         LISTS['P1']['B']['phi'] = {}
-        LISTS['P1']['B']['phi'][0] = lambda x,y: 1-x-y # is this correct? prolly ...
+        LISTS['P1']['B']['phi'][0] = lambda x,y: 1-x-y
         LISTS['P1']['B']['phi'][1] = lambda x,y: x
         LISTS['P1']['B']['phi'][2] = lambda x,y: y
         LISTS['P1']['B']['qp_we_B'] = quadrature.dunavant(order = 2)

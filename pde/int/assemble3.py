@@ -27,32 +27,25 @@ def assemble3(MESH,order):
     return D
 
 
-# def assembleB(MESH,order):
+def assembleB3(MESH,order):
     
-#     p = MESH.p;
-#     e = MESH.e; ne = e.shape[0]
+    p = MESH.p;
+    f = MESH.f; nf = f.shape[0]
     
-#     qp,we = quadrature.one_d(order); nqp = len(we)
-            
-#     #####################################################################################
-#     # Mappings
-#     #####################################################################################
-        
-#     e0 = e[:,0]; e1 = e[:,1]
-#     A0 =  p[e1,0]-p[e0,0]; A1 =  p[e1,1]-p[e0,1]
-#     detA = npy.sqrt(A0**2+A1**2)
+    qp,we = quadrature.dunavant(order); nqp = len(we)
     
-#     #####################################################################################
+    #####################################################################################
 
-#     ellmatsD = npy.zeros((nqp*ne))
+    ellmatsD = npy.zeros((nqp*nf))
     
-#     iD = npy.r_[0:nqp*ne].reshape(ne,nqp).T
+    iD = npy.r_[:nqp*nf].reshape(nf,nqp).T
     
-#     for i in range(nqp):
-#         ellmatsD[i*ne:(i+1)*ne] = npy.abs(detA)*we[i]
+    for i in range(nqp):
+        detB = MESH.detB(qp[0,i],qp[1,i])
+        ellmatsD[i*nf:(i+1)*nf] = 1/2*npy.abs(detB)*we[i]
     
-#     D = sparse(iD,iD,ellmatsD,nqp*ne,nqp*ne)
-#     return D
+    D = sparse(iD,iD,ellmatsD,nqp*nf,nqp*nf)
+    return D
 
 
 # def assembleE(MESH,order):
@@ -115,70 +108,51 @@ def evaluate3(MESH, order, coeff = lambda x,y,z : 1+0*x*y*z, regions = '', indic
     D = sparse(iD,iD,ellmatsD,nqp*MESH.nt,nqp*MESH.nt)
     return D
 
-# def evaluateB(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = '', like = 0):
-    
-#     # if edges.size == 0:
-#     #     edges = MESH.Boundary_Region
-    
-#     # indices = npy.argwhere(npy.in1d(MESH.Boundary_Region,edges))[:,0]
-#     # indices = npy.in1d(MESH.Boundary_Region,edges)
-    
-#     # if edges == '':
-#     #     ind_edges = MESH.Boundary_Region
-#     # else:
-#     #     ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
-#     # indices = npy.in1d(MESH.Boundary_Region,ind_edges)
-    
-    
-#     if type(edges) == str:
-#         if edges == '':
-#             ind_edges = MESH.Boundary_Region
-#         else:
-#             ind_edges = MESH.getIndices2d(MESH.regions_1d,edges)
-#     else:
-#         if MESH.regions_1d == []:
-#             ind_edges = edges
-        
-#     indices = npy.in1d(MESH.Boundary_Region,ind_edges)
-    
-    
-#     p = MESH.p;    
-#     e = MESH.e[indices,:]; ne = e.shape[0]
-    
-#     # print(ind_edges,MESH.e.shape,e.shape)
-    
-#     #####################################################################################
-#     # Mappings
-#     #####################################################################################
 
-#     e0 = e[:,0]; e1 = e[:,1]
-#     A0 = p[e1,0]-p[e0,0]; A1 = p[e1,1]-p[e0,1]
+
+def evaluateB3(MESH, order, coeff = lambda x,y,z : 1+0*x*y*z, faces = '', like = 0):
     
-#     #####################################################################################
-#     # Custom config matrix
-#     #####################################################################################
     
-#     qp,we = quadrature.one_d(order); nqp = len(we)
-#     ellmatsD = npy.zeros((nqp*ne))
+    if type(faces) == str:
+        if faces == '':
+            ind_faces = MESH.Boundary_Faces
+        else:
+            ind_faces = getIndices(MESH.regions_2d,faces)
+    else:
+        if MESH.regions_2d == []:
+            ind_faces = faces
+        
+    indices = npy.in1d(MESH.BoundaryFaces_Region,ind_faces)
     
-#     iD = npy.r_[0:nqp*MESH.ne].reshape(MESH.ne,nqp).T
-#     iD = iD[:,indices]
+    p = MESH.p;    
+    f = MESH.f[indices,:]; nf = f.shape[0]
     
-#     d = npy.zeros(nqp*MESH.ne)
+    #####################################################################################
+    # Custom config matrix
+    #####################################################################################
     
-#     for i in range(nqp):
-#         qpT_i_1 = A0*qp[i] + p[e0,0]
-#         qpT_i_2 = A1*qp[i] + p[e0,1]
-#         ellmatsD[i*ne:(i+1)*ne] = coeff(qpT_i_1,qpT_i_2)
+    qp,we = quadrature.dunavant(order); nqp = len(we)
+    ellmatsD = npy.zeros((nqp*nf))
     
-#     # D = sparse(iD,iD,ellmatsD,nqp*MESH.ne,nqp*MESH.ne)
-#     d[iD.flatten()] = ellmatsD
+    iD = npy.r_[:nqp*MESH.nf].reshape(MESH.nf,nqp).T
+    iD = iD[:,indices]
     
-#     if like == 0:
-#         return sp.diags(d)
+    d = npy.zeros(nqp*MESH.nf)
     
-#     if like == 1:
-#         return d
+    for i in range(nqp):
+        # This is also weird!
+        qpT_i_1 = MESH.Bx(qp[0,i],qp[1,i])[indices]
+        qpT_i_2 = MESH.By(qp[0,i],qp[1,i])[indices]
+        qpT_i_3 = MESH.Bz(qp[0,i],qp[1,i])[indices]
+        ellmatsD[i*nf:(i+1)*nf] = coeff(qpT_i_1,qpT_i_2,qpT_i_2)
+    
+    d[iD.flatten()] = ellmatsD
+    
+    if like == 0:
+        return sp.diags(d)
+    
+    if like == 1:
+        return d
 
 
 # def evaluateE(MESH, order, coeff = lambda x,y : 1+0*x*y, edges = '', like = 0):

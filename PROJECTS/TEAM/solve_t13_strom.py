@@ -52,7 +52,7 @@ phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', mat
 
 unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
 phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
-          
+
 D = pde.int.assemble3(MESH, order = order)
 
 
@@ -65,8 +65,8 @@ K_Hdiv = divphi_Hdiv @ D @ divphi_Hdiv.T
 C_Hdiv_L2 = divphi_Hdiv @ D @ phi_L2.T
 
 M_Hcurl = phix_Hcurl @ D @ unit_coil @ phix_Hcurl.T +\
-                    phiy_Hcurl @ D @ unit_coil @ phiy_Hcurl.T +\
-                    phiz_Hcurl @ D @ unit_coil @ phiz_Hcurl.T
+          phiy_Hcurl @ D @ unit_coil @ phiy_Hcurl.T +\
+          phiz_Hcurl @ D @ unit_coil @ phiz_Hcurl.T
 
 M_Hdiv_coil_full = phix_Hdiv @ D @ unit_coil @ phix_Hdiv.T +\
                    phiy_Hdiv @ D @ unit_coil @ phiy_Hdiv.T +\
@@ -176,6 +176,7 @@ grid.SetPoints(points)
 
 for elem in elems: grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
+
 scalars = MESH.t[:,-1]
 pdata = grid.GetCellData()
 data = vtk.vtkDoubleArray()
@@ -183,12 +184,14 @@ data.SetNumberOfValues(MESH.nt)
 for i,p in enumerate(scalars): data.SetValue(i,p)
 pdata.SetScalars(data)
 
+
 vecJ = vtk.vtkFloatArray()
 vecJ.SetNumberOfComponents(3)
 for i in range(MESH.nt):
     vecJ.InsertNextTuple([newJx[i],newJy[i],newJz[i]])
 vecJ.SetName('omg')
 pdata.AddArray(vecJ)
+
 
 vecJ = vtk.vtkFloatArray()
 vecJ.SetNumberOfComponents(3)
