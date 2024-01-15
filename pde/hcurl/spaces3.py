@@ -52,11 +52,6 @@ def spaceInfo(MESH,space):
         LISTS['N0']['B']['qp_we_B'] = quadrature.one_d(order = 0)
         
         LISTS['N0']['B']['LIST_DOF'] = MESH.Boundary_Edges
-        # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,0]
-        # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,1]
-        
-        # LISTS['N0']['TET']['phidual'] = {}
-        # LISTS['N0']['TET']['phidual'][0] = lambda x: 2+0*x
     ###########################################################################
 
     

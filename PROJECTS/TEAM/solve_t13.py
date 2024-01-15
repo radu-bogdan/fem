@@ -208,7 +208,7 @@ r = eJx_new @ D @ phix_Hcurl.T +\
 # r = eJx @ D @ phix_Hcurl.T +\
 #     eJy @ D @ phiy_Hcurl.T +\
 #     eJz @ D @ phiz_Hcurl.T
-    
+
 cholKR = chol(KR)
 x = cholKR.solve_A(R.T@r)
 x = R@x

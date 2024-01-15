@@ -25,7 +25,7 @@ full.mat("full")
 geoOCC = occ.OCCGeometry(full)
 ng.Draw(geoOCC)
 
-geoOCCmesh = geoOCC.GenerateMesh(maxh = 50)
+geoOCCmesh = geoOCC.GenerateMesh(maxh = 30)
 # geoOCCmesh.Refine()
 
 mesh = ng.Mesh(geoOCCmesh)
@@ -37,14 +37,14 @@ mesh = ng.Mesh(geoOCCmesh)
 ##########################################################################
 
 # fes = ng.H1(mesh, order = 0)
-fes = ng.HCurl(mesh, order = 0)
-# fes = ng.HDiv(mesh, order = 0)
+# fes = ng.HCurl(mesh, order = 0)
+fes = ng.HDiv(mesh, order = 0)
 print ("Hx dofs:", fes.ndof)
 u,v = fes.TnT()
 
 # bfa = ng.BilinearForm(ng.grad(u)*ng.grad(v)*ng.dx).Assemble()
-# bfa = ng.BilinearForm(u*v*ng.dx).Assemble()
-bfa = ng.BilinearForm(ng.curl(u)*ng.curl(v)*ng.dx).Assemble()
+bfa = ng.BilinearForm(u*v*ng.dx).Assemble()
+# bfa = ng.BilinearForm(ng.curl(u)*ng.curl(v)*ng.dx).Assemble()
 # bfa = ng.BilinearForm(ng.div(u)*ng.div(v)*ng.dx).Assemble()
 
 rows,cols,vals = bfa.mat.COO()
@@ -58,7 +58,7 @@ sys.path.insert(0,'../../') # adds parent directory
 import pde
 from sksparse.cholmod import cholesky as chol
 
-order = 2
+order = 3
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 print(MESH)
@@ -80,15 +80,22 @@ Kn = RSS @ K @ RSS.T
 
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
+phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
+divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
 
 M_Hcurl = phix_Hcurl @ D @ phix_Hcurl.T +\
           phiy_Hcurl @ D @ phiy_Hcurl.T +\
           phiz_Hcurl @ D @ phiz_Hcurl.T
-          
 
 K_Hcurl = curlphix_Hcurl @ D @ curlphix_Hcurl.T +\
           curlphiy_Hcurl @ D @ curlphiy_Hcurl.T +\
           curlphiz_Hcurl @ D @ curlphiz_Hcurl.T
+          
+M_Hdiv = phix_Hdiv @ D @ phix_Hdiv.T +\
+         phiy_Hdiv @ D @ phiy_Hdiv.T +\
+         phiz_Hdiv @ D @ phiz_Hdiv.T
+          
+K_Hdiv = divphi_Hdiv @ D @ divphi_Hdiv.T
           
 C_Hcurl_H1 = phix_Hcurl @ D @ dphix_H1.T +\
              phiy_Hcurl @ D @ dphiy_H1.T +\
@@ -125,6 +132,10 @@ KR = R.T@K_Hcurl@R
 ##########################################################################
 
 
+MESH = pde.mesh3.netgen(geoOCCmesh)
+
+
+##########################################################################
 
 
 
@@ -153,6 +164,9 @@ other_edge_indices = np.setdiff1d(np.r_[:MESH.NoEdges],edge_indices)
 noPoints_interior = np.unique(MESH.EdgesToVertices[other_edge_indices,:2]).size
 
 print(edge_indices.shape)
+
+
+
 
 # LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],edge_indices)
 # D = sp.eye(MESH.NoEdges, format = 'csc')

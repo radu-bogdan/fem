@@ -996,8 +996,7 @@ def intersect2d(X, Y):
 class mesh3:
     def __init__(self, p, e, f, t, r3d = npy.empty(0), r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
         
-        # erst t sortieren anscheinend ...
-
+        # erst t sortieren! ... macht einiges einfacher
         t = npy.c_[npy.sort(t[:,:4]),t[:,4]]
 
 
@@ -1025,7 +1024,7 @@ class mesh3:
         EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
 
         NoEdges = EdgesToVertices.shape[0]
-        TetsToEdges = je[:6*nt].reshape(nt,6, order = 'F').astype(npy.int64)
+        TetsToEdges = je[:6*nt].reshape(nt, 6, order = 'F').astype(npy.int64)
         BoundaryEdges = intersect2d(EdgesToVertices,e_new)
         # InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
 
@@ -1040,12 +1039,16 @@ class mesh3:
         FacesToVertices, je = npy.unique(faces, axis = 0, return_inverse = True)
 
         NoFaces = FacesToVertices.shape[0]
-        TetsToFaces = je[:4*nt].reshape(nt,4, order = 'F').astype(npy.int64)
+        TetsToFaces = je[:4*nt].reshape(nt, 4, order = 'F').astype(npy.int64)
         BoundaryFaces = intersect2d(FacesToVertices,f_new)
         # InteriorFaces = npy.setdiff1d(npy.arange(NoFaces),BoundaryFaces)
 
         FacesToVertices = npy.c_[FacesToVertices,npy.zeros(FacesToVertices.shape[0],dtype = npy.int64)-1]
         FacesToVertices[BoundaryFaces,3] = f[:,-1]
+        
+        indices = npy.unique(TetsToFaces, return_index=True)[1]
+        DirectionFaces = 1+0*TetsToFaces.copy()
+        DirectionFaces.ravel()[indices] = -1
         #############################################################################################################
 
 
@@ -1102,6 +1105,7 @@ class mesh3:
         
         self.FacesToVertices = FacesToVertices
         self.TetsToFaces = TetsToFaces
+        self.DirectionFaces = DirectionFaces
         self.NoFaces = NoFaces
         
         self.BoundaryEdges_Region = e[:,-1]

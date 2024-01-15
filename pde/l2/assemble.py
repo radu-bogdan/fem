@@ -13,14 +13,14 @@ def assemble(MESH,space,matrix,order=-1):
     p = MESH.p;
     t = MESH.t; nt = t.shape[0]
     
-    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
-    phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
-    dphi = MESH.FEMLISTS[space]['TRIG']['dphi']; ldphi = len(dphi)
+    sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
+    phi = MESH.FEMLISTS[space]['TET']['phi']; lphi = len(phi)
+    dphi = MESH.FEMLISTS[space]['TET']['dphi']; ldphi = len(dphi)
     
-    LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
+    LIST_DOF = MESH.FEMLISTS[space]['TET']['LIST_DOF']
     
     if order != -1:
-        qp,we = quadrature.dunavant(order); nqp = len(we)
+        qp,we = quadrature.keast(order); nqp = len(we)
     
     #####################################################################################
     # Mass matrix
@@ -28,17 +28,17 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'M':
         if order == -1:
-            qp = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
-            we = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
+            qp = MESH.FEMLISTS[space]['TET']['qp_we_M'][0]; 
+            we = MESH.FEMLISTS[space]['TET']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(npy.c_[:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
-                ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i])
+                ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i],qp[2,i])
         
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
         return B
@@ -49,14 +49,14 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'K':
         if order == -1:
-            qp =  MESH.FEMLISTS[space]['TRIG']['qp_we_K'][0]; 
-            we =  MESH.FEMLISTS[space]['TRIG']['qp_we_K'][1]; nqp = len(we)
+            qp =  MESH.FEMLISTS[space]['TET']['qp_we_K'][0]; 
+            we =  MESH.FEMLISTS[space]['TET']['qp_we_K'][1]; nqp = len(we)
         
         ellmatsBKx = npy.zeros((nqp*nt,ldphi))
         ellmatsBKy = npy.zeros((nqp*nt,ldphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
+        jm = npy.tile(npy.c_[:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
         
         for j in range(ldphi):
             for i in range(nqp):

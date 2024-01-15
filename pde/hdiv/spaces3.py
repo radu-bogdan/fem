@@ -18,9 +18,23 @@ def spaceInfo(MESH,space):
     Dlam[2] = lambda x,y,z : np.r_[ 0, 1, 0]
     Dlam[3] = lambda x,y,z : np.r_[ 0, 0, 1]
     
-    W2 = lambda i,j,k,x,y,z : lam[i](x,y,z)*np.cross(Dlam[j](x,y,z),Dlam[k](x,y,z))+\
-                              lam[j](x,y,z)*np.cross(Dlam[k](x,y,z),Dlam[i](x,y,z))+\
-                              lam[k](x,y,z)*np.cross(Dlam[i](x,y,z),Dlam[j](x,y,z))
+    # Dlam0 x Dlam1 = ( 0,-1, 1)
+    # Dlam0 x Dlam2 = ( 1, 0,-1)
+    # Dlam0 x Dlam3 = (-1, 1, 0)
+    # Dlam1 x Dlam2 = ( 0, 0, 1)
+    # Dlam1 x Dlam3 = ( 0,-1, 0)
+    # Dlam2 x Dlam3 = ( 1, 0, 0)
+    
+    W2 = lambda i,j,k,x,y,z : lam[i](x,y,z)*np.cross(Dlam[j](x,y,z),Dlam[k](x,y,z))
+    divW2 = lambda i,j,k,x,y,z : np.dot(Dlam[i](x,y,z),np.cross(Dlam[j](x,y,z),Dlam[k](x,y,z)))
+    
+    W = lambda i,j,k,x,y,z : W2(i,j,k,x,y,z)+\
+                             W2(j,k,i,x,y,z)+\
+                             W2(k,i,j,x,y,z)
+                             
+    divW = lambda i,j,k,x,y,z : divW2(i,j,k,x,y,z)+\
+                                divW2(j,k,i,x,y,z)+\
+                                divW2(k,i,j,x,y,z)
     
     ###########################################################################
     if space == 'RT0':
@@ -28,37 +42,32 @@ def spaceInfo(MESH,space):
         LISTS['RT0'] = {}
         LISTS['RT0']['TET'] = {}
         
-        LISTS['RT0']['TET']['qp_we_M'] = quadrature.keast(order = 2)
-        LISTS['RT0']['TET']['qp_we_Mh'] = quadrature.keast(order = 1)
-        LISTS['RT0']['TET']['qp_we_K'] = quadrature.keast(order = 0)
+        LISTS['RT0']['TET']['qp_we_M']  = quadrature.keast(order = 2)
+        LISTS['RT0']['TET']['qp_we_K']  = quadrature.keast(order = 0)
         
-        LISTS['RT0']['TET']['sizeM'] = MESH.NoEdges
+        LISTS['RT0']['TET']['sizeM'] = MESH.NoFaces
         
         LISTS['RT0']['TET']['phi'] = {}
-        LISTS['RT0']['TET']['phi'][0] = lambda x,y,z: W2(0,1,2,x,y,z)
-        LISTS['RT0']['TET']['phi'][1] = lambda x,y,z: W2(0,1,3,x,y,z)
-        LISTS['RT0']['TET']['phi'][2] = lambda x,y,z: W2(0,2,3,x,y,z)
-        LISTS['RT0']['TET']['phi'][3] = lambda x,y,z: W2(1,2,3,x,y,z)
+        LISTS['RT0']['TET']['phi'][0] = lambda x,y,z: W(1,2,3,x,y,z)
+        LISTS['RT0']['TET']['phi'][1] = lambda x,y,z: -W(0,2,3,x,y,z)
+        LISTS['RT0']['TET']['phi'][2] = lambda x,y,z: W(0,1,3,x,y,z)
+        LISTS['RT0']['TET']['phi'][3] = lambda x,y,z: -W(0,1,2,x,y,z)
         
+        LISTS['RT0']['TET']['divphi'] = {}
+        LISTS['RT0']['TET']['divphi'][0] = lambda x,y,z: divW(1,2,3,x,y,z)
+        LISTS['RT0']['TET']['divphi'][1] = lambda x,y,z: -divW(0,2,3,x,y,z)
+        LISTS['RT0']['TET']['divphi'][2] = lambda x,y,z: divW(0,1,3,x,y,z)
+        LISTS['RT0']['TET']['divphi'][3] = lambda x,y,z: -divW(0,1,2,x,y,z)
         
+        LISTS['RT0']['TET']['LIST_DOF'] = MESH.TetsToFaces
+        LISTS['RT0']['TET']['DIRECTION_DOF'] = MESH.DirectionFaces
         
-        
-        LISTS['RT0']['TET']['phi'][1] = lambda x,y,z: lam0(x,y,z)*Dlam2(x,y,z)-lam2(x,y,z)*Dlam0(x,y,z)
-        LISTS['RT0']['TET']['phi'][2] = lambda x,y,z: lam0(x,y,z)*Dlam3(x,y,z)-lam3(x,y,z)*Dlam0(x,y,z)
-        
-        LISTS['RT0']['TET']['curlphi'] = {}
-        LISTS['RT0']['TET']['divphi'][0] = lambda x,y,z: np.cross(Dlam0(x,y,z),Dlam1(x,y,z))-np.cross(Dlam1(x,y,z),Dlam0(x,y,z))
-        LISTS['RT0']['TET']['divphi'][1] = lambda x,y,z: np.cross(Dlam0(x,y,z),Dlam2(x,y,z))-np.cross(Dlam2(x,y,z),Dlam0(x,y,z))
-        LISTS['RT0']['TET']['divphi'][2] = lambda x,y,z: np.cross(Dlam0(x,y,z),Dlam3(x,y,z))-np.cross(Dlam3(x,y,z),Dlam0(x,y,z))
-        
-        LISTS['RT0']['TET']['LIST_DOF'] = MESH.TetsToEdges
-
         LISTS['RT0']['B'] = {}
         LISTS['RT0']['B']['phi'] = {}
-        LISTS['RT0']['B']['phi'][0] = lambda x: 1
+        LISTS['RT0']['B']['phi'][0] = lambda x: 1 #?
         LISTS['RT0']['B']['qp_we_B'] = quadrature.one_d(order = 0)
         
-        LISTS['RT0']['B']['LIST_DOF'] = MESH.Boundary_Edges
+        LISTS['RT0']['B']['LIST_DOF'] = MESH.Boundary_Faces
         
         # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,0]
         # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,1]
