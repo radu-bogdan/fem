@@ -1212,14 +1212,14 @@ class mesh3:
         self.iJF01 = iJF01; self.iJF11 = iJF11; self.iJF21 = iJF21;
         self.iJF02 = iJF02; self.iJF12 = iJF12; self.iJF22 = iJF22;
         
-        self.Bx = Bx; self.By = By;
+        self.Bx = Bx; self.By = By; self.Bz = Bz;
         self.detB = detB
         
-        self.JB00 = JB00; self.JB10 = JB10;
-        self.JB01 = JB01; self.JB11 = JB11;
+        self.JB00 = JB00; self.JB10 = JB10; self.JB20 = JB20;
+        self.JB01 = JB01; self.JB11 = JB11; self.JB21 = JB21;
         
-        self.iJB00 = iJB00; self.iJB10 = iJB10;
-        self.iJB01 = iJB01; self.iJB11 = iJB11;
+        self.iJB00 = iJB00; self.iJB10 = iJB10; self.iJB20 = iJB20;
+        self.iJB01 = iJB01; self.iJB11 = iJB11; self.iJB21 = iJB21;
         
         #############################################################################################################
 

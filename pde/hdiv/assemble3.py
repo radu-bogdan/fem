@@ -126,10 +126,8 @@ def assembleB3(MESH, space, matrix, shape, order = -1):
         for j in range(lphi):
             for i in range(nqp):
                 detB = MESH.detB(qp[0,i],qp[1,i])
-                print(j,i,abs(detB).max(),abs(detB).min())
                 ellmatsB[i*nf:(i+1)*nf,j] = 1/npy.abs(detB)*phi[j](qp[0,i],qp[1,i])
         
-        print(im.shape,jm.shape,ellmatsB.shape,nqp,nf,shape)
         B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
         return B
     
@@ -222,37 +220,38 @@ def assembleB3(MESH, space, matrix, shape, order = -1):
         
 #         return B0,B1,B2
 
-# def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
+def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
     
-#     if not space in MESH.FEMLISTS.keys():
-#         spaceInfo(MESH,space)
+    
+    if not space in MESH.FEMLISTS.keys():
+        spaceInfo(MESH,space)
         
-#     if type(faces) == str:
-#         if faces == '':
-#             ind_faces = MESH.BoundaryEdges_Region
-#         else:
-#             ind_faces = getIndices(MESH.regions_2d,faces)
-#     else:
-#         if MESH.regions_2d == []:
-#             ind_faces = edges
-#         else:
-#             ind_faces = getIndices(MESH.regions_2d,faces)
+    if type(faces) == str:
+        if faces == '':
+            ind_faces = MESH.MESH.BoundaryFaces_Region
+        else:
+            ind_faces = getIndices(MESH.regions_2d,faces)
+    else:
+        if MESH.regions_2d == []:
+            ind_faces = faces
+        else:
+            ind_faces = getIndices(MESH.regions_2d,faces)
+            
     
-#     indices = npy.in1d(MESH.BoundaryEdges_Region,ind_edges)
-#     sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
+    indices = npy.in1d(MESH.BoundaryFaces_Region,ind_faces)
     
-#     LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices])
-#     LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
+    sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
+    LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices,:])
+    LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
     
-#     D = sp.eye(sizeM, format = 'csc')
+    if listDOF.size > 0:
+        LIST_DOF = listDOF
     
-#     if listDOF.size > 0:
-#         LIST_DOF = listDOF
+    D = sp.eye(sizeM, format = 'csc')
+    R1 = D[:,LIST_DOF]
+    R2 = D[:,LIST_DOF2]
     
-#     R1 = D[:,LIST_DOF]
-#     R2 = D[:,LIST_DOF2]
-    
-#     return R1.T.tocsc(),R2.T.tocsc()
+    return R1.T.tocsc(),R2.T.tocsc()
     
 def sparse(i, j, v, m, n):
     return sp.csc_matrix((v.flatten(), (i.flatten(), j.flatten())), shape = (m, n))

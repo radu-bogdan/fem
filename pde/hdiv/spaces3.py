@@ -67,7 +67,7 @@ def spaceInfo(MESH,space):
         LISTS['RT0']['B']['phi'][0] = lambda x,y: 1 #?
         LISTS['RT0']['B']['qp_we_B'] = quadrature.one_d(order = 0)
         
-        LISTS['RT0']['B']['LIST_DOF'] = MESH.Boundary_Faces
+        LISTS['RT0']['B']['LIST_DOF'] = MESH.Boundary_Faces[:,None]
         
         # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,0]
         # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,1]

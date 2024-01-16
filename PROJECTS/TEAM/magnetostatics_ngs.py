@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.sparse as sp
 from sksparse.cholmod import cholesky as chol
+from scipy.sparse import bmat
 
 import sys
 sys.path.insert(0,'../../') # adds parent directory
@@ -67,7 +68,11 @@ print('My code took ... ',time.monotonic()-tm)
 
 phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
 divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
+phiB_Hdiv = pde.hdiv.assembleB3(MESH, space = 'RT0', matrix = 'M', shape = phix_Hdiv.shape, order = order)
 phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
+
+R0_out,     RSS_out     = pde.hdiv.assembleR3(MESH, space = 'RT0', faces = 'out')
+R0_coilbnd, RSS_coilbnd = pde.hdiv.assembleR3(MESH, space = 'RT0', faces = 'coilbnd')
 
 M_Hdiv = phix_Hdiv @ D @ unit_coil @ phix_Hdiv.T +\
          phiy_Hdiv @ D @ unit_coil @ phiy_Hdiv.T +\
@@ -77,7 +82,9 @@ C_Hdiv_L2 = divphi_Hdiv @ D @ unit_coil @ phi_L2.T
 
 
 
-dsa = pde.hdiv.assembleB3(MESH, space = 'RT0', matrix = 'M', shape = phix_Hdiv.shape, order = 1)
+M_Hdiv_new = RSS_out @ M_Hdiv @ RSS_out.T
+
+
 
 A = bmat([[M_Hdiv,-C_Hdiv_L2],
           [C_Hdiv_L2.T, None]])
