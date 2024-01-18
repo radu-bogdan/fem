@@ -1168,7 +1168,13 @@ class mesh3:
                                           -JB20(x,y)*JB10(x,y)*JB11(x,y))
 
         #############################################################################################################
-
+        
+        n = npy.cross(npy.c_[B01-B00,B11-B10,B21-B20],npy.c_[B02-B00,B12-B10,B22-B20])
+        normals = n/npy.tile(npy.sqrt(n[:,0]**2 + n[:,1]**2 + n[:,2]**2),(3,1)).T
+        self.normals = normals
+        
+        #############################################################################################################
+        
         self.EdgesToVertices = EdgesToVertices
         self.TetsToEdges = TetsToEdges
         self.NoEdges = NoEdges

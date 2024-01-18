@@ -188,3 +188,16 @@ print(edge_indices.shape)
 # print(KR.shape,np.linalg.matrix_rank(KR.A, tol=1e-10))
 # print(K_Hcurl.shape,np.linalg.matrix_rank(K_Hcurl.A, tol=1e-10))
 # return R1.T.tocsc(),R2.T.tocsc()
+
+
+FaceNormals = np.zeros((MESH.NoFaces,2))
+# for i in range(MESH.NoFaces):
+#     p1 = 
+    # n = 
+    
+f = MESH.f; p = MESH.p;
+f0 = f[:,0]; f1 = f[:,1]; f2 = f[:,2]
+B00 = p[f0,0]; B01 = p[f1,0]; B02 = p[f2,0];
+B10 = p[f0,1]; B11 = p[f1,1]; B12 = p[f2,1];
+B20 = p[f0,2]; B21 = p[f1,2]; B22 = p[f2,2];
+
