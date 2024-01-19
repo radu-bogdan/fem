@@ -59,7 +59,7 @@ D = pde.int.assemble3(MESH, order = order)
 M_Hdiv = phix_Hdiv @ D @ phix_Hdiv.T +\
          phiy_Hdiv @ D @ phiy_Hdiv.T +\
          phiz_Hdiv @ D @ phiz_Hdiv.T
-          
+         
 K_Hdiv = divphi_Hdiv @ D @ divphi_Hdiv.T
 
 C_Hdiv_L2 = divphi_Hdiv @ D @ phi_L2.T

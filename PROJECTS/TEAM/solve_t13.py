@@ -11,7 +11,7 @@ import vtk
 from scipy.sparse import bmat
 
 
-MESH = pde.mesh3.netgen(geoOCCmesh)
+M   ESH = pde.mesh3.netgen(geoOCCmesh)
 
 ##############################################################################
 # B-H curves

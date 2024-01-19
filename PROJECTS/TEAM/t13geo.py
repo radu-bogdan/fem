@@ -12,7 +12,6 @@ box2 = occ.Box(occ.Pnt(-75,-75,-50), occ.Pnt(75,75,50))
 ##########################################################################
 
 corner1_ext = occ.Box(occ.Pnt(75,75,-50), occ.Pnt(100,100,50))
-# cyl1_ext = occ.Cylinder(occ.Pnt(50,50,-50), occ.Z, r=75, h=100)
 cyl1_ext = occ.Cylinder(occ.Pnt(75,75,-50), occ.Z, r=25, h=100)
 corner1_int = occ.Box(occ.Pnt(50,50,-50), occ.Pnt(75,75,50))
 cyl1_int = occ.Cylinder(occ.Pnt(50,50,-50), occ.Z, r=25, h=100)
@@ -40,7 +39,7 @@ corner4_int = corner4_int-cyl4_int; corner4_ext = corner4_ext-cyl4_ext
 # Adding the steel parts
 ##########################################################################
 
-coil = (box1-box2)+corner1_int-corner1_ext+corner2_int-corner2_ext+corner3_int-corner3_ext+corner4_int-corner4_ext
+coil_full = (box1-box2)+corner1_int-corner1_ext+corner2_int-corner2_ext+corner3_int-corner3_ext+corner4_int-corner4_ext
 
 mid_steel = occ.Box(occ.Pnt(-1.6,-25,-64.2),occ.Pnt(1.6,25,64.2))
 
@@ -58,19 +57,32 @@ l_steel = l_steel1 + l_steel2 + l_steel3
 # Glueing ...
 ##########################################################################
 
-geom = coil + mid_steel + r_steel + l_steel
+    
+half_box_1 = occ.Box(occ.Pnt(-100,-100,-50), occ.Pnt(0,100,50))
+half_box_2 = occ.Box(occ.Pnt(100,-100,-50), occ.Pnt(0,100,50))
+
+coil_half_box_1 = coil_full*half_box_1
+coil_half_box_2 = coil_full*half_box_2
+
+coil = occ.Glue([coil_half_box_1,coil_half_box_2])
 ambient =  occ.Box(occ.Pnt(-200,-200,-100), occ.Pnt(200,200,100))
-full = occ.Glue([geom, ambient])
+
+full = occ.Glue([coil, mid_steel, r_steel, l_steel, ambient])
+
 
 ##########################################################################
 # Identifications
 ##########################################################################
+
 
 for face in coil.faces: face.name = 'coil_face'
 for face in r_steel.faces: face.name = 'r_steel_face'
 for face in l_steel.faces: face.name = 'l_steel_face'
 for face in mid_steel.faces: face.name = 'mid_steel_face'
 for face in ambient.faces: face.name = 'ambient_face'
+
+coil.faces[6].name = 'coil_cut_1'
+coil.faces[12].name = 'coil_cut_2'
 
 coil.mat("coil")
 r_steel.mat("r_steel")
@@ -88,10 +100,3 @@ geoOCCmesh = geoOCC.GenerateMesh()
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
 
-
-
-
-
-
-
-    
