@@ -40,6 +40,66 @@ evJx = evJ[:,0]
 evJy = evJ[:,1]
 evJz = evJ[:,2]
 
+###########################################################################
+
+order = 1
+D = pde.int.assemble3(MESH, order = order)
+DB = pde.int.assembleB3(MESH, order = order)
+unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
+coil_cut  = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
+
+###########################################################################
+
+tm = time.monotonic()
+
+phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
+dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
+phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'M', shape = phi_H1.shape, order = order)
+
+R0, RSS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1')
+RSS = RSS[3:,:]
+
+r = coil_cut @ DB @ phiB_H1.T
+
+M = phi_H1 @ D @ unit_coil @ phi_H1.T
+
+K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
+    dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
+    dphiz_H1 @ D @ unit_coil @ dphiz_H1.T
+
+
+K = RSS @ K @ RSS.T
+RZ = pde.tools.removeZeros(K)
+K = RZ @ K @ RZ.T
+
+
+M = RSS @ M @ RSS.T
+M = RZ @ M @ RZ.T
+
+r = RZ @ RSS @ r
+
+
+
+sigma = 58.7e6
+x = chol(sigma*K).solve_A(r)
+x = RSS.T @ RZ.T @ x
+print('My code took ... ',time.monotonic()-tm)
+
+print(x.max())
+
+###########################################################################
+
+import vtklib
+
+grid = vtklib.createVTK(MESH)
+vtklib.add_H1_Scalar(grid, x, 'lel')
+vtklib.writeVTK(grid, 'das2.vtu')
+
+
+##############################################################################
+
+stop
+
 ##############################################################################
 # Hdiv proj
 ##############################################################################
@@ -54,7 +114,6 @@ unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x,
 phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
 
 D = pde.int.assemble3(MESH, order = order)
-
 
 M_Hdiv = phix_Hdiv @ D @ phix_Hdiv.T +\
          phiy_Hdiv @ D @ phiy_Hdiv.T +\
@@ -76,13 +135,11 @@ M_Hcurl_coil_full = phix_Hcurl @ D @ unit_coil @ phix_Hcurl.T +\
                     phiy_Hcurl @ D @ unit_coil @ phiy_Hcurl.T +\
                     phiz_Hcurl @ D @ unit_coil @ phiz_Hcurl.T
 
-non_zero_rows_Hdiv = np.where((np.diff(M_Hdiv_coil_full.indptr) != 0))[0]
-M_Hdiv_coil = M_Hdiv_coil_full[:,non_zero_rows_Hdiv]
-M_Hdiv_coil = M_Hdiv_coil[non_zero_rows_Hdiv,:]
+RZdiv = pde.tools.removeZeros(M_Hdiv_coil_full)
+M_Hdiv_coil = RZdiv @ M_Hdiv_coil_full @ RZdiv.T
 
-non_zero_rows_Hcurl = np.where((np.diff(M_Hcurl_coil_full.indptr) != 0))[0]
-M_Hcurl_coil = M_Hcurl_coil_full[:,non_zero_rows_Hcurl]
-M_Hcurl_coil = M_Hcurl_coil[non_zero_rows_Hcurl,:]
+RZcurl = pde.tools.removeZeros(M_Hcurl_coil_full)
+M_Hcurl_coil = RZcurl @ M_Hcurl_coil_full @ RZcurl.T
 
 ##############################################################################
 
@@ -105,7 +162,7 @@ b = np.r_[r_hdiv,np.zeros(MESH.nt)]
 x = sp.linalg.spsolve(A,b)
 newJ = x[:MESH.NoFaces]
 
-newJ_coil = sp.linalg.spsolve(M_Hdiv_coil,r_hdiv[non_zero_rows_Hdiv])
+newJ_coil = sp.linalg.spsolve(M_Hdiv_coil,RZdiv @ r_hdiv)
 # newJ_coil = sp.linalg.spsolve(M_Hcurl_coil,r_hdiv[non_zero_rows_Hcurl])
 
 phix_Hdiv_P0, phiy_Hdiv_P0, phiz_Hdiv_P0 = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = 0)
@@ -208,3 +265,10 @@ writer.SetFileName("whatever.vtu")
 writer.SetInputData(grid)
 writer.Write()
 print('Time needed to write to file ... ',time.monotonic()-tm)
+
+
+import vtklib
+
+grid = vtklib.createVTK(MESH)
+vtklib.add_H1_Scalar(grid, x, 'lel')
+vtklib.writeVTK(grid, 'das.vtu')

@@ -57,7 +57,6 @@ l_steel = l_steel1 + l_steel2 + l_steel3
 # Glueing ...
 ##########################################################################
 
-    
 half_box_1 = occ.Box(occ.Pnt(-100,-100,-50), occ.Pnt(0,100,50))
 half_box_2 = occ.Box(occ.Pnt(100,-100,-50), occ.Pnt(0,100,50))
 
@@ -99,4 +98,3 @@ geoOCC = occ.OCCGeometry(full)
 geoOCCmesh = geoOCC.GenerateMesh()
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()
-
