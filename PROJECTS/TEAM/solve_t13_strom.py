@@ -8,7 +8,7 @@ from scipy import sparse as sp
 import numpy as np
 import time
 import vtk
-from scipy.sparse import bmat
+from scipy.sparse import bmat,hstack,vstack
 
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
@@ -57,7 +57,9 @@ dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K'
 phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'M', shape = phi_H1.shape, order = order)
 
 R0, RSS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1')
-RSS = RSS[3:,:]
+# RSS = RSS[3:,:]
+RSS = vstack((RSS,R0[1:,:]))
+
 
 r = coil_cut @ DB @ phiB_H1.T
 
