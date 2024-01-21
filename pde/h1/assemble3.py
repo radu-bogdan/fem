@@ -85,10 +85,11 @@ def assembleB3(MESH, space, matrix, shape, order=-1):
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
-    p = MESH.p;
+    p = MESH.p
     f = MESH.f; nf = f.shape[0]
     
     phi =  MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
+    dphi =  MESH.FEMLISTS[space]['B']['dphi']; ldphi = len(dphi)
     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
     
     if order != -1:
@@ -106,14 +107,46 @@ def assembleB3(MESH, space, matrix, shape, order=-1):
         ellmatsB = npy.zeros((nqp*nf,lphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nf*nqp].reshape(nf,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(npy.c_[:nf*nqp].reshape(nf,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
                 ellmatsB[i*nf:(i+1)*nf,j] = phi[j](qp[0,i],qp[1,i])
-        
+
         B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
         return B
+
+    #####################################################################################
+    # dn_u
+    #####################################################################################
+
+    if matrix == 'dnu':
+        if order == -1:
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]
+            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
+
+        ellmatsB = npy.zeros((nqp*nf,lphi))
+
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[:nf*nqp].reshape(nf,nqp).T.flatten(),(lphi,1)).T
+
+        for j in range(ldphi):
+            for i in range(nqp):
+                dphii = dphi[j](qp[0,i],qp[1,i])
+                detB = MESH.detB(qp[0,i],qp[1,i])
+                iJB00 = MESH.iJB00(qp[0,i],qp[1,i]); iJB01 = MESH.iJB01(qp[0,i],qp[1,i])
+                iJB10 = MESH.iJB10(qp[0,i],qp[1,i]); iJB11 = MESH.iJB11(qp[0,i],qp[1,i])
+                iJB20 = MESH.iJB20(qp[0,i],qp[1,i]); iJB21 = MESH.iJB21(qp[0,i],qp[1,i])
+
+                ellmatsB[i*nf:(i+1)*nf,j] =  MESH.normals[:,0]*(iJB00*dphii[0]+iJB01*dphii[1])\
+                                            +MESH.normals[:,1]*(iJB10*dphii[0]+iJB11*dphii[1])\
+                                            +MESH.normals[:,2]*(iJB20*dphii[0]+iJB21*dphii[1])
+
+        B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
+        return B
+
+
+
     
 # def assembleE(MESH,space,matrix,order=1):
     

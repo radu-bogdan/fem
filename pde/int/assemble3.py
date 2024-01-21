@@ -9,7 +9,7 @@ from ..tools import getIndices
 # @profile
 def assemble3(MESH,order):
     
-    p = MESH.p;
+    p = MESH.p
     t = MESH.t; nt = t.shape[0]
     
     qp,we = quadrature.keast(order); nqp = len(we)
@@ -29,7 +29,7 @@ def assemble3(MESH,order):
 
 def assembleB3(MESH,order):
     
-    p = MESH.p;
+    p = MESH.p
     f = MESH.f; nf = f.shape[0]
     
     qp,we = quadrature.dunavant(order); nqp = len(we)

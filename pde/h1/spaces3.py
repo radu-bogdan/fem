@@ -34,6 +34,11 @@ def spaceInfo(MESH,space):
         LISTS['P1']['B']['phi'][0] = lambda x,y: 1-x-y
         LISTS['P1']['B']['phi'][1] = lambda x,y: x
         LISTS['P1']['B']['phi'][2] = lambda x,y: y
+
+        LISTS['P1']['B']['dphi'] = {}
+        LISTS['P1']['B']['dphi'][0] = lambda x,y: np.r_[-1,-1]
+        LISTS['P1']['B']['dphi'][1] = lambda x,y: np.r_[ 1, 0]
+        LISTS['P1']['B']['dphi'][2] = lambda x,y: np.r_[ 0, 1]
         LISTS['P1']['B']['qp_we_B'] = quadrature.dunavant(order = 2)
         
         LISTS['P1']['TET']['LIST_DOF'] = MESH.t[:,:4]

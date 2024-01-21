@@ -1076,9 +1076,9 @@ class mesh3:
 
         if (t.shape[1] == 5): # linear mapping
             t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]; t3 = t[:,3]
-            C00 = p[t0,0]; C01 = p[t1,0]; C02 = p[t2,0]; C03 = p[t3,0];
-            C10 = p[t0,1]; C11 = p[t1,1]; C12 = p[t2,1]; C13 = p[t3,1];
-            C20 = p[t0,2]; C21 = p[t1,2]; C22 = p[t2,2]; C23 = p[t3,2];
+            C00 = p[t0,0]; C01 = p[t1,0]; C02 = p[t2,0]; C03 = p[t3,0]
+            C10 = p[t0,1]; C11 = p[t1,1]; C12 = p[t2,1]; C13 = p[t3,1]
+            C20 = p[t0,2]; C21 = p[t1,2]; C22 = p[t2,2]; C23 = p[t3,2]
             
             Fx = lambda x,y,z : C00*(1-x-y-z) +C01*x +C02*y +C03*z
             Fy = lambda x,y,z : C10*(1-x-y-z) +C11*x +C12*y +C13*z
@@ -1098,9 +1098,9 @@ class mesh3:
             
             
             f0 = f[:,0]; f1 = f[:,1]; f2 = f[:,2]
-            B00 = p[f0,0]; B01 = p[f1,0]; B02 = p[f2,0];
-            B10 = p[f0,1]; B11 = p[f1,1]; B12 = p[f2,1];
-            B20 = p[f0,2]; B21 = p[f1,2]; B22 = p[f2,2];
+            B00 = p[f0,0]; B01 = p[f1,0]; B02 = p[f2,0]
+            B10 = p[f0,1]; B11 = p[f1,1]; B12 = p[f2,1]
+            B20 = p[f0,2]; B21 = p[f1,2]; B22 = p[f2,2]
             
             Bx = lambda x,y : B00*(1-x-y) +B01*x +B02*y
             By = lambda x,y : B10*(1-x-y) +B11*x +B12*y
@@ -1132,46 +1132,50 @@ class mesh3:
         iJF12 = lambda x,y,z: -1/detA(x,y,z)*(JF12(x,y,z)*JF00(x,y,z)-JF10(x,y,z)*JF02(x,y,z))
         iJF22 = lambda x,y,z:  1/detA(x,y,z)*(JF11(x,y,z)*JF00(x,y,z)-JF10(x,y,z)*JF01(x,y,z))
 
-
+        # actually det of pseudo-inverse (B'B)\B'
         detB = lambda x,y : (JB00(x,y)**2 + JB10(x,y)**2 + JB20(x,y)**2)\
                            *(JB01(x,y)**2 + JB11(x,y)**2 + JB21(x,y)**2)\
                            -(JB00(x,y)*JB01(x,y) + JB10(x,y)*JB11(x,y) + JB20(x,y)*JB21(x,y))
                            
-        iJB00 = lambda x,y:  1/detB(x,y)*(+JB00(x,y)*JB11(x,y)**2 \
-                                          +JB00(x,y)*JB21(x,y)**2 \
-                                          -JB01(x,y)*JB10(x,y)*JB11(x,y)\
+        iJB00 = lambda x,y:  1/detB(x,y)*(+JB00(x,y)*JB11(x,y)**2
+                                          +JB00(x,y)*JB21(x,y)**2
+                                          -JB01(x,y)*JB10(x,y)*JB11(x,y)
                                           -JB01(x,y)*JB20(x,y)*JB21(x,y))
         
-        iJB01 = lambda x,y:  1/detB(x,y)*(+JB01(x,y)*JB10(x,y)**2 \
-                                          +JB10(x,y)*JB20(x,y)**2 \
-                                          -JB00(x,y)*JB10(x,y)*JB11(x,y)\
+        iJB01 = lambda x,y:  1/detB(x,y)*(+JB01(x,y)*JB10(x,y)**2
+                                          +JB10(x,y)*JB20(x,y)**2
+                                          -JB00(x,y)*JB10(x,y)*JB11(x,y)
                                           -JB00(x,y)*JB20(x,y)*JB21(x,y))
         
-        iJB10 = lambda x,y:  1/detB(x,y)*(+JB10(x,y)*JB01(x,y)**2 \
-                                          +JB10(x,y)*JB21(x,y)**2 \
-                                          -JB00(x,y)*JB01(x,y)*JB11(x,y)\
+        iJB10 = lambda x,y:  1/detB(x,y)*(+JB10(x,y)*JB01(x,y)**2
+                                          +JB10(x,y)*JB21(x,y)**2
+                                          -JB00(x,y)*JB01(x,y)*JB11(x,y)
                                           -JB11(x,y)*JB20(x,y)*JB21(x,y))
         
-        iJB11 = lambda x,y:  1/detB(x,y)*(+JB11(x,y)*JB00(x,y)**2 \
-                                          +JB11(x,y)*JB20(x,y)**2 \
-                                          -JB00(x,y)*JB01(x,y)*JB10(x,y)\
+        iJB11 = lambda x,y:  1/detB(x,y)*(+JB11(x,y)*JB00(x,y)**2
+                                          +JB11(x,y)*JB20(x,y)**2
+                                          -JB00(x,y)*JB01(x,y)*JB10(x,y)
                                           -JB10(x,y)*JB20(x,y)*JB21(x,y))
         
-        iJB20 = lambda x,y:  1/detB(x,y)*(+JB20(x,y)*JB01(x,y)**2 \
-                                          +JB20(x,y)*JB11(x,y)**2 \
-                                          -JB00(x,y)*JB01(x,y)*JB21(x,y)\
+        iJB20 = lambda x,y:  1/detB(x,y)*(+JB20(x,y)*JB01(x,y)**2
+                                          +JB20(x,y)*JB11(x,y)**2
+                                          -JB00(x,y)*JB01(x,y)*JB21(x,y)
                                           -JB10(x,y)*JB11(x,y)*JB21(x,y))
         
-        iJB21 = lambda x,y:  1/detB(x,y)*(+JB21(x,y)*JB00(x,y)**2 \
-                                          +JB21(x,y)*JB10(x,y)**2 \
-                                          -JB00(x,y)*JB01(x,y)*JB20(x,y)\
+        iJB21 = lambda x,y:  1/detB(x,y)*(+JB21(x,y)*JB00(x,y)**2
+                                          +JB21(x,y)*JB10(x,y)**2
+                                          -JB00(x,y)*JB01(x,y)*JB20(x,y)
                                           -JB20(x,y)*JB10(x,y)*JB11(x,y))
 
         #############################################################################################################
         
-        n = npy.cross(npy.c_[B01-B00,B11-B10,B21-B20],\
+        n = npy.cross(npy.c_[B01-B00,B11-B10,B21-B20],
                       npy.c_[B02-B00,B12-B10,B22-B20])
-        normals = n/npy.tile(npy.sqrt(n[:,0]**2 + n[:,1]**2 + n[:,2]**2),(3,1)).T
+
+        normals = n/npy.tile(npy.sqrt(n[:,0]**2 +\
+                                      n[:,1]**2 +\
+                                      n[:,2]**2),(3,1)).T
+
         self.normals = normals
         
         #############################################################################################################
@@ -1207,27 +1211,27 @@ class mesh3:
         self.FEMLISTS = {}
         #############################################################################################################
         
-        self.Fx = Fx; self.Fy = Fy; self.Fz = Fz;
+        self.Fx = Fx; self.Fy = Fy; self.Fz = Fz
         self.detA = detA
         self.mp_tet = mp_tet
         
-        self.JF00 = JF00; self.JF10 = JF10; self.JF20 = JF20;
-        self.JF01 = JF01; self.JF11 = JF11; self.JF21 = JF21;
-        self.JF02 = JF02; self.JF12 = JF12; self.JF22 = JF22;
+        self.JF00 = JF00; self.JF10 = JF10; self.JF20 = JF20
+        self.JF01 = JF01; self.JF11 = JF11; self.JF21 = JF21
+        self.JF02 = JF02; self.JF12 = JF12; self.JF22 = JF22
+
+        self.iJF00 = iJF00; self.iJF10 = iJF10; self.iJF20 = iJF20
+        self.iJF01 = iJF01; self.iJF11 = iJF11; self.iJF21 = iJF21
+        self.iJF02 = iJF02; self.iJF12 = iJF12; self.iJF22 = iJF22
         
-        self.iJF00 = iJF00; self.iJF10 = iJF10; self.iJF20 = iJF20;
-        self.iJF01 = iJF01; self.iJF11 = iJF11; self.iJF21 = iJF21;
-        self.iJF02 = iJF02; self.iJF12 = iJF12; self.iJF22 = iJF22;
-        
-        self.Bx = Bx; self.By = By; self.Bz = Bz;
+        self.Bx = Bx; self.By = By; self.Bz = Bz
         self.detB = detB
         
-        self.JB00 = JB00; self.JB10 = JB10; self.JB20 = JB20;
-        self.JB01 = JB01; self.JB11 = JB11; self.JB21 = JB21;
+        self.JB00 = JB00; self.JB10 = JB10; self.JB20 = JB20
+        self.JB01 = JB01; self.JB11 = JB11; self.JB21 = JB21
         
-        self.iJB00 = iJB00; self.iJB10 = iJB10; self.iJB20 = iJB20;
-        self.iJB01 = iJB01; self.iJB11 = iJB11; self.iJB21 = iJB21;
-        
+        self.iJB00 = iJB00; self.iJB10 = iJB10; self.iJB20 = iJB20
+        self.iJB01 = iJB01; self.iJB11 = iJB11; self.iJB21 = iJB21
+
         #############################################################################################################
 
     def __repr__(self):
