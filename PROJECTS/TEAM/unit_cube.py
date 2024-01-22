@@ -112,7 +112,12 @@ AA = bmat([[K_Hcurl, C_Hcurl_H1],
 
 from mst import *
 
-newListOfEdges = MESH.EdgesToVertices[:,:2]
+random = np.random.permutation(MESH.EdgesToVertices[:,:2].shape[0])
+newListOfEdges = MESH.EdgesToVertices[random,:2]
+
+print(random)
+
+# newListOfEdges = MESH.EdgesToVertices[:,:2]
 
 g = Graph(MESH.np)
 
@@ -122,13 +127,18 @@ for i in range(newListOfEdges.shape[0]):
 g.KruskalMST()
 indices = np.array(g.MST)[:,2]
 
-LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],indices)
+
+
+LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],random[indices])
+# LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],indices)
 
 D = sp.eye(MESH.NoEdges, format = 'csc')
 
 R = D[:,LIST_DOF]
 
 KR = R.T@K_Hcurl@R
+print(np.linalg.matrix_rank(KR.A),KR.shape)
+
 ##########################################################################
 
 

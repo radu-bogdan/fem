@@ -25,6 +25,29 @@ def assemble3(MESH,order):
     
     D = sparse(iD,iD,ellmatsD,nqp*nt,nqp*nt)
     return D
+def assembleN3(MESH,order):
+
+    p = MESH.p
+    f = MESH.f; nf = f.shape[0]
+
+    qp,we = quadrature.dunavant(order); nqp = len(we)
+
+    #####################################################################################
+
+    ellmatsN1 = npy.zeros((nqp*nf))
+    ellmatsN2 = npy.zeros((nqp*nf))
+    ellmatsN3 = npy.zeros((nqp*nf))
+    iN = npy.r_[:nqp*nf].reshape(nf,nqp).T
+
+    for i in range(nqp):
+        ellmatsN1[i*nf:(i+1)*nf] = MESH.normals[:,0]
+        ellmatsN2[i*nf:(i+1)*nf] = MESH.normals[:,1]
+        ellmatsN3[i*nf:(i+1)*nf] = MESH.normals[:,2]
+
+    N1 = sparse(iN,iN,ellmatsN1,nqp*nf,nqp*nf).diagonal()
+    N2 = sparse(iN,iN,ellmatsN2,nqp*nf,nqp*nf).diagonal()
+    N3 = sparse(iN,iN,ellmatsN3,nqp*nf,nqp*nf).diagonal()
+    return N1,N2,N3
 
 
 def assembleB3(MESH,order):
@@ -124,7 +147,7 @@ def evaluateB3(MESH, order, coeff = lambda x,y,z : 1+0*x*y*z, faces = '', like =
         
     indices = npy.in1d(MESH.BoundaryFaces_Region,ind_faces)
     
-    p = MESH.p;    
+    p = MESH.p
     f = MESH.f[indices,:]; nf = f.shape[0]
     
     #####################################################################################
@@ -144,7 +167,7 @@ def evaluateB3(MESH, order, coeff = lambda x,y,z : 1+0*x*y*z, faces = '', like =
         qpT_i_1 = MESH.Bx(qp[0,i],qp[1,i])[indices]
         qpT_i_2 = MESH.By(qp[0,i],qp[1,i])[indices]
         qpT_i_3 = MESH.Bz(qp[0,i],qp[1,i])[indices]
-        ellmatsD[i*nf:(i+1)*nf] = coeff(qpT_i_1,qpT_i_2,qpT_i_2)
+        ellmatsD[i*nf:(i+1)*nf] = coeff(qpT_i_1,qpT_i_2,qpT_i_3)
     
     d[iD.flatten()] = ellmatsD
     

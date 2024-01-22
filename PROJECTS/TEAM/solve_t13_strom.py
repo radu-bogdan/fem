@@ -15,28 +15,45 @@ MESH = pde.mesh3.netgen(geoOCCmesh)
 ##############################################################################
 
 face_index = pde.tools.getIndices(MESH.regions_2d,'coil_cut_1')
-points_to_duplicate = np.unique(MESH.f[MESH.BoundaryFaces_Region==face_index,:3].ravel())
+faces = MESH.f[MESH.BoundaryFaces_Region == face_index,:3]
+new_faces = faces.copy()
+
+points_to_duplicate = np.unique(faces.ravel())
+new_points = np.arange(MESH.np,MESH.np+points_to_duplicate.size)
+
 actual_points = MESH.p[points_to_duplicate,:]
-t = MESH.t[:,:4].copy()
+
+t_new = MESH.t[:,:4].copy()
+p_new = MESH.p.copy()
+f_new = MESH.f.copy()
 
 for i,pnt in enumerate(points_to_duplicate):
 
     # append point to list
-    MESH.p = np.vstack([MESH.p,MESH.p[pnt,:]])
+    p_new = np.vstack([p_new,p_new[pnt,:]])
 
     # finding tets coordinates containing the ith point to duplicate
-    tets_containing_points = np.argwhere(MESH.t[:,:4]==pnt)[:,0]
+    tets_containing_points = np.argwhere(t_new[:,:4]==pnt)[:,0]
 
     for _,j in enumerate(tets_containing_points):
         #check if tet is left
         if MESH.mp_tet[j,0]<0:
-            print(i,j,MESH.np+i,pnt,t[j,:])
-            t[j,t[j,:]==pnt] = MESH.np + i
+            t_new[j,t_new[j,:]==pnt] = MESH.np + i
 
+t_new = np.c_[t_new,MESH.t[:,4]]
 
-##############################################################################
+for i,j in enumerate(faces.ravel()):
+    new_faces.ravel()[i] = new_points[points_to_duplicate==j]
 
-stop
+new_faces = np.c_[new_faces,np.tile(f_new[:,3].max()+1,(new_faces.shape[0],1))]
+f_new = (np.r_[f_new,new_faces]).astype(int)
+
+regions_2d_new = MESH.regions_2d.copy()
+regions_2d_new.append('new')
+
+identifications = (np.c_[points_to_duplicate,new_points]).astype(int)
+# stop
+MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.regions_1d,identifications = identifications)
 
 ##############################################################################
 # Current density (approx)
@@ -61,17 +78,17 @@ J = lambda x,y,z : np.tile(((x<= 50)*(x>= -50)*(y< -75)*(y>=-100)*(z>-50)*(z<50)
 
 evJ = J(MESH.mp_tet[:,0],MESH.mp_tet[:,1],MESH.mp_tet[:,2])
 
-evJx = evJ[:,0]
-evJy = evJ[:,1]
-evJz = evJ[:,2]
+evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
 
 order = 1
 D = pde.int.assemble3(MESH, order = order)
 DB = pde.int.assembleB3(MESH, order = order)
+N1,N2,N3 = pde.int.assembleN3(MESH, order = order)
 unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
-coil_cut  = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1, faces = 'coil_cut_1').diagonal()
-R0, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1')
 
+face_in_1 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
+face_in_2 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
+face_in_3 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
 
 ###########################################################################
 
@@ -80,17 +97,11 @@ tm = time.monotonic()
 phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
 dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
 phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'M', shape = phi_H1.shape, order = order)
-dnu_phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'dnu', shape = phi_H1.shape, order = order)
 
+R0, RS0 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'new,coil_cut_1')
+R1, RS1 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1')
 
-# RS = RS[3:,:]
-RS = vstack((RS,R0[1:,:]))
-
-
-r = coil_cut @ DB @ phiB_H1.T
-
-R = dnu_phiB_H1 @ DB @ phiB_H1.T
-MB = phiB_H1 @ DB @ phiB_H1.T
+r = (face_in_1*N1 + face_in_2*N2 + face_in_3*N3) @ DB @ phiB_H1.T
 
 M = phi_H1 @ D @ unit_coil @ phi_H1.T
 
@@ -98,33 +109,46 @@ K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
     dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
     dphiz_H1 @ D @ unit_coil @ dphiz_H1.T
 
-K = K + (R + 2*R.T + 10*MB)
+r = -RS0 @ K @ R1.T @ (1+np.zeros(R1.shape[0]))
+K = RS0 @ K @ RS0.T
 
-K = RS @ K @ RS.T
+
 RZ = pde.tools.removeZeros(K)
 K = RZ @ K @ RZ.T
 
+# M = RS0 @ M @ RS0.T
+# M = RZ @ M @ RZ.T
 
-M = RS @ M @ RS.T
-M = RZ @ M @ RZ.T
+r = RZ @ r
 
-r = RZ @ RS @ r
-
-
-
-sigma = 58.7e6
+sigma = 1#58.7e6
 x = chol(sigma*K).solve_A(r)
-x = RS.T @ RZ.T @ x
+x = RS0.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
 print('My code took ... ',time.monotonic()-tm)
 
-print(x.max())
+dx_x = (dphix_H1.T@x)*unit_coil.diagonal()
+dy_x = (dphiy_H1.T@x)*unit_coil.diagonal()
+dz_x = (dphiz_H1.T@x)*unit_coil.diagonal()
 
-###########################################################################
+dphix_H1_P0, dphiy_H1_P0, dphiz_H1_P0 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = 0)
+unit_coil_P0 = pde.int.evaluate3(MESH, order = 0, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
+dx_x_P0 = (dphix_H1_P0.T@x)*unit_coil_P0.diagonal()
+dy_x_P0 = (dphiy_H1_P0.T@x)*unit_coil_P0.diagonal()
+dz_x_P0 = (dphiz_H1_P0.T@x)*unit_coil_P0.diagonal()
+
+phi_j = x
+
+##############################################################################
+
 
 import vtklib
 
 grid = vtklib.createVTK(MESH)
 vtklib.add_H1_Scalar(grid, x, 'lel')
+vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
+vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'kek2')
+
+vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')
 vtklib.writeVTK(grid, 'das2.vtu')
 
 

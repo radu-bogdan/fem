@@ -117,6 +117,27 @@ def assembleB3(MESH, space, matrix, shape, order=-1):
         return B
 
     #####################################################################################
+    # Mass matrix (over the edge)
+    #####################################################################################
+
+    if matrix == 'M_dir':
+        if order == -1:
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0];
+            we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
+
+        ellmatsB = npy.zeros((nqp*nf,lphi))
+
+        im = npy.tile(LIST_DOF,(nqp,1))
+        jm = npy.tile(npy.c_[:nf*nqp].reshape(nf,nqp).T.flatten(),(lphi,1)).T
+
+        for j in range(lphi):
+            for i in range(nqp):
+                ellmatsB[i*nf:(i+1)*nf,j] = phi[j](qp[0,i],qp[1,i])
+
+        B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
+        return B
+
+    #####################################################################################
     # dn_u
     #####################################################################################
 

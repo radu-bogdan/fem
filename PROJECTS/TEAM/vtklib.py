@@ -51,7 +51,16 @@ def add_L2_Vector(grid,x,y,z,name):
         vecJ.InsertNextTuple([x[i],y[i],z[i]])
     vecJ.SetName(name)
     grid.GetCellData().AddArray(vecJ)
-    
+
+
+def add_L2_Scalar(grid,x,name):
+    nt = grid.GetCells().GetNumberOfCells()
+    vecJ = vtk.vtkFloatArray()
+    vecJ.SetNumberOfComponents(1)
+    for i in range(nt):
+        vecJ.InsertNextTuple([x[i]])
+    vecJ.SetName(name)
+    grid.GetCellData().AddArray(vecJ)
     
 def writeVTK(grid,name):
     writer = vtk.vtkXMLUnstructuredGridWriter()
