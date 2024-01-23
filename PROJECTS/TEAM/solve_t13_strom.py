@@ -4,11 +4,8 @@ import sys
 sys.path.insert(0,'../../') # adds parent directory
 import pde
 from sksparse.cholmod import cholesky as chol
-from scipy import sparse as sp
 import numpy as np
 import time
-import vtk
-from scipy.sparse import bmat,hstack,vstack
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
@@ -43,7 +40,7 @@ for i,pnt in enumerate(points_to_duplicate):
 t_new = np.c_[t_new,MESH.t[:,4]]
 
 for i,j in enumerate(faces.ravel()):
-    new_faces.ravel()[i] = new_points[points_to_duplicate==j]
+    new_faces.ravel()[i] = new_points[points_to_duplicate==j][0]
 
 new_faces = np.c_[new_faces,np.tile(f_new[:,3].max()+1,(new_faces.shape[0],1))]
 f_new = (np.r_[f_new,new_faces]).astype(int)
@@ -59,26 +56,28 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 # Current density (approx)
 ##############################################################################
 
-J1 = lambda x,y,z : np.c_[ 1+0*x,   0*y, 0*z]
-J2 = lambda x,y,z : np.c_[   0*x, 1+0*y, 0*z]
-J3 = lambda x,y,z : np.c_[-1+0*x,   0*y, 0*z]
-J4 = lambda x,y,z : np.c_[   0*x,-1+0*y, 0*z]
-JR = lambda x,y,z,m,n : np.c_[-(y-n)*1/np.sqrt((x-m)**2+(y-n)**2),
-                               (x-m)*1/np.sqrt((x-m)**2+(y-n)**2), 
-                                0*z]
+# J1 = lambda x,y,z : np.c_[ 1+0*x,   0*y, 0*z]
+# J2 = lambda x,y,z : np.c_[   0*x, 1+0*y, 0*z]
+# J3 = lambda x,y,z : np.c_[-1+0*x,   0*y, 0*z]
+# J4 = lambda x,y,z : np.c_[   0*x,-1+0*y, 0*z]
+# JR = lambda x,y,z,m,n : np.c_[-(y-n)*1/np.sqrt((x-m)**2+(y-n)**2),
+#                                (x-m)*1/np.sqrt((x-m)**2+(y-n)**2),
+#                                 0*z]
+#
+# J = lambda x,y,z : np.tile(((x<= 50)*(x>= -50)*(y< -75)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*J1(x,y,z) +\
+#                    np.tile(((x<= 50)*(x>= -50)*(y>= 75)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*J3(x,y,z) +\
+#                    np.tile(((x<=-75)*(x>=-100)*(y<= 50)*(y>= -50)*(z>-50)*(z<50)),(3,1)).T*J4(x,y,z) +\
+#                    np.tile(((x>= 75)*(x<= 100)*(y<= 50)*(y>= -50)*(z>-50)*(z<50)),(3,1)).T*J2(x,y,z) +\
+#                    np.tile(((x>= 50)*(x<= 100)*(y>= 50)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50, 50) +\
+#                    np.tile(((x<=-50)*(x>=-100)*(y<=-50)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50,-50) +\
+#                    np.tile(((x<=-50)*(x>=-100)*(y>= 50)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50, 50) +\
+#                    np.tile(((x>= 50)*(x<= 100)*(y<=-50)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50,-50)
+#
+# evJ = J(MESH.mp_tet[:,0],MESH.mp_tet[:,1],MESH.mp_tet[:,2])
+#
+# evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
 
-J = lambda x,y,z : np.tile(((x<= 50)*(x>= -50)*(y< -75)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*J1(x,y,z) +\
-                   np.tile(((x<= 50)*(x>= -50)*(y>= 75)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*J3(x,y,z) +\
-                   np.tile(((x<=-75)*(x>=-100)*(y<= 50)*(y>= -50)*(z>-50)*(z<50)),(3,1)).T*J4(x,y,z) +\
-                   np.tile(((x>= 75)*(x<= 100)*(y<= 50)*(y>= -50)*(z>-50)*(z<50)),(3,1)).T*J2(x,y,z) +\
-                   np.tile(((x>= 50)*(x<= 100)*(y>= 50)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50, 50) +\
-                   np.tile(((x<=-50)*(x>=-100)*(y<=-50)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50,-50) +\
-                   np.tile(((x<=-50)*(x>=-100)*(y>= 50)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50, 50) +\
-                   np.tile(((x>= 50)*(x<= 100)*(y<=-50)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50,-50)
-
-evJ = J(MESH.mp_tet[:,0],MESH.mp_tet[:,1],MESH.mp_tet[:,2])
-
-evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
+###########################################################################
 
 order = 1
 D = pde.int.assemble3(MESH, order = order)
@@ -145,7 +144,7 @@ import vtklib
 
 grid = vtklib.createVTK(MESH)
 vtklib.add_H1_Scalar(grid, x, 'lel')
-vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
+# vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
 vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'kek2')
 
 vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')

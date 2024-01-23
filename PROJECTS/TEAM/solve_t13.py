@@ -93,7 +93,7 @@ r = dx_x @ D @ phix_Hcurl.T +\
     dy_x @ D @ phiy_Hcurl.T +\
     dz_x @ D @ phiz_Hcurl.T
 
-# MESH.pdesurf(u_H1, faces = 'l_steel_face,r_steel_face,mid_steel_face,coil_face')
+
 
 ##############################################################################
 # Only coil stuff...
@@ -201,7 +201,7 @@ import vtklib
 
 grid = vtklib.createVTK(MESH)
 vtklib.add_H1_Scalar(grid, phi_j, 'lel')
-vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
+# vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
 vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'kek2')
 vtklib.add_L2_Vector(grid,ux,uy,uz,'kek3')
 

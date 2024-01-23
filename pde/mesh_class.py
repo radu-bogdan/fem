@@ -1290,7 +1290,7 @@ class mesh3:
         ind_regions = getIndices(self.regions_2d, faces)
         indices = npy.in1d(self.f[:,-1],ind_regions)
         
-        nt = self.nt; p = self.p; t = self.t[:,:3]; np = self.np; 
+        nt = self.nt; p = self.p; t = self.t[:,:3]; np = self.np
         f = self.f[indices,:3]; nf = f.shape[0]
         
         xx_trig = npy.c_[p[f[:,0],0],p[f[:,1],0],p[f[:,2],0]]
