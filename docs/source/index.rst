@@ -3,12 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+===============================
 Welcome to FEM's documentation!
 ===============================
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: TEAM 13
 
-   notebooks/createMesh
-   ../PROJECTS/SeminarEM/mag_vec_pot
+   notebooks/TEAM_13_geometry
+
+.. .. toctree::
+..    :maxdepth: 2
+..    :caption: Contents2
+
+..    notebooks/createMesh
+
+.. .. toctree::
+..    :maxdepth: 2
+..    :caption: Contents3
+
+   .. notebooks/createMesh

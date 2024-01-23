@@ -90,8 +90,7 @@
 # ones.
 # extensions = ["sphinx.ext.autodoc","numpydoc","sphinx.ext.autosummary","sphinx.ext.napoleon","sphinx.ext.intersphinx"]
 extensions = ["sphinx.ext.autodoc","sphinx.ext.mathjax","sphinx.ext.todo",
-              "IPython.sphinxext.ipython_console_highlighting", "IPython.sphinxext.ipython_directive",
-              "nbsphinx"]
+              "IPython.sphinxext.ipython_console_highlighting", "IPython.sphinxext.ipython_directive", "nbsphinx"]
 
 
 # START nbsphinx stuff

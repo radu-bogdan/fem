@@ -130,3 +130,7 @@ div.nboutput div.output_area {
     margin-bottom: 0;
 
 }
+
+.wy-nav-content {
+    max-width: 1200px !important;
+}
