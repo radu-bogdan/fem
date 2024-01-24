@@ -51,7 +51,7 @@ table.rows tr:nth-child(odd) {
 }
 
 div.nboutput div.output_area {
-    max-height: 400px;
+    /* max-height: 400px; */
 }
 
 .highlight {

@@ -150,6 +150,10 @@ vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'kek2')
 vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')
 vtklib.writeVTK(grid, 'das2.vtu')
 
+# import vtk.web
+import pyvista as pv
+mesh = pv.read('current_density.vtu')
+mesh.plot(notebook=True)
 
 # ##############################################################################
 #
