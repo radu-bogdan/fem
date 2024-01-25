@@ -1,7 +1,6 @@
 import ngsolve as ng
 import netgen.occ as occ
 # import netgen.gui
-from netgen.webgui import Draw as DrawGeo
 import numpy as np
 import numpy as npy
 
@@ -56,7 +55,6 @@ A = sp.csr_matrix((vals,(rows,cols)))
 import sys
 sys.path.insert(0,'../../') # adds parent directory
 import pde
-from sksparse.cholmod import cholesky as chol
 
 order = 3
 
@@ -110,7 +108,7 @@ AA = bmat([[K_Hcurl, C_Hcurl_H1],
 # Tree/Cotree gauging
 ##########################################################################
 
-from mst import *
+from pde.tools.mst import *
 
 random = np.random.permutation(MESH.EdgesToVertices[:,:2].shape[0])
 newListOfEdges = MESH.EdgesToVertices[random,:2]

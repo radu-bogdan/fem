@@ -8,11 +8,12 @@ Welcome to FEM's documentation!
 ===============================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: TEAM 13
 
    notebooks/TEAM_13_geometry
    notebooks/current_density
+   notebooks/magnetostatics
 
 .. .. toctree::
 ..    :maxdepth: 2

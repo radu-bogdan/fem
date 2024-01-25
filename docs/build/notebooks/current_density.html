@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Computing the current density \(j\) in the coil \(\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}\) &mdash; FEM  documentation</title>
+  <title>Computing the current density j in the coil &mdash; FEM  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -30,6 +30,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Magnetostatics solution" href="magnetostatics.html" />
     <link rel="prev" title="Creating the 3D geometry for TEAM problem 13" href="TEAM_13_geometry.html" /> 
 </head>
 
@@ -55,7 +56,8 @@
               <p class="caption" role="heading"><span class="caption-text">TEAM 13</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="TEAM_13_geometry.html">Creating the 3D geometry for TEAM problem 13</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Computing the current density <span class="math notranslate nohighlight">\(j\)</span> in the coil <span class="math notranslate nohighlight">\(\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}\)</span></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Computing the current density j in the coil</a></li>
+<li class="toctree-l1"><a class="reference internal" href="magnetostatics.html">Magnetostatics solution</a></li>
 </ul>
 
         </div>
@@ -72,7 +74,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Computing the current density <span class="math notranslate nohighlight">\(j\)</span> in the coil <span class="math notranslate nohighlight">\(\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}\)</span></li>
+      <li class="breadcrumb-item active">Computing the current density j in the coil</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/notebooks/current_density.ipynb" rel="nofollow"> View page source</a>
       </li>
@@ -82,9 +84,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="Computing-the-current-density-j-in-the-coil-\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}">
-<h1>Computing the current density <span class="math notranslate nohighlight">\(j\)</span> in the coil <span class="math notranslate nohighlight">\(\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}\)</span><a class="headerlink" href="#Computing-the-current-density-j-in-the-coil-\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}" title="Permalink to this heading">¶</a></h1>
-<p>Before we solve the non-linear magnetostatic problem, we first need to find the current <span class="math notranslate nohighlight">\(j\)</span> flowing inside the coil <span class="math notranslate nohighlight">\(\Omega_c\)</span>.</p>
+  <section id="Computing-the-current-density-j-in-the-coil">
+<h1>Computing the current density j in the coil<a class="headerlink" href="#Computing-the-current-density-j-in-the-coil" title="Permalink to this heading">¶</a></h1>
+<p><span class="math notranslate nohighlight">\(\def\curl{\operatorname{curl}}\def\Curl{\operatorname{Curl}}\def\div{\operatorname{div}}\)</span> Before we solve the non-linear magnetostatic problem, we first need to find the current <span class="math notranslate nohighlight">\(j\)</span> flowing inside the coil <span class="math notranslate nohighlight">\(\Omega_c\)</span>.</p>
 <p>The first property is that <span class="math notranslate nohighlight">\(j\)</span> is solenoidal, i.e. <span class="math notranslate nohighlight">\(\div(j)=0\)</span>. Further, we presume the existence of a potential <span class="math notranslate nohighlight">\(\phi\)</span> with <span class="math notranslate nohighlight">\(j=-\sigma\nabla\phi\)</span>, where <span class="math notranslate nohighlight">\(\sigma\)</span> denotes the connectivity. As for the boundary conditions, we prescribe <span class="math notranslate nohighlight">\(n\cdot j = -\sigma\partial_n\phi=0\)</span> on the exterior boundary <span class="math notranslate nohighlight">\(\Gamma_{ex}\)</span>, and <span class="math notranslate nohighlight">\(\phi=1\)</span> and <span class="math notranslate nohighlight">\(\phi=0\)</span> on the inflow <span class="math notranslate nohighlight">\(\Gamma_{in}\)</span> and outflow boundary <span class="math notranslate nohighlight">\(\Gamma_{out}\)</span>, respectively. Altogether, we
 have</p>
 <div class="math notranslate nohighlight">
@@ -108,11 +110,10 @@ j &amp;= 1 \qquad\text{on }\Gamma_{in}
 </div>
 <p>Create the MESH object from the mesh generated by netgen</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sksparse.cholmod</span> <span class="kn">import</span> <span class="n">cholesky</span> <span class="k">as</span> <span class="n">chol</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;../../../&#39;</span><span class="p">)</span> <span class="c1"># adds parent directory</span>
 <span class="kn">import</span> <span class="nn">pde</span>
 <span class="n">MESH</span> <span class="o">=</span> <span class="n">pde</span><span class="o">.</span><span class="n">mesh3</span><span class="o">.</span><span class="n">netgen</span><span class="p">(</span><span class="n">geoOCCmesh</span><span class="p">)</span>
@@ -121,7 +122,7 @@ j &amp;= 1 \qquad\text{on }\Gamma_{in}
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -131,7 +132,7 @@ np:4132, nt:23369, nf:3059, ne:720, nf_all:46966, ne_all:27728
 </div>
 <p>The piece of code below duplicates the face, as described above, and generates a new MESH object.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -183,7 +184,7 @@ np:4132, nt:23369, nf:3059, ne:720, nf_all:46966, ne_all:27728
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -392,6 +393,7 @@ np:4149, nt:23369, nf:3076, ne:720, nf_all:47028, ne_all:27806
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="TEAM_13_geometry.html" class="btn btn-neutral float-left" title="Creating the 3D geometry for TEAM problem 13" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="magnetostatics.html" class="btn btn-neutral float-right" title="Magnetostatics solution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,15 +1,6 @@
-from t13geo import *
-
 import sys
 sys.path.insert(0,'../../') # adds parent directory
-import pde
-from sksparse.cholmod import cholesky as chol
 from scipy import sparse as sp
-import numpy as npy
-import time
-import vtk
-from scipy.sparse import bmat
-import numpy as np
 
 from solve_t13_strom import *
 
@@ -26,27 +17,7 @@ H = np.array([0, 16, 30, 54, 93, 143, 191, 210, 222, 233, 247, 258, 272, 289, 31
 # Tree/Cotree gauging
 ##############################################################################
 
-from mst import *
-
-random = np.random.permutation(MESH.EdgesToVertices[:,:2].shape[0])
-newListOfEdges = MESH.EdgesToVertices[random,:2]
-# newListOfEdges = MESH.EdgesToVertices[:,:2]
-
-g = Graph(MESH.np)
-
-for i in range(newListOfEdges.shape[0]):
-    g.addEdge(newListOfEdges[i,0],newListOfEdges[i,1],i)
-    
-g.KruskalMST()
-indices = np.array(g.MST)[:,2]
-
-LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],random[indices])
-# LIST_DOF = np.setdiff1d(np.r_[:MESH.NoEdges],indices)
-
-DD = sp.eye(MESH.NoEdges, format = 'csc')
-
-R = DD[:,LIST_DOF]
-print(LIST_DOF)
+R = pde.tools.tree_cotree_gauge(MESH)
 
 ##############################################################################
 # Assembly
