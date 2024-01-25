@@ -12,7 +12,7 @@ Welcome to FEM's documentation!
    :caption: TEAM 13
 
    notebooks/TEAM_13_geometry
-   notebooks/TEAM_13_geometry
+   notebooks/current_density
 
 .. .. toctree::
 ..    :maxdepth: 2
