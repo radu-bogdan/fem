@@ -200,9 +200,9 @@ todo_include_todos = False
 # html_theme = 'alabaster'
 # html_theme = 'default'
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'my_sphinx_rtd_theme'
 # install it via: pip install sphinx_rtd_theme
-# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_path = ["."]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -215,7 +215,8 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['static']
 
-# html_js_files = ['webgui.js', 'webgui_jupyter_widgets.js']
+html_js_files = ['iframe_stuff.js']
+# html_js_files = [('iframe_stuff.js', {'defer': 'defer'})]
 
 # -- Options for HTMLHelp output ------------------------------------------
 
