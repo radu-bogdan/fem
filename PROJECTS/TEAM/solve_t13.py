@@ -28,7 +28,7 @@ order = 1
 phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
 dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
 D = pde.int.assemble3(MESH, order = order)
-# R0, RSS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
+
 
 M = phi_H1 @ D @ phi_H1.T
 
@@ -40,6 +40,8 @@ K = dphix_H1 @ D @ dphix_H1.T +\
 
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
+
+R0, RSS = pde.hcurl.assembleR3(MESH, space = 'N0', faces = 'ambient_face')
 
 M_Hcurl = phix_Hcurl @ D @ phix_Hcurl.T +\
           phiy_Hcurl @ D @ phiy_Hcurl.T +\

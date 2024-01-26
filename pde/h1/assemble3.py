@@ -28,7 +28,7 @@ def assemble3(MESH,space,matrix,order=-1):
     # Mass matrix
     #####################################################################################
     
-    if matrix == 'M':
+    if matrix == 'M' or matrix == 'phi':
         if order == -1:
             qp = MESH.FEMLISTS[space]['TET']['qp_we_M'][0]; 
             we = MESH.FEMLISTS[space]['TET']['qp_we_M'][1]; nqp = len(we)
@@ -99,7 +99,7 @@ def assembleB3(MESH, space, matrix, shape, order=-1):
     # Mass matrix (over the edge)
     #####################################################################################
 
-    if matrix == 'M':
+    if matrix == 'M' or matrix == 'phi':
         if order == -1:
             qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0];
             we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
@@ -141,7 +141,7 @@ def assembleB3(MESH, space, matrix, shape, order=-1):
     # dn_u
     #####################################################################################
 
-    if matrix == 'dnu':
+    if matrix == 'n*phi':
         if order == -1:
             qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]
             we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
@@ -274,10 +274,11 @@ def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
     
     sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
     LIST_DOF  = npy.unique(MESH.FEMLISTS[space]['B']['LIST_DOF'][indices,:])
-    LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
     
     if listDOF.size > 0:
         LIST_DOF = listDOF
+
+    LIST_DOF2 = npy.setdiff1d(npy.arange(sizeM),LIST_DOF)
     
     D = sp.eye(sizeM, format = 'csc')
     R1 = D[:,LIST_DOF]

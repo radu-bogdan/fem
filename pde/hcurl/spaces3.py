@@ -48,7 +48,7 @@ def spaceInfo(MESH,space):
 
         LISTS['N0']['B'] = {}
         LISTS['N0']['B']['phi'] = {}
-        LISTS['N0']['B']['phi'][0] = lambda x: 1
+        LISTS['N0']['B']['phi'][0] = lambda x,y: 1
         LISTS['N0']['B']['qp_we_B'] = quadrature.one_d(order = 0)
         
         LISTS['N0']['B']['LIST_DOF'] = MESH.Boundary_Edges

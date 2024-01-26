@@ -77,7 +77,7 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 #
 # evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
 
-###########################################################################
+##############################################################################
 
 order = 1
 D = pde.int.assemble3(MESH, order = order)
@@ -85,24 +85,33 @@ DB = pde.int.assembleB3(MESH, order = order)
 N1,N2,N3 = pde.int.assembleN3(MESH, order = order)
 unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
 
-face_in_1 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
-face_in_2 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
-face_in_3 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
+# unit_coil_cut_face = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1')
+# unit_coil_cut_face_new = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'new')
 
-###########################################################################
+# face_in_1 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
+# face_in_2 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
+# face_in_3 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
+
+##############################################################################
 
 tm = time.monotonic()
 
 phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
 dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
-phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'M', shape = phi_H1.shape, order = order)
 
+phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'phi', shape = phi_H1.shape, order = order)
+n_phiB_H1 = pde.h1.assembleB3(MESH, space = 'P1', matrix = 'n*phi', shape = phi_H1.shape, order = order)
+
+# R0, RS0 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'dochnet')
 R0, RS0 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'new,coil_cut_1')
 R1, RS1 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1')
 
-r = (face_in_1*N1 + face_in_2*N2 + face_in_3*N3) @ DB @ phiB_H1.T
+# r = (face_in_1*N1 + face_in_2*N2 + face_in_3*N3) @ DB @ phiB_H1.T
+# M = phi_H1 @ D @ unit_coil @ phi_H1.T
 
-M = phi_H1 @ D @ unit_coil @ phi_H1.T
+##############################################################################
+# Stranded conductor
+##############################################################################
 
 K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
     dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
@@ -111,12 +120,8 @@ K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
 r = -RS0 @ K @ R1.T @ (1+np.zeros(R1.shape[0]))
 K = RS0 @ K @ RS0.T
 
-
 RZ = pde.tools.removeZeros(K)
 K = RZ @ K @ RZ.T
-
-# M = RS0 @ M @ RS0.T
-# M = RZ @ M @ RZ.T
 
 r = RZ @ r
 
@@ -124,6 +129,39 @@ sigma = 1#58.7e6
 x = chol(sigma*K).solve_A(r)
 x = RS0.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
 print('My code took ... ',time.monotonic()-tm)
+
+
+##############################################################################
+# Solid conductor
+##############################################################################
+
+# K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
+#     dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
+#     dphiz_H1 @ D @ unit_coil @ dphiz_H1.T
+#
+# R_out, R_int = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1,new')
+# R0, RS0 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'new', listDOF = MESH.identifications[:,0])
+# R1, RS1 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1', listDOF = MESH.identifications[:,1])
+#
+#
+# from scipy.sparse import bmat
+# R_jump =  bmat([[R_int], [R0+R1]])
+#
+#
+# r = -R_jump @ K @ R1.T @ (1+np.zeros(R1.shape[0]))
+#
+# K = R_jump @ K @ R_jump.T
+#
+# RZ = pde.tools.removeZeros(K)
+# K = RZ @ K @ RZ.T
+# r = RZ @ r
+#
+# sigma = 1#58.7e6
+# x = chol(sigma*K).solve_A(r)
+# x = R_jump.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
+# print('My code took ... ',time.monotonic()-tm)
+
+##############################################################################
 
 dx_x = (dphix_H1.T@x)*unit_coil.diagonal()
 dy_x = (dphiy_H1.T@x)*unit_coil.diagonal()
@@ -151,9 +189,9 @@ vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')
 vtklib.writeVTK(grid, 'das2.vtu')
 
 # import vtk.web
-import pyvista as pv
-mesh = pv.read('current_density.vtu')
-mesh.plot(notebook=True)
+# import pyvista as pv
+# mesh = pv.read('current_density.vtu')
+# mesh.plot()
 
 # ##############################################################################
 #
