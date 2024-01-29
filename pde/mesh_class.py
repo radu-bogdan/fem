@@ -1073,6 +1073,32 @@ class mesh3:
         DirectionFaces.ravel()[indices] = 1
         #############################################################################################################
 
+        EdgesToFaces = npy.r_[npy.c_[TetsToEdges[:,[3,4,5]],TetsToFaces[:,0]],
+            npy.c_[TetsToEdges[:,[1,2,5]],TetsToFaces[:,1]],
+            npy.c_[TetsToEdges[:,[0,2,4]],TetsToFaces[:,2]],
+            npy.c_[TetsToEdges[:,[0,1,3]],TetsToFaces[:,3]]]
+
+        EdgesToFaces = EdgesToFaces[EdgesToFaces[:, 3].argsort()]
+        EdgesToFaces = npy.unique(EdgesToFaces, axis=0)[:,:3]
+
+        #############################################################################################################
+        # edges = npy.r_[npy.sort(edges_trigs),
+        #                npy.sort(edges_quads)].astype(int)
+        # EdgesToVertices, je = npy.unique(edges, axis = 0, return_inverse = True)
+        # # EdgesToVertices, je = unique_rows(edges, return_inverse = True)
+        #
+        # NoEdges = EdgesToVertices.shape[0]
+        # TriangleToEdges = je[0:3*nt].reshape(nt,3, order = 'F').astype(npy.int64)
+        # QuadToEdges = je[3*nt:].reshape(nq,4, order = 'F')
+        # BoundaryEdges = intersect2d(EdgesToVertices,e_new)
+        # # InteriorEdges = npy.setdiff1d(npy.arange(NoEdges),BoundaryEdges)
+        #
+        # EdgesToVertices = npy.c_[EdgesToVertices,npy.zeros(EdgesToVertices.shape[0],dtype = npy.int64)-1]
+        # EdgesToVertices[BoundaryEdges,2] = e[:,-1]
+        #############################################################################################################
+
+        #############################################################################################################
+
 
         if (t.shape[1] == 5): # linear mapping
             t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]; t3 = t[:,3]
@@ -1186,6 +1212,7 @@ class mesh3:
         
         self.FacesToVertices = FacesToVertices
         self.TetsToFaces = TetsToFaces
+        self.EdgesToFaces = EdgesToFaces
         self.DirectionFaces = DirectionFaces
         self.NoFaces = NoFaces
         

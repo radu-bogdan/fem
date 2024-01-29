@@ -6,6 +6,7 @@ import pde
 from sksparse.cholmod import cholesky as chol
 import numpy as np
 import time
+import scipy.sparse as sp
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
@@ -110,8 +111,6 @@ R1, RS1 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1')
 # M = phi_H1 @ D @ unit_coil @ phi_H1.T
 
 ##############################################################################
-# Stranded conductor
-##############################################################################
 
 K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
     dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
@@ -130,36 +129,49 @@ x = chol(sigma*K).solve_A(r)
 x = RS0.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
 print('My code took ... ',time.monotonic()-tm)
 
+##############################################################################
+# Hdiv solver
+##############################################################################
+
+order = 2
+phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
+divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
+
+phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
+
+D = pde.int.assemble3(MESH, order = order)
+
+M_Hdiv_coil_full = phix_Hdiv @ D @ unit_coil @ phix_Hdiv.T +\
+                   phiy_Hdiv @ D @ unit_coil @ phiy_Hdiv.T +\
+                   phiz_Hdiv @ D @ unit_coil @ phiz_Hdiv.T
+
+C_Hdiv_L2 = divphi_Hdiv @ D @ unit_coil @ phi_L2.T
+R1, RS1 = pde.hdiv.assembleR3(MESH, space = 'RT0', faces = 'coil_face')
+
+M_Hdiv_coil_full = RS1 @ M_Hdiv_coil_full @RS1.T
+C_Hdiv_L2 = RS1 @ C_Hdiv_L2
+
+AA = sp.bmat([[M_Hdiv_coil_full, C_Hdiv_L2],
+              [C_Hdiv_L2.T, None]])
+
+RZdiv = pde.tools.removeZeros(AA)
+AA = RZdiv @ AA @ RZdiv.T
+
+phiB_Hdiv = pde.hdiv.assembleB3(MESH, space = 'RT0', matrix = 'phi', shape = phix_Hdiv.shape, order = order)
+unit_coil_B = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
+DB = pde.int.assembleB3(MESH, order = order)
+
+rhs = unit_coil_B @ DB @ phiB_Hdiv.T
+rhs = np.r_[RS1@rhs,np.zeros(MESH.nt)]
+
+rhs = RZdiv @ rhs
+
+
+xx = sp.linalg.spsolve(AA,rhs)
+
+potential = (RZdiv.T@xx)[-MESH.nt:]
 
 ##############################################################################
-# Solid conductor
-##############################################################################
-
-# K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
-#     dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
-#     dphiz_H1 @ D @ unit_coil @ dphiz_H1.T
-#
-# R_out, R_int = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1,new')
-# R0, RS0 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'new', listDOF = MESH.identifications[:,0])
-# R1, RS1 = pde.h1.assembleR3(MESH, space = 'P1', faces = 'coil_cut_1', listDOF = MESH.identifications[:,1])
-#
-#
-# from scipy.sparse import bmat
-# R_jump =  bmat([[R_int], [R0+R1]])
-#
-#
-# r = -R_jump @ K @ R1.T @ (1+np.zeros(R1.shape[0]))
-#
-# K = R_jump @ K @ R_jump.T
-#
-# RZ = pde.tools.removeZeros(K)
-# K = RZ @ K @ RZ.T
-# r = RZ @ r
-#
-# sigma = 1#58.7e6
-# x = chol(sigma*K).solve_A(r)
-# x = R_jump.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
-# print('My code took ... ',time.monotonic()-tm)
 
 ##############################################################################
 
@@ -186,6 +198,7 @@ vtklib.add_H1_Scalar(grid, x, 'lel')
 vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'kek2')
 
 vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')
+vtklib.add_L2_Scalar(grid,potential,'potential')
 vtklib.writeVTK(grid, 'das2.vtu')
 
 # import vtk.web

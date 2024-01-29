@@ -17,7 +17,13 @@ H = np.array([0, 16, 30, 54, 93, 143, 191, 210, 222, 233, 247, 258, 272, 289, 31
 # Tree/Cotree gauging
 ##############################################################################
 
-R = pde.tools.tree_cotree_gauge(MESH)
+ambient_edges_indices = pde.tools.getIndices(MESH.regions_2d,'ambient_face')
+ambient_edges_indices = np.unique(MESH.EdgesToFaces[np.in1d(MESH.FacesToVertices[:,3],ambient_edges_indices)])
+ambient_edges_indices = np.setdiff1d(np.arange(MESH.NoEdges),ambient_edges_indices)
+
+edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
+# edges = MESH.EdgesToVertices
+R = pde.tools.tree_cotree_gauge(MESH, edges = edges)
 
 ##############################################################################
 # Assembly
@@ -41,7 +47,7 @@ K = dphix_H1 @ D @ dphix_H1.T +\
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
-R0, RSS = pde.hcurl.assembleR3(MESH, space = 'N0', faces = 'ambient_face')
+# R0, RSS = pde.hcurl.assembleR3(MESH, space = 'N0', faces = 'ambient_face')
 
 M_Hcurl = phix_Hcurl @ D @ phix_Hcurl.T +\
           phiy_Hcurl @ D @ phiy_Hcurl.T +\

@@ -99,6 +99,8 @@ C_Hcurl_H1 = phix_Hcurl @ D @ dphix_H1.T +\
              phiy_Hcurl @ D @ dphiy_H1.T +\
              phiz_Hcurl @ D @ dphiz_H1.T
 
+
+
 from scipy.sparse import bmat
 
 AA = bmat([[K_Hcurl, C_Hcurl_H1],

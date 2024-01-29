@@ -2,12 +2,15 @@ from .mst import *
 import numpy as np
 import scipy.sparse as sp
 
-def tree_cotree_gauge(MESH, random_edges=True):
+def tree_cotree_gauge(MESH, random_edges=True, edges = None):
+
+    if edges is None: edges = MESH.EdgesToVertices[:,:2]
+
     if random_edges:
-        random = np.random.permutation(MESH.EdgesToVertices[:,:2].shape[0])
-        newListOfEdges = MESH.EdgesToVertices[random,:2]
+        random = np.random.permutation(edges.shape[0])
+        newListOfEdges = edges[random,:]
     else:
-        newListOfEdges = MESH.EdgesToVertices[:,:2]
+        newListOfEdges = edges
 
     g = Graph(MESH.np)
 

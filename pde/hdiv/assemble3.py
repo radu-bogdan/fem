@@ -12,7 +12,7 @@ def assemble3(MESH,space,matrix,order=-1):
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
     
-    p = MESH.p;
+    p = MESH.p
     t = MESH.t; nt = t.shape[0]
     
     sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
@@ -32,7 +32,7 @@ def assemble3(MESH,space,matrix,order=-1):
     
     if matrix == 'M' or matrix == 'phi':
         if order == -1:
-            qp = MESH.FEMLISTS[space]['TET']['qp_we_M'][0]; 
+            qp = MESH.FEMLISTS[space]['TET']['qp_we_M'][0]
             we = MESH.FEMLISTS[space]['TET']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsBx = npy.zeros((nqp*nt,lphi))
@@ -46,9 +46,9 @@ def assemble3(MESH,space,matrix,order=-1):
             for i in range(nqp):
                 phii = phi[j](qp[0,i],qp[1,i],qp[2,i])
                 detA = MESH.detA(qp[0,i],qp[1,i],qp[2,i])
-                JF00 = MESH.JF00(qp[0,i],qp[1,i],qp[2,i]); JF01 = MESH.JF01(qp[0,i],qp[1,i],qp[2,i]); JF02 = MESH.JF02(qp[0,i],qp[1,i],qp[2,i]);
-                JF10 = MESH.JF10(qp[0,i],qp[1,i],qp[2,i]); JF11 = MESH.JF11(qp[0,i],qp[1,i],qp[2,i]); JF12 = MESH.JF12(qp[0,i],qp[1,i],qp[2,i]);
-                JF20 = MESH.JF20(qp[0,i],qp[1,i],qp[2,i]); JF21 = MESH.JF21(qp[0,i],qp[1,i],qp[2,i]); JF22 = MESH.JF22(qp[0,i],qp[1,i],qp[2,i]);
+                JF00 = MESH.JF00(qp[0,i],qp[1,i],qp[2,i]); JF01 = MESH.JF01(qp[0,i],qp[1,i],qp[2,i]); JF02 = MESH.JF02(qp[0,i],qp[1,i],qp[2,i])
+                JF10 = MESH.JF10(qp[0,i],qp[1,i],qp[2,i]); JF11 = MESH.JF11(qp[0,i],qp[1,i],qp[2,i]); JF12 = MESH.JF12(qp[0,i],qp[1,i],qp[2,i])
+                JF20 = MESH.JF20(qp[0,i],qp[1,i],qp[2,i]); JF21 = MESH.JF21(qp[0,i],qp[1,i],qp[2,i]); JF22 = MESH.JF22(qp[0,i],qp[1,i],qp[2,i])
                 
                 ellmatsBx[i*nt:(i+1)*nt,j] = 1/(detA)*(JF00*phii[0]+JF01*phii[1]+JF02*phii[2])*DIRECTION_DOF[:,j]
                 ellmatsBy[i*nt:(i+1)*nt,j] = 1/(detA)*(JF10*phii[0]+JF11*phii[1]+JF12*phii[2])*DIRECTION_DOF[:,j]
@@ -67,7 +67,7 @@ def assemble3(MESH,space,matrix,order=-1):
     # todo
     if matrix == 'K' or matrix == 'divphi':
         if order == -1:
-            qp = MESH.FEMLISTS[space]['TET']['qp_we_K'][0]; 
+            qp = MESH.FEMLISTS[space]['TET']['qp_we_K'][0]
             we = MESH.FEMLISTS[space]['TET']['qp_we_K'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
@@ -94,14 +94,12 @@ def assembleB3(MESH, space, matrix, shape, order = -1):
         spaceInfo(MESH,space)
     
     p = MESH.p
-    f = MESH.f;
+    f = MESH.f
     
     phi = MESH.FEMLISTS[space]['B']['phi']; lphi = len(phi)
     
-    # if faces.size == 0:
-    #     f = MESH.f
-    # else:
-    #     f = MESH.FacesToVertices[faces,:]
+    # if faces.size == 0: f = MESH.f
+    # else: f = MESH.FacesToVertices[faces,:]
         
     nf = f.shape[0]
     LIST_DOF = MESH.FEMLISTS[space]['B']['LIST_DOF']
@@ -113,9 +111,9 @@ def assembleB3(MESH, space, matrix, shape, order = -1):
     # Mass matrix (over the edge)
     #####################################################################################
 
-    if matrix == 'M':
+    if matrix == 'M' or matrix == 'phi':
         if order == -1:
-            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]; 
+            qp = MESH.FEMLISTS[space]['B']['qp_we_B'][0]
             we = MESH.FEMLISTS[space]['B']['qp_we_B'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nf,lphi))
@@ -127,7 +125,7 @@ def assembleB3(MESH, space, matrix, shape, order = -1):
             for i in range(nqp):
                 detB = MESH.detB(qp[0,i],qp[1,i])
                 ellmatsB[i*nf:(i+1)*nf,j] = 1/npy.abs(detB)*phi[j](qp[0,i],qp[1,i])
-        
+        # print(im.shape,jm.shape,ellmatsB.shape,shape[0])
         B = sparse(im,jm,ellmatsB,shape[0],nqp*nf)
         return B
     
@@ -221,7 +219,6 @@ def assembleB3(MESH, space, matrix, shape, order = -1):
 #         return B0,B1,B2
 
 def assembleR3(MESH, space, faces = '', listDOF = npy.empty(0)):
-    
     
     if not space in MESH.FEMLISTS.keys():
         spaceInfo(MESH,space)
