@@ -50,9 +50,9 @@ def assemble3(MESH,space,matrix,order=-1):
                 JF10 = MESH.JF10(qp[0,i],qp[1,i],qp[2,i]); JF11 = MESH.JF11(qp[0,i],qp[1,i],qp[2,i]); JF12 = MESH.JF12(qp[0,i],qp[1,i],qp[2,i])
                 JF20 = MESH.JF20(qp[0,i],qp[1,i],qp[2,i]); JF21 = MESH.JF21(qp[0,i],qp[1,i],qp[2,i]); JF22 = MESH.JF22(qp[0,i],qp[1,i],qp[2,i])
                 
-                ellmatsBx[i*nt:(i+1)*nt,j] = 1/(detA)*(JF00*phii[0]+JF01*phii[1]+JF02*phii[2])*DIRECTION_DOF[:,j]
-                ellmatsBy[i*nt:(i+1)*nt,j] = 1/(detA)*(JF10*phii[0]+JF11*phii[1]+JF12*phii[2])*DIRECTION_DOF[:,j]
-                ellmatsBz[i*nt:(i+1)*nt,j] = 1/(detA)*(JF20*phii[0]+JF21*phii[1]+JF22*phii[2])*DIRECTION_DOF[:,j]
+                ellmatsBx[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*(JF00*phii[0]+JF01*phii[1]+JF02*phii[2])*DIRECTION_DOF[:,j]
+                ellmatsBy[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*(JF10*phii[0]+JF11*phii[1]+JF12*phii[2])*DIRECTION_DOF[:,j]
+                ellmatsBz[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*(JF20*phii[0]+JF21*phii[1]+JF22*phii[2])*DIRECTION_DOF[:,j]
         
         Bx = sparse(im,jm,ellmatsBx,sizeM,nqp*nt)
         By = sparse(im,jm,ellmatsBy,sizeM,nqp*nt)
@@ -79,7 +79,7 @@ def assemble3(MESH,space,matrix,order=-1):
             for i in range(nqp):
                 divphii = divphi[j](qp[0,i],qp[1,i],qp[2,i])
                 detA = MESH.detA(qp[0,i],qp[1,i],qp[2,i])
-                ellmatsB[i*nt:(i+1)*nt,j] = 1/detA*divphii*DIRECTION_DOF[:,j]
+                ellmatsB[i*nt:(i+1)*nt,j] = 1/npy.abs(detA)*divphii*DIRECTION_DOF[:,j] #why do i need the abs here tho...?
                 
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
         return B

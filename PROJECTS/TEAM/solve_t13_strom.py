@@ -89,9 +89,9 @@ unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x,
 # unit_coil_cut_face = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1')
 # unit_coil_cut_face_new = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'new')
 
-# face_in_1 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
-# face_in_2 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
-# face_in_3 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
+face_in_1 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
+face_in_2 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
+face_in_3 = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 0+0*x, faces = 'coil_cut_1').diagonal()
 
 ##############################################################################
 
@@ -157,9 +157,14 @@ AA = sp.bmat([[M_Hdiv_coil_full, C_Hdiv_L2],
 RZdiv = pde.tools.removeZeros(AA)
 AA = RZdiv @ AA @ RZdiv.T
 
+print(RS1.shape,RZdiv.shape)
+
 phiB_Hdiv = pde.hdiv.assembleB3(MESH, space = 'RT0', matrix = 'phi', shape = phix_Hdiv.shape, order = order)
 unit_coil_B = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'coil_cut_1').diagonal()
 DB = pde.int.assembleB3(MESH, order = order)
+
+
+# rhs= (face_in_1*N1 + face_in_2*N2 + face_in_3*N3) @ DB @ phiB_Hdiv.T
 
 rhs = unit_coil_B @ DB @ phiB_Hdiv.T
 rhs = np.r_[RS1@rhs,np.zeros(MESH.nt)]

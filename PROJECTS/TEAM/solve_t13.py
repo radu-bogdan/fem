@@ -21,8 +21,8 @@ ambient_edges_indices = pde.tools.getIndices(MESH.regions_2d,'ambient_face')
 ambient_edges_indices = np.unique(MESH.EdgesToFaces[np.in1d(MESH.FacesToVertices[:,3],ambient_edges_indices)])
 ambient_edges_indices = np.setdiff1d(np.arange(MESH.NoEdges),ambient_edges_indices)
 
-edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
-# edges = MESH.EdgesToVertices
+# edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
+edges = MESH.EdgesToVertices
 R = pde.tools.tree_cotree_gauge(MESH, edges = edges)
 
 ##############################################################################
