@@ -15,11 +15,11 @@ Welcome to FEM's documentation!
    notebooks/current_density
    notebooks/magnetostatics
 
-.. .. toctree::
-..    :maxdepth: 2
-..    :caption: Contents2
+.. toctree::
+   :maxdepth: 2
+   :caption: 2D electric motor
 
-..    notebooks/createMesh
+   notebooks/createMesh
 
 .. .. toctree::
 ..    :maxdepth: 2

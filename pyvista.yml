@@ -65,7 +65,8 @@ dependencies:
   - defusedxml
   - python-neo # ab hier mein zeug
   - scikit-sparse
-  - pip  
+  - pip
+  - nbsphinx
   - pip:
     - ngsolve
     - gmsh

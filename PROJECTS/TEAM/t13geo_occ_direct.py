@@ -1,26 +1,29 @@
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeBox
-from OCC.Core.gp import gp_Pnt
-
-def create_box(corner1, corner2):
-    pnt1 = gp_Pnt(corner1[0], corner1[1], corner1[2])
-    pnt2 = gp_Pnt(corner2[0], corner2[1], corner2[2])
-    dx = abs(corner2[0] - corner1[0])
-    dy = abs(corner2[1] - corner1[1])
-    dz = abs(corner2[2] - corner1[2])
-
-    # The BRepPrimAPI_MakeBox function can also take dimensions directly
-    box = BRepPrimAPI_MakeBox(pnt1, dx, dy, dz).Shape()
-
-    return box
-
-# Creating the boxes similar to the original example
-box1 = create_box((-100, -100, -50), (100, 100, 50))
-box2 = create_box((-75, -75, -50), (75, 75, 50))
-
-# These boxes are now created as TopoDS_Shape objects and can be used for further operations.
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeBox,BRepPrimAPI_MakeCylinder
+from OCC.Core.gp import gp_Pnt, gp_Ax2, gp_Dir
 
 
+box1 = BRepPrimAPI_MakeBox(gp_Pnt(-100, -100, -50), gp_Pnt(100, 100, 50)).Shape()
+box2 = BRepPrimAPI_MakeBox(gp_Pnt(-75,-75,-50), gp_Pnt(75,75,50)).Shape()
 
+##########################################################################
+# Rounding corners ...
+##########################################################################
+
+corner1_ext = BRepPrimAPI_MakeBox(gp_Pnt(75,75,-50), gp_Pnt(100,100,50))
+cyl1_ext = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(75,75,-50), gp_Dir(0,0,1)), 25, 100)
+corner1_int = BRepPrimAPI_MakeBox(gp_Pnt(50,50,-50), gp_Pnt(75,75,50))
+cyl1_int = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(50,50,-50), gp_Dir(0,0,1)), 25, 100)
+
+corner1_int = corner1_int-cyl1_int; corner1_ext = corner1_ext-cyl1_ext
+
+# corner1_ext = occ.Box(occ.Pnt(75,75,-50), occ.Pnt(100,100,50))
+# cyl1_ext = occ.Cylinder(occ.Pnt(75,75,-50), occ.Z, r=25, h=100)
+# corner1_int = occ.Box(occ.Pnt(50,50,-50), occ.Pnt(75,75,50))
+# cyl1_int = occ.Cylinder(occ.Pnt(50,50,-50), occ.Z, r=25, h=100)
+# corner1_int = corner1_int-cyl1_int; corner1_ext = corner1_ext-cyl1_ext
+
+
+stop
 
 from OCC.Core.BRepFilletAPI import BRepFilletAPI_MakeFillet
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCylinder
