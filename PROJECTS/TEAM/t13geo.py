@@ -87,6 +87,7 @@ coil.mat("coil")
 r_steel.mat("r_steel")
 l_steel.mat("l_steel")
 mid_steel.mat("mid_steel")
+ambient.mat("ambient")
 
 ##########################################################################
 # Generating mesh...

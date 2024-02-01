@@ -22,8 +22,9 @@ ambient_edges_indices = np.unique(MESH.EdgesToFaces[np.in1d(MESH.FacesToVertices
 ambient_edges_indices = np.setdiff1d(np.arange(MESH.NoEdges),ambient_edges_indices)
 
 # edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
-edges = MESH.EdgesToVertices
-R = pde.tools.tree_cotree_gauge(MESH, edges = edges)
+# edges = MESH.EdgesToVertices
+# R = pde.tools.tree_cotree_gauge(MESH, edges = edges)
+R = pde.tools.tree_cotree_gauge(MESH, random_edges=True)
 
 ##############################################################################
 # Assembly
@@ -68,96 +69,15 @@ dphix_H1_P0, dphiy_H1_P0, dphiz_H1_P0 = pde.h1.assemble3(MESH, space = 'P1', mat
 KR = R.T@K_Hcurl@R
 MR = R.T@M_Hcurl@R
 
-r = dx_x @ D @ phix_Hcurl.T +\
-    dy_x @ D @ phiy_Hcurl.T +\
-    dz_x @ D @ phiz_Hcurl.T
+r = jx_L2 @ D @ phix_Hcurl.T +\
+    jy_L2 @ D @ phiy_Hcurl.T +\
+    jz_L2 @ D @ phiz_Hcurl.T
 
 
 
 ##############################################################################
 # Only coil stuff...
 ##############################################################################
-
-    
-# unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
-#
-# K_Hcurl_coil_full = curlphix_Hcurl @ D @ unit_coil @ curlphix_Hcurl.T +\
-#                     curlphiy_Hcurl @ D @ unit_coil @ curlphiy_Hcurl.T +\
-#                     curlphiz_Hcurl @ D @ unit_coil @ curlphiz_Hcurl.T
-#
-# C_Hcurl_H1_coil_full = phix_Hcurl @ D @ unit_coil @ dphix_H1.T +\
-#                        phiy_Hcurl @ D @ unit_coil @ dphiy_H1.T +\
-#                        phiz_Hcurl @ D @ unit_coil @ dphiz_H1.T
-#
-# non_zero_rows_K = np.where((np.diff(K_Hcurl_coil_full.indptr) != 0))[0]
-# non_zero_rows_C = np.where((np.diff(C_Hcurl_H1_coil_full.indptr) != 0))[0]
-#
-# K_Hcurl_coil = K_Hcurl_coil_full[:,non_zero_rows_K]
-# K_Hcurl_coil = K_Hcurl_coil[non_zero_rows_K,:]
-#
-# C_Hcurl_H1_coil = C_Hcurl_H1_coil_full[non_zero_rows_K,:]
-# C_Hcurl_H1_coil = C_Hcurl_H1_coil[:,non_zero_rows_C]
-# C_Hcurl_H1_coil_eich = C_Hcurl_H1_coil[:,:-1]
-#
-# # Eliminate harmonic? seems to work but what do I kno
-# K_Hcurl_coil_eich = K_Hcurl_coil[:,:-1]
-# K_Hcurl_coil_eich = K_Hcurl_coil_eich[:-1,:]
-# C_Hcurl_H1_coil_eich = C_Hcurl_H1_coil_eich[:-1,:]
-#
-# AA = bmat([[K_Hcurl_coil_eich, C_Hcurl_H1_coil_eich],
-#            [C_Hcurl_H1_coil_eich.T, None]]).tocsc()
-#
-# r_coil = r[non_zero_rows_K]
-# r_coil_eich = r_coil[:-1]
-#
-# bb = np.r_[r_coil_eich,np.zeros(non_zero_rows_C.size-1)]
-#
-# tm = time.monotonic()
-# xxx = sp.linalg.spsolve(AA,bb)
-# print('Solving saddle point took ... ',time.monotonic()-tm)
-#
-# xxx = xxx[-non_zero_rows_C.size+1:]
-# xxx = np.r_[xxx,0] # readding the last entry
-#
-# xx = np.zeros(MESH.np)
-# xx[non_zero_rows_C] = xxx
-
-##############################################################################
-# Solving stuff...
-##############################################################################
-
-
-# C_Hcurl_H1_eich = C_Hcurl_H1[:,:-1] # removing last entry
-
-# AA = bmat([[K_Hcurl, C_Hcurl_H1_eich], 
-#            [C_Hcurl_H1_eich.T, None]]).tocsc()
-
-# bb = np.r_[r,np.zeros(MESH.np-1)]
-
-
-# tm = time.monotonic()
-# xx = sp.linalg.spsolve(AA,bb)
-# print('Solving saddle point took ... ',time.monotonic()-tm)
-
-
-# xx = xx[-MESH.np+1:]
-# xx = np.r_[xx,0] # readding the last entry
-
-##############################################################################
-
-# dx_xx = dphix_H1.T@xx
-# dy_xx = dphiy_H1.T@xx
-# dz_xx = dphiz_H1.T@xx
-
-# eJx_new = eJx - 0*dx_xx
-# eJy_new = eJy - 0*dy_xx
-# eJz_new = eJz - 0*dz_xx
-
-##############################################################################
-
-# r = eJx @ D @ phix_Hcurl.T +\
-#     eJy @ D @ phiy_Hcurl.T +\
-#     eJz @ D @ phiz_Hcurl.T
 
 cholKR = chol(KR)
 x = cholKR.solve_A(R.T@r)
@@ -166,11 +86,9 @@ x = cholKR.solve_A(R.T@r)
 # x = pde.pcg(KR,R.T@r,output=True,maxit=1e14,tol=1e-14)
 x = R@x
 
-
-
-ux = curlphix_Hcurl_P0.T @ x
-uy = curlphiy_Hcurl_P0.T @ x
-uz = curlphiz_Hcurl_P0.T @ x
+Bx = curlphix_Hcurl_P0.T @ x
+By = curlphiy_Hcurl_P0.T @ x
+Bz = curlphiz_Hcurl_P0.T @ x
 
 ##############################################################################
 # Storing to vtk
@@ -179,13 +97,10 @@ uz = curlphiz_Hcurl_P0.T @ x
 import vtklib
 
 grid = vtklib.createVTK(MESH)
-vtklib.add_H1_Scalar(grid, phi_j, 'lel')
-# vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
-vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'kek2')
-vtklib.add_L2_Vector(grid,ux,uy,uz,'kek3')
+vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
+vtklib.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
+vtklib.add_L2_Vector(grid,Bx,By,Bz,'B')
 
-vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')
-vtklib.add_L2_Scalar(grid,ux**2+uy**2+uz**2,'kek3norm')
 vtklib.writeVTK(grid, 'das2.vtu')
 
 # tm = time.monotonic()

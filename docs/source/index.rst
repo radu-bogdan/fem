@@ -14,6 +14,8 @@ Welcome to FEM's documentation!
    notebooks/TEAM_13_geometry
    notebooks/current_density
    notebooks/magnetostatics
+   notebooks/TEAM_13_nonlinearity
+   notebooks/magnetostatics_nl
 
 .. toctree::
    :maxdepth: 2

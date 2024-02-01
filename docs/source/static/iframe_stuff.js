@@ -1,4 +1,5 @@
 // This piece of code removes the unnecessary scrolling option for pyvista's iframes
+// god praise chatgpt for this
 document.addEventListener('DOMContentLoaded', function() {
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {

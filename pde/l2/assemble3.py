@@ -1,7 +1,7 @@
 
 from scipy import sparse as sp
 import numpy as npy
-from .spaces import spaceInfo
+from .spaces3 import spaceInfo
 from .. import basis
 from .. import quadrature
 

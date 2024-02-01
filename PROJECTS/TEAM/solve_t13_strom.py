@@ -9,28 +9,6 @@ import time
 import scipy.sparse as sp
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
-print(MESH)
-#########
-# Checks:
-ind_faces1 = pde.tools.getIndices(MESH.regions_2d,'coil_face')
-ind_faces2 = pde.tools.getIndices(MESH.regions_2d,'coil_cut_1')
-ind_faces3 = pde.tools.getIndices(MESH.regions_2d,'coil_cut_1,coil_face')
-
-indices1 = np.in1d(MESH.BoundaryFaces_Region,ind_faces1)
-indices2 = np.in1d(MESH.BoundaryFaces_Region,ind_faces2)
-indices3 = np.in1d(MESH.BoundaryFaces_Region,ind_faces3)
-
-dphix_H1, dphiy_H1, dphiz_H1 = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = 1)
-sizeM = MESH.FEMLISTS['RT0']['TET']['sizeM']
-LIST_DOF10  = np.unique(MESH.FEMLISTS['RT0']['B']['LIST_DOF'][indices1,:])
-LIST_DOF20  = np.unique(MESH.FEMLISTS['RT0']['B']['LIST_DOF'][indices2,:])
-LIST_DOF30  = np.unique(MESH.FEMLISTS['RT0']['B']['LIST_DOF'][indices3,:])
-
-
-print(LIST_DOF10.shape,LIST_DOF20.shape,LIST_DOF30.shape)
-# stop
-#########
-
 
 ##############################################################################
 
@@ -82,30 +60,7 @@ regions_2d_new = MESH.regions_2d.copy()
 regions_2d_new.append('new')
 
 identifications = (np.c_[points_to_duplicate,new_points]).astype(int)
-# stop
 MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.regions_1d,identifications = identifications)
-print(MESH)
-
-########
-# Checks:
-ind_faces1 = pde.tools.getIndices(MESH.regions_2d,'coil_face')
-ind_faces2 = pde.tools.getIndices(MESH.regions_2d,'coil_cut_1')
-ind_faces3 = pde.tools.getIndices(MESH.regions_2d,'coil_cut_1,new')
-
-indices1 = np.in1d(MESH.BoundaryFaces_Region,ind_faces1)
-indices2 = np.in1d(MESH.BoundaryFaces_Region,ind_faces2)
-indices3 = np.in1d(MESH.BoundaryFaces_Region,ind_faces3)
-
-dphix_H1, dphiy_H1, dphiz_H1 = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = 1)
-sizeM = MESH.FEMLISTS['RT0']['TET']['sizeM']
-LIST_DOF11  = np.unique(MESH.FEMLISTS['RT0']['B']['LIST_DOF'][indices1,:])
-LIST_DOF21  = np.unique(MESH.FEMLISTS['RT0']['B']['LIST_DOF'][indices2,:])
-LIST_DOF31  = np.unique(MESH.FEMLISTS['RT0']['B']['LIST_DOF'][indices3,:])
-
-
-print(LIST_DOF11.shape,LIST_DOF21.shape,LIST_DOF31.shape)
-# stop
-########
 
 ##############################################################################
 # Current density (approx)
@@ -171,7 +126,7 @@ r = RZ @ r
 
 sigma = 1#58.7e6
 x = chol(sigma*K).solve_A(r)
-x = RS0.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
+potential_H1 = RS0.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
 print('My code took ... ',time.monotonic()-tm)
 
 # stop
@@ -225,7 +180,7 @@ rhs = RZdiv @ rhs
 
 xx = sp.linalg.spsolve(AA,rhs)
 
-potential = (RZdiv.T@xx)[-MESH.nt:]
+potential_L2 = (RZdiv.T@xx)[-MESH.nt:]
 j_hdiv = RS1.T@(RZdiv.T@xx)[:-MESH.nt]
 
 
@@ -241,14 +196,14 @@ jz_hdiv = (phiz_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 
 ##############################################################################
 
-dx_x = -(dphix_H1.T@x)*unit_coil.diagonal()
-dy_x = -(dphiy_H1.T@x)*unit_coil.diagonal()
-dz_x = -(dphiz_H1.T@x)*unit_coil.diagonal()
+jx_L2 = -(dphix_H1.T@potential_H1)*unit_coil.diagonal()
+jy_L2 = -(dphiy_H1.T@potential_H1)*unit_coil.diagonal()
+jz_L2 = -(dphiz_H1.T@potential_H1)*unit_coil.diagonal()
 
 dphix_H1_P0, dphiy_H1_P0, dphiz_H1_P0 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = 0)
-dx_x_P0 = -(dphix_H1_P0.T@x)*unit_coil_P0.diagonal()
-dy_x_P0 = -(dphiy_H1_P0.T@x)*unit_coil_P0.diagonal()
-dz_x_P0 = -(dphiz_H1_P0.T@x)*unit_coil_P0.diagonal()
+jx_L2_P0 = -(dphix_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
+jy_L2_P0 = -(dphiy_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
+jz_L2_P0 = -(dphiz_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
 
 phi_j = x
 
@@ -258,193 +213,9 @@ phi_j = x
 import vtklib
 
 grid = vtklib.createVTK(MESH)
-vtklib.add_H1_Scalar(grid, x, 'lel')
-# vtklib.add_L2_Vector(grid,evJx,evJy,evJz,'kek')
-vtklib.add_L2_Vector(grid,dx_x_P0,dy_x_P0,dz_x_P0,'j_l2')
+vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
+vtklib.add_L2_Vector(grid,jx_L2_P0,jy_L2_P0,jz_L2_P0,'j_l2')
 vtklib.add_L2_Vector(grid,jx_hdiv,jy_hdiv,jz_hdiv,'j_hdiv')
 
-vtklib.add_L2_Scalar(grid,dx_x_P0**2+dy_x_P0**2+dz_x_P0**2,'kek2magn')
-vtklib.add_L2_Scalar(grid,potential,'potential')
+vtklib.add_L2_Scalar(grid,potential_L2,'potential_L2')
 vtklib.writeVTK(grid, 'das2.vtu')
-
-# import vtk.web
-# import pyvista as pv
-# mesh = pv.read('current_density.vtu')
-# mesh.plot()
-
-# ##############################################################################
-#
-# stop
-#
-# ##############################################################################
-# # Hdiv proj
-# ##############################################################################
-#
-# order = 2
-# phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
-# divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
-#
-# phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
-#
-# unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
-# phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
-#
-# D = pde.int.assemble3(MESH, order = order)
-#
-# M_Hdiv = phix_Hdiv @ D @ phix_Hdiv.T +\
-#          phiy_Hdiv @ D @ phiy_Hdiv.T +\
-#          phiz_Hdiv @ D @ phiz_Hdiv.T
-#
-# K_Hdiv = divphi_Hdiv @ D @ divphi_Hdiv.T
-#
-# C_Hdiv_L2 = divphi_Hdiv @ D @ phi_L2.T
-#
-# M_Hcurl = phix_Hcurl @ D @ unit_coil @ phix_Hcurl.T +\
-#           phiy_Hcurl @ D @ unit_coil @ phiy_Hcurl.T +\
-#           phiz_Hcurl @ D @ unit_coil @ phiz_Hcurl.T
-#
-# M_Hdiv_coil_full = phix_Hdiv @ D @ unit_coil @ phix_Hdiv.T +\
-#                    phiy_Hdiv @ D @ unit_coil @ phiy_Hdiv.T +\
-#                    phiz_Hdiv @ D @ unit_coil @ phiz_Hdiv.T
-#
-# M_Hcurl_coil_full = phix_Hcurl @ D @ unit_coil @ phix_Hcurl.T +\
-#                     phiy_Hcurl @ D @ unit_coil @ phiy_Hcurl.T +\
-#                     phiz_Hcurl @ D @ unit_coil @ phiz_Hcurl.T
-#
-# RZdiv = pde.tools.removeZeros(M_Hdiv_coil_full)
-# M_Hdiv_coil = RZdiv @ M_Hdiv_coil_full @ RZdiv.T
-#
-# RZcurl = pde.tools.removeZeros(M_Hcurl_coil_full)
-# M_Hcurl_coil = RZcurl @ M_Hcurl_coil_full @ RZcurl.T
-#
-# ##############################################################################
-#
-# eJx = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : J(x,y,z)[:,0], regions = 'coil').diagonal()
-# eJy = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : J(x,y,z)[:,1], regions = 'coil').diagonal()
-# eJz = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : J(x,y,z)[:,2], regions = 'coil').diagonal()
-#
-# r_hdiv = eJx @ D @ phix_Hdiv.T +\
-#          eJy @ D @ phiy_Hdiv.T +\
-#          eJz @ D @ phiz_Hdiv.T
-#
-# r_hcurl = eJx @ D @ phix_Hcurl.T +\
-#           eJy @ D @ phiy_Hcurl.T +\
-#           eJz @ D @ phiz_Hcurl.T
-#
-# A = bmat([[M_Hdiv,-C_Hdiv_L2],
-#           [C_Hdiv_L2.T, None]])
-# b = np.r_[r_hdiv,np.zeros(MESH.nt)]
-#
-# x = sp.linalg.spsolve(A,b)
-# newJ = x[:MESH.NoFaces]
-#
-# newJ_coil = sp.linalg.spsolve(M_Hdiv_coil,RZdiv @ r_hdiv)
-# # newJ_coil = sp.linalg.spsolve(M_Hcurl_coil,r_hdiv[non_zero_rows_Hcurl])
-#
-# phix_Hdiv_P0, phiy_Hdiv_P0, phiz_Hdiv_P0 = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = 0)
-# phix_Hcurl_P0, phiy_Hcurl_P0, phiz_Hcurl_P0 = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = 0)
-#
-#
-# # newJ = np.zeros(MESH.NoFaces)
-# # newJ[non_zero_rows_Hdiv] = newJ_coil
-#
-# newJx = phix_Hdiv_P0.T @ newJ
-# newJy = phiy_Hdiv_P0.T @ newJ
-# newJz = phiz_Hdiv_P0.T @ newJ
-#
-# # newJ = np.zeros(MESH.NoEdges)
-# # newJ[non_zero_rows_Hcurl] = newJ_coil
-#
-# # newJx = phix_Hcurl_P0.T @ newJ
-# # newJy = phiy_Hcurl_P0.T @ newJ
-# # newJz = phiz_Hcurl_P0.T @ newJ
-#
-#
-# ##########################################################################
-# # NGSOVLE STUFF...
-# ##########################################################################
-#
-# import ngsolve as ng
-#
-# mesh = ng.Mesh(geoOCCmesh)
-#
-# # fes = ng.H1(mesh, order = 0)
-# fes = ng.HCurl(mesh, order = 0)
-# # fes = ng.HDiv(mesh, order = 0)
-# print ("Hx dofs:", fes.ndof)
-# u,v = fes.TnT()
-#
-# # bfa = ng.BilinearForm(ng.grad(u)*ng.grad(v)*ng.dx).Assemble()
-# bfa = ng.BilinearForm(u*v*ng.dx).Assemble()
-# # bfa = ng.BilinearForm(ng.curl(u)*ng.curl(v)*ng.dx).Assemble()
-# # bfa = ng.BilinearForm(ng.div(u)*ng.div(v)*ng.dx).Assemble()
-#
-# rows,cols,vals = bfa.mat.COO()
-# A = sp.csr_matrix((vals,(rows,cols)))
-#
-# ##############################################################################
-# # Storing to vtk
-# ##############################################################################
-#
-#
-# tm = time.monotonic()
-#
-# points = vtk.vtkPoints()
-# grid = vtk.vtkUnstructuredGrid()
-#
-# for i in range(MESH.np): points.InsertPoint(i, (MESH.p[i,0], MESH.p[i,1], MESH.p[i,2]))
-#
-# def create_cell(i):
-#     tetra = vtk.vtkTetra()
-#     ids = tetra.GetPointIds()
-#     ids.SetId(0, MESH.t[i,0])
-#     ids.SetId(1, MESH.t[i,1])
-#     ids.SetId(2, MESH.t[i,2])
-#     ids.SetId(3, MESH.t[i,3])
-#     return tetra
-#
-# elems = [create_cell(i) for i in range(MESH.nt)]
-# grid.Allocate(MESH.nt, 1)
-# grid.SetPoints(points)
-#
-# for elem in elems: grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-#
-#
-# scalars = MESH.t[:,-1]
-# pdata = grid.GetCellData()
-# data = vtk.vtkDoubleArray()
-# data.SetNumberOfValues(MESH.nt)
-# for i,p in enumerate(scalars): data.SetValue(i,p)
-# pdata.SetScalars(data)
-#
-#
-# vecJ = vtk.vtkFloatArray()
-# vecJ.SetNumberOfComponents(3)
-# for i in range(MESH.nt):
-#     vecJ.InsertNextTuple([newJx[i],newJy[i],newJz[i]])
-# vecJ.SetName('omg')
-# pdata.AddArray(vecJ)
-#
-#
-# vecJ = vtk.vtkFloatArray()
-# vecJ.SetNumberOfComponents(3)
-# for i in range(MESH.nt):
-#     vecJ.InsertNextTuple([evJx[i],evJy[i],evJz[i]])
-# vecJ.SetName('omg2')
-# pdata.AddArray(vecJ)
-#
-#
-# print('Time needed to prepare file ... ',time.monotonic()-tm)
-#
-# writer = vtk.vtkXMLUnstructuredGridWriter()
-# writer.SetFileName("whatever.vtu")
-# writer.SetInputData(grid)
-# writer.Write()
-# print('Time needed to write to file ... ',time.monotonic()-tm)
-#
-#
-# import vtklib
-#
-# grid = vtklib.createVTK(MESH)
-# vtklib.add_H1_Scalar(grid, x, 'lel')
-# vtklib.writeVTK(grid, 'das.vtu')
