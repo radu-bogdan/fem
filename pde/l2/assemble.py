@@ -13,11 +13,11 @@ def assemble(MESH,space,matrix,order=-1):
     p = MESH.p;
     t = MESH.t; nt = t.shape[0]
     
-    sizeM = MESH.FEMLISTS[space]['TET']['sizeM']
-    phi = MESH.FEMLISTS[space]['TET']['phi']; lphi = len(phi)
-    dphi = MESH.FEMLISTS[space]['TET']['dphi']; ldphi = len(dphi)
+    sizeM = MESH.FEMLISTS[space]['TRIG']['sizeM']
+    phi = MESH.FEMLISTS[space]['TRIG']['phi']; lphi = len(phi)
+    dphi = MESH.FEMLISTS[space]['TRIG']['dphi']; ldphi = len(dphi)
     
-    LIST_DOF = MESH.FEMLISTS[space]['TET']['LIST_DOF']
+    LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     
     if order != -1:
         qp,we = quadrature.keast(order); nqp = len(we)
@@ -28,17 +28,17 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'M':
         if order == -1:
-            qp = MESH.FEMLISTS[space]['TET']['qp_we_M'][0]; 
-            we = MESH.FEMLISTS[space]['TET']['qp_we_M'][1]; nqp = len(we)
+            qp = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][0]; 
+            we = MESH.FEMLISTS[space]['TRIG']['qp_we_M'][1]; nqp = len(we)
         
         ellmatsB = npy.zeros((nqp*nt,lphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
-                ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i],qp[2,i])
+                ellmatsB[i*nt:(i+1)*nt,j] = phi[j](qp[0,i],qp[1,i])
         
         B = sparse(im,jm,ellmatsB,sizeM,nqp*nt)
         return B
@@ -49,28 +49,32 @@ def assemble(MESH,space,matrix,order=-1):
     
     if matrix == 'K':
         if order == -1:
-            qp =  MESH.FEMLISTS[space]['TET']['qp_we_K'][0]; 
-            we =  MESH.FEMLISTS[space]['TET']['qp_we_K'][1]; nqp = len(we)
+            qp =  MESH.FEMLISTS[space]['TRIG']['qp_we_K'][0]; 
+            we =  MESH.FEMLISTS[space]['TRIG']['qp_we_K'][1]; nqp = len(we)
         
         ellmatsBKx = npy.zeros((nqp*nt,ldphi))
         ellmatsBKy = npy.zeros((nqp*nt,ldphi))
+        ellmatsBKz = npy.zeros((nqp*nt,ldphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
+        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
         
         for j in range(ldphi):
             for i in range(nqp):
-                dphii = dphi[j](qp[0,i],qp[1,i])
-                detA = MESH.detA(qp[0,i],qp[1,i])
-                iJF00 = MESH.iJF00(qp[0,i],qp[1,i]); iJF01 = MESH.iJF01(qp[0,i],qp[1,i]);
-                iJF10 = MESH.iJF10(qp[0,i],qp[1,i]); iJF11 = MESH.iJF11(qp[0,i],qp[1,i]);
+                dphii = dphi[j](qp[0,i],qp[1,i],qp[2,i])
+                detA = MESH.detA(qp[0,i],qp[1,i],qp[2,i])
+                iJF00 = MESH.iJF00(qp[0,i],qp[1,i],qp[2,i]); iJF01 = MESH.iJF01(qp[0,i],qp[1,i],qp[2,i]); iJF02 = MESH.iJF02(qp[0,i],qp[1,i],qp[2,i]);
+                iJF10 = MESH.iJF10(qp[0,i],qp[1,i],qp[2,i]); iJF11 = MESH.iJF11(qp[0,i],qp[1,i],qp[2,i]); iJF12 = MESH.iJF12(qp[0,i],qp[1,i],qp[2,i]);
+                iJF20 = MESH.iJF20(qp[0,i],qp[1,i],qp[2,i]); iJF21 = MESH.iJF21(qp[0,i],qp[1,i],qp[2,i]); iJF22 = MESH.iJF22(qp[0,i],qp[1,i],qp[2,i]);
                 
-                ellmatsBKx[i*nt:(i+1)*nt,j] = iJF00*dphii[0]+iJF10*dphii[1]
-                ellmatsBKy[i*nt:(i+1)*nt,j] = iJF01*dphii[0]+iJF11*dphii[1]
+                ellmatsBKx[i*nt:(i+1)*nt,j] = iJF00*dphii[0]+iJF10*dphii[1]+iJF20*dphii[2]
+                ellmatsBKy[i*nt:(i+1)*nt,j] = iJF01*dphii[0]+iJF11*dphii[1]+iJF21*dphii[2]
+                ellmatsBKz[i*nt:(i+1)*nt,j] = iJF02*dphii[0]+iJF12*dphii[1]+iJF22*dphii[2]
         
         BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
         BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)
-        return BKx, BKy
+        BKz = sparse(im,jm,ellmatsBKz,sizeM,nqp*nt)
+        return BKx, BKy, BKz
     
 def assembleE(MESH,space,matrix,order=0):
         
