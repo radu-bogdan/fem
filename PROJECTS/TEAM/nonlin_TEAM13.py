@@ -111,7 +111,7 @@ fyy_linear = lambda x,y,z : nu0 + 0*y
 fyz_linear = lambda x,y,z : z*0
 
 fzx_linear = lambda x,y,z : x*0
-fzy_linear = lambda x,y,z : y*y
+fzy_linear = lambda x,y,z : y*0
 fzz_linear = lambda x,y,z : nu0 + z*0
 
 ##########################################################################################
@@ -119,35 +119,67 @@ fzz_linear = lambda x,y,z : nu0 + z*0
 # TODO:
     
 
-# def g_nonlinear(x,y,z):
-#     return 1/2*mu.antiderivative(1)(x**2+y**2)
-
-# def gx_nonlinear(x,y,z):
-#     return mu(x**2+y**2)*x
-
-# def gy_nonlinear(x,y,z):
-#     return mu(x**2+y**2)*y
-
-# def gxx_nonlinear(x,y,z):
-#     return mu(x**2+y**2) + 2*x*dx_mu(x**2+y**2)*x
-
-# def gxy_nonlinear(x,y,z):
-#     return 2*x*y*dx_mu(x**2+y**2)
-
-# def gyx_nonlinear(x,y,z):
-#     return 2*x*y*dx_mu(x**2+y**2)
-
-# def gyy_nonlinear(x,y,z):
-#     return mu(x**2+y**2) + 2*y*dx_mu(x**2+y**2)*y
+def g_nonlinear(x,y,z):
+    return 1/2*mu.antiderivative(1)(x**2+y**2+z**2)
 
 
-# g_linear = lambda x,y,z : 1/(2*nu0)*(x**2+y**2)
-# gx_linear = lambda x,y,z : 1/nu0*x
-# gy_linear = lambda x,y,z : 1/nu0*y
-# gxx_linear = lambda x,y,z : 1/nu0 + 0*x
-# gxy_linear = lambda x,y,z : x*0
-# gyx_linear = lambda x,y,z : y*0
-# gyy_linear = lambda x,y,z : 1/nu0 + 0*y
+def gx_nonlinear(x,y,z):
+    return mu(x**2+y**2+z**2)*x
+
+def gy_nonlinear(x,y,z):
+    return mu(x**2+y**2+z**2)*y
+
+def gy_nonlinear(x,y,z):
+    return mu(x**2+y**2+z**2)*z
+
+
+def gxx_nonlinear(x,y,z):
+    return mu(x**2+y**2+z**2) + 2*x*dx_mu(x**2+y**2+z**2)*x
+
+def gxy_nonlinear(x,y,z):
+    return 2*x*y*dx_mu(x**2+y**2+z**2)
+
+def gxz_nonlinear(x,y,z):
+    return 2*x*z*dx_mu(x**2+y**2+z**2)
+
+
+def gyx_nonlinear(x,y,z):
+    return 2*x*y*dx_mu(x**2+y**2+z**2)
+
+def gyy_nonlinear(x,y,z):
+    return mu(x**2+y**2+z**2) + 2*y*dx_mu(x**2+y**2+z**2)*y
+
+def gyz_nonlinear(x,y,z):
+    return 2*y*z*dx_mu(x**2+y**2+z**2)
+
+
+def gzx_nonlinear(x,y,z):
+    return 2*x*z*dx_mu(x**2+y**2+z**2)
+
+def gzy_nonlinear(x,y,z):
+    return 2*y*z*dx_mu(x**2+y**2+z**2)
+
+def gzz_nonlinear(x,y,z):
+    return mu(x**2+y**2+z**2) + 2*z*dx_mu(x**2+y**2+z**2)*z
+
+
+g_linear = lambda x,y,z : 1/(2*nu0)*(x**2+y**2+z**2)
+
+gx_linear = lambda x,y,z : 1/nu0*x
+gy_linear = lambda x,y,z : 1/nu0*y
+gz_linear = lambda x,y,z : 1/nu0*z
+
+gxx_linear = lambda x,y,z : 1/nu0 + 0*x
+gxy_linear = lambda x,y,z : y*0
+gxz_linear = lambda x,y,z : z*0
+
+gyx_linear = lambda x,y,z : x*0
+gyy_linear = lambda x,y,z : 1/nu0 + 0*y
+gyz_linear = lambda x,y,z : z*0
+
+gzx_linear = lambda x,y,z : x*0
+gzy_linear = lambda x,y,z : y*y
+gzz_linear = lambda x,y,z : 1/nu0 + z*0
            
 
 

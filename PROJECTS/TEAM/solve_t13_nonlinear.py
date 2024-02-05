@@ -19,7 +19,7 @@ maxIter = 100
 # Tree/Cotree gauging
 ##############################################################################
 
-R = pde.tools.tree_cotree_gauge(MESH,random_edges=True)
+R = pde.tools.tree_cotree_gauge(MESH, random_edges=True)
 
 ##############################################################################
 # Assembly

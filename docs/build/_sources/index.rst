@@ -11,11 +11,11 @@ Welcome to FEM's documentation!
    :maxdepth: 3
    :caption: TEAM 13
 
-   notebooks/TEAM_13_geometry
-   notebooks/current_density
-   notebooks/magnetostatics
-   notebooks/TEAM_13_nonlinearity
-   notebooks/magnetostatics_nl
+   notebooks/TEAM_13/TEAM_13_geometry
+   notebooks/TEAM_13/TEAM_13_current_J
+   notebooks/TEAM_13/TEAM_13_vec_pot_lin
+   notebooks/TEAM_13/TEAM_13_nonlinearity
+   notebooks/TEAM_13/TEAM_13_vec_pot_nl
 
 .. toctree::
    :maxdepth: 2
