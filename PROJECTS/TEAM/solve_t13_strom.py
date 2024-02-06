@@ -187,10 +187,14 @@ j_hdiv = RS1.T@(RZdiv.T@xx)[:-MESH.nt]
 ##############################################################################
 unit_coil_P0 = pde.int.evaluate3(MESH, order = 0, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
 
+jx_hdiv = (phix_Hdiv.T@j_hdiv)*unit_coil.diagonal()
+jy_hdiv = (phiy_Hdiv.T@j_hdiv)*unit_coil.diagonal()
+jz_hdiv = (phiz_Hdiv.T@j_hdiv)*unit_coil.diagonal()
+
 phix_Hdiv_P0, phiy_Hdiv_P0, phiz_Hdiv_P0 = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = 0)
-jx_hdiv = (phix_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
-jy_hdiv = (phiy_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
-jz_hdiv = (phiz_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
+jx_hdiv_P0 = (phix_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
+jy_hdiv_P0 = (phiy_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
+jz_hdiv_P0 = (phiz_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 
 ##############################################################################
 
@@ -215,7 +219,7 @@ import vtklib
 grid = vtklib.createVTK(MESH)
 vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
 vtklib.add_L2_Vector(grid,jx_L2_P0,jy_L2_P0,jz_L2_P0,'j_l2')
-vtklib.add_L2_Vector(grid,jx_hdiv,jy_hdiv,jz_hdiv,'j_hdiv')
+vtklib.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
 
 vtklib.add_L2_Scalar(grid,potential_L2,'potential_L2')
 vtklib.writeVTK(grid, 'das2.vtu')

@@ -129,7 +129,7 @@ def gx_nonlinear(x,y,z):
 def gy_nonlinear(x,y,z):
     return mu(x**2+y**2+z**2)*y
 
-def gy_nonlinear(x,y,z):
+def gz_nonlinear(x,y,z):
     return mu(x**2+y**2+z**2)*z
 
 
@@ -178,7 +178,7 @@ gyy_linear = lambda x,y,z : 1/nu0 + 0*y
 gyz_linear = lambda x,y,z : z*0
 
 gzx_linear = lambda x,y,z : x*0
-gzy_linear = lambda x,y,z : y*y
+gzy_linear = lambda x,y,z : y*0
 gzz_linear = lambda x,y,z : 1/nu0 + z*0
            
 
