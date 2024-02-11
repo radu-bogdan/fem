@@ -3,7 +3,7 @@ sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sp
 
 from solve_t13_strom import *
-from nonlin_TEAM13 import *
+from nonlin_TEAM13_new import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 

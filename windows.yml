@@ -502,6 +502,7 @@ dependencies:
   - zlib-ng=2.0.7
   - zstandard=0.22.0
   - zstd=1.5.5
+  - spyder-line-profiler
   - pip:
       - gmsh==4.12.2
       - intel-openmp==2024.0.2

@@ -81,7 +81,7 @@ for face in mid_steel.faces: face.name = 'mid_steel_face'
 for face in ambient.faces: face.name = 'ambient_face'
 
 
-steel_h = 2.5
+steel_h = 10
 
 for face in r_steel.faces: face.maxh = steel_h
 for face in l_steel.faces: face.maxh = steel_h

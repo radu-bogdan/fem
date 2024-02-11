@@ -1,16 +1,25 @@
 name: pdefem
 channels:
+  - intel
   - conda-forge
 dependencies:
-  - python>=3.9
+  - python
   - pip
-  - numpy
-  - scipy
-  - openblas!=0.3.26  # until https://github.com/conda-forge/scipy-feedstock/pull/268 lands
-  - matplotlib
-  - numba
+  - intel::numpy
+  - intel::scipy
+  - intel::numba
+  # - intel::pandas
+  - intel::cython
+  # - intel::matplotlib
+  # - numpy
+  # - scipy
+  # - numba
   - pandas
+  # - cython
+  - matplotlib
+  # - openblas!=0.3.26  # until https://github.com/conda-forge/scipy-feedstock/pull/268 lands
   - jupyter
+  - jupyterlab
   - ipython !=8.7.0
   - spyder-kernels>=1.10.0
   - vtk>=9.2
@@ -35,6 +44,7 @@ dependencies:
   - pandoc
   - sphinx
   - spyder
+  - spyder-line-profiler
   - pip:
     - ngsolve
 
