@@ -4,8 +4,12 @@ from scipy import interpolate
 import numba as nb
 
 nu0 = 10**7/(4*np.pi)
-# k1 = 49.4; k2 = 1.3; k3 = 520.6
-k1 = 49.4; k2 = 1.46; k3 = 520.6
+
+# k1 = 49.4; k2 = 1.3; k3 = 120.6 # 21
+
+k1 = 49.4; k2 = 1.46; k3 = 520.6 # 21
+# k1 = 2.6; k2 = 2.72; k3 = 154.4 # 17
+# k1 = 3.8; k2 = 2.17; k3 = 396.2 # 21
 
 @nb.njit()
 def gen_nu(x):
@@ -13,13 +17,13 @@ def gen_nu(x):
     pos = 1/k2*np.log(1/k1*(nu0-k3))
     return nu_nl(x)*(x<pos)+nu0*(x>pos)
 
-xx = np.linspace(0,8,500)
-yy = np.exp(np.linspace(0,np.log(5*1e8),500))-1
+xx = np.linspace(0,8,5000)
+yy = np.exp(np.linspace(0,np.log(5*1e8),5000))-1
 
 nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'natural')
 spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
-dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
-# dx_nu = nu.derivative(1)
+# dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
+dx_nu = nu.derivative(1)
 
 gen_gs = interpolate.CubicSpline(xx*nu(xx**2), xx, bc_type = 'natural')
 mu = interpolate.CubicSpline(yy[1:]**2, gen_gs(yy[1:])/yy[1:], bc_type = 'natural')

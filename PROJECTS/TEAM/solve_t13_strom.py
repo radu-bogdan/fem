@@ -214,12 +214,17 @@ phi_j = x
 ##############################################################################
 
 
-import vtklib
+# import vtklib
+# grid = vtklib.createVTK(MESH)
+# vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
+# vtklib.add_L2_Vector(grid,jx_L2_P0,jy_L2_P0,jz_L2_P0,'j_l2')
+# vtklib.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
+# vtklib.add_L2_Scalar(grid,potential_L2,'potential_L2')
+# vtklib.writeVTK(grid, 'das2.vtu')
 
-grid = vtklib.createVTK(MESH)
-vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
-vtklib.add_L2_Vector(grid,jx_L2_P0,jy_L2_P0,jz_L2_P0,'j_l2')
-vtklib.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
-
-vtklib.add_L2_Scalar(grid,potential_L2,'potential_L2')
-vtklib.writeVTK(grid, 'das2.vtu')
+grid = pde.tools.vtklib.createVTK(MESH)
+pde.tools.vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
+pde.tools.vtklib.add_L2_Vector(grid,jx_L2_P0,jy_L2_P0,jz_L2_P0,'j_l2')
+pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
+pde.tools.add_L2_Scalar(grid,potential_L2,'potential_L2')
+pde.tools.vtklib.writeVTK(grid, 'das2.vtu')

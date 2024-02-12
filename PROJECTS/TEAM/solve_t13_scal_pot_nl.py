@@ -3,7 +3,7 @@ sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sps
 
 from solve_t13_strom import *
-from nonlin_TEAM13_new import *
+from nonlin_TEAM13 import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
@@ -23,10 +23,10 @@ Bx = curlphix_Hcurl.T @ A
 By = curlphiy_Hcurl.T @ A
 Bz = curlphiz_Hcurl.T @ A
 
-#richtig skalieren evtl!
-Hjx = Bx*10**7
-Hjy = By*10**7
-Hjz = Bz*10**7
+nu0 = 10**7/(4*np.pi)
+Hjx = Bx*nu0
+Hjy = By*nu0
+Hjz = Bz*nu0
 
 ##############################################################################
 # Assembly
@@ -113,11 +113,11 @@ for i in range(maxIter):
     u_old_i = u
     u = u + alpha*w
     
-    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha)+"|| J(u) : %2e" %J(u))
+    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
     
     # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
     #     break
-    if (np.abs(J(u)-J(u_old_i)) < 1e-1):
+    if (np.abs(J(u)-J(u_old_i)) < 1e-5):
         break
     
 elapsed = time.monotonic()-tm2
@@ -132,9 +132,9 @@ By_P0 = curlphiy_Hcurl_P0.T @ A
 Bz_P0 = curlphiz_Hcurl_P0.T @ A
 
 #richtig skalieren evtl!
-Hjx_P0 = Bx_P0*10**7
-Hjy_P0 = By_P0*10**7
-Hjz_P0 = Bz_P0*10**7
+Hjx_P0 = Bx_P0*nu0
+Hjy_P0 = By_P0*nu0
+Hjz_P0 = Bz_P0*nu0
 
 
 Hx = Hjx_P0 + ux

@@ -3,7 +3,7 @@ sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sp
 
 from solve_t13_strom import *
-from nonlin_TEAM13_new import *
+from nonlin_TEAM13 import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
@@ -38,8 +38,9 @@ curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space
 aJ = jx_hdiv @ D @ phix_Hcurl.T +\
      jy_hdiv @ D @ phiy_Hcurl.T +\
      jz_hdiv @ D @ phiz_Hcurl.T
-     
-aJ = 1e7*aJ
+
+nu0 = 10**7/(4*np.pi)
+aJ = nu0*aJ
 
 def gss(A):
     curl_Ax = curlphix_Hcurl.T@A; curl_Ay = curlphiy_Hcurl.T@A; curl_Az = curlphiz_Hcurl.T@A
@@ -150,11 +151,16 @@ Bz = curlphiz_Hcurl_P0.T @ A
 # Storing to vtk
 ##############################################################################
 
-import vtklib
+# import vtklib
+# grid = vtklib.createVTK(MESH)
+# vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
+# vtklib.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
+# vtklib.add_L2_Vector(grid,Bx,By,Bz,'B')
+# vtklib.writeVTK(grid, 'das2.vtu')
 
-grid = vtklib.createVTK(MESH)
-vtklib.add_H1_Scalar(grid, potential_H1, 'potential_H1')
-vtklib.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
-vtklib.add_L2_Vector(grid,Bx,By,Bz,'B')
 
-vtklib.writeVTK(grid, 'das2.vtu')
+grid = pde.tools.vtklib.createVTK(MESH)
+pde.tools.add_H1_Scalar(grid, potential_H1, 'potential_H1')
+pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
+pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
+pde.tools.vtklib.writeVTK(grid, 'das2.vtu')
