@@ -1,8 +1,16 @@
-import ngsolve as ng
-import netgen.occ as occ
+print('t13_geo')
+
+# import ngsolve as ng
+# import netgen.occ as occ
+# import time
+
+from imports import *
 
 # import netgen.gui
 # from netgen.webgui import Draw as DrawGeo
+
+tm = time.monotonic()
+println('Generating the geometry took ...  ')
 
 box1 = occ.Box(occ.Pnt(-100,-100,-50), occ.Pnt(100,100,50))
 box2 = occ.Box(occ.Pnt(-75,-75,-50), occ.Pnt(75,75,50))
@@ -81,7 +89,7 @@ for face in mid_steel.faces: face.name = 'mid_steel_face'
 for face in ambient.faces: face.name = 'ambient_face'
 
 
-steel_h = 2.5
+steel_h = 10
 
 for face in r_steel.faces: face.maxh = steel_h
 for face in l_steel.faces: face.maxh = steel_h
@@ -103,7 +111,10 @@ ambient.mat("ambient")
 
 geoOCC = occ.OCCGeometry(full)
 # ng.Draw(geoOCC)
+print(time.monotonic()-tm)
 
+tm = time.monotonic()
 geoOCCmesh = geoOCC.GenerateMesh()
+print('Generating the mesh took ...', time.monotonic()-tm)
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()

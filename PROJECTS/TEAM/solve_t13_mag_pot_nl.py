@@ -1,3 +1,5 @@
+print('solve_t13_mag_pot_nl')
+
 import sys
 sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sp
@@ -19,13 +21,13 @@ maxIter = 100
 # Tree/Cotree gauging
 ##############################################################################
 
-R = pde.tools.tree_cotree_gauge(MESH, random_edges=True)
+R = pde.tools.tree_cotree_gauge(MESH, random_edges = False).tocsr()
 
 ##############################################################################
 # Assembly
 ##############################################################################
 
-order = 1
+order = 0
 
 fem_linear = pde.int.evaluate3(MESH, order = order, regions = linear).diagonal()
 fem_nonlinear = pde.int.evaluate3(MESH, order = order, regions = nonlinear).diagonal()
@@ -35,12 +37,10 @@ D = pde.int.assemble3(MESH, order = order)
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
-aJ = jx_hdiv @ D @ phix_Hcurl.T +\
-     jy_hdiv @ D @ phiy_Hcurl.T +\
-     jz_hdiv @ D @ phiz_Hcurl.T
+aJ = jx_L2 @ D @ phix_Hcurl.T +\
+     jy_L2 @ D @ phiy_Hcurl.T +\
+     jz_L2 @ D @ phiz_Hcurl.T
 
-nu0 = 10**7/(4*np.pi)
-aJ = nu0*aJ
 
 def gss(A):
     curl_Ax = curlphix_Hcurl.T@A; curl_Ay = curlphiy_Hcurl.T@A; curl_Az = curlphiz_Hcurl.T@A
@@ -79,16 +79,15 @@ mu = 0.0001
 eps_newton = 1e-5
 factor_residual = 1/2
 
-tm = time.monotonic()
+tm2 = time.monotonic()
 for i in range(maxIter):
     
+    tm = time.monotonic()
     gssu = R.T @ gss(A) @ R
     gsu = R.T @ gs(A)
     
-    tm = time.monotonic()
     wS = chol(gssu).solve_A(-gsu)
     # wS = sp.linalg.spsolve(gssu, -gsu)
-    print('Solving took ', time.monotonic()-tm)
     
     w = R@wS
     
@@ -109,7 +108,7 @@ for i in range(maxIter):
     A_old_i = A
     A = A + alpha*w
     
-    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(A)+"|| ||grad||: %2e" %np.linalg.norm(R.T @ gs(A),np.inf)+"||alpha: %2e" % (alpha))
+    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %.2e" %J(A)+"|| ||grad||: %.2e" %np.linalg.norm(R.T @ gs(A),np.inf)+"||alpha: %.2e" % (alpha)+ "|| Step took : %.2f" %(time.monotonic()-tm))
     
     
     # if ( np.linalg.norm(R.T @ gs(A),np.inf) < eps_newton):
@@ -117,7 +116,7 @@ for i in range(maxIter):
     if (np.abs(J(A)-J(A_old_i)) < 1e-5):
         break
     
-elapsed = time.monotonic()-tm
+elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')
 
 
@@ -147,6 +146,13 @@ Bx = curlphix_Hcurl_P0.T @ A
 By = curlphiy_Hcurl_P0.T @ A
 Bz = curlphiz_Hcurl_P0.T @ A
 
+
+phix_Hcurl_P0, phiy_Hcurl_P0, phiz_Hcurl_P0 = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = 0)
+Ax = phix_Hcurl_P0.T @ A
+Ay = phiy_Hcurl_P0.T @ A
+Az = phiz_Hcurl_P0.T @ A
+
+
 ##############################################################################
 # Storing to vtk
 ##############################################################################
@@ -163,4 +169,5 @@ grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.add_H1_Scalar(grid, potential_H1, 'potential_H1')
 pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
 pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
+pde.tools.add_L2_Vector(grid,Ax,Ay,Az,'A')
 pde.tools.vtklib.writeVTK(grid, 'das2.vtu')

@@ -1,48 +1,48 @@
+print('solve_t13_scal_pot_nl')
+
 import sys
 sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sps
 
-from solve_t13_strom import *
 from nonlin_TEAM13 import *
+from solve_t13_mag_pot_lin import A
+from solve_t13_strom import *
 
+# @profile
+# def do():
+    
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
 ##############################################################################
 # B-H curves
 ##############################################################################
 
+order = 0
+
 linear = '*coil,default'
 nonlinear = 'r_steel,l_steel,mid_steel'
 maxIter = 100
 
-from solve_t13_mag_pot_lin import A
-
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
-Bx = curlphix_Hcurl.T @ A
-By = curlphiy_Hcurl.T @ A
-Bz = curlphiz_Hcurl.T @ A
-
-nu0 = 10**7/(4*np.pi)
-Hjx = Bx*nu0
-Hjy = By*nu0
-Hjz = Bz*nu0
+Hjx = 1*curlphix_Hcurl.T @ A # 1 is "mu0" here
+Hjy = 1*curlphiy_Hcurl.T @ A
+Hjz = 1*curlphiz_Hcurl.T @ A
 
 ##############################################################################
 # Assembly
 ##############################################################################
 
-order = 2
-
 D = pde.int.assemble3(MESH, order = order)
 
-phi_H1  = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = 1)
+# phi_H1  = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = 1)
 dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
 
 fem_linear = pde.int.evaluate3(MESH, order = order, regions = linear).diagonal()
 fem_nonlinear = pde.int.evaluate3(MESH, order = order, regions = nonlinear).diagonal()
 
 
+# @profile
 def gss(u):
     ux = dphix_H1.T@u; uy = dphiy_H1.T@u; uz = dphiz_H1.T@u
     
@@ -74,9 +74,7 @@ def J(u):
 
 
 
-R_out, R_int = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
-# RS = sp.bmat([[R_int[1:]],[R_out]])
-RS = R_int
+R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
 u = np.zeros(MESH.np)
 mu = 0.0001
@@ -86,13 +84,13 @@ factor_residual = 1/2
 tm2 = time.monotonic()
 for i in range(maxIter):
     
+    tm = time.monotonic()
+    
     gssu = RS @ gss(u) @ RS.T
     gsu = RS @ gs(u)
     
-    tm = time.monotonic()
     wS = chol(gssu).solve_A(-gsu)
     # wS = sps.linalg.spsolve(gssu,-gsu)
-    print('Solving took ', time.monotonic()-tm)
     
     w = RS.T@wS
     
@@ -113,10 +111,11 @@ for i in range(maxIter):
     u_old_i = u
     u = u + alpha*w
     
-    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %2e" %J(u)+"|| ||grad||: %2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %2e" % (alpha))
+    print ("NEWTON : %2d " %(i+1)+"||obj: %.2e" %J(u)+"|| ||grad||: %.2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm))
     
     # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
     #     break
+    
     if (np.abs(J(u)-J(u_old_i)) < 1e-5):
         break
     
@@ -127,14 +126,13 @@ curlphix_Hcurl_P0, curlphiy_Hcurl_P0, curlphiz_Hcurl_P0 = pde.hcurl.assemble3(ME
 dphix_H1_P0, dphiy_H1_P0, dphiz_H1_P0 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = 0)
 
 ux = dphix_H1_P0.T@u; uy = dphiy_H1_P0.T@u; uz = dphiz_H1_P0.T@u
-Bx_P0 = curlphix_Hcurl_P0.T @ A
-By_P0 = curlphiy_Hcurl_P0.T @ A
-Bz_P0 = curlphiz_Hcurl_P0.T @ A
+Bx_lin_P0 = curlphix_Hcurl_P0.T @ A
+By_lin_P0 = curlphiy_Hcurl_P0.T @ A
+Bz_lin_P0 = curlphiz_Hcurl_P0.T @ A
 
-#richtig skalieren evtl!
-Hjx_P0 = Bx_P0*nu0
-Hjy_P0 = By_P0*nu0
-Hjz_P0 = Bz_P0*nu0
+Hjx_P0 = Bx_lin_P0
+Hjy_P0 = By_lin_P0
+Hjz_P0 = Bz_lin_P0
 
 
 Hx = Hjx_P0 + ux
@@ -155,5 +153,7 @@ Bz_new = gz_linear(Hx,Hy,Hz)*fem_linear_P0 + gz_nonlinear(Hx,Hy,Hz)*fem_nonlinea
 
 grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.vtklib.add_L2_Vector(grid,Bx_new,By_new,Bz_new,'B_new')
-pde.tools.vtklib.add_L2_Vector(grid,Bx_P0,By_P0,Bz_P0,'B')
+pde.tools.vtklib.add_L2_Vector(grid,Bx_lin_P0,By_lin_P0,Bz_lin_P0,'B')
 pde.tools.vtklib.writeVTK(grid, 'magnetostatics_solution.vtu')
+    
+# do()

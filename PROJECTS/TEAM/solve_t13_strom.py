@@ -88,11 +88,13 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 # evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
 
 ##############################################################################
+nu0 = 10**7/(4*np.pi)
+scaling = nu0
+##############################################################################
 
-order = 1
+order = 0
 D = pde.int.assemble3(MESH, order = order)
 DB = pde.int.assembleB3(MESH, order = order)
-N1,N2,N3 = pde.int.assembleN3(MESH, order = order)
 unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
 
 ##############################################################################
@@ -114,7 +116,7 @@ K = dphix_H1 @ D @ unit_coil @ dphix_H1.T +\
     dphiy_H1 @ D @ unit_coil @ dphiy_H1.T +\
     dphiz_H1 @ D @ unit_coil @ dphiz_H1.T
 
-r = -RS0 @ K @ R1.T @ (1+np.zeros(R1.shape[0]))
+r = -RS0 @ K @ R1.T @ (scaling + np.zeros(R1.shape[0]))
 K = RS0 @ K @ RS0.T
 
 RZ = pde.tools.removeZeros(K)
@@ -126,8 +128,8 @@ r = RZ @ r
 
 sigma = 1#58.7e6
 x = chol(sigma*K).solve_A(r)
-potential_H1 = RS0.T @ RZ.T @ x + R1.T @ (1+np.zeros(R1.shape[0]))
-print('My code took ... ',time.monotonic()-tm)
+potential_H1 = RS0.T @ RZ.T @ x + R1.T @ (scaling + np.zeros(R1.shape[0]))
+print('My code computing J in L2 took ... ',time.monotonic()-tm)
 
 # stop
 
@@ -135,7 +137,9 @@ print('My code took ... ',time.monotonic()-tm)
 # Hdiv solver
 ##############################################################################
 
-order = 2
+tm = time.monotonic()
+
+order = 0
 phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
 divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
 
@@ -159,16 +163,11 @@ AA = sp.bmat([[M_Hdiv_coil_full, C_Hdiv_L2],
 RZdiv = pde.tools.removeZeros(AA)
 AA = RZdiv @ AA @ RZdiv.T
 
-# print(RS1.shape,RZdiv.shape)
-
 phiB_Hdiv = pde.hdiv.assembleB3(MESH, space = 'RT0', matrix = 'phi', shape = phix_Hdiv.shape, order = order)
 unit_coil_B = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, faces = 'new').diagonal()
 DB = pde.int.assembleB3(MESH, order = order)
 
-
-# rhs= (face_in_1*N1 + face_in_2*N2 + face_in_3*N3) @ DB @ phiB_Hdiv.T
-
-rhs = unit_coil_B @ DB @ phiB_Hdiv.T
+rhs = scaling*unit_coil_B @ DB @ phiB_Hdiv.T
 # print(rhs[rhs!=0],np.argwhere(rhs!=0))
 # rhs[np.argwhere(rhs!=0)[14]]=-0.5
 
@@ -182,7 +181,7 @@ xx = sp.linalg.spsolve(AA,rhs)
 
 potential_L2 = (RZdiv.T@xx)[-MESH.nt:]
 j_hdiv = RS1.T@(RZdiv.T@xx)[:-MESH.nt]
-
+print('My code computing J in Hdiv (mixed) took ... ',time.monotonic()-tm)
 
 ##############################################################################
 unit_coil_P0 = pde.int.evaluate3(MESH, order = 0, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
