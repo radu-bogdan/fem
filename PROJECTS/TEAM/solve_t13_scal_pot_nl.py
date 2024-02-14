@@ -21,7 +21,7 @@ order = 0
 
 linear = '*coil,default'
 nonlinear = 'r_steel,l_steel,mid_steel'
-maxIter = 100
+maxIter = 1000
 
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
@@ -78,6 +78,7 @@ R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
 u = np.zeros(MESH.np)
 mu = 0.0001
+# mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
 

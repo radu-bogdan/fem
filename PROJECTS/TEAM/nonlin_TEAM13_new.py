@@ -26,8 +26,8 @@ H2 = 1/mu0*(B2-Ms)
 B = np.array([0, 0.0025, 0.0050, 0.0125, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80])
 H = np.array([0, 16, 30, 54, 93, 143, 191, 210, 222, 233, 247, 258, 272, 289, 313, 342, 377, 433, 509, 648, 933, 1228, 1934, 2913, 4993, 7189, 9423])
 
-B = np.r_[B,B1,B2]
-H = np.r_[H,H1,H2]
+B = np.r_[B[6:],B1,B2]-B[6]
+H = np.r_[H[6:],H1,H2]-H[6]
 
 
 # plt.plot(H,B,'*')
@@ -35,8 +35,8 @@ H = np.r_[H,H1,H2]
 # plt.plot(H2,B2,'*')
 
 
-nu = interpolate.CubicSpline(B[1:]**2, H[1:]/B[1:], bc_type = 'natural')
-mu = interpolate.CubicSpline(H[1:]**2, B[1:]/H[1:], bc_type = 'natural')
+nu = interpolate.CubicSpline(B[1:]**2, H[1:]/B[1:], bc_type = 'not-a-knot')
+mu = interpolate.CubicSpline(H[1:]**2, B[1:]/H[1:], bc_type = 'not-a-knot') # natural
 
 spl = interpolate.make_smoothing_spline(B[1:]**2, nu.derivative()(B[1:]**2))
 dx_nu = interpolate.BSpline(B[1:]**2, spl(B[1:]**2)*(spl(B[1:]**2)>0),k=1)

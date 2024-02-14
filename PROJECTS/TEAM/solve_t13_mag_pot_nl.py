@@ -76,6 +76,7 @@ def J(A):
 
 A = np.zeros(curlphix_Hcurl.shape[0])
 mu = 0.0001
+# mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
 
@@ -101,7 +102,7 @@ for i in range(maxIter):
     # AmijoBacktracking
     float_eps = 1e-12; #float_eps = np.finfo(float).eps
     for kk in range(1000):
-        if J(A+alpha*w)-J(A) <= alpha*mu*(gsu@wS) + np.abs(J(A))*float_eps: break
+        if J(A+alpha*w)-J(A) <= alpha*mu*(gsu@wS) + 0*np.abs(J(A))*float_eps: break
         else: alpha = alpha*factor_residual
     
     

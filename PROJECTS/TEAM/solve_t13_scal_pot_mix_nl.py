@@ -85,8 +85,7 @@ def gs(b,psi):
 def J(b,psi):
     bx = b[:len(b)//3]; by = b[len(b)//3:2*len(b)//3]; bz = b[2*len(b)//3:]
     psix = dphix_H1.T@psi; psiy = dphiy_H1.T@psi; psiz = dphiz_H1.T@psi
-    return np.ones(D.size)@ D @(f_linear(bx,by,bz)*fem_linear + f_nonlinear(bx,by,bz)*fem_nonlinear +(-Hjx)*bx +(-Hjy)*by +(-Hjz)*bz -psix*bx -psiy*by -psiz*bz)        
-
+    return np.ones(D.size)@ D @(f_linear(bx,by,bz)*fem_linear + f_nonlinear(bx,by,bz)*fem_nonlinear +(-Hjx)*bx +(-Hjy)*by +(-Hjz)*bz -psix*bx -psiy*by -psiz*bz)
 
 
 R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
@@ -95,6 +94,7 @@ b = np.zeros(3*MESH.nt)
 psi = np.zeros(MESH.np)
 
 mu = 0.0001
+# mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
 
