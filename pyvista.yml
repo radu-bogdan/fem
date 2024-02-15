@@ -1,15 +1,17 @@
 name: pdefem
 channels:
+  - default
   - intel
   - conda-forge
 dependencies:
+  - conda install intel::intelpython3_full
   - python
   - pip
-  - intel::numpy
-  - intel::scipy
-  - intel::numba
+  - numpy
+  - scipy
+  - numba
   # - intel::pandas
-  - intel::cython
+  - cython
   # - intel::matplotlib
   # - numpy
   # - scipy

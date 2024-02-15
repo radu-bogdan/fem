@@ -1,4 +1,4 @@
-print('solve_t13_scal_pot_nl')
+print('solve_t13_scal_pot_mix_nl')
 
 from imports import *
 
@@ -93,7 +93,7 @@ R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 b = np.zeros(3*MESH.nt)
 psi = np.zeros(MESH.np)
 
-mu = 0.0001
+mu = 1e-4
 # mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
@@ -109,15 +109,20 @@ for i in range(maxIter):
     A = bmat([[R,-C@RS.T],
               [RS@C.T,None]]).tocsc()
     
-    r = np.r_[r1,0*RS@r2]
+    r = np.r_[r1,RS@r2]
+    
+    # w = sp.linalg.spsolve(A, -r)
+    # wb = w[:3*MESH.nt]
+    # wpsi = RS.T@w[3*MESH.nt:]
     
     tm3 = time.monotonic()
     iR = pde.tools.fastBlockInverse(R)    
     itm = time.monotonic()-tm3
     
     AA = RS@C.T@iR@C@RS.T
-    rr = RS@(-C.T@iR@r1+0*r2)
-    wpsi = RS.T@chol(AA).solve_A(-rr)
+    # rr = RS@(-C.T@iR@r1+0*r2)
+    rr = RS@(-C.T@iR@r1+r2)
+    wpsi = RS.T@chol(AA).solve_A(rr)
     wb = iR@(C@wpsi-r1)
     w = np.r_[RS@wpsi,wb]
     
@@ -133,6 +138,7 @@ for i in range(maxIter):
     for kk in range(1000):
         if J(b+alpha*wb,psi+alpha*wpsi)-J(b,psi) <= alpha*mu*(r@w)+ np.abs(J(b,psi))*float_eps: break
         else: alpha = alpha*factor_residual
+        # print(J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w),max(abs(w-w_old)))
     
     b_old_i = b
     psi_old_i = psi
