@@ -105,6 +105,8 @@ l_steel.mat("l_steel")
 mid_steel.mat("mid_steel")
 ambient.mat("ambient")
 
+# ambient.maxh = 5
+
 ##########################################################################
 # Generating mesh...
 ##########################################################################
@@ -116,5 +118,7 @@ print(time.monotonic()-tm)
 tm = time.monotonic()
 geoOCCmesh = geoOCC.GenerateMesh()
 print('Generating the mesh took ...', time.monotonic()-tm)
+
+# geoOCCmesh.SecondOrder()
 # geoOCCmesh.Refine()
 # geoOCCmesh.Refine()

@@ -11,9 +11,15 @@ tm = time.monotonic()
 
 nu0 = 10**7/(4*np.pi)
 
-k1 = 49.4; k2 = 3; k3 = 120.6 # 21
 
-# k1 = 49.4; k2 = 1.46; k3 = 520.6 # 21
+# k1 = 0.8; k2 = 10; k3 = 500.6 # 13/26/17
+# k1 = 50; k2 = 10; k3 = 500.6 # 9/18/15
+# k1 = 3; k2 = 1.1; k3 = 500.6 # 8/26/17
+# k1 = 2.4; k2 = 1.1; k3 = 100.6 # 14/33/19 - best so far
+# k1 = 2.4; k2 = 1.35; k3 = 10.6 # 16/33/23
+
+
+k1 = 49.4; k2 = 1.46; k3 = 520.6 # 21
 # k1 = 2.6; k2 = 2.72; k3 = 154.4 # 17
 # k1 = 3.8; k2 = 2.17; k3 = 396.2 # 21
 # k1 = 1; k2 = 10; k3 = 10 # 21
@@ -25,16 +31,16 @@ def gen_nu(x):
     return nu_nl(x)*(x<pos)+nu0*(x>pos)
 
 
-xx = np.linspace(0,8,5000)
-yy = np.exp(np.linspace(0,np.log(5*1e8),5000))-1
+xx = np.linspace(0,15,8000)
+yy = np.exp(np.linspace(0,np.log(5*1e8),8000))-1
 
-nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'natural')
+nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'not-a-knot')
 spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
 dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
 # dx_nu = nu.derivative(1)
 
-gen_gs = interpolate.CubicSpline(xx*nu(xx**2), xx, bc_type = 'natural')
-mu = interpolate.CubicSpline(yy[1:]**2, gen_gs(yy[1:])/yy[1:], bc_type = 'natural')
+gen_gs = interpolate.CubicSpline(xx*nu(xx**2), xx, bc_type = 'not-a-knot')
+mu = interpolate.CubicSpline(yy[1:]**2, gen_gs(yy[1:])/yy[1:], bc_type = 'not-a-knot')
 dx_mu = mu.derivative(1)
 
 # B = np.array([0, 0.0025, 0.0050, 0.0125, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80])
@@ -42,7 +48,7 @@ dx_mu = mu.derivative(1)
 
 # plt.close('all')
 
-# xx = np.linspace(0,8,3000)
+# xx = np.linspace(0,12,3000)
 # plt.figure()
 # plt.plot(xx,dx_nu.antiderivative(0)(xx),'.')
 # plt.plot(xx,dx_nu.antiderivative(1)(xx),'.')
@@ -57,11 +63,11 @@ dx_mu = mu.derivative(1)
 # plt.plot(yy,1/nu0+0*yy)
 # plt.plot(xx,dx_nu.antiderivative(0)(xx)*xx,'.')
 
-# # check inverse!
+# check inverse!
 
 # plt.figure()
 # plt.plot(mu(yy**2)*nu(mu(yy**2)**2*yy**2))
-# # plt.plot(nu(xx**2)*mu(nu(xx**2)**2*xx**2))
+# plt.plot(nu(xx**2)*mu(nu(xx**2)**2*xx**2))
 
 ##########################################################################################
 

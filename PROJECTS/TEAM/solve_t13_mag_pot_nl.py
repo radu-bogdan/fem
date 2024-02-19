@@ -37,10 +37,13 @@ D = pde.int.assemble3(MESH, order = order)
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
-aJ = jx_L2 @ D @ phix_Hcurl.T +\
-     jy_L2 @ D @ phiy_Hcurl.T +\
-     jz_L2 @ D @ phiz_Hcurl.T
+aJ = jx_hdiv @ D @ phix_Hcurl.T +\
+     jy_hdiv @ D @ phiy_Hcurl.T +\
+     jz_hdiv @ D @ phiz_Hcurl.T
 
+# aJ = jx_L2 @ D @ phix_Hcurl.T +\
+#      jy_L2 @ D @ phiy_Hcurl.T +\
+#      jz_L2 @ D @ phiz_Hcurl.T
 
 def gss(A):
     curl_Ax = curlphix_Hcurl.T@A; curl_Ay = curlphiy_Hcurl.T@A; curl_Az = curlphiz_Hcurl.T@A
@@ -75,7 +78,7 @@ def J(A):
 
 
 A = np.zeros(curlphix_Hcurl.shape[0])
-mu = 0.0001
+mu = 1e-2
 # mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
@@ -105,7 +108,6 @@ for i in range(maxIter):
         if J(A+alpha*w)-J(A) <= alpha*mu*(gsu@wS) + np.abs(J(A))*float_eps: break
         else: alpha = alpha*factor_residual
     
-    
     A_old_i = A
     A = A + alpha*w
     
@@ -114,7 +116,7 @@ for i in range(maxIter):
     
     # if ( np.linalg.norm(R.T @ gs(A),np.inf) < eps_newton):
     #     break
-    if (np.abs(J(A)-J(A_old_i)) < 1e-5):
+    if (np.abs(J(A)-J(A_old_i)) < 1e-8):
         break
     
 elapsed = time.monotonic()-tm2
@@ -169,6 +171,7 @@ Az = phiz_Hcurl_P0.T @ A
 grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.add_H1_Scalar(grid, potential_H1, 'potential_H1')
 pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
+pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
 pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
 pde.tools.add_L2_Vector(grid,Ax,Ay,Az,'A')
 pde.tools.vtklib.writeVTK(grid, 'das2.vtu')

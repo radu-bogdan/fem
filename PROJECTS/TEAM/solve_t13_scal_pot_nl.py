@@ -77,7 +77,7 @@ def J(u):
 R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
 u = np.zeros(MESH.np)
-mu = 0.0001
+mu = 1e-2
 # mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
@@ -117,7 +117,7 @@ for i in range(maxIter):
     # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
     #     break
     
-    if (np.abs(J(u)-J(u_old_i)) < 1e-5):
+    if (np.abs(J(u)-J(u_old_i)) < 1e-8):
         break
     
 elapsed = time.monotonic()-tm2

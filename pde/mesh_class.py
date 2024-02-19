@@ -1015,13 +1015,68 @@ def intersect2d(X, Y):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
+def sort_3D(t):
+    if (t.shape[1] == 5):
+        sorted_t = npy.c_[npy.sort(t[:,:4]),t[:,4]]
+    if (t.shape[1] == 11):
+        def f(x,y):
+            if x+y == 1: return 4
+            if x+y == 2: return 5
+            if x+y == 4: return 8
+            if x+y == 5: return 9
+            
+            if x+y == 3 and x*y == 0: return 6
+            if x+y == 3 and x*y == 2: return 7
+            return 'error'
+        
+        f = npy.vectorize(f)
+        
+        ts = npy.argsort(t[:,:4])
+        
+        ts5  = f(ts[:,0],ts[:,1])
+        ts6  = f(ts[:,0],ts[:,2])
+        ts7  = f(ts[:,0],ts[:,3])
+        ts8  = f(ts[:,1],ts[:,2])
+        ts9  = f(ts[:,1],ts[:,3])
+        ts10 = f(ts[:,2],ts[:,3])
+        
+        indices = npy.c_[ts,ts5,ts6,ts7,ts8,ts9,ts10,10+0*ts10]
+        sorted_t = npy.take_along_axis(t, indices, axis=1).astype(int)
+    return sorted_t
+
+
+
 class mesh3:
+            
+    
     def __init__(self, p, e, f, t, r3d = npy.empty(0), r2d = npy.empty(0), r1d = npy.empty(0), identifications = npy.empty(0)):
         
-        # erst t sortieren! ... macht einiges einfacher
-        t = npy.c_[npy.sort(t[:,:4]),t[:,4]]
-
-
+        # erst t sortieren! ... macht alles einfacher
+        t = sort_3D(t)
+        
         edges_tets = npy.r_[npy.c_[t[:,0],t[:,1]],
                             npy.c_[t[:,0],t[:,2]],
                             npy.c_[t[:,0],t[:,3]],
@@ -1040,6 +1095,13 @@ class mesh3:
         f_new = npy.sort(f[:,:3])
             
         nt = t.shape[0]
+        
+        if (t.shape[1] == 11):
+            maxp = t[:,:4].max()
+            pm = p.copy()
+            p = p[:maxp+1,:]
+        else:
+            pm = p.copy()
 
         #############################################################################################################
         edges = npy.sort(edges_tets).astype(int)
@@ -1074,9 +1136,9 @@ class mesh3:
         #############################################################################################################
 
         EdgesToFaces = npy.r_[npy.c_[TetsToEdges[:,[3,4,5]],TetsToFaces[:,0]],
-            npy.c_[TetsToEdges[:,[1,2,5]],TetsToFaces[:,1]],
-            npy.c_[TetsToEdges[:,[0,2,4]],TetsToFaces[:,2]],
-            npy.c_[TetsToEdges[:,[0,1,3]],TetsToFaces[:,3]]]
+                                npy.c_[TetsToEdges[:,[1,2,5]],TetsToFaces[:,1]],
+                                npy.c_[TetsToEdges[:,[0,2,4]],TetsToFaces[:,2]],
+                                npy.c_[TetsToEdges[:,[0,1,3]],TetsToFaces[:,3]]]
 
         EdgesToFaces = EdgesToFaces[EdgesToFaces[:, 3].argsort()]
         EdgesToFaces = npy.unique(EdgesToFaces, axis=0)[:,:3]
@@ -1141,6 +1203,48 @@ class mesh3:
             JB20 = lambda x,y : B21-B20
             JB21 = lambda x,y : B22-B20
             
+        
+        
+        if (t.shape[1] == 11):
+            t0 = t[:,0]; t1 = t[:,1]; t2 = t[:,2]; t3 = t[:,3]; t4 = t[:,4]; t5 = t[:,5]; t6 = t[:,6]; t7 = t[:,7]; t8 = t[:,8]; t9 = t[:,9]
+            C00 = pm[t0,0]; C01 = pm[t1,0]; C02 = pm[t2,0]; C03 = pm[t3,0]; C04 = pm[t4,0]; C05 = pm[t5,0]; C06 = pm[t6,0]; C07 = pm[t7,0]; C08 = pm[t8,0]; C09 = pm[t9,0];
+            C10 = pm[t0,1]; C11 = pm[t1,1]; C12 = pm[t2,1]; C13 = pm[t3,1]; C14 = pm[t4,1]; C15 = pm[t5,1]; C16 = pm[t6,1]; C17 = pm[t7,1]; C18 = pm[t8,1]; C19 = pm[t9,1];
+            C20 = pm[t0,2]; C21 = pm[t1,2]; C22 = pm[t2,2]; C23 = pm[t3,2]; C24 = pm[t4,2]; C25 = pm[t5,2]; C26 = pm[t6,2]; C27 = pm[t7,2]; C28 = pm[t8,2]; C29 = pm[t9,2];
+            
+            Fx = lambda x,y,z : C00*(1-x-y-z)*(1-2*x-2*y-2*z) + C01*x*(2*x-1) + C02*y*(2*y-1) + C03*z*(2*z-1) + C04*4*x*(1-x-y-z) + C05*4*y*(1-x-y-z) + C06*4*z*(1-x-y-z) + C07*4*x*y + C08*4*x*z  + C09*4*y*z
+            Fy = lambda x,y,z : C10*(1-x-y-z)*(1-2*x-2*y-2*z) + C11*x*(2*x-1) + C12*y*(2*y-1) + C13*z*(2*z-1) + C14*4*x*(1-x-y-z) + C15*4*y*(1-x-y-z) + C16*4*z*(1-x-y-z) + C17*4*x*y + C18*4*x*z  + C19*4*y*z
+            Fz = lambda x,y,z : C20*(1-x-y-z)*(1-2*x-2*y-2*z) + C21*x*(2*x-1) + C22*y*(2*y-1) + C23*z*(2*z-1) + C24*4*x*(1-x-y-z) + C25*4*y*(1-x-y-z) + C26*4*z*(1-x-y-z) + C27*4*x*y + C28*4*x*z  + C29*4*y*z
+            
+            JF00 = lambda x,y,z: -C00*(-2*x - 2*y - 2*z + 1) - 2*C00*(-x - y - z + 1) + 2*C01*x + C01*(2*x - 1) - 4*C04*x + 4*C04*(-x - y - z + 1) - 4*C05*y - 4*C06*z + 4*C07*y + 4*C08*z
+            JF01 = lambda x,y,z: -C00*(-2*x - 2*y - 2*z + 1) - 2*C00*(-x - y - z + 1) + 2*C02*y + C02*(2*y - 1) - 4*C04*x - 4*C05*y + 4*C05*(-x - y - z + 1) - 4*C06*z + 4*C07*x + 4*C09*z
+            JF02 = lambda x,y,z: -C00*(-2*x - 2*y - 2*z + 1) - 2*C00*(-x - y - z + 1) + 2*C03*z + C03*(2*z - 1) - 4*C04*x - 4*C05*y - 4*C06*z + 4*C06*(-x - y - z + 1) + 4*C08*x + 4*C09*y
+            
+            JF10 = lambda x,y,z: -C10*(-2*x - 2*y - 2*z + 1) - 2*C10*(-x - y - z + 1) + 2*C11*x + C11*(2*x - 1) - 4*C14*x + 4*C14*(-x - y - z + 1) - 4*C15*y - 4*C16*z + 4*C17*y + 4*C18*z
+            JF11 = lambda x,y,z: -C10*(-2*x - 2*y - 2*z + 1) - 2*C10*(-x - y - z + 1) + 2*C12*y + C12*(2*y - 1) - 4*C14*x - 4*C15*y + 4*C15*(-x - y - z + 1) - 4*C16*z + 4*C17*x + 4*C19*z
+            JF12 = lambda x,y,z: -C10*(-2*x - 2*y - 2*z + 1) - 2*C10*(-x - y - z + 1) + 2*C13*z + C13*(2*z - 1) - 4*C14*x - 4*C15*y - 4*C16*z + 4*C16*(-x - y - z + 1) + 4*C18*x + 4*C19*y
+            
+            JF20 = lambda x, y, z: -C20*(-2*x - 2*y - 2*z + 1) - 2*C20*(-x - y - z + 1) + 2*C21*x + C21*(2*x - 1) - 4*C24*x + 4*C24*(-x - y - z + 1) - 4*C25*y - 4*C26*z + 4*C27*y + 4*C28*z
+            JF21 = lambda x, y, z: -C20*(-2*x - 2*y - 2*z + 1) - 2*C20*(-x - y - z + 1) + 2*C22*y + C22*(2*y - 1) - 4*C24*x - 4*C25*y + 4*C25*(-x - y - z + 1) - 4*C26*z + 4*C27*x + 4*C29*z
+            JF22 = lambda x, y, z: -C20*(-2*x - 2*y - 2*z + 1) - 2*C20*(-x - y - z + 1) + 2*C23*z + C23*(2*z - 1) - 4*C24*x - 4*C25*y - 4*C26*z + 4*C26*(-x - y - z + 1) + 4*C28*x + 4*C29*y
+
+            # TODO! des bleibt erstma linear...
+            f0 = f[:,0]; f1 = f[:,1]; f2 = f[:,2]
+            B00 = p[f0,0]; B01 = p[f1,0]; B02 = p[f2,0]
+            B10 = p[f0,1]; B11 = p[f1,1]; B12 = p[f2,1]
+            B20 = p[f0,2]; B21 = p[f1,2]; B22 = p[f2,2]
+            
+            Bx = lambda x,y : B00*(1-x-y) +B01*x +B02*y
+            By = lambda x,y : B10*(1-x-y) +B11*x +B12*y
+            Bz = lambda x,y : B20*(1-x-y) +B21*x +B22*y
+            
+            JB00 = lambda x,y : B01-B00
+            JB01 = lambda x,y : B02-B00
+            
+            JB10 = lambda x,y : B11-B10
+            JB11 = lambda x,y : B12-B10
+            
+            JB20 = lambda x,y : B21-B20
+            JB21 = lambda x,y : B22-B20
 
         detA = lambda x,y,z : +JF00(x,y,z)*(JF11(x,y,z)*JF22(x,y,z)-JF12(x,y,z)*JF21(x,y,z)) \
                               -JF01(x,y,z)*(JF10(x,y,z)*JF22(x,y,z)-JF12(x,y,z)*JF20(x,y,z)) \
@@ -1227,8 +1331,8 @@ class mesh3:
         self.p = p; self.np = p.shape[0]
         self.e = npy.c_[e_new,e[:,-1]]; self.ne = e_new.shape[0]
         self.f = npy.c_[f_new,f[:,-1]]; self.nf = f_new.shape[0]
-        # self.t = t[:,npy.r_[:3,-1]]; self.nt = nt
-        self.t = t; self.nt = nt
+        self.t = t[:,npy.r_[:4,-1]]; self.nt = nt
+        # self.t = t; self.nt = nt
         
         self.regions_3d = list(r3d)
         self.regions_2d = list(r2d)
@@ -1260,7 +1364,7 @@ class mesh3:
         self.iJB01 = iJB01; self.iJB11 = iJB11; self.iJB21 = iJB21
 
         #############################################################################################################
-
+    
     def __repr__(self):
         return f"np:{self.np}, nt:{self.nt}, nf:{self.nf}, ne:{self.ne}, nf_all:{self.NoFaces}, ne_all:{self.NoEdges}"
     

@@ -24,8 +24,105 @@ full.mat("full")
 geoOCC = occ.OCCGeometry(full)
 ng.Draw(geoOCC)
 
-geoOCCmesh = geoOCC.GenerateMesh(maxh = 30)
+geoOCCmesh = geoOCC.GenerateMesh(maxh = 25)
 # geoOCCmesh.Refine()
+
+geoOCCmesh.SecondOrder()
+
+npoints2D = geoOCCmesh.Elements2D().NumPy()['np'].max()
+npoints3D = geoOCCmesh.Elements3D().NumPy()['np'].max()
+
+p = geoOCCmesh.Coordinates()
+
+t = npy.c_[geoOCCmesh.Elements3D().NumPy()['nodes'].astype(npy.uint64)[:,:npoints3D],
+           geoOCCmesh.Elements3D().NumPy()['index'].astype(npy.uint64)]-1
+
+f = npy.c_[geoOCCmesh.Elements2D().NumPy()['nodes'].astype(npy.uint64)[:,:npoints2D],
+           geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64)]-1
+
+e = npy.c_[geoOCCmesh.Elements1D().NumPy()['nodes'].astype(npy.uint64)[:,:((npoints2D+1)//2)],
+           geoOCCmesh.Elements1D().NumPy()['index'].astype(npy.uint64)]-1
+
+max_ed_index = geoOCCmesh.Elements1D().NumPy()['index'].astype(npy.uint64).max()
+max_bc_index = geoOCCmesh.Elements2D().NumPy()['index'].astype(npy.uint64).max()
+max_rg_index = geoOCCmesh.Elements3D().NumPy()['index'].astype(npy.uint64).max()
+
+import sys
+sys.path.insert(0,'../../') # adds parent directory
+import pde
+
+order = 3
+
+geoOCCmesh.SecondOrder()
+
+MESH = pde.mesh3.netgen(geoOCCmesh)
+print(MESH)
+
+
+
+
+# def second_order_sort(t):
+#     def f(x,y):
+#         if x+y == 1: return 4
+#         if x+y == 2: return 5
+#         if x+y == 4: return 8
+#         if x+y == 5: return 9
+        
+#         if x+y == 3 and x*y == 0: return 6
+#         if x+y == 3 and x*y == 2: return 7
+#         return 'error'
+    
+#     f = np.vectorize(f)
+    
+#     ts = npy.argsort(t[:,:4])
+    
+#     ts5  = f(ts[:,0],ts[:,1])
+#     ts6  = f(ts[:,0],ts[:,2])
+#     ts7  = f(ts[:,0],ts[:,3])
+#     ts8  = f(ts[:,1],ts[:,2])
+#     ts9  = f(ts[:,1],ts[:,3])
+#     ts10 = f(ts[:,2],ts[:,3])
+    
+#     indices = np.c_[ts,ts5,ts6,ts7,ts8,ts9,ts10,10+0*ts10]
+#     sorted_t = np.take_along_axis(t, indices, axis=1)
+#     return sorted_t
+
+
+
+# new_t = second_order_sort(t)
+# # new_t = t
+
+# p0 = p[new_t[:,0],:]
+# p1 = p[new_t[:,1],:]
+# p2 = p[new_t[:,2],:]
+# p3 = p[new_t[:,3],:]
+
+# p4 = p[new_t[:,4],:]
+# p5 = p[new_t[:,5],:]
+# p6 = p[new_t[:,6],:]
+# p7 = p[new_t[:,7],:]
+# p8 = p[new_t[:,8],:]
+# p9 = p[new_t[:,9],:]
+
+# p10= p[new_t[:,10],:]
+
+# print((p4-1/2*(p0+p1)).max())
+# print((p5-1/2*(p0+p2)).max())
+# print((p6-1/2*(p0+p3)).max())
+# print((p7-1/2*(p1+p2)).max())
+# print((p8-1/2*(p1+p3)).max())
+# print((p9-1/2*(p2+p3)).max())
+
+
+
+# Test:
+
+
+
+
+
+
+# stop
 
 mesh = ng.Mesh(geoOCCmesh)
 # mesh.Refine()

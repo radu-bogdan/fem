@@ -67,9 +67,13 @@ dphix_H1_P0, dphiy_H1_P0, dphiz_H1_P0 = pde.h1.assemble3(MESH, space = 'P1', mat
 KR = R.T@K_Hcurl@R
 MR = R.T@M_Hcurl@R
 
-r = jx_L2 @ D @ phix_Hcurl.T +\
-    jy_L2 @ D @ phiy_Hcurl.T +\
-    jz_L2 @ D @ phiz_Hcurl.T
+# r = jx_L2 @ D @ phix_Hcurl.T +\
+#     jy_L2 @ D @ phiy_Hcurl.T +\
+#     jz_L2 @ D @ phiz_Hcurl.T
+
+r = jx_hdiv @ D @ phix_Hcurl.T +\
+    jy_hdiv @ D @ phiy_Hcurl.T +\
+    jz_hdiv @ D @ phiz_Hcurl.T
 
 ##############################################################################
 # Only coil stuff...
