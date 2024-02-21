@@ -9,6 +9,7 @@ import time
 import scipy.sparse as sp
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
+MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 
@@ -88,11 +89,9 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 # evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
 
 ##############################################################################
-nu0 = 10**7/(4*np.pi)
-sigma = 3.526*10**7 # S/m
-I0 = 1000
-
-scaling = sigma/100
+sigma = 6*1e7
+crosssection = 25*100
+scaling = 1/crosssection*1000/75/2
 ##############################################################################
 
 order = 0
@@ -129,8 +128,7 @@ r = RZ @ r
 
 # stop
 
-sigma = 1#58.7e6
-x = chol(sigma*K).solve_A(r)
+x = chol(K).solve_A(r)
 potential_H1 = RS0.T @ RZ.T @ x + R1.T @ (scaling + np.zeros(R1.shape[0]))
 print('My code computing J in L2 took ... ',time.monotonic()-tm)
 
@@ -183,7 +181,7 @@ rhs = RZdiv @ rhs
 xx = sp.linalg.spsolve(AA,rhs)
 
 potential_L2 = (RZdiv.T@xx)[-MESH.nt:]
-j_hdiv = RS1.T@(RZdiv.T@xx)[:-MESH.nt]
+j_hdiv = sigma*RS1.T@(RZdiv.T@xx)[:-MESH.nt]
 print('My code computing J in Hdiv (mixed) took ... ',time.monotonic()-tm)
 
 ##############################################################################
@@ -202,14 +200,14 @@ jz_hdiv_P0 = (phiz_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 
 ##############################################################################
 
-jx_L2 = -(dphix_H1.T@potential_H1)*unit_coil.diagonal()
-jy_L2 = -(dphiy_H1.T@potential_H1)*unit_coil.diagonal()
-jz_L2 = -(dphiz_H1.T@potential_H1)*unit_coil.diagonal()
+jx_L2 = -sigma*(dphix_H1.T@potential_H1)*unit_coil.diagonal()
+jy_L2 = -sigma*(dphiy_H1.T@potential_H1)*unit_coil.diagonal()
+jz_L2 = -sigma*(dphiz_H1.T@potential_H1)*unit_coil.diagonal()
 
 dphix_H1_P0, dphiy_H1_P0, dphiz_H1_P0 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = 0)
-jx_L2_P0 = -(dphix_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
-jy_L2_P0 = -(dphiy_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
-jz_L2_P0 = -(dphiz_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
+jx_L2_P0 = -sigma*(dphix_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
+jy_L2_P0 = -sigma*(dphiy_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
+jz_L2_P0 = -sigma*(dphiz_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
 
 phi_j = x
 

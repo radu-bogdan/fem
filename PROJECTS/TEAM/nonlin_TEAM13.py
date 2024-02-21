@@ -1,6 +1,5 @@
 print('nonlin_TEAM13')
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate
@@ -19,8 +18,8 @@ nu0 = 10**7/(4*np.pi)
 # k1 = 2.4; k2 = 1.35; k3 = 10.6 # 16/33/23
 
 
-k1 = 49.4; k2 = 1.46; k3 = 520.6 # 21
-# k1 = 2.6; k2 = 2.72; k3 = 154.4 # 17
+# k1 = 49.4; k2 = 1.46; k3 = 520.6 # 21
+k1 = 2.6; k2 = 2.72; k3 = 154.4 # 17
 # k1 = 3.8; k2 = 2.17; k3 = 396.2 # 21
 # k1 = 1; k2 = 10; k3 = 10 # 21
 
@@ -63,7 +62,7 @@ dx_mu = mu.derivative(1)
 # plt.plot(yy,1/nu0+0*yy)
 # plt.plot(xx,dx_nu.antiderivative(0)(xx)*xx,'.')
 
-# check inverse!
+# # check inverse!
 
 # plt.figure()
 # plt.plot(mu(yy**2)*nu(mu(yy**2)**2*yy**2))

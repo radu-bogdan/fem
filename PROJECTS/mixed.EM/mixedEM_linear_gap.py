@@ -45,7 +45,7 @@ m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 plot = 0
-level = 0
+level = 2
 
 open_file = open('mesh_full'+str(level)+'.pkl', "rb")
 # open_file = open('mesh'+str(level)+'.pkl', "rb")

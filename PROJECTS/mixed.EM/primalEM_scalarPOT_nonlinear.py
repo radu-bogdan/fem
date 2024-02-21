@@ -7,7 +7,7 @@ writer = FFMpegWriter(fps = 50, metadata = dict(title = 'Motor'))
 # Parameters
 ##########################################################################################
 
-ORDER = 1
+ORDER = 2
 refinements = 1
 plot = 1
 # rot_speed = (((18*2-1)*2-1)*2-1)*2-1
@@ -28,7 +28,7 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 0
+    level = 2
     
     
 print("LEVEL " , level)
@@ -267,7 +267,7 @@ for m in range(refinements):
             
             # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
             #     break
-            if (np.abs(J(u)-J(u_old_i)) < 1e-1):
+            if (np.abs(J(u)-J(u_old_i)) < 1e-5):
                 break
             
         # print('im out!!!!!!!!!')

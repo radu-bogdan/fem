@@ -20,7 +20,7 @@ def assemble(MESH,space,matrix,order=-1):
     LIST_DOF = MESH.FEMLISTS[space]['TRIG']['LIST_DOF']
     
     if order != -1:
-        qp,we = quadrature.keast(order); nqp = len(we)
+        qp,we = quadrature.dunavant(order); nqp = len(we)
     
     #####################################################################################
     # Mass matrix
@@ -34,7 +34,7 @@ def assemble(MESH,space,matrix,order=-1):
         ellmatsB = npy.zeros((nqp*nt,lphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
+        jm = npy.tile(npy.c_[:nt*nqp].reshape(nt,nqp).T.flatten(),(lphi,1)).T
         
         for j in range(lphi):
             for i in range(nqp):
@@ -54,27 +54,23 @@ def assemble(MESH,space,matrix,order=-1):
         
         ellmatsBKx = npy.zeros((nqp*nt,ldphi))
         ellmatsBKy = npy.zeros((nqp*nt,ldphi))
-        ellmatsBKz = npy.zeros((nqp*nt,ldphi))
         
         im = npy.tile(LIST_DOF,(nqp,1))
-        jm = npy.tile(npy.c_[0:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
+        jm = npy.tile(npy.c_[:nt*nqp].reshape(nt,nqp).T.flatten(),(ldphi,1)).T
         
         for j in range(ldphi):
             for i in range(nqp):
-                dphii = dphi[j](qp[0,i],qp[1,i],qp[2,i])
-                detA = MESH.detA(qp[0,i],qp[1,i],qp[2,i])
-                iJF00 = MESH.iJF00(qp[0,i],qp[1,i],qp[2,i]); iJF01 = MESH.iJF01(qp[0,i],qp[1,i],qp[2,i]); iJF02 = MESH.iJF02(qp[0,i],qp[1,i],qp[2,i]);
-                iJF10 = MESH.iJF10(qp[0,i],qp[1,i],qp[2,i]); iJF11 = MESH.iJF11(qp[0,i],qp[1,i],qp[2,i]); iJF12 = MESH.iJF12(qp[0,i],qp[1,i],qp[2,i]);
-                iJF20 = MESH.iJF20(qp[0,i],qp[1,i],qp[2,i]); iJF21 = MESH.iJF21(qp[0,i],qp[1,i],qp[2,i]); iJF22 = MESH.iJF22(qp[0,i],qp[1,i],qp[2,i]);
+                dphii = dphi[j](qp[0,i],qp[1,i])
+                detA = MESH.detA(qp[0,i],qp[1,i])
+                iJF00 = MESH.iJF00(qp[0,i],qp[1,i]); iJF01 = MESH.iJF01(qp[0,i],qp[1,i]);
+                iJF10 = MESH.iJF10(qp[0,i],qp[1,i]); iJF11 = MESH.iJF11(qp[0,i],qp[1,i]);
                 
-                ellmatsBKx[i*nt:(i+1)*nt,j] = iJF00*dphii[0]+iJF10*dphii[1]+iJF20*dphii[2]
-                ellmatsBKy[i*nt:(i+1)*nt,j] = iJF01*dphii[0]+iJF11*dphii[1]+iJF21*dphii[2]
-                ellmatsBKz[i*nt:(i+1)*nt,j] = iJF02*dphii[0]+iJF12*dphii[1]+iJF22*dphii[2]
+                ellmatsBKx[i*nt:(i+1)*nt,j] = iJF00*dphii[0]+iJF10*dphii[1]
+                ellmatsBKy[i*nt:(i+1)*nt,j] = iJF01*dphii[0]+iJF11*dphii[1]
         
         BKx = sparse(im,jm,ellmatsBKx,sizeM,nqp*nt)
         BKy = sparse(im,jm,ellmatsBKy,sizeM,nqp*nt)
-        BKz = sparse(im,jm,ellmatsBKz,sizeM,nqp*nt)
-        return BKx, BKy, BKz
+        return BKx, BKy
     
 def assembleE(MESH,space,matrix,order=0):
         

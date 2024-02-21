@@ -8,6 +8,7 @@ from solve_t13_strom import *
 from nonlin_TEAM13 import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
+MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 # B-H curves
@@ -116,7 +117,7 @@ for i in range(maxIter):
     
     # if ( np.linalg.norm(R.T @ gs(A),np.inf) < eps_newton):
     #     break
-    if (np.abs(J(A)-J(A_old_i)) < 1e-8):
+    if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i)+1))):
         break
     
 elapsed = time.monotonic()-tm2

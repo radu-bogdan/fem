@@ -117,6 +117,9 @@ print(time.monotonic()-tm)
 
 tm = time.monotonic()
 geoOCCmesh = geoOCC.GenerateMesh()
+
+
+
 print('Generating the mesh took ...', time.monotonic()-tm)
 
 # geoOCCmesh.SecondOrder()

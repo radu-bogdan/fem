@@ -12,6 +12,7 @@ from solve_t13_strom import *
 # def do():
     
 MESH = pde.mesh3.netgen(geoOCCmesh)
+MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 # B-H curves
@@ -117,7 +118,7 @@ for i in range(maxIter):
     # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
     #     break
     
-    if (np.abs(J(u)-J(u_old_i)) < 1e-8):
+    if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i)+1))):
         break
     
 elapsed = time.monotonic()-tm2

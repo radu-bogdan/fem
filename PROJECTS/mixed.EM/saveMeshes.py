@@ -19,7 +19,7 @@ j3 = motor_npz['j3']
 geoOCCmesh = geoOCC.GenerateMesh()
 ngsolvemesh = ng.Mesh(geoOCCmesh)
 
-nums = 3
+nums = 2
 MESH = []
 
 for i in range(nums):
@@ -46,7 +46,7 @@ import dill
 import pickle
 import pde
 
-nums = 0
+nums = 2
 open_file = open('mesh_full'+str(nums)+'.pkl', "rb")
 MESH_LOADED = dill.load(open_file)
 open_file.close()

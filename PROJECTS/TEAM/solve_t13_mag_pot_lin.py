@@ -7,6 +7,7 @@ from scipy import sparse as sp
 from solve_t13_strom import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
+MESH.p = 1/1000*MESH.p
 
 # @profile
 # def do():
@@ -22,7 +23,7 @@ ambient_edges_indices = np.setdiff1d(np.arange(MESH.NoEdges),ambient_edges_indic
 # edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
 # edges = MESH.EdgesToVertices
 # R = pde.tools.tree_cotree_gauge(MESH, edges = edges)
-R = pde.tools.tree_cotree_gauge(MESH, random_edges=True)
+R = pde.tools.tree_cotree_gauge(MESH, random_edges = True)
 
 ##############################################################################
 # Assembly

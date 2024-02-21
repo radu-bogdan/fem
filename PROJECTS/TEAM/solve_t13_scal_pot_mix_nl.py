@@ -10,6 +10,7 @@ from solve_t13_mag_pot_lin import A
 # def do():
     
 MESH = pde.mesh3.netgen(geoOCCmesh)
+MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 # B-H curves
@@ -152,7 +153,10 @@ for i in range(maxIter):
             
     # if ( np.linalg.norm(r,np.inf) < eps_newton):
     #     break
-    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8):
+    # if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8):
+    #     break
+    
+    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i)+1))):
         break
     
 elapsed = time.monotonic()-tm2
