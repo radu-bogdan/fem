@@ -155,7 +155,7 @@ for i in range(maxIter):
     # if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8):
     #     break
     
-    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i)+1))):
+    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
         break
     
 elapsed = time.monotonic()-tm2
@@ -171,4 +171,5 @@ grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.vtklib.add_L2_Vector(grid,bx,by,bz,'B_new2')
 pde.tools.vtklib.writeVTK(grid, 'magnetostatics_solution2.vtu')
     
+print(np.sqrt(bx**2+by**2+bz**2).max())
 # do()

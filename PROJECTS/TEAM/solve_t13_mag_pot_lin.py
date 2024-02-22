@@ -24,7 +24,7 @@ R = pde.tools.tree_cotree_gauge(MESH, random_edges = True)
 # Assembly
 ##############################################################################
 
-order = 0
+order = 1
 
 phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
 dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)

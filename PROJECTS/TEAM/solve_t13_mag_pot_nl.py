@@ -27,7 +27,7 @@ R = pde.tools.tree_cotree_gauge(MESH, random_edges = False).tocsr()
 # Assembly
 ##############################################################################
 
-order = 0
+order = 1
 
 fem_linear = pde.int.evaluate3(MESH, order = order, regions = linear).diagonal()
 fem_nonlinear = pde.int.evaluate3(MESH, order = order, regions = nonlinear).diagonal()
@@ -116,7 +116,7 @@ for i in range(maxIter):
     
     # if ( np.linalg.norm(R.T @ gs(A),np.inf) < eps_newton):
     #     break
-    if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i)+1))):
+    if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i))+1)):
         break
     
 elapsed = time.monotonic()-tm2
@@ -175,3 +175,6 @@ pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
 pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
 pde.tools.add_L2_Vector(grid,Ax,Ay,Az,'A')
 pde.tools.vtklib.writeVTK(grid, 'vector_potential.vtu')
+
+
+print(np.sqrt(Bx**2+By**2+Bz**2).max())

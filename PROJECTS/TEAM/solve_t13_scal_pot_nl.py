@@ -117,7 +117,7 @@ for i in range(maxIter):
     # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
     #     break
     
-    if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i)+1))):
+    if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
         break
     
 elapsed = time.monotonic()-tm2
@@ -157,4 +157,5 @@ pde.tools.vtklib.add_L2_Vector(grid,Bx_new,By_new,Bz_new,'B_new')
 pde.tools.vtklib.add_L2_Vector(grid,Bx_lin_P0,By_lin_P0,Bz_lin_P0,'B')
 pde.tools.vtklib.writeVTK(grid, 'magnetostatics_solution.vtu')
     
+print(np.sqrt(Bx_new**2+By_new**2+Bz_new**2).max())
 # do()

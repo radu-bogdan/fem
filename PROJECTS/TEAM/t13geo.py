@@ -90,6 +90,7 @@ for face in ambient.faces: face.name = 'ambient_face'
 
 
 steel_h = 0.01
+steel_h = 0.003
 
 for face in r_steel.faces: face.maxh = steel_h
 for face in l_steel.faces: face.maxh = steel_h
@@ -105,7 +106,7 @@ l_steel.mat("l_steel")
 mid_steel.mat("mid_steel")
 ambient.mat("ambient")
 
-# ambient.maxh = 5
+ambient.maxh = 0.005
 
 ##########################################################################
 # Generating mesh...

@@ -63,37 +63,11 @@ identifications = (np.c_[points_to_duplicate,new_points]).astype(int)
 MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.regions_1d,identifications = identifications)
 
 ##############################################################################
-# Current density (approx)
-##############################################################################
-
-# J1 = lambda x,y,z : np.c_[ 1+0*x,   0*y, 0*z]
-# J2 = lambda x,y,z : np.c_[   0*x, 1+0*y, 0*z]
-# J3 = lambda x,y,z : np.c_[-1+0*x,   0*y, 0*z]
-# J4 = lambda x,y,z : np.c_[   0*x,-1+0*y, 0*z]
-# JR = lambda x,y,z,m,n : np.c_[-(y-n)*1/np.sqrt((x-m)**2+(y-n)**2),
-#                                (x-m)*1/np.sqrt((x-m)**2+(y-n)**2),
-#                                 0*z]
-#
-# J = lambda x,y,z : np.tile(((x<= 50)*(x>= -50)*(y< -75)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*J1(x,y,z) +\
-#                    np.tile(((x<= 50)*(x>= -50)*(y>= 75)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*J3(x,y,z) +\
-#                    np.tile(((x<=-75)*(x>=-100)*(y<= 50)*(y>= -50)*(z>-50)*(z<50)),(3,1)).T*J4(x,y,z) +\
-#                    np.tile(((x>= 75)*(x<= 100)*(y<= 50)*(y>= -50)*(z>-50)*(z<50)),(3,1)).T*J2(x,y,z) +\
-#                    np.tile(((x>= 50)*(x<= 100)*(y>= 50)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50, 50) +\
-#                    np.tile(((x<=-50)*(x>=-100)*(y<=-50)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50,-50) +\
-#                    np.tile(((x<=-50)*(x>=-100)*(y>= 50)*(y<= 100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z,-50, 50) +\
-#                    np.tile(((x>= 50)*(x<= 100)*(y<=-50)*(y>=-100)*(z>-50)*(z<50)),(3,1)).T*JR(x,y,z, 50,-50)
-#
-# evJ = J(MESH.mp_tet[:,0],MESH.mp_tet[:,1],MESH.mp_tet[:,2])
-#
-# evJx = evJ[:,0]; evJy = evJ[:,1]; evJz = evJ[:,2]
-
-##############################################################################
 sigma = 6*1e7
-crosssection = 25*100
-scaling = 1/crosssection*1000/75/2
+scaling = 0.004375 # Volts -> about 1000A
 ##############################################################################
 
-order = 0
+order = 1
 D = pde.int.assemble3(MESH, order = order)
 DB = pde.int.assembleB3(MESH, order = order)
 unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
@@ -139,7 +113,7 @@ print('My code computing J in L2 took ... ',time.monotonic()-tm)
 
 tm = time.monotonic()
 
-order = 0
+order = 1
 phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
 divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
 
