@@ -28,7 +28,7 @@ corner1_int = corner1_int-cyl1_int; corner1_ext = corner1_ext-cyl1_ext
 corner2_ext = occ.Box(occ.Pnt(-0.100,-0.100,-0.050), occ.Pnt(-0.075,-0.075,0.050))
 cyl2_ext = occ.Cylinder(occ.Pnt(-0.075,-0.075,-0.050), occ.Z, r=0.025, h=0.100)
 corner2_int = occ.Box(occ.Pnt(-0.075,-0.075,-0.050), occ.Pnt(-0.050,-0.050,0.050))
-cyl2_int = occ.Cylinder(occ.Pnt(-0.050,-0.050,-0.050), occ.Z, r=25, h=0.100)
+cyl2_int = occ.Cylinder(occ.Pnt(-0.050,-0.050,-0.050), occ.Z, r=0.025, h=0.100)
 corner2_int = corner2_int-cyl2_int; corner2_ext = corner2_ext-cyl2_ext
 
 corner3_ext = occ.Box(occ.Pnt(0.075,-0.075,-0.050), occ.Pnt(0.100,-0.100,0.050))
@@ -89,7 +89,7 @@ for face in mid_steel.faces: face.name = 'mid_steel_face'
 for face in ambient.faces: face.name = 'ambient_face'
 
 
-steel_h = 10
+steel_h = 0.01
 
 for face in r_steel.faces: face.maxh = steel_h
 for face in l_steel.faces: face.maxh = steel_h

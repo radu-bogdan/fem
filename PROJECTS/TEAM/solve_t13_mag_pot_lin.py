@@ -7,7 +7,6 @@ from scipy import sparse as sp
 from solve_t13_strom import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
-# MESH.p = 1/1000*MESH.p
 
 # @profile
 # def do():
@@ -94,7 +93,8 @@ Bz = curlphiz_Hcurl_P0.T @ A
 grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.add_H1_Scalar(grid, potential_H1, 'potential_H1')
 pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
+pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
 pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
-pde.tools.vtklib.writeVTK(grid, 'das2.vtu')
+pde.tools.vtklib.writeVTK(grid, 'vector_potential.vtu')
 
 # do()

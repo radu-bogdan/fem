@@ -12,7 +12,6 @@ from solve_t13_strom import *
 # def do():
     
 MESH = pde.mesh3.netgen(geoOCCmesh)
-MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 # B-H curves

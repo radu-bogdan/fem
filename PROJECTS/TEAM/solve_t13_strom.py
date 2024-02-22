@@ -90,7 +90,7 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 ##############################################################################
 sigma = 6*1e7
 crosssection = 25*100
-scaling = 1/crosssection*1000/75/10/5
+scaling = 1/crosssection*1000/75/2
 ##############################################################################
 
 order = 0

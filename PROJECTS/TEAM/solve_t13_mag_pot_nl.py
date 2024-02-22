@@ -8,7 +8,6 @@ from solve_t13_strom import *
 from nonlin_TEAM13 import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
-MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 # B-H curves
@@ -175,4 +174,4 @@ pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
 pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
 pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
 pde.tools.add_L2_Vector(grid,Ax,Ay,Az,'A')
-pde.tools.vtklib.writeVTK(grid, 'das2.vtu')
+pde.tools.vtklib.writeVTK(grid, 'vector_potential.vtu')
