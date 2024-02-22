@@ -7,7 +7,7 @@ from scipy import sparse as sp
 from solve_t13_strom import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
-MESH.p = 1/1000*MESH.p
+# MESH.p = 1/1000*MESH.p
 
 # @profile
 # def do():
@@ -15,10 +15,6 @@ MESH.p = 1/1000*MESH.p
 ##############################################################################
 # Tree/Cotree gauging
 ##############################################################################
-
-ambient_edges_indices = pde.tools.getIndices(MESH.regions_2d,'ambient_face')
-ambient_edges_indices = np.unique(MESH.EdgesToFaces[np.in1d(MESH.FacesToVertices[:,3],ambient_edges_indices)])
-ambient_edges_indices = np.setdiff1d(np.arange(MESH.NoEdges),ambient_edges_indices)
 
 # edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
 # edges = MESH.EdgesToVertices

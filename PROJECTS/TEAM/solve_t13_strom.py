@@ -9,11 +9,10 @@ import time
 import scipy.sparse as sp
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
-MESH.p = 1/1000*MESH.p
 
 ##############################################################################
 
-face_index = pde.tools.getIndices(MESH.regions_2d,'coil_cut_1')
+face_index = pde.tools.getIndices(MESH.regions_2d, 'coil_cut_1')
 faces = MESH.f[MESH.BoundaryFaces_Region == face_index,:3]
 new_faces = faces.copy()
 
@@ -91,7 +90,7 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 ##############################################################################
 sigma = 6*1e7
 crosssection = 25*100
-scaling = 1/crosssection*1000/75/2
+scaling = 1/crosssection*1000/75/10/5
 ##############################################################################
 
 order = 0
