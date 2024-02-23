@@ -120,9 +120,10 @@ for i in range(maxIter):
     itm = time.monotonic()-tm3
     
     AA = RS@C.T@iR@C@RS.T
-    # rr = RS@(-C.T@iR@r1+0*r2)
     rr = RS@(-C.T@iR@r1+r2)
     wpsi = RS.T@chol(AA).solve_A(-rr)
+    # wpsi = RS.T@sp.linalg.spsolve(AA, -rr)
+    
     wb = iR@(C@wpsi-r1)
     w = np.r_[RS@wpsi,wb]
     
