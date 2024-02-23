@@ -106,17 +106,17 @@ for i in range(maxIter):
     R,C = gss(b)
     r1,r2 = gs(b,psi)
     
-    # A = bmat([[R,-C@RS.T],
-    #           [RS@C.T,None]]).tocsc()
+    A = bmat([[R,-C@RS.T],
+              [RS@C.T,None]]).tocsc()
     
-    # r = np.r_[r1,RS@r2]
+    r = np.r_[r1,RS@r2]
     
     # w = sp.linalg.spsolve(A, -r)
     # wb2 = w[:3*MESH.nt]
     # wpsi2 = RS.T@w[3*MESH.nt:]
     
     tm3 = time.monotonic()
-    iR = pde.tools.fastBlockInverse(R)    
+    iR = pde.tools.fastBlockInverse(R)
     itm = time.monotonic()-tm3
     
     AA = RS@C.T@iR@C@RS.T
@@ -136,9 +136,10 @@ for i in range(maxIter):
     #     else: alpha = alpha*factor_residual
     
     # AmijoBacktracking
-    float_eps = 1e-12; #float_eps = np.finfo(float).eps
+    float_eps = 1e-16; #float_eps = np.finfo(float).eps
+    Jbpsi = J(b,psi)
     for kk in range(1000):
-        if J(b+alpha*wb,psi+alpha*wpsi)-J(b,psi) <= alpha*mu*(r2@wpsi)+ np.abs(J(b,psi))*float_eps: break
+        if J(b+alpha*wb,psi+alpha*wpsi)-Jbpsi <= alpha*mu*(r2@wpsi)+ np.abs(Jbpsi)*float_eps: break
         else: alpha = alpha*factor_residual
         # print(J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w),max(abs(w-w_old)))
     
@@ -148,15 +149,19 @@ for i in range(maxIter):
     b = b + alpha*wb
     psi = psi + alpha*wpsi
     
-    print ("NEWTON : %2d " %(i+1)+"||obj: %.2e" %J(b,psi)+"|| ||grad||: %.2e" %np.linalg.norm(np.r_[r1,RS@r2],np.inf)+"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm) + "|| inv took : %.2f" %(itm))
-            
-    # if ( np.linalg.norm(r,np.inf) < eps_newton):
-    #     break
-    # if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8):
-    #     break
+    residual = w.T@A@w
+    residual2 = np.abs(r@np.r_[RS@psi,b])
     
-    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
+    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(b,psi)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm) + "|| inv took : %.2f" %(itm))
+            
+    
+    
+    
+    if (residual2 < eps_newton):
         break
+    
+    # if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
+    #     break
     
 elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')
@@ -169,7 +174,7 @@ bx = b[:len(b)//3]; by = b[len(b)//3:2*len(b)//3]; bz = b[2*len(b)//3:]
 
 grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.vtklib.add_L2_Vector(grid,bx,by,bz,'B_new2')
-pde.tools.vtklib.writeVTK(grid, 'magnetostatics_solution2.vtu')
+pde.tools.vtklib.writeVTK(grid, 'scalar_potential_mix.vtu')
     
 print(np.sqrt(bx**2+by**2+bz**2).max())
 # do()

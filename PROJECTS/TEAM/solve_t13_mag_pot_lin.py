@@ -82,9 +82,9 @@ A = cholKR.solve_A(R.T@r)
 # x = pde.pcg(KR,R.T@r,output=True,maxit=1e14,tol=1e-14)
 A = R@A
 
-Bx = curlphix_Hcurl_P0.T @ A
-By = curlphiy_Hcurl_P0.T @ A
-Bz = curlphiz_Hcurl_P0.T @ A
+Bx_lin = curlphix_Hcurl_P0.T @ A
+Bx_lin = curlphiy_Hcurl_P0.T @ A
+Bx_lin = curlphiz_Hcurl_P0.T @ A
 
 ##############################################################################
 # Storing to vtk
@@ -94,7 +94,7 @@ grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.add_H1_Scalar(grid, potential_H1, 'potential_H1')
 pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
 pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
-pde.tools.add_L2_Vector(grid,Bx,By,Bz,'B')
-pde.tools.vtklib.writeVTK(grid, 'vector_potential.vtu')
+pde.tools.add_L2_Vector(grid,Bx_lin,Bx_lin,Bx_lin,'B')
+pde.tools.vtklib.writeVTK(grid, 'vector_potential_lin.vtu')
 
 # do()

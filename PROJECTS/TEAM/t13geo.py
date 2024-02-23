@@ -89,12 +89,17 @@ for face in mid_steel.faces: face.name = 'mid_steel_face'
 for face in ambient.faces: face.name = 'ambient_face'
 
 
-steel_h = 0.01
-steel_h = 0.003
+# steel_h = 0.01
 
-for face in r_steel.faces: face.maxh = steel_h
-for face in l_steel.faces: face.maxh = steel_h
-for face in mid_steel.faces: face.maxh = steel_h
+# steel_h = 0.0008
+# for edge in r_steel.edges: edge.maxh = steel_h
+# for edge in l_steel.edges: edge.maxh = steel_h
+# for edge in mid_steel.edges: edge.maxh = steel_h
+
+# steel_hf = 0.05
+# for face in r_steel.faces: face.maxh = steel_hf
+# for face in l_steel.faces: face.maxh = steel_hf
+# for face in mid_steel.faces: face.maxh = steel_hf
 
 
 coil.faces[6].name = 'coil_cut_1'
@@ -106,7 +111,8 @@ l_steel.mat("l_steel")
 mid_steel.mat("mid_steel")
 ambient.mat("ambient")
 
-ambient.maxh = 0.005
+# ambient.maxh = 0.05
+# coil.maxh = 0.05
 
 ##########################################################################
 # Generating mesh...
@@ -120,6 +126,7 @@ tm = time.monotonic()
 geoOCCmesh = geoOCC.GenerateMesh()
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
+print(MESH)
 
 print('Generating the mesh took ...', time.monotonic()-tm)
 

@@ -103,22 +103,25 @@ for i in range(maxIter):
     #     else: alpha = alpha*factor_residual
     
     # AmijoBacktracking
-    float_eps = 1e-12; #float_eps = np.finfo(float).eps
+    float_eps = 1e-16; #float_eps = np.finfo(float).eps
+    Ju = J(u)
     for kk in range(1000):
-        
-        if J(u+alpha*w)-J(u) <= alpha*mu*(gsu@wS) + np.abs(J(u))*float_eps: break
+        if J(u+alpha*w)-Ju <= alpha*mu*(gsu@wS) + np.abs(Ju)*float_eps: break
         else: alpha = alpha*factor_residual
     
     u_old_i = u
     u = u + alpha*w
     
-    print ("NEWTON : %2d " %(i+1)+"||obj: %.2e" %J(u)+"|| ||grad||: %.2e" %np.linalg.norm(RS @ gs(u),np.inf)+"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm))
+    residual = wS.T@gssu@wS
+    residual2 = np.abs((RS@u)@gsu)
     
-    # if ( np.linalg.norm(RS @ gs(u),np.inf) < eps_newton):
-    #     break
+    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(u)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm))
     
-    if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
+    if (residual2  < eps_newton):
         break
+    
+    # if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
+    #     break
     
 elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')
@@ -155,7 +158,7 @@ Bz_new = gz_linear(Hx,Hy,Hz)*fem_linear_P0 + gz_nonlinear(Hx,Hy,Hz)*fem_nonlinea
 grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.vtklib.add_L2_Vector(grid,Bx_new,By_new,Bz_new,'B_new')
 pde.tools.vtklib.add_L2_Vector(grid,Bx_lin_P0,By_lin_P0,Bz_lin_P0,'B')
-pde.tools.vtklib.writeVTK(grid, 'magnetostatics_solution.vtu')
+pde.tools.vtklib.writeVTK(grid, 'scalar_potential.vtu')
     
 print(np.sqrt(Bx_new**2+By_new**2+Bz_new**2).max())
 # do()

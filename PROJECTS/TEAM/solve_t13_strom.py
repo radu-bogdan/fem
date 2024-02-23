@@ -64,7 +64,7 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 
 ##############################################################################
 sigma = 6*1e7
-scaling = 0.004375 # Volts -> about 1000A
+scaling = 0.004375*2 # Volts -> about 1000A
 ##############################################################################
 
 order = 1

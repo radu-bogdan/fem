@@ -27,7 +27,7 @@ R = pde.tools.tree_cotree_gauge(MESH, random_edges = False).tocsr()
 # Assembly
 ##############################################################################
 
-order = 1
+order = 0
 
 fem_linear = pde.int.evaluate3(MESH, order = order, regions = linear).diagonal()
 fem_nonlinear = pde.int.evaluate3(MESH, order = order, regions = nonlinear).diagonal()
@@ -37,9 +37,12 @@ D = pde.int.assemble3(MESH, order = order)
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
-aJ = jx_hdiv @ D @ phix_Hcurl.T +\
-     jy_hdiv @ D @ phiy_Hcurl.T +\
-     jz_hdiv @ D @ phiz_Hcurl.T
+phix_Hcurl_o1, phiy_Hcurl_o1, phiz_Hcurl_o1 = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = 1)
+D1 = pde.int.assemble3(MESH, order = 1)
+
+aJ = jx_hdiv @ D1 @ phix_Hcurl_o1.T +\
+     jy_hdiv @ D1 @ phiy_Hcurl_o1.T +\
+     jz_hdiv @ D1 @ phiz_Hcurl_o1.T
 
 # aJ = jx_L2 @ D @ phix_Hcurl.T +\
 #      jy_L2 @ D @ phiy_Hcurl.T +\
@@ -103,21 +106,25 @@ for i in range(maxIter):
     #     else: alpha = alpha*factor_residual
     
     # AmijoBacktracking
-    float_eps = 1e-12; #float_eps = np.finfo(float).eps
+    float_eps = 1e-16; #float_eps = np.finfo(float).eps
+    JA = J(A)
     for kk in range(1000):
-        if J(A+alpha*w)-J(A) <= alpha*mu*(gsu@wS) + np.abs(J(A))*float_eps: break
+        if J(A+alpha*w)-JA <= alpha*mu*(gsu@wS) + np.abs(JA)*float_eps: break
         else: alpha = alpha*factor_residual
     
     A_old_i = A
     A = A + alpha*w
     
-    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %.2e" %J(A)+"|| ||grad||: %.2e" %np.linalg.norm(R.T @ gs(A),np.inf)+"||alpha: %.2e" % (alpha)+ "|| Step took : %.2f" %(time.monotonic()-tm))
+    residual = ((R.T@w).T@gssu@(R.T@w))
+    residual2 = np.abs((R.T@A)@gsu)
+    
+    print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %.9e" %J(A)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha)+ "|| Step took : %.2f" %(time.monotonic()-tm))
     
     
-    # if ( np.linalg.norm(R.T @ gs(A),np.inf) < eps_newton):
-    #     break
-    if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i))+1)):
+    if (residual2 < eps_newton):
         break
+    # if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i))+1)):
+    #     break
     
 elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')
