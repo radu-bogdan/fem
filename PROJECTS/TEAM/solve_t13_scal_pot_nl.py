@@ -105,6 +105,7 @@ for i in range(maxIter):
     float_eps = 1e-16; #float_eps = np.finfo(float).eps
     Ju = J(u)
     for kk in range(1000):
+        if np.isnan(J(u+alpha*w)): print('nan action')
         if J(u+alpha*w)-Ju <= alpha*mu*(gsu@wS) + np.abs(Ju)*float_eps: break
         else: alpha = alpha*factor_residual
     

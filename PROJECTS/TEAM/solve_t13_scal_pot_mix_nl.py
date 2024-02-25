@@ -94,7 +94,7 @@ b = np.zeros(3*MESH.nt)
 psi = np.zeros(MESH.np)
 
 mu = 1e-2
-# mu = 1/2
+# mu = 1
 eps_newton = 1e-5
 factor_residual = 1/2
 
@@ -136,13 +136,19 @@ for i in range(maxIter):
     #     if np.linalg.norm(gs(u+alpha*w),np.inf) <= np.linalg.norm(gs(u),np.inf): break
     #     else: alpha = alpha*factor_residual
     
+    # wbx = wb[:len(b)//3]; wby = wb[len(b)//3:2*len(b)//3]; wbz = wb[2*len(b)//3:]
+    # f_nonlinear(wbx,wby,wbz)
+    # stop
+    
+    
     # AmijoBacktracking
     float_eps = 1e-16; #float_eps = np.finfo(float).eps
     Jbpsi = J(b,psi)
     for kk in range(1000):
+        if np.isnan(J(b+alpha*wb,psi+alpha*wpsi)): print('nan action')
         if J(b+alpha*wb,psi+alpha*wpsi)-Jbpsi <= alpha*mu*(r2@wpsi)+ np.abs(Jbpsi)*float_eps: break
         else: alpha = alpha*factor_residual
-        # print(J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w),max(abs(w-w_old)))
+        print(J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w))
     
     b_old_i = b
     psi_old_i = psi
