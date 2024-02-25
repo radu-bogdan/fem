@@ -59,7 +59,6 @@ def gss(u):
     Kzx = dphix_H1 @ D @ sps.diags(gzx_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gzx_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiz_H1.T
     Kzy = dphiy_H1 @ D @ sps.diags(gzy_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gzy_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiz_H1.T
     
-    
     return Kxx + Kyy + Kzz + Kxy + Kxz + Kyx + Kyz + Kzx + Kzy 
     
 def gs(u):
@@ -157,6 +156,7 @@ Bz_new = gz_linear(Hx,Hy,Hz)*fem_linear_P0 + gz_nonlinear(Hx,Hy,Hz)*fem_nonlinea
 
 grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.vtklib.add_L2_Vector(grid,Bx_new,By_new,Bz_new,'B_new')
+pde.tools.vtklib.add_L2_Vector(grid,Hx,Hy,Hz,'H_new')
 pde.tools.vtklib.add_L2_Vector(grid,Bx_lin_P0,By_lin_P0,Bz_lin_P0,'B')
 pde.tools.vtklib.writeVTK(grid, 'scalar_potential.vtu')
     

@@ -153,9 +153,10 @@ for i in range(maxIter):
     residual = w.T@A@w
     residual2 = np.abs(r@np.r_[RS@psi,b])
     
-    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(b,psi)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm) + "|| inv took : %.2f" %(itm))
-            
+    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(b,psi)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm) + "|| inv took : %.2f" %(itm))            
     
+    # bx = b[:len(b)//3]; by = b[len(b)//3:2*len(b)//3]; bz = b[2*len(b)//3:]
+    # print(np.sqrt(bx**2+by**2+bz**2).max())
     
     
     if (residual2 < eps_newton):

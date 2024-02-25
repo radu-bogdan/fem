@@ -6,39 +6,77 @@ from scipy import interpolate
 import numba as nb
 import time
 
+
+all_linear = 0
+
 tm = time.monotonic()
 
 nu0 = 10**7/(4*np.pi)
+# k1 = 3; k2 = 1.8; k3 = 30.6    # -/27/18
+
+# k1 = 3; k2 = 1.8; k3 = 0     # 13/23/24
+# k1 = 3; k2 = 1.8; k3 = 500.6 #  6/16/13
+# k1 = 3; k2 = 1.8; k3 = 50.6  #  9/27/17
+# k1 = 2; k2 = 1.8; k3 = 50.6  #  9/28/16, 11/39/21 (0.002), -/38/28 (0.0015)
 
 
-# k1 = 0.8; k2 = 10; k3 = 500.6 # 13/26/17
+# k1 = 3; k2 = 2.3; k3 = 50.6  # 11/25/18
+
+
+
 # k1 = 50; k2 = 10; k3 = 500.6 # 9/18/15
-# k1 = 3; k2 = 1.1; k3 = 500.6 # 8/26/17
+# k1 = 3; k2 = 0.5; k3 = 500.6 # 8/26/17
 # k1 = 2.4; k2 = 1.1; k3 = 100.6 # 14/33/19 - best so far
 # k1 = 2.4; k2 = 1.35; k3 = 10.6 # 16/33/23
 
 
 # k1 = 49.4; k2 = 1.46; k3 = 520.6 # 21
-k1 = 2.6; k2 = 2.72; k3 = 154.4 # 17
-# k1 = 3.8; k2 = 2.17; k3 = 396.2 # 21
+# k1 = 2.6; k2 = 2.72; k3 = 154.4 # 17
+k1 = 3.8; k2 = 2.17; k3 = 396.2 # 21
 # k1 = 1; k2 = 10; k3 = 10 # 21
 
-@nb.njit()
+# @nb.njit()
+# def gen_nu(x):
+#     nu_nl = lambda x : (k1*np.exp(k2*x)+k3)
+#     pos = 1/k2*np.log(1/k1*(nu0-k3))
+#     val = nu_nl(x)*(x<pos)+nu0*(x>pos)
+    
+#     if np.isnan(val):
+#         return nu0
+#     else:
+#         return val
+
 def gen_nu(x):
     nu_nl = lambda x : (k1*np.exp(k2*x)+k3)
     pos = 1/k2*np.log(1/k1*(nu0-k3))
-    return nu_nl(x)*(x<pos)+nu0*(x>pos)
+    val = nu_nl(x)
+    
+    if np.isnan(val):
+        return nu0
+    else:
+        return val
+    
+gen_nu = np.vectorize(gen_nu)
+
+# @nb.njit()
+# def gen_nu(x):
+#     nu_nl = lambda x : (k1*np.exp(k2*x)+k3)
+#     # pos = 1/k2*np.log(1/k1*(nu0-k3))
+#     return nu_nl(x)#*(x<pos)+nu0*(x>pos)
 
 
-xx = np.linspace(0,15,8000)
-yy = np.exp(np.linspace(0,np.log(5*1e8),8000))-1
+xx = np.linspace(0,30,800)
+yy = np.exp(np.linspace(0,np.log(20*1e8),800))-1
 
-nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'not-a-knot')
-spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
-dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
-# dx_nu = nu.derivative(1)
+# nu = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'not-a-knot')
+nu = interpolate.Akima1DInterpolator(xx, gen_nu(xx))
+# spl = interpolate.make_smoothing_spline(xx, nu.derivative()(xx))
+# dx_nu = interpolate.BSpline(xx, spl(xx)*(spl(xx)>0),k=1)
+dx_nu = nu.derivative(1)
 
-gen_gs = interpolate.CubicSpline(xx*nu(xx**2), xx, bc_type = 'not-a-knot')
+nu2 = interpolate.CubicSpline(xx, gen_nu(xx), bc_type = 'not-a-knot')
+gen_gs = interpolate.CubicSpline(xx*nu2(xx**2), xx, bc_type = 'not-a-knot')
+# gen_gs = interpolate.Akima1DInterpolator(xx*gen_nu(xx**2), xx)
 mu = interpolate.CubicSpline(yy[1:]**2, gen_gs(yy[1:])/yy[1:], bc_type = 'not-a-knot')
 dx_mu = mu.derivative(1)
 
@@ -51,18 +89,18 @@ dx_mu = mu.derivative(1)
 
 # xx = np.linspace(0,12,3000)
 # plt.figure()
-# plt.plot(xx,dx_nu.antiderivative(0)(xx),'.')
-# plt.plot(xx,dx_nu.antiderivative(1)(xx),'.')
-# plt.plot(xx,dx_nu.antiderivative(2)(xx),'.')
-# plt.plot(xx,nu0+0*xx)
+# plt.plot(nu(xx),xx,'.')
+# # plt.plot(xx,dx_nu.antiderivative(1)(xx),'.')
+# # plt.plot(xx,dx_nu.antiderivative(2)(xx),'.')
+# # plt.plot(xx,nu0+0*xx)
 
 
 # yy = np.exp(np.linspace(0,np.log(1e8),300))-1
 # plt.figure()
-# plt.plot(yy,mu(yy),'*')
-# plt.plot(yy,mu.derivative()(yy),'*')
-# plt.plot(yy,1/nu0+0*yy)
-# plt.plot(xx,dx_nu.antiderivative(0)(xx)*xx,'.')
+# plt.plot(yy,mu(yy**2),'*')
+# # plt.plot(yy,mu.derivative()(yy),'*')
+# # plt.plot(yy,1/nu0+0*yy)
+# # plt.plot(xx,dx_nu.antiderivative(0)(xx)*xx,'.')
 
 # # check inverse!
 
@@ -211,3 +249,38 @@ print('Generating nonlinear functions took ... ', time.monotonic()-tm)
 # c = 1.591
 # Ms = 2.16
 # mu0 = (4*np.pi)/10**7
+
+
+
+
+if all_linear == 1:
+    
+    f_nonlinear = lambda x,y,z : 1/2*nu0*(x**2+y**2+z**2)
+    fx_nonlinear = lambda x,y,z : nu0*x
+    fy_nonlinear = lambda x,y,z : nu0*y
+    fz_nonlinear = lambda x,y,z : nu0*z
+    fxx_nonlinear = lambda x,y,z : nu0 + 0*x
+    fxy_nonlinear = lambda x,y,z : y*0
+    fxz_nonlinear = lambda x,y,z : z*0
+    fyx_nonlinear = lambda x,y,z : x*0
+    fyy_nonlinear = lambda x,y,z : nu0 + 0*y
+    fyz_nonlinear = lambda x,y,z : z*0
+    fzx_nonlinear = lambda x,y,z : x*0
+    fzy_nonlinear = lambda x,y,z : y*0
+    fzz_nonlinear = lambda x,y,z : nu0 + z*0
+
+    g_nonlinear = lambda x,y,z : 1/(2*nu0)*(x**2+y**2+z**2)
+    gx_nonlinear = lambda x,y,z : 1/nu0*x
+    gy_nonlinear = lambda x,y,z : 1/nu0*y
+    gz_nonlinear = lambda x,y,z : 1/nu0*z
+    gxx_nonlinear = lambda x,y,z : 1/nu0 + 0*x
+    gxy_nonlinear = lambda x,y,z : y*0
+    gxz_nonlinear = lambda x,y,z : z*0
+    gyx_nonlinear = lambda x,y,z : x*0
+    gyy_nonlinear = lambda x,y,z : 1/nu0 + 0*y
+    gyz_nonlinear = lambda x,y,z : z*0
+    gzx_nonlinear = lambda x,y,z : x*0
+    gzy_nonlinear = lambda x,y,z : y*0
+    gzz_nonlinear = lambda x,y,z : 1/nu0 + z*0
+
+

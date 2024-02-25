@@ -37,16 +37,20 @@ D = pde.int.assemble3(MESH, order = order)
 phix_Hcurl, phiy_Hcurl, phiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = order)
 curlphix_Hcurl, curlphiy_Hcurl, curlphiz_Hcurl = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = order)
 
-phix_Hcurl_o1, phiy_Hcurl_o1, phiz_Hcurl_o1 = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = 1)
-D1 = pde.int.assemble3(MESH, order = 1)
+# phix_Hcurl_o1, phiy_Hcurl_o1, phiz_Hcurl_o1 = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'M', order = 1)
+# D1 = pde.int.assemble3(MESH, order = 1)
 
-aJ = jx_hdiv @ D1 @ phix_Hcurl_o1.T +\
-     jy_hdiv @ D1 @ phiy_Hcurl_o1.T +\
-     jz_hdiv @ D1 @ phiz_Hcurl_o1.T
+# aJ = jx_hdiv @ D1 @ phix_Hcurl_o1.T +\
+#      jy_hdiv @ D1 @ phiy_Hcurl_o1.T +\
+#      jz_hdiv @ D1 @ phiz_Hcurl_o1.T
+
+aJ = jx_hdiv @ D @ phix_Hcurl.T +\
+     jy_hdiv @ D @ phiy_Hcurl.T +\
+     jz_hdiv @ D @ phiz_Hcurl.T
 
 # aJ = jx_L2 @ D @ phix_Hcurl.T +\
-#      jy_L2 @ D @ phiy_Hcurl.T +\
-#      jz_L2 @ D @ phiz_Hcurl.T
+#       jy_L2 @ D @ phiy_Hcurl.T +\
+#       jz_L2 @ D @ phiz_Hcurl.T
 
 def gss(A):
     curl_Ax = curlphix_Hcurl.T@A; curl_Ay = curlphiy_Hcurl.T@A; curl_Az = curlphiz_Hcurl.T@A
@@ -109,7 +113,7 @@ for i in range(maxIter):
     float_eps = 1e-16; #float_eps = np.finfo(float).eps
     JA = J(A)
     for kk in range(1000):
-        if J(A+alpha*w)-JA <= alpha*mu*(gsu@wS) + np.abs(JA)*float_eps: break
+        if J(A+alpha*w)-JA <= alpha*mu*(gsu@wS) + 0*np.abs(JA)*float_eps: break
         else: alpha = alpha*factor_residual
     
     A_old_i = A
@@ -120,6 +124,12 @@ for i in range(maxIter):
     
     print ("NEWTON: Iteration: %2d " %(i+1)+"||obj: %.9e" %J(A)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha)+ "|| Step took : %.2f" %(time.monotonic()-tm))
     
+    
+    # curlphix_Hcurl_P0, curlphiy_Hcurl_P0, curlphiz_Hcurl_P0 = pde.hcurl.assemble3(MESH, space = 'N0', matrix = 'K', order = 0)
+    # Bx = curlphix_Hcurl_P0.T @ A
+    # By = curlphiy_Hcurl_P0.T @ A
+    # Bz = curlphiz_Hcurl_P0.T @ A
+    # print(np.sqrt(Bx**2+By**2+Bz**2).max())
     
     if (residual2 < eps_newton):
         break
