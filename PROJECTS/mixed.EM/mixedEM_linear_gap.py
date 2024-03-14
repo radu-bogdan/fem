@@ -45,10 +45,10 @@ m = motor_npz['m']; m_new = m
 j3 = motor_npz['j3']
 
 plot = 0
-level = 2
+level = 1
 
-open_file = open('mesh_full'+str(level)+'.pkl', "rb")
-# open_file = open('mesh'+str(level)+'.pkl', "rb")
+# open_file = open('mesh_full'+str(level)+'.pkl', "rb")
+open_file = open('mesh'+str(level)+'.pkl', "rb")
 MESH = dill.load(open_file)[0]
 open_file.close()
 
@@ -59,8 +59,8 @@ rotor = 'rotor_iron,*magnet,rotor_air,shaft_iron'
 
 from findPoints import *
 
-# getPoints(MESH)
-# makeIdentifications(MESH)
+getPoints(MESH)
+makeIdentifications(MESH)
 
 rot_speed = 1
 rots = 1
@@ -126,8 +126,8 @@ for k in range(rots):
     aJ = phi_L2(int_order)@ D(int_order) @Ja
     
     ##########################################################################################
-    # RS = getRS_Hcurl(MESH, 1, 'N0', k, rot_speed)
-    RS = sps.eye(MESH.NoEdges)
+    RS = getRS_Hcurl(MESH, 1, 'N0', k, rot_speed)
+    # RS = sps.eye(MESH.NoEdges)
     ##########################################################################################
     
     SYS = bmat([[Mh2,C.T],\

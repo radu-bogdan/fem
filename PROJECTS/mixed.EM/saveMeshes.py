@@ -9,8 +9,8 @@ import pickle
 
 # from netgen import gui
 
-# motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
-motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
+motor_npz = np.load('../meshes/motor_pizza_gap.npz', allow_pickle = True)
+# motor_npz = np.load('../meshes/motor.npz', allow_pickle = True)
 
 geoOCC = motor_npz['geoOCC'].tolist()
 m = motor_npz['m']; m_new = m

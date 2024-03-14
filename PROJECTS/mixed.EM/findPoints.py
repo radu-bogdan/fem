@@ -222,7 +222,6 @@ def getRS_H1(MESH,ORDER,poly,k,rot_speed):
     R_R = R_R[ind1,:]
     
     
-    
     ident0 = np.roll(MESH.ident_points_gap[:,0], -k*rot_speed)
     ident1 = MESH.ident_points_gap[:,1]
     
