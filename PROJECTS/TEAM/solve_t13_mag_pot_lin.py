@@ -18,13 +18,13 @@ MESH = pde.mesh3.netgen(geoOCCmesh)
 # edges = MESH.EdgesToVertices[ambient_edges_indices,:2]
 # edges = MESH.EdgesToVertices
 # R = pde.tools.tree_cotree_gauge(MESH, edges = edges)
-R = pde.tools.tree_cotree_gauge(MESH, random_edges = True)
+R = pde.tools.tree_cotree_gauge(MESH, random_edges = False).tocsr()
 
 ##############################################################################
 # Assembly
 ##############################################################################
 
-order = 1
+order = 0
 
 phi_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'M', order = order)
 dphix_H1, dphiy_H1, dphiz_H1 = pde.h1.assemble3(MESH, space = 'P1', matrix = 'K', order = order)
@@ -76,15 +76,14 @@ r = jx_hdiv @ D @ phix_Hcurl.T +\
 ##############################################################################
 
 cholKR = chol(KR.tocsc())
-A = cholKR.solve_A(R.T@r)
+A = R@cholKR.solve_A(R.T@r)
 # x = pde.pcg(KR,R.T@r,output=True,pfuns = lambda x : sp.spdiags(MR.diagonal(), 0,MR.shape)@x,maxit=10000)
 # x = pde.pcg(KR,R.T@r,output=True,pfuns = lambda x : sp.spdiags(10**(-6)*(np.arange(MR.shape[0])+1), 0,MR.shape)@x,maxit=10000)
 # x = pde.pcg(KR,R.T@r,output=True,maxit=1e14,tol=1e-14)
-A = R@A
 
 Bx_lin = curlphix_Hcurl_P0.T @ A
-Bx_lin = curlphiy_Hcurl_P0.T @ A
-Bx_lin = curlphiz_Hcurl_P0.T @ A
+By_lin = curlphiy_Hcurl_P0.T @ A
+Bz_lin = curlphiz_Hcurl_P0.T @ A
 
 ##############################################################################
 # Storing to vtk
@@ -94,7 +93,7 @@ grid = pde.tools.vtklib.createVTK(MESH)
 pde.tools.add_H1_Scalar(grid, potential_H1, 'potential_H1')
 pde.tools.add_L2_Vector(grid,jx_L2,jy_L2,jz_L2,'j_L2')
 pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
-pde.tools.add_L2_Vector(grid,Bx_lin,Bx_lin,Bx_lin,'B')
+pde.tools.add_L2_Vector(grid,Bx_lin,By_lin,Bz_lin,'B')
 pde.tools.vtklib.writeVTK(grid, 'vector_potential_lin.vtu')
 
 # do()

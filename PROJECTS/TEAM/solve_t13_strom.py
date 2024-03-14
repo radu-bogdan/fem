@@ -64,10 +64,10 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 
 ##############################################################################
 sigma = 6*1e7
-scaling = 0.004375*2 # Volts -> about 1000A
+scaling = 0.004375*2*5 # Volts -> about 1000A
 ##############################################################################
 
-order = 1
+order = 0
 D = pde.int.assemble3(MESH, order = order)
 DB = pde.int.assembleB3(MESH, order = order)
 unit_coil = pde.int.evaluate3(MESH, order = order, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
@@ -113,7 +113,7 @@ print('My code computing J in L2 took ... ',time.monotonic()-tm)
 
 tm = time.monotonic()
 
-order = 1
+order = 0
 phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'M', order = order)
 divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'RT0', matrix = 'K', order = order)
 
@@ -169,6 +169,8 @@ jx_hdiv_P0 = (phix_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 jy_hdiv_P0 = (phiy_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 jz_hdiv_P0 = (phiz_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 
+print(np.sqrt(jx_hdiv_P0**2+jy_hdiv_P0**2+jz_hdiv_P0**2).max())
+
 ##############################################################################
 
 ##############################################################################
@@ -183,6 +185,7 @@ jy_L2_P0 = -sigma*(dphiy_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
 jz_L2_P0 = -sigma*(dphiz_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
 
 phi_j = x
+print(np.sqrt(jx_L2_P0**2+jy_L2_P0**2+jz_L2_P0**2).max())
 
 ##############################################################################
 
