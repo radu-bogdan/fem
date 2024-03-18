@@ -28,26 +28,26 @@ j3 = motor_npz['j3']
 if len(sys.argv) > 1:
     level = int(sys.argv[1])
 else:
-    level = 2
+    level = 1
     
     
 print("LEVEL " , level)
 
 for m in range(refinements):
     
-    open_file = open('mesh_full'+str(level)+'.pkl', "rb")
-    # open_file = open('mesh'+str(level)+'.pkl', "rb")
+    # open_file = open('mesh_full'+str(level)+'.pkl', "rb")
+    open_file = open('mesh'+str(level)+'.pkl', "rb")
     MESH = dill.load(open_file)[0]
     open_file.close()
     
     from findPoints import *
     
     tm = time.monotonic()
-    # getPoints(MESH)
+    getPoints(MESH)
     print('getPoints took  ', time.monotonic()-tm)
     
     tm = time.monotonic()
-    # makeIdentifications(MESH)
+    makeIdentifications(MESH)
     print('makeIdentifications took  ', time.monotonic()-tm)
     
     
@@ -113,10 +113,11 @@ for m in range(refinements):
         D_order_phiphi = pde.int.assemble(MESH, order = order_phiphi)
         # R0, RSS = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
         
-        # RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
+        RS = getRS_H1_nonzero(MESH,ORDER,poly,k,rot_speed)
         
-        R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
-        RS = bmat([[R_int[1:]],[R_out]])
+        # R_out, R_int = pde.h1.assembleR(MESH, space = poly, edges = 'stator_outer')
+        # RS = bmat([[R_int[1:]],[R_out]])
+        
         # RS = sps.eye(MESH.np)
         
         # D_order_phiphi_b = pde.int.assembleB(MESH, order = order_phiphi)
@@ -148,8 +149,8 @@ for m in range(refinements):
             M0 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
             M1 += pde.int.evaluate(MESH, order = order_phiphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
             
-            M00 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
-            M10 += pde.int.evaluate(MESH, order = 0, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
+            M00 += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
+            M10 += pde.int.evaluate(MESH, order = 1, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
             
             M0_dphi += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[0,i], regions = 'magnet'+str(i+1)).diagonal()
             M1_dphi += pde.int.evaluate(MESH, order = order_dphidphi, coeff = lambda x,y : m_new[1,i], regions = 'magnet'+str(i+1)).diagonal()
@@ -277,7 +278,7 @@ for m in range(refinements):
         
         
         # ax1.cla()
-        dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 0)
+        dphix_H1_o1, dphiy_H1_o1 = pde.h1.assemble(MESH, space = poly, matrix = 'K', order = 1)
         ux = dphix_H1_o1.T@u; uy = dphiy_H1_o1.T@u
         
         Hx = Hjx + ux
@@ -287,8 +288,8 @@ for m in range(refinements):
         gx_H_l  = allH[1]; gy_H_l  = allH[2];
         gx_H_nl = allH[8]; gy_H_nl = allH[9];
     
-        fem_linear = pde.int.evaluate(MESH, order = 0, regions = linear).diagonal()
-        fem_nonlinear = pde.int.evaluate(MESH, order = 0, regions = nonlinear).diagonal()
+        fem_linear = pde.int.evaluate(MESH, order = 1, regions = linear).diagonal()
+        fem_nonlinear = pde.int.evaluate(MESH, order = 1, regions = nonlinear).diagonal()
     
         Bx = (gx_H_l*fem_linear + gx_H_nl*fem_nonlinear) + 1/nu0*M00
         By = (gy_H_l*fem_linear + gy_H_nl*fem_nonlinear) + 1/nu0*M10

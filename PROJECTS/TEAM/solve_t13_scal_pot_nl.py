@@ -10,7 +10,7 @@ from solve_t13_strom import *
 
 # @profile
 # def do():
-    
+
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
 ##############################################################################
