@@ -1,5 +1,4 @@
 import sympy as sym
-from sympy.integrals.intpoly import polytope_integrate
 
 
 p1 = sym.Point2D(0, 0)
@@ -37,14 +36,14 @@ polynom1 = axis1 * axis2 * axis3 * saxis1; polynom1_eval = lambda a : polynom1.s
 polynom2 = axis1 * axis2 * axis3 * saxis2; polynom2_eval = lambda a : polynom2.subs(dict(zip([x, y], a)))
 polynom3 = axis1 * axis2 * axis3 * saxis3; polynom3_eval = lambda a : polynom3.subs(dict(zip([x, y], a)))
 polynom4 = axis1 * axis2 * axis3;          polynom4_eval = lambda a : polynom4.subs(dict(zip([x, y], a)))
-polynom5 = x*y*(x-y)*saxis2;          polynom5_eval = lambda a : polynom5.subs(dict(zip([x, y], a)))
+polynom5 = x*y*(x-y)*saxis2;               polynom5_eval = lambda a : polynom5.subs(dict(zip([x, y], a)))
 
 
-result1 = sym.integrate(sym.integrate(polynom1,(y,0,1-x)),  (x, 0, 1)); print(result1)
-result2 = sym.integrate(sym.integrate(polynom2,(y,0,1-x)),  (x, 0, 1)); print(result2)
-result3 = sym.integrate(sym.integrate(polynom3,(y,0,1-x)),  (x, 0, 1)); print(result3)
-result4 = sym.integrate(sym.integrate(polynom4,(y,0,1-x)),  (x, 0, 1)); print(result4)
-result5 = sym.integrate(sym.integrate(polynom5,(y,0,1-x)),  (x, 0, 1)); print(result5)
+result1 = sym.integrate(sym.integrate(polynom1,(y,0,1-x)),(x,0,1)); print(result1)
+result2 = sym.integrate(sym.integrate(polynom2,(y,0,1-x)),(x,0,1)); print(result2)
+result3 = sym.integrate(sym.integrate(polynom3,(y,0,1-x)),(x,0,1)); print(result3)
+result4 = sym.integrate(sym.integrate(polynom4,(y,0,1-x)),(x,0,1)); print(result4)
+result5 = sym.integrate(sym.integrate(polynom5,(y,0,1-x)),(x,0,1)); print(result5)
 
 # weight = 2*1/polynom1_eval(a1)*result
 
@@ -88,11 +87,18 @@ print(float(1/2*wei*pol2evala),float(result2a),float(1/2*wei*pol2evala)/float(re
 print(float(1/2*wei*pol3evala),float(result3a),float(1/2*wei*pol3evala)/float(result3a))
 print(float(1/2*wei*pol4evala),float(result4a),float(1/2*wei*pol4evala)/float(result4a))
 
-print(polynom1_eval(a1),' ## ', result1)
-print(polynom4_eval(a1),' ## ', result4)
+print("\n")
 
-zz = sym.solve([w*(polynom1_eval(a1))-result1,
-                w*(polynom2_eval(a2))-result2,
+print(w*polynom1_eval(a1),' ## ', result1)
+print(w*(polynom5_eval(a1) + polynom5_eval(a2) + polynom5_eval(a3)),' ## ', result5)
+print(w*(polynom4_eval(a1) + polynom4_eval(a2) + polynom4_eval(a3)),' ## ', result4)
+
+print("\n")
+
+zz = sym.solve([
+                # w*(polynom1_eval(a1))-result1,
+                # w*(polynom2_eval(a2))-result2,
                 w*(polynom4_eval(a1) + polynom4_eval(a2) + polynom4_eval(a3))-result4,
-                w*(polynom5_eval(a1) + polynom5_eval(a2) + polynom5_eval(a3))-result5], [w,a], dict=True)
+                w*(polynom5_eval(a1) + polynom5_eval(a2) + polynom5_eval(a3))-result5
+                ], [w,a], dict=True)
 print(zz)
