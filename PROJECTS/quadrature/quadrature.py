@@ -1,12 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from sksparse.cholmod import cholesky as chol
 
 plt.close('all')
 
 p1 = np.r_[0,0]
 p2 = np.r_[1,0]
-p3 = np.r_[1/2,np.sqrt(3)/2]
+# p3 = np.r_[1/2,np.sqrt(3)/2]
+p3 = np.r_[0,1]
 
 m1 = (p2+p3)/2
 m2 = (p1+p3)/2
@@ -73,21 +75,64 @@ def integral(i,j):
 Jij = lambda i,j,a,w : np.r_[sum(eval_T1(i,j)),
                              sum(eval_T2(i,j)),
                              sum(eval_T5(a,i,j)),
-                             w[-1]*sum(eval_T5(a,i-1,j)*dT5[0,:]+eval_T5(a,i,j-1)*dT5[1,:])]
+                             w[-1]*sum(eval_T5(a,i-1,j)*dT5[0,:] + eval_T5(a,i,j-1)*dT5[1,:])]
 
-res = lambda i,j,a,w : np.r_[eval_T1(i,j),eval_T2(i,j),eval_T4(i,j)]*w-integral(i,j)
+# res = lambda i,j,a,w : np.r_[eval_T1(i,j),eval_T2(i,j),eval_T5(a,i,j)]*w-integral(i,j)
 
 
-w = np.r_[0.3,0.2,0.7]
-a = 0.21
+lam = 2*(7-np.sqrt(13))/18;
 
+we1 = (11-np.sqrt(13))/360;
+we2 = (10-2*np.sqrt(13))/45;
+we3 = (29+17*np.sqrt(13))/360;
 J = lambda a,w : np.c_[Jij(0,0,a,w),
                        Jij(1,0,a,w),
-                       Jij(0,1,a,w),
-                       Jij(1,1,a,w),
-                       Jij(2,0,a,w),
-                       Jij(0,2,a,w)]
+                        Jij(2,0,a,w),
+                        # Jij(0,1,a,w),
+                        # Jij(1,1,a,w),
+                        # Jij(0,2,a,w),
+                       ]
+rhs = lambda a,w : np.c_[1/2*Jij(0,0,a,w)[:-1]@w - integral(0,0),
+                         1/2*Jij(1,0,a,w)[:-1]@w - integral(1,0),
+                         # 1/2*Jij(1,1,a,w)[:-1]@w - integral(1,1),
+                         1/2*Jij(2,0,a,w)[:-1]@w - integral(2,0)]
 
+
+# given a,w : 
+    
+
+w = np.r_[1/3,1/3,1/3]
+a = 1/3
+
+for i in range(100):
+    Jaw = J(a,w).T
+    rhsaw = rhs(a,w)
+    JS = Jaw.T@Jaw
+    
+    x = np.linalg.solve(Jaw.T@Jaw,Jaw.T@rhsaw.T)[:,0]
+    
+    w = w + 1/2*x[:3]
+    a = a + 1/2*x[-1]
+    
+    print('wtf ',i,x,w,a)
+    # print('wtf ',x[:3],x[-1])
+    
+
+# Jaw = J(a,w)
+# rhsaw = rhs(a,w)
+    
+# JS = Jaw.T@Jaw
+# rhsaw
+
+# x = np.linalg.solve(JS,rhsaw.T)
+
+# print(rhsaw)
+
+# print(Jaw.shape)
+# print((Jaw.T@Jaw).shape)
+# print(np.linalg.matrix_rank(Jaw))
+
+stop
 
 ##### Polynomials #####
 
@@ -139,15 +184,15 @@ P = lambda x,y : np.r_[1,x,y,x*y,x**2,y**2]
 
 
 
-# plt.plot(T1[0,:],T1[1,:],'.')
-# # plt.plot(T2[0,:],T2[1,:],'.')
-# # plt.plot(T3[0],T3[1],'.')
-# # a = 0.1
-# # plt.plot(T4(a)[0,:],T4(a)[1,:],'*')
-# a = 0.3
-# b = 0.3
+plt.plot(T1[0,:],T1[1,:],'.')
+# plt.plot(T2[0,:],T2[1,:],'.')
+# plt.plot(T3[0],T3[1],'.')
+# a = 0.1
+# plt.plot(T4(a)[0,:],T4(a)[1,:],'*')
+a = 0.3
+b = 0.3
 # plt.plot(T6(a,b)[0,:],T6(a,b)[1,:],'*')
-# plt.plot(T5(a)[0,:],T5(a)[1,:],'*')
+plt.plot(T5(a)[0,:],T5(a)[1,:],'*')
 
 
 
