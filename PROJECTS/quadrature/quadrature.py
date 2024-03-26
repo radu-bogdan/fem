@@ -87,14 +87,14 @@ we2 = (10-2*np.sqrt(13))/45;
 we3 = (29+17*np.sqrt(13))/360;
 J = lambda a,w : np.c_[Jij(0,0,a,w),
                        Jij(1,0,a,w),
-                        Jij(2,0,a,w),
+                       Jij(1,1,a,w),
+                       Jij(2,0,a,w),
                         # Jij(0,1,a,w),
-                        # Jij(1,1,a,w),
                         # Jij(0,2,a,w),
                        ]
 rhs = lambda a,w : np.c_[1/2*Jij(0,0,a,w)[:-1]@w - integral(0,0),
                          1/2*Jij(1,0,a,w)[:-1]@w - integral(1,0),
-                         # 1/2*Jij(1,1,a,w)[:-1]@w - integral(1,1),
+                         1/2*Jij(1,1,a,w)[:-1]@w - integral(1,1),
                          1/2*Jij(2,0,a,w)[:-1]@w - integral(2,0)]
 
 
@@ -102,11 +102,11 @@ rhs = lambda a,w : np.c_[1/2*Jij(0,0,a,w)[:-1]@w - integral(0,0),
     
 
 w = np.r_[1/3,1/3,1/3]
-a = 1/3
+a = lam
 
-for i in range(100):
+for i in range(1000):
     Jaw = J(a,w).T
-    rhsaw = rhs(a,w)
+    rhsaw = -rhs(a,w)
     JS = Jaw.T@Jaw
     
     x = np.linalg.solve(Jaw.T@Jaw,Jaw.T@rhsaw.T)[:,0]
@@ -114,7 +114,9 @@ for i in range(100):
     w = w + 1/2*x[:3]
     a = a + 1/2*x[-1]
     
-    print('wtf ',i,x,w,a)
+    print('wtf ',i,x,w,a,rhsaw)
+    
+    # stop
     # print('wtf ',x[:3],x[-1])
     
 
