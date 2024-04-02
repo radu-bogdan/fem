@@ -5,7 +5,7 @@ sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sp
 
 from solve_t13_strom import *
-from nonlin_TEAM13 import *
+from nonlin_TEAM13_new import *
 
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
@@ -84,7 +84,7 @@ def J(A):
 
 
 
-A = np.zeros(curlphix_Hcurl.shape[0])
+A = np.zeros(curlphix_Hcurl.shape[0])+1e-5
 mu = 1e-2
 # mu = 1/2
 eps_newton = 1e-5
@@ -98,6 +98,7 @@ for i in range(maxIter):
     gsu = R.T @ gs(A)
     
     wS = chol(gssu).solve_A(-gsu)
+    # wS = pysolve(gssu,-gsu)
     # wS = sp.linalg.spsolve(gssu, -gsu)
     
     w = R@wS
@@ -132,10 +133,10 @@ for i in range(maxIter):
     # Bz = curlphiz_Hcurl_P0.T @ A
     # print(np.sqrt(Bx**2+By**2+Bz**2).max())
     
-    if (residual2 < eps_newton):
-        break
-    # if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i))+1)):
+    # if (residual2 < eps_newton):
     #     break
+    if (np.abs(J(A)-J(A_old_i)) < 1e-8*(np.abs(J(A))+np.abs(J(A_old_i))+1)):
+        break
     
 elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')

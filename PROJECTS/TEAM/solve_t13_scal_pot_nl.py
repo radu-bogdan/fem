@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0,'../../') # adds parent directory
 from scipy import sparse as sps
 
-from nonlin_TEAM13 import *
+from nonlin_TEAM13_new import *
 from solve_t13_mag_pot_lin import A
 from solve_t13_strom import *
 
@@ -90,6 +90,7 @@ for i in range(maxIter):
     gsu = RS @ gs(u)
     
     wS = chol(gssu).solve_A(-gsu)
+    # wS = pysolve(gssu,-gsu)
     # wS = sps.linalg.spsolve(gssu,-gsu)
     
     w = RS.T@wS
@@ -117,11 +118,11 @@ for i in range(maxIter):
     
     print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(u)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm))
     
-    if (residual2  < eps_newton):
-        break
-    
-    # if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
+    # if (residual2  < eps_newton):
     #     break
+    
+    if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
+        break
     
 elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')

@@ -2,7 +2,7 @@ print('solve_t13_scal_pot_mix_nl')
 
 from imports import *
 
-from nonlin_TEAM13 import *
+from nonlin_TEAM13_new import *
 from solve_t13_strom import *
 from solve_t13_mag_pot_lin import A
 
@@ -90,8 +90,8 @@ def J(b,psi):
 
 R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
-b = np.zeros(3*MESH.nt)
-psi = np.zeros(MESH.np)
+b = np.zeros(3*MESH.nt)+ 1e-9
+psi = np.zeros(MESH.np)+ 0*1e-5
 
 mu = 1e-2
 # mu = 1
@@ -106,6 +106,8 @@ for i in range(maxIter):
     R,C = gss(b)
     r1,r2 = gs(b,psi)
     
+    print('Auswerten took: ', time.monotonic()-tm)
+    
     A = bmat([[R,-C@RS.T],
               [RS@C.T,None]]).tocsc()
     
@@ -118,11 +120,18 @@ for i in range(maxIter):
     tm3 = time.monotonic()
     iR = pde.tools.fastBlockInverse(R)
     itm = time.monotonic()-tm3
+    # print('Inverting took: ', time.monotonic()-tm3)
     
+    tm2 = time.monotonic()
     AA = RS@C.T@iR@C@RS.T
     rr = RS@(-C.T@iR@r1+r2)
-    wpsi = RS.T@chol(AA).solve_A(-rr)
-    # wpsi = RS.T@sp.linalg.spsolve(AA, -rr)
+    # print('Aufstellen2 took: ', time.monotonic()-tm2)
+    # wpsi = RS.T@chol(AA).solve_A(-rr)
+    
+    
+    tm3 = time.monotonic()
+    wpsi = RS.T@pysolve(AA, -rr)
+    # print('Solution took: ', time.monotonic()-tm3)
     
     wb = iR@(C@wpsi-r1)
     w = np.r_[RS@wpsi,wb]
@@ -148,7 +157,7 @@ for i in range(maxIter):
         if np.isnan(J(b+alpha*wb,psi+alpha*wpsi)): print('nan action')
         if J(b+alpha*wb,psi+alpha*wpsi)-Jbpsi <= alpha*mu*(r2@wpsi)+ np.abs(Jbpsi)*float_eps: break
         else: alpha = alpha*factor_residual
-        print(J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w))
+        # print("wtf düd : ", J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w))
     
     b_old_i = b
     psi_old_i = psi
@@ -165,11 +174,11 @@ for i in range(maxIter):
     # print(np.sqrt(bx**2+by**2+bz**2).max())
     
     
-    if (residual2 < eps_newton):
-        break
-    
-    # if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
+    # if (residual2 < eps_newton):
     #     break
+    
+    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
+        break
     
 elapsed = time.monotonic()-tm2
 print('Solving took ', elapsed, 'seconds')

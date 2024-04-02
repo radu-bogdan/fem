@@ -77,6 +77,7 @@ r = jx_hdiv @ D @ phix_Hcurl.T +\
 
 cholKR = chol(KR.tocsc())
 A = R@cholKR.solve_A(R.T@r)
+
 # x = pde.pcg(KR,R.T@r,output=True,pfuns = lambda x : sp.spdiags(MR.diagonal(), 0,MR.shape)@x,maxit=10000)
 # x = pde.pcg(KR,R.T@r,output=True,pfuns = lambda x : sp.spdiags(10**(-6)*(np.arange(MR.shape[0])+1), 0,MR.shape)@x,maxit=10000)
 # x = pde.pcg(KR,R.T@r,output=True,maxit=1e14,tol=1e-14)

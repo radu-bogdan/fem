@@ -27,22 +27,30 @@ H2 = 1/mu0*(B2-Ms)
 B = np.r_[B0,B1,B2]
 H = np.r_[H0,H1,H2]
 
-plt.plot(H,B,'*')
+# plt.plot(H,B,'*')
 
 
 
-mu = (B[1:]-B[:-1])/(H[1:]-H[:-1])
-nu = 1/mu
+gss_vals = (B[1:]-B[:-1])/(H[1:]-H[:-1])
+fss_vals = 1/gss_vals
 
-plt.figure()
+# plt.figure()
 # plt.plot(mu,'*')
-plt.plot(H[:-1], mu, '*')
-plt.plot(B[:-1], nu, '*')
 
-mu_of_H = interpolate.CubicSpline(H[:-1], mu, bc_type = 'not-a-knot')
-nu_of_B = interpolate.CubicSpline(B[:-1], nu, bc_type = 'not-a-knot')
+# plt.plot(H[:-1], mu_vals, '*')
+# plt.plot(B[:-1], nu_vals, '*')
 
-plt.plot(H[:-1], mu_of_H(H[:-1]), '*')
+gss = interpolate.CubicSpline(H[:-1], gss_vals, bc_type = 'not-a-knot') #
+fss = interpolate.CubicSpline(B[:-1], fss_vals, bc_type = 'not-a-knot')
+
+gs = gss.antiderivative(1)
+fs = fss.antiderivative(1)
+
+g = gs.antiderivative(1)
+f = fs.antiderivative(1)
+
+# plt.plot(H[:-1], gs(H[:-1]), '*')
+# plt.plot(B[:-1], fss(B[:-1]), '*')
 
 
 
@@ -90,139 +98,141 @@ plt.plot(H[:-1], mu_of_H(H[:-1]), '*')
 
 
 
+eps = 1e-5
+
+
+def norms(x,y,z):
+    val = (x**2+y**2+z**2+eps)**0.5
+    # return val*(val>eps) + eps*(val<eps)
+    return val
+
+eps = 0
+
+def f_nonlinear(x,y,z):
+    return f(norms(x,y,z))
+
+def fx_nonlinear(x,y,z):
+    return fs(norms(x,y,z))*x/norms(x,y,z)
+
+def fy_nonlinear(x,y,z):
+    return fs(norms(x,y,z))*y/norms(x,y,z)
+
+def fz_nonlinear(x,y,z):
+    return fs(norms(x,y,z))*z/norms(x,y,z)
+
+
+def fxx_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*x*x/norms(x,y,z)**2 + fs(norms(x,y,z))*(y**2+z**2)/norms(x,y,z)**3 + eps
+    
+def fxy_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*x*y/norms(x,y,z)**2 + fs(norms(x,y,z))*(-x*y)/norms(x,y,z)**3
+
+def fxz_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*x*z/norms(x,y,z)**2 + fs(norms(x,y,z))*(-x*z)/norms(x,y,z)**3
+
+
+def fyx_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*x*y/norms(x,y,z)**2 + fs(norms(x,y,z))*(-x*y)/norms(x,y,z)**3
+
+def fyy_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*y*y/norms(x,y,z)**2 + fs(norms(x,y,z))*(x**2+z**2)/norms(x,y,z)**3 + eps
+
+def fyz_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*y*z/norms(x,y,z)**2 + fs(norms(x,y,z))*(-y*z)/norms(x,y,z)**3
+
+
+def fzx_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*x*z/norms(x,y,z)**2 + fs(norms(x,y,z))*(-x*z)/norms(x,y,z)**3
+
+def fzy_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*y*z/norms(x,y,z)**2 + fs(norms(x,y,z))*(-y*z)/norms(x,y,z)**3
+
+def fzz_nonlinear(x,y,z):
+    return fss(norms(x,y,z))*z*z/norms(x,y,z)**2 + fs(norms(x,y,z))*(x**2+y**2)/norms(x,y,z)**3 + eps
 
 
 
 
+f_linear = lambda x,y,z : 1/2*nu0*(x**2+y**2+z**2)
 
+fx_linear = lambda x,y,z : nu0*x
+fy_linear = lambda x,y,z : nu0*y
+fz_linear = lambda x,y,z : nu0*z
 
-# def f_nonlinear(x,y,z):
-#     return 1/2*nu.antiderivative(1)(x**2+y**2+z**2)
+fxx_linear = lambda x,y,z : nu0 + 0*x
+fxy_linear = lambda x,y,z : y*0
+fxz_linear = lambda x,y,z : z*0
 
+fyx_linear = lambda x,y,z : x*0
+fyy_linear = lambda x,y,z : nu0 + 0*y
+fyz_linear = lambda x,y,z : z*0
 
-# def fx_nonlinear(x,y,z):
-#     return nu(x**2+y**2+z**2)*x
-
-# def fy_nonlinear(x,y,z):
-#     return nu(x**2+y**2+z**2)*y
-
-# def fz_nonlinear(x,y,z):
-#     return nu(x**2+y**2+z**2)*z
-
-
-# def fxx_nonlinear(x,y,z):
-#     return nu(x**2+y**2+z**2) + 2*x*dx_nu(x**2+y**2+z**2)*x
-
-# def fxy_nonlinear(x,y,z):
-#     return 2*x*y*dx_nu(x**2+y**2+z**2)
-
-# def fxz_nonlinear(x,y,z):
-#     return 2*x*z*dx_nu(x**2+y**2+z**2)
-
-
-# def fyx_nonlinear(x,y,z):
-#     return 2*x*y*dx_nu(x**2+y**2+z**2)
-
-# def fyy_nonlinear(x,y,z):
-#     return nu(x**2+y**2+z**2) + 2*y*dx_nu(x**2+y**2+z**2)*y
-
-# def fyz_nonlinear(x,y,z):
-#     return 2*y*z*dx_nu(x**2+y**2+z**2)
-
-
-# def fzx_nonlinear(x,y,z):
-#     return 2*x*z*dx_nu(x**2+y**2+z**2)
-
-# def fzy_nonlinear(x,y,z):
-#     return 2*y*z*dx_nu(x**2+y**2+z**2)
-
-# def fzz_nonlinear(x,y,z):
-#     return nu(x**2+y**2+z**2) + 2*z*dx_nu(x**2+y**2+z**2)*z
-
-
-
-
-# f_linear = lambda x,y,z : 1/2*nu0*(x**2+y**2+z**2)
-
-# fx_linear = lambda x,y,z : nu0*x
-# fy_linear = lambda x,y,z : nu0*y
-# fz_linear = lambda x,y,z : nu0*z
-
-# fxx_linear = lambda x,y,z : nu0 + 0*x
-# fxy_linear = lambda x,y,z : y*0
-# fxz_linear = lambda x,y,z : z*0
-
-# fyx_linear = lambda x,y,z : x*0
-# fyy_linear = lambda x,y,z : nu0 + 0*y
-# fyz_linear = lambda x,y,z : z*0
-
-# fzx_linear = lambda x,y,z : x*0
-# fzy_linear = lambda x,y,z : y*0
-# fzz_linear = lambda x,y,z : nu0 + z*0
+fzx_linear = lambda x,y,z : x*0
+fzy_linear = lambda x,y,z : y*0
+fzz_linear = lambda x,y,z : nu0 + z*0
 
 # ##########################################################################################
 
 # # TODO:
     
 
-# def g_nonlinear(x,y,z):
-#     return 1/2*mu2.antiderivative(1)(x**2+y**2+z**2)
+def g_nonlinear(x,y,z):
+    return g(norms(x,y,z))
+
+def gx_nonlinear(x,y,z):
+    return gs(norms(x,y,z))*x/norms(x,y,z)
+
+def gy_nonlinear(x,y,z):
+    return gs(norms(x,y,z))*y/norms(x,y,z)
+
+def gz_nonlinear(x,y,z):
+    return gs(norms(x,y,z))*z/norms(x,y,z)
 
 
-# def gx_nonlinear(x,y,z):
-#     return mu(x**2+y**2+z**2)*x
+def gxx_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*x*x/norms(x,y,z)**2 + gs(norms(x,y,z))*(y**2+z**2)/norms(x,y,z)**3 + eps
+    
+def gxy_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*x*y/norms(x,y,z)**2 + gs(norms(x,y,z))*(-x*y)/norms(x,y,z)**3
 
-# def gy_nonlinear(x,y,z):
-#     return mu(x**2+y**2+z**2)*y
-
-# def gz_nonlinear(x,y,z):
-#     return mu(x**2+y**2+z**2)*z
-
-
-# def gxx_nonlinear(x,y,z):
-#     return mu(x**2+y**2+z**2) + 2*x*dx_mu(x**2+y**2+z**2)*x
-
-# def gxy_nonlinear(x,y,z):
-#     return 2*x*y*dx_mu(x**2+y**2+z**2)
-
-# def gxz_nonlinear(x,y,z):
-#     return 2*x*z*dx_mu(x**2+y**2+z**2)
+def gxz_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*x*z/norms(x,y,z)**2 + gs(norms(x,y,z))*(-x*z)/norms(x,y,z)**3
 
 
-# def gyx_nonlinear(x,y,z):
-#     return 2*x*y*dx_mu(x**2+y**2+z**2)
+def gyx_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*x*y/norms(x,y,z)**2 + gs(norms(x,y,z))*(-x*y)/norms(x,y,z)**3
 
-# def gyy_nonlinear(x,y,z):
-#     return mu(x**2+y**2+z**2) + 2*y*dx_mu(x**2+y**2+z**2)*y
+def gyy_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*y*y/norms(x,y,z)**2 + gs(norms(x,y,z))*(x**2+z**2)/norms(x,y,z)**3 + eps
 
-# def gyz_nonlinear(x,y,z):
-#     return 2*y*z*dx_mu(x**2+y**2+z**2)
-
-
-# def gzx_nonlinear(x,y,z):
-#     return 2*x*z*dx_mu(x**2+y**2+z**2)
-
-# def gzy_nonlinear(x,y,z):
-#     return 2*y*z*dx_mu(x**2+y**2+z**2)
-
-# def gzz_nonlinear(x,y,z):
-#     return mu(x**2+y**2+z**2) + 2*z*dx_mu(x**2+y**2+z**2)*z
+def gyz_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*y*z/norms(x,y,z)**2 + gs(norms(x,y,z))*(-y*z)/norms(x,y,z)**3
 
 
-# g_linear = lambda x,y,z : 1/(2*nu0)*(x**2+y**2+z**2)
+def gzx_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*x*z/norms(x,y,z)**2 + gs(norms(x,y,z))*(-x*z)/norms(x,y,z)**3
 
-# gx_linear = lambda x,y,z : 1/nu0*x
-# gy_linear = lambda x,y,z : 1/nu0*y
-# gz_linear = lambda x,y,z : 1/nu0*z
+def gzy_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*y*z/norms(x,y,z)**2 + gs(norms(x,y,z))*(-y*z)/norms(x,y,z)**3
 
-# gxx_linear = lambda x,y,z : 1/nu0 + 0*x
-# gxy_linear = lambda x,y,z : y*0
-# gxz_linear = lambda x,y,z : z*0
+def gzz_nonlinear(x,y,z):
+    return gss(norms(x,y,z))*z*z/norms(x,y,z)**2 + gs(norms(x,y,z))*(x**2+y**2)/norms(x,y,z)**3 + eps
 
-# gyx_linear = lambda x,y,z : x*0
-# gyy_linear = lambda x,y,z : 1/nu0 + 0*y
-# gyz_linear = lambda x,y,z : z*0
 
-# gzx_linear = lambda x,y,z : x*0
-# gzy_linear = lambda x,y,z : y*0
-# gzz_linear = lambda x,y,z : 1/nu0 + z*0
+g_linear = lambda x,y,z : 1/(2*nu0)*(x**2+y**2+z**2)
+
+gx_linear = lambda x,y,z : 1/nu0*x
+gy_linear = lambda x,y,z : 1/nu0*y
+gz_linear = lambda x,y,z : 1/nu0*z
+
+gxx_linear = lambda x,y,z : 1/nu0 + 0*x
+gxy_linear = lambda x,y,z : y*0
+gxz_linear = lambda x,y,z : z*0
+
+gyx_linear = lambda x,y,z : x*0
+gyy_linear = lambda x,y,z : 1/nu0 + 0*y
+gyz_linear = lambda x,y,z : z*0
+
+gzx_linear = lambda x,y,z : x*0
+gzy_linear = lambda x,y,z : y*0
+gzz_linear = lambda x,y,z : 1/nu0 + z*0
