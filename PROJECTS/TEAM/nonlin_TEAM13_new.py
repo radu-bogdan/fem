@@ -19,7 +19,7 @@ f1 = lambda x : mu0*x  +a*x**2 + b*x + c
 f2 = lambda x : mu0*x + Ms
 
 B1 = np.r_[1.81:2.21:0.01]
-B2 = np.r_[2.22:20:0.01]
+B2 = np.r_[2.22:200:0.01]
 
 H1 = (-b - mu0 + np.sqrt((b+mu0)**2-4*a*(c-B1)))/(2*a)
 H2 = 1/mu0*(B2-Ms)
@@ -40,8 +40,8 @@ fss_vals = 1/gss_vals
 # plt.plot(H[:-1], mu_vals, '*')
 # plt.plot(B[:-1], nu_vals, '*')
 
-gss = interpolate.CubicSpline(H[:-1], gss_vals, bc_type = 'not-a-knot') #
-fss = interpolate.CubicSpline(B[:-1], fss_vals, bc_type = 'not-a-knot')
+gss = interpolate.CubicSpline(H[:-1], gss_vals, bc_type = 'natural')
+fss = interpolate.CubicSpline(B[:-1], fss_vals, bc_type = 'natural')
 
 gs = gss.antiderivative(1)
 fs = fss.antiderivative(1)
@@ -106,7 +106,7 @@ def norms(x,y,z):
     # return val*(val>eps) + eps*(val<eps)
     return val
 
-eps = 0
+eps = 1e-5
 
 def f_nonlinear(x,y,z):
     return f(norms(x,y,z))

@@ -84,7 +84,7 @@ def J(A):
 
 
 
-A = np.zeros(curlphix_Hcurl.shape[0])+1e-5
+A = np.zeros(curlphix_Hcurl.shape[0])#+1e-5
 mu = 1e-2
 # mu = 1/2
 eps_newton = 1e-5

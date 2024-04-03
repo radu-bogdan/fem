@@ -90,8 +90,8 @@ def J(b,psi):
 
 R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
-b = np.zeros(3*MESH.nt)+ 1e-9
-psi = np.zeros(MESH.np)+ 0*1e-5
+b = np.zeros(3*MESH.nt) + 1e-1
+psi = np.zeros(MESH.np) + 1e-5
 
 mu = 1e-2
 # mu = 1
@@ -106,19 +106,21 @@ for i in range(maxIter):
     R,C = gss(b)
     r1,r2 = gs(b,psi)
     
-    print('Auswerten took: ', time.monotonic()-tm)
+    # stop
+    
+    # print('Auswerten took: ', time.monotonic()-tm)
     
     A = bmat([[R,-C@RS.T],
               [RS@C.T,None]]).tocsc()
     
-    r = np.r_[r1,RS@r2]
+    r = np.r_[r1,0*RS@r2]
     
     # w = sp.linalg.spsolve(A, -r)
     # wb2 = w[:3*MESH.nt]
     # wpsi2 = RS.T@w[3*MESH.nt:]
     
     tm3 = time.monotonic()
-    iR = pde.tools.fastBlockInverse(R)
+    iR = pde.tools.fastBlockInverse2(R)
     itm = time.monotonic()-tm3
     # print('Inverting took: ', time.monotonic()-tm3)
     
