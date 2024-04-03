@@ -224,17 +224,17 @@ def spaceInfo(MESH,space):
     #                                             range(2*MESH.NoEdges+1,2*MESH.NoEdges+2*MESH.nt,2)]
     
     #     LISTS['N1']['TET']['DIRECTION_DOF'] = np.c_[MESH.EdgeDirectionTET[:,0],
-    #                                                  MESH.EdgeDirectionTET[:,0],
-    #                                                  MESH.EdgeDirectionTET[:,1],
-    #                                                  MESH.EdgeDirectionTET[:,1],
-    #                                                  MESH.EdgeDirectionTET[:,2],
-    #                                                  MESH.EdgeDirectionTET[:,2],
-    #                                                  np.ones(MESH.nt),
-    #                                                  np.ones(MESH.nt)]
+    #                                                   MESH.EdgeDirectionTET[:,0],
+    #                                                   MESH.EdgeDirectionTET[:,1],
+    #                                                   MESH.EdgeDirectionTET[:,1],
+    #                                                   MESH.EdgeDirectionTET[:,2],
+    #                                                   MESH.EdgeDirectionTET[:,2],
+    #                                                   np.ones(MESH.nt),
+    #                                                   np.ones(MESH.nt)]
         
     #     LISTS['N1']['B'] = {}
     #     LISTS['N1']['B']['LIST_DOF'] = np.c_[2*MESH.Boundary_Edges,
-    #                                          2*MESH.Boundary_Edges+1]
+    #                                           2*MESH.Boundary_Edges+1]
                                              
     # ###########################################################################
     
