@@ -7,6 +7,8 @@ from scipy import sparse as sp
 from solve_t13_strom import *
 from nonlin_TEAM13_new import *
 
+from sksparse.cholmod import analyze as cholana
+
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
 ##############################################################################
@@ -83,12 +85,13 @@ def J(A):
 
 
 
-
 A = np.zeros(curlphix_Hcurl.shape[0])#+1e-5
 mu = 1e-2
 # mu = 1/2
 eps_newton = 1e-5
 factor_residual = 1/2
+
+# fac_gssu = cholana(R.T @ gss(1+A) @ R, ordering_method="metis")
 
 tm2 = time.monotonic()
 for i in range(maxIter):
@@ -96,6 +99,14 @@ for i in range(maxIter):
     tm = time.monotonic()
     gssu = R.T @ gss(A) @ R
     gsu = R.T @ gs(A)
+    
+    # fac_gssu.
+    # fac_gssu.cholesky_inplace(gssu)
+    
+    # wS = fac_gssu.solve_A(-gsu)
+    
+    # fac_gssu.update_inplace(gssu)
+    # wS = fac_gssu.solve_A(-gsu)
     
     wS = chol(gssu).solve_A(-gsu)
     # wS = pysolve(gssu,-gsu)

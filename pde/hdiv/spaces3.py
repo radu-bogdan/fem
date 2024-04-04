@@ -76,6 +76,50 @@ def spaceInfo(MESH,space):
         # LISTS['N0']['TET']['phidual'][0] = lambda x: 2+0*x
     ###########################################################################
 
+    ###########################################################################
+    if space == 'BDM1':
+        
+        LISTS['BDM1'] = {}
+        LISTS['BDM1']['TET'] = {}
+        
+        LISTS['BDM1']['TET']['qp_we_M']  = quadrature.keast(order = 2)
+        LISTS['BDM1']['TET']['qp_we_K']  = quadrature.keast(order = 0)
+        
+        LISTS['BDM1']['TET']['sizeM'] = MESH.NoFaces
+        
+        LISTS['BDM1']['TET']['phi'] = {}
+        LISTS['BDM1']['TET']['phi'][0] = lambda x,y,z: W2(1,2,3,x,y,z)
+        LISTS['BDM1']['TET']['phi'][0] = lambda x,y,z: W2(2,3,1,x,y,z)
+        
+        
+        
+        LISTS['BDM1']['TET']['phi'][1] = lambda x,y,z: -W(0,2,3,x,y,z)
+        LISTS['BDM1']['TET']['phi'][2] = lambda x,y,z: W(0,1,3,x,y,z)
+        LISTS['BDM1']['TET']['phi'][3] = lambda x,y,z: -W(0,1,2,x,y,z)
+        
+        LISTS['BDM1']['TET']['divphi'] = {}
+        LISTS['BDM1']['TET']['divphi'][0] = lambda x,y,z: divW(1,2,3,x,y,z)
+        LISTS['BDM1']['TET']['divphi'][1] = lambda x,y,z: -divW(0,2,3,x,y,z)
+        LISTS['BDM1']['TET']['divphi'][2] = lambda x,y,z: divW(0,1,3,x,y,z)
+        LISTS['BDM1']['TET']['divphi'][3] = lambda x,y,z: -divW(0,1,2,x,y,z)
+        
+        LISTS['BDM1']['TET']['LIST_DOF'] = MESH.TetsToFaces
+        LISTS['BDM1']['TET']['DIRECTION_DOF'] = MESH.DirectionFaces
+        
+        LISTS['BDM1']['B'] = {}
+        LISTS['BDM1']['B']['phi'] = {}
+        LISTS['BDM1']['B']['phi'][0] = lambda x,y: 1 #?
+        LISTS['BDM1']['B']['qp_we_B'] = quadrature.one_d(order = 0)
+        
+        LISTS['BDM1']['B']['LIST_DOF'] = MESH.Boundary_Faces[:,None]
+        
+        # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,0]
+        # LISTS['N0']['B']['LIST_DOF_E1'] = MESH.IntEdgesToTriangles[:,1]
+        
+        # LISTS['N0']['TET']['phidual'] = {}
+        # LISTS['N0']['TET']['phidual'][0] = lambda x: 2+0*x
+    ###########################################################################
+
     
     # ###########################################################################
     # if space == 'EJ1':
