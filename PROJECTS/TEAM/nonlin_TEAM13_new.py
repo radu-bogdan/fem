@@ -40,6 +40,9 @@ fss_vals = 1/gss_vals
 # plt.plot(H[:-1], mu_vals, '*')
 # plt.plot(B[:-1], nu_vals, '*')
 
+
+
+
 gss = interpolate.CubicSpline(H[:-1], gss_vals, bc_type = 'natural')
 fss = interpolate.CubicSpline(B[:-1], fss_vals, bc_type = 'natural')
 
@@ -49,8 +52,22 @@ fs = fss.antiderivative(1)
 g = gs.antiderivative(1)
 f = fs.antiderivative(1)
 
+
+
+
+gs = interpolate.CubicSpline(H, B, bc_type = 'natural')
+fs = interpolate.CubicSpline(B, H, bc_type = 'natural')
+
+g = gs.antiderivative(1)
+f = fs.antiderivative(1)
+
+gss = gs.derivative()
+fss = fs.derivative()
+
+
+
 # plt.plot(H[:-1], gs(H[:-1]), '*')
-# plt.plot(B[:-1], fss(B[:-1]), '*')
+# plt.plot(B, fs.derivative()(B), '*')
 
 
 

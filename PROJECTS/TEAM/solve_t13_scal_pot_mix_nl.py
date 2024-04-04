@@ -90,8 +90,8 @@ def J(b,psi):
 
 R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
-b = np.zeros(3*MESH.nt) + 1e-1
-psi = np.zeros(MESH.np) + 1e-5
+b = np.zeros(3*MESH.nt) + 0*1e-1
+psi = np.zeros(MESH.np) + 0*1e-5
 
 mu = 1e-2
 # mu = 1
@@ -132,7 +132,8 @@ for i in range(maxIter):
     
     
     tm3 = time.monotonic()
-    wpsi = RS.T@pysolve(AA, -rr)
+    # wpsi = RS.T@pysolve(AA, -rr)
+    wpsi = RS.T@chol(AA).solve_A(-rr)
     # print('Solution took: ', time.monotonic()-tm3)
     
     wb = iR@(C@wpsi-r1)

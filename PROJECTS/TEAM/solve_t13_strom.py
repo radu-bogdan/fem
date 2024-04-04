@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0,'../../') # adds parent directory
 import pde
 from sksparse.cholmod import cholesky as chol
-from pypardiso import spsolve as pysolve
+# from pypardiso import spsolve as pysolve
 import numpy as np
 import time
 import scipy.sparse as sp
@@ -65,7 +65,7 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 
 ##############################################################################
 sigma = 6*1e7
-scaling = 0.004375*2*20 # Volts -> about 1000A
+scaling = 0.004375*2*20*10 # Volts -> about 1000A
 ##############################################################################
 
 order = 0
