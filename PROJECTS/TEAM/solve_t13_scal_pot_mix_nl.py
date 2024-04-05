@@ -54,16 +54,18 @@ def gss(b):
     Kxy = phi_L2 @ D @ sp.diags(fxy_linear(bx,by,bz)*fem_linear + fxy_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     Kxz = phi_L2 @ D @ sp.diags(fxz_linear(bx,by,bz)*fem_linear + fxz_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     
-    Kyx = phi_L2 @ D @ sp.diags(fyx_linear(bx,by,bz)*fem_linear + fyx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
+    Kyx = Kxy #phi_L2 @ D @ sp.diags(fyx_linear(bx,by,bz)*fem_linear + fyx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     Kyz = phi_L2 @ D @ sp.diags(fyz_linear(bx,by,bz)*fem_linear + fyz_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     
-    Kzx = phi_L2 @ D @ sp.diags(fzx_linear(bx,by,bz)*fem_linear + fzx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
-    Kzy = phi_L2 @ D @ sp.diags(fzy_linear(bx,by,bz)*fem_linear + fzy_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
+    Kzx = Kxz #phi_L2 @ D @ sp.diags(fzx_linear(bx,by,bz)*fem_linear + fzx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
+    Kzy = Kyz #phi_L2 @ D @ sp.diags(fzy_linear(bx,by,bz)*fem_linear + fzy_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     
     
     R = bmat([[Kxx,Kxy,Kxz],
               [Kyx,Kyy,Kyz],
               [Kzx,Kzy,Kzz]])
+    
+    detR = Kxx@Kzz@Kzz-Kyy@Kxx@Kzz+Kxy@Kxy@Kzz-2*Kxy@Kxz@Kyz
     
     C = bmat([[Cx],[Cy],[Cz]])
     
@@ -90,7 +92,7 @@ def J(b,psi):
 
 R_out, RS = pde.h1.assembleR3(MESH, space = 'P1', faces = 'ambient_face')
 
-b = np.zeros(3*MESH.nt) + 0*1e-1
+b = np.zeros(3*MESH.nt) + 0*1e-5
 psi = np.zeros(MESH.np) + 0*1e-5
 
 mu = 1e-2
@@ -120,7 +122,7 @@ for i in range(maxIter):
     # wpsi2 = RS.T@w[3*MESH.nt:]
     
     tm3 = time.monotonic()
-    iR = pde.tools.fastBlockInverse2(R)
+    iR = pde.tools.fastBlockInverse(R)
     itm = time.monotonic()-tm3
     # print('Inverting took: ', time.monotonic()-tm3)
     
@@ -180,7 +182,10 @@ for i in range(maxIter):
     # if (residual2 < eps_newton):
     #     break
     
-    if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
+    # if (np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8*(np.abs(J(b,psi))+np.abs(J(b_old_i,psi_old_i))+1)):
+    #     break
+    
+    if np.abs(J(b,psi)-J(b_old_i,psi_old_i)) < 1e-8:
         break
     
 elapsed = time.monotonic()-tm2

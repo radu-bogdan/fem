@@ -196,3 +196,26 @@ print(np.sqrt(jx_L2_P0**2+jy_L2_P0**2+jz_L2_P0**2).max())
 # pde.tools.add_L2_Vector(grid,jx_hdiv_P0,jy_hdiv_P0,jz_hdiv_P0,'j_hdiv')
 # pde.tools.add_L2_Scalar(grid,potential_L2,'potential_L2')
 # pde.tools.vtklib.writeVTK(grid, 'das2.vtu')
+
+
+order = 1
+D = pde.int.assemble3(MESH, order = order)
+phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'BDM1', matrix = 'M', order = order)
+divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'BDM1', matrix = 'K', order = order)
+phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
+
+M = phix_Hdiv @ D @ phix_Hdiv.T +\
+    phiy_Hdiv @ D @ phiy_Hdiv.T +\
+    phiz_Hdiv @ D @ phiz_Hdiv.T
+    
+B = divphi_Hdiv @ D @ phi_L2.T
+
+
+iM = pde.tools.fastBlockInverse(M)
+
+
+# cholM = chol(M)
+# plt.spy(cholM.L(),markersize=1)
+
+# spluM = sp.linalg.splu(M)
+# plt.spy(spluM.L,markersize=1)

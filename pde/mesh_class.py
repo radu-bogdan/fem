@@ -1136,9 +1136,9 @@ class mesh3:
         #############################################################################################################
 
         EdgesToFaces = npy.r_[npy.c_[TetsToEdges[:,[3,4,5]],TetsToFaces[:,0]],
-                                npy.c_[TetsToEdges[:,[1,2,5]],TetsToFaces[:,1]],
-                                npy.c_[TetsToEdges[:,[0,2,4]],TetsToFaces[:,2]],
-                                npy.c_[TetsToEdges[:,[0,1,3]],TetsToFaces[:,3]]]
+                              npy.c_[TetsToEdges[:,[1,2,5]],TetsToFaces[:,1]],
+                              npy.c_[TetsToEdges[:,[0,2,4]],TetsToFaces[:,2]],
+                              npy.c_[TetsToEdges[:,[0,1,3]],TetsToFaces[:,3]]]
 
         EdgesToFaces = EdgesToFaces[EdgesToFaces[:, 3].argsort()]
         EdgesToFaces = npy.unique(EdgesToFaces, axis=0)[:,:3]

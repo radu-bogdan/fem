@@ -90,8 +90,8 @@ for face in ambient.faces: face.name = 'ambient_face'
 
 
 # steel_h = 0.01
+steel_h = 0.002
 
-steel_h = 0.001
 for edge in r_steel.edges: edge.maxh = steel_h
 for edge in l_steel.edges: edge.maxh = steel_h
 for edge in mid_steel.edges: edge.maxh = steel_h

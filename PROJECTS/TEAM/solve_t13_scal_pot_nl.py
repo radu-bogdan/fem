@@ -121,7 +121,8 @@ for i in range(maxIter):
     # if (residual2  < eps_newton):
     #     break
     
-    if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
+    # if (np.abs(J(u)-J(u_old_i)) < 1e-8*(np.abs(J(u))+np.abs(J(u_old_i))+1)):
+    if np.abs(J(u)-J(u_old_i)) < 1e-8:
         break
     
 elapsed = time.monotonic()-tm2
