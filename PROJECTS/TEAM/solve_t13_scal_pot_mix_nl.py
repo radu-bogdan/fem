@@ -65,11 +65,29 @@ def gss(b):
               [Kyx,Kyy,Kyz],
               [Kzx,Kzy,Kzz]])
     
-    detR = Kxx@Kzz@Kzz-Kyy@Kxx@Kzz+Kxy@Kxy@Kzz-2*Kxy@Kxz@Kyz
+    I_detR = sp.diags(1/(-Kxx@Kyy@Kzz + Kxx@Kyz@Kyz + Kxy@Kxy@Kzz -2*Kxy@Kxz@Kyz + Kxz@Kxz@Kyy).diagonal())
+    
+    iKxx = I_detR@(Kyz@Kyz-Kyy@Kzz)
+    iKxy = I_detR@(Kxy@Kzz-Kxz@Kyz)
+    iKxz = I_detR@(Kxz@Kyy-Kxy@Kyz)
+    
+    iKyx = iKxy
+    iKyy = I_detR@(Kxz@Kxz-Kxx@Kzz)
+    iKyz = I_detR@(Kxx@Kyz-Kxy@Kxz)
+    
+    iKzx = iKxz
+    iKzy = iKyz
+    iKzz = I_detR@(Kxy@Kxy-Kxx@Kyy)
+    
+    iR = bmat([[iKxx,iKxy,iKxz],
+               [iKyx,iKyy,iKyz],
+               [iKzx,iKzy,iKzz]])
+    
+    # iR = 0
     
     C = bmat([[Cx],[Cy],[Cz]])
     
-    return R,C
+    return R,C,iR
 
 def gs(b,psi):
     bx = b[:len(b)//3]; by = b[len(b)//3:2*len(b)//3]; bz = b[2*len(b)//3:]
@@ -105,7 +123,7 @@ for i in range(maxIter):
     
     tm = time.monotonic()
     
-    R,C = gss(b)
+    R,C,iR2 = gss(b)
     r1,r2 = gs(b,psi)
     
     # stop
@@ -122,11 +140,16 @@ for i in range(maxIter):
     # wpsi2 = RS.T@w[3*MESH.nt:]
     
     tm3 = time.monotonic()
-    iR = pde.tools.fastBlockInverse(R)
+    # iR = pde.tools.fastBlockInverse(R)
+    iR = iR2
     itm = time.monotonic()-tm3
     # print('Inverting took: ', time.monotonic()-tm3)
     
-    tm2 = time.monotonic()
+    
+    # print(pde.tools.condest(R@iR2),abs(iR-iR2).max())
+    
+    
+    # tm2 = time.monotonic()
     AA = RS@C.T@iR@C@RS.T
     rr = RS@(-C.T@iR@r1+r2)
     # print('Aufstellen2 took: ', time.monotonic()-tm2)
@@ -160,7 +183,7 @@ for i in range(maxIter):
     Jbpsi = J(b,psi)
     for kk in range(1000):
         if np.isnan(J(b+alpha*wb,psi+alpha*wpsi)): print('nan action')
-        if J(b+alpha*wb,psi+alpha*wpsi)-Jbpsi <= alpha*mu*(r2@wpsi)+ np.abs(Jbpsi)*float_eps: break
+        if J(b+alpha*wb,psi+alpha*wpsi)-Jbpsi <= alpha*mu*(r2@wpsi)+ 0*np.abs(Jbpsi)*float_eps: break
         else: alpha = alpha*factor_residual
         # print("wtf düd : ", J(b+alpha*wb,psi+alpha*wpsi),J(b,psi),alpha*mu*(r@w))
     
