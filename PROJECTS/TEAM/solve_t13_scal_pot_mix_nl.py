@@ -54,11 +54,11 @@ def gss(b):
     Kxy = phi_L2 @ D @ sp.diags(fxy_linear(bx,by,bz)*fem_linear + fxy_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     Kxz = phi_L2 @ D @ sp.diags(fxz_linear(bx,by,bz)*fem_linear + fxz_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     
-    Kyx = Kxy #phi_L2 @ D @ sp.diags(fyx_linear(bx,by,bz)*fem_linear + fyx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
+    Kyx = Kxy.T #phi_L2 @ D @ sp.diags(fyx_linear(bx,by,bz)*fem_linear + fyx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     Kyz = phi_L2 @ D @ sp.diags(fyz_linear(bx,by,bz)*fem_linear + fyz_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     
-    Kzx = Kxz #phi_L2 @ D @ sp.diags(fzx_linear(bx,by,bz)*fem_linear + fzx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
-    Kzy = Kyz #phi_L2 @ D @ sp.diags(fzy_linear(bx,by,bz)*fem_linear + fzy_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
+    Kzx = Kxz.T #phi_L2 @ D @ sp.diags(fzx_linear(bx,by,bz)*fem_linear + fzx_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
+    Kzy = Kyz.T #phi_L2 @ D @ sp.diags(fzy_linear(bx,by,bz)*fem_linear + fzy_nonlinear(bx,by,bz)*fem_nonlinear)@ phi_L2.T
     
     
     R = bmat([[Kxx,Kxy,Kxz],
@@ -126,6 +126,7 @@ for i in range(maxIter):
     R,C,iR2 = gss(b)
     r1,r2 = gs(b,psi)
     
+    asm = time.monotonic()-tm
     # stop
     
     # print('Auswerten took: ', time.monotonic()-tm)
@@ -133,16 +134,14 @@ for i in range(maxIter):
     A = bmat([[R,-C@RS.T],
               [RS@C.T,None]]).tocsc()
     
-    r = np.r_[r1,0*RS@r2]
+    r = np.r_[r1,RS@r2]
     
     # w = sp.linalg.spsolve(A, -r)
     # wb2 = w[:3*MESH.nt]
     # wpsi2 = RS.T@w[3*MESH.nt:]
     
-    tm3 = time.monotonic()
     # iR = pde.tools.fastBlockInverse(R)
     iR = iR2
-    itm = time.monotonic()-tm3
     # print('Inverting took: ', time.monotonic()-tm3)
     
     
@@ -150,8 +149,14 @@ for i in range(maxIter):
     
     
     # tm2 = time.monotonic()
+    
+    tm3 = time.monotonic()
+    
     AA = RS@C.T@iR@C@RS.T
     rr = RS@(-C.T@iR@r1+r2)
+    
+    inv = time.monotonic()-tm3
+    
     # print('Aufstellen2 took: ', time.monotonic()-tm2)
     # wpsi = RS.T@chol(AA).solve_A(-rr)
     
@@ -159,6 +164,7 @@ for i in range(maxIter):
     tm3 = time.monotonic()
     # wpsi = RS.T@pysolve(AA, -rr)
     wpsi = RS.T@chol(AA).solve_A(-rr)
+    itm2 = time.monotonic()-tm3
     # print('Solution took: ', time.monotonic()-tm3)
     
     wb = iR@(C@wpsi-r1)
@@ -196,7 +202,7 @@ for i in range(maxIter):
     residual = w.T@A@w
     residual2 = np.abs(r@np.r_[RS@psi,b])
     
-    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(b,psi)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm) + "|| inv took : %.2f" %(itm))            
+    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(b,psi)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm) + "|| Assembly took: %.2f" %(asm) + "|| Solution took: %.2f" %(itm2) + "|| inv took : %.2f" %(inv))            
     
     # bx = b[:len(b)//3]; by = b[len(b)//3:2*len(b)//3]; bz = b[2*len(b)//3:]
     # print(np.sqrt(bx**2+by**2+bz**2).max())

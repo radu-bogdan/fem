@@ -64,11 +64,11 @@ def gss(A):
     Kxy = curlphiy_Hcurl @ D @ sp.diags(fxy_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fxy_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphix_Hcurl.T
     Kxz = curlphiz_Hcurl @ D @ sp.diags(fxz_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fxz_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphix_Hcurl.T
     
-    Kyx = curlphix_Hcurl @ D @ sp.diags(fyx_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fyx_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiy_Hcurl.T
+    Kyx = Kxy.T # Kyx = curlphix_Hcurl @ D @ sp.diags(fyx_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fyx_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiy_Hcurl.T
     Kyz = curlphiz_Hcurl @ D @ sp.diags(fyz_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fyz_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiy_Hcurl.T
     
-    Kzx = curlphix_Hcurl @ D @ sp.diags(fzx_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fzx_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiz_Hcurl.T
-    Kzy = curlphiy_Hcurl @ D @ sp.diags(fzy_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fzy_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiz_Hcurl.T
+    Kzx = Kxz.T # Kzx = curlphix_Hcurl @ D @ sp.diags(fzx_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fzx_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiz_Hcurl.T
+    Kzy = Kyz.T # Kzy = curlphiy_Hcurl @ D @ sp.diags(fzy_linear(curl_Ax,curl_Ay,curl_Az)*fem_linear + fzy_nonlinear(curl_Ax,curl_Ay,curl_Az)*fem_nonlinear)@ curlphiz_Hcurl.T
     
     return Kxx + Kyy + Kzz + Kxy + Kxz + Kyx + Kyz + Kzx + Kzy
     

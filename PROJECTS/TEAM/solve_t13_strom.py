@@ -65,7 +65,8 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 
 ##############################################################################
 sigma = 6*1e7
-scaling = 0.004375*2*20*10 # Volts -> about 1000A
+scaling = 0.004375*2/1000 # Volts -> about 1000A
+# scaling = 1000/(sigma*0.1*0.025)
 ##############################################################################
 
 order = 0
@@ -158,6 +159,8 @@ potential_L2 = (RZdiv.T@xx)[-MESH.nt:]
 j_hdiv = sigma*RS1.T@(RZdiv.T@xx)[:-MESH.nt]
 print('My code computing J in Hdiv (mixed) took ... ',time.monotonic()-tm)
 
+j_hdiv@phiB_Hdiv@DB@unit_coil_B
+
 ##############################################################################
 unit_coil_P0 = pde.int.evaluate3(MESH, order = 0, coeff = lambda x,y,z : 1+0*x, regions = 'coil')
 
@@ -198,20 +201,24 @@ print(np.sqrt(jx_L2_P0**2+jy_L2_P0**2+jz_L2_P0**2).max())
 # pde.tools.vtklib.writeVTK(grid, 'das2.vtu')
 
 
-order = 1
-D = pde.int.assemble3(MESH, order = order)
-phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'BDM1', matrix = 'M', order = order)
-divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'BDM1', matrix = 'K', order = order)
-phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
 
-M = phix_Hdiv @ D @ phix_Hdiv.T +\
-    phiy_Hdiv @ D @ phiy_Hdiv.T +\
-    phiz_Hdiv @ D @ phiz_Hdiv.T
+
+
+
+# order = 1
+# D = pde.int.assemble3(MESH, order = order)
+# phix_Hdiv, phiy_Hdiv, phiz_Hdiv = pde.hdiv.assemble3(MESH, space = 'BDM1', matrix = 'M', order = order)
+# divphi_Hdiv = pde.hdiv.assemble3(MESH, space = 'BDM1', matrix = 'K', order = order)
+# phi_L2 = pde.l2.assemble3(MESH, space = 'P0', matrix = 'M', order = order)
+
+# M = phix_Hdiv @ D @ phix_Hdiv.T +\
+#     phiy_Hdiv @ D @ phiy_Hdiv.T +\
+#     phiz_Hdiv @ D @ phiz_Hdiv.T
     
-B = divphi_Hdiv @ D @ phi_L2.T
+# B = divphi_Hdiv @ D @ phi_L2.T
 
 
-iM = pde.tools.fastBlockInverse(M)
+# iM = pde.tools.fastBlockInverse(M)
 
 
 # cholM = chol(M)

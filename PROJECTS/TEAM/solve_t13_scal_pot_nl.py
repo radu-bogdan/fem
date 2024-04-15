@@ -53,11 +53,11 @@ def gss(u):
     Kxy = dphiy_H1 @ D @ sps.diags(gxy_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gxy_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphix_H1.T
     Kxz = dphiz_H1 @ D @ sps.diags(gxz_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gxz_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphix_H1.T
     
-    Kyx = dphix_H1 @ D @ sps.diags(gyx_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gyx_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiy_H1.T
+    Kyx = Kxy.T # Kyx = dphix_H1 @ D @ sps.diags(gyx_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gyx_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiy_H1.T
     Kyz = dphiz_H1 @ D @ sps.diags(gyz_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gyz_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiy_H1.T
     
-    Kzx = dphix_H1 @ D @ sps.diags(gzx_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gzx_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiz_H1.T
-    Kzy = dphiy_H1 @ D @ sps.diags(gzy_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gzy_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiz_H1.T
+    Kzx = Kxz.T # Kzx = dphix_H1 @ D @ sps.diags(gzx_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gzx_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiz_H1.T
+    Kzy = Kyz.T # Kzy = dphiy_H1 @ D @ sps.diags(gzy_linear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_linear + gzy_nonlinear(Hjx+ux,Hjy+uy,Hjz+uz)*fem_nonlinear)@ dphiz_H1.T
     
     return Kxx + Kyy + Kzz + Kxy + Kxz + Kyx + Kyz + Kzx + Kzy 
     
@@ -81,15 +81,18 @@ mu = 1e-2
 eps_newton = 1e-5
 factor_residual = 1/2
 
-tm2 = time.monotonic()
 for i in range(maxIter):
+    tm2 = time.monotonic()
     
     tm = time.monotonic()
-    
     gssu = RS @ gss(u) @ RS.T
     gsu = RS @ gs(u)
+    asm = time.monotonic()-tm
     
+    tm = time.monotonic()
     wS = chol(gssu).solve_A(-gsu)
+    solt = time.monotonic()-tm
+    
     # wS = pysolve(gssu,-gsu)
     # wS = sps.linalg.spsolve(gssu,-gsu)
     
@@ -116,7 +119,7 @@ for i in range(maxIter):
     residual = wS.T@gssu@wS
     residual2 = np.abs((RS@u)@gsu)
     
-    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(u)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm))
+    print ("NEWTON : %2d " %(i+1)+"||obj: %.9e" %J(u)+"|| ||grad||: %.2e" %residual2 +"||alpha: %.2e" % (alpha) + "|| Step took : %.2f" %(time.monotonic()-tm2)+ "|| Assembly took : %.2f" %(asm)+ "|| Solution took : %.2f" %(solt))
     
     # if (residual2  < eps_newton):
     #     break
