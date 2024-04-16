@@ -65,8 +65,8 @@ MESH = pde.mesh3(p_new,MESH.e,f_new,t_new,MESH.regions_3d,regions_2d_new,MESH.re
 
 ##############################################################################
 sigma = 6*1e7
-scaling = 0.004375*2/1000 # Volts -> about 1000A
-# scaling = 1000/(sigma*0.1*0.025)
+# scaling = 0.004375*2/1000 # Volts -> about 1000A
+scaling = 1000/(sigma*0.1*0.025)/10/1.5
 ##############################################################################
 
 order = 0
@@ -173,7 +173,7 @@ jx_hdiv_P0 = (phix_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 jy_hdiv_P0 = (phiy_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 jz_hdiv_P0 = (phiz_Hdiv_P0.T@j_hdiv)*unit_coil_P0.diagonal()
 
-print(np.sqrt(jx_hdiv_P0**2+jy_hdiv_P0**2+jz_hdiv_P0**2).max())
+# print(np.sqrt(jx_hdiv_P0**2+jy_hdiv_P0**2+jz_hdiv_P0**2).max())
 
 ##############################################################################
 
@@ -189,7 +189,12 @@ jy_L2_P0 = -sigma*(dphiy_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
 jz_L2_P0 = -sigma*(dphiz_H1_P0.T@potential_H1)*unit_coil_P0.diagonal()
 
 phi_j = x
-print(np.sqrt(jx_L2_P0**2+jy_L2_P0**2+jz_L2_P0**2).max())
+# print(np.sqrt(jx_L2_P0**2+jy_L2_P0**2+jz_L2_P0**2).max())
+
+indices = np.where(unit_coil_P0.diagonal())[0]
+print(np.mean(np.sqrt(jx_L2**2+jy_L2**2+jz_L2**2)[indices]))
+print(np.median(np.sqrt(jx_L2**2+jy_L2**2+jz_L2**2)[indices]))
+
 
 ##############################################################################
 
