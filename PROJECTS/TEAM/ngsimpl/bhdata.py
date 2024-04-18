@@ -68,7 +68,7 @@ def BHCurves(nr):
 
     bb=Bdata.copy()
     hh=Hdata.copy()
-
+    
     order=2
     if nr>0:
         print("returning energy")
