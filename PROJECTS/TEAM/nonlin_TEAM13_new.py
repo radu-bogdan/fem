@@ -115,7 +115,7 @@ fss = fs.derivative()
 
 
 
-eps = 1e-5
+eps = 1e-12
 
 
 def norms(x,y,z):

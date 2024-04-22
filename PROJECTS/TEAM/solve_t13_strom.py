@@ -1,4 +1,4 @@
-from t13geo import *
+from t13geo_load import *
 
 import sys
 sys.path.insert(0,'../../') # adds parent directory
@@ -144,6 +144,7 @@ unit_coil_B = pde.int.evaluateB3(MESH, order = order, coeff = lambda x,y,z : 1+0
 DB = pde.int.assembleB3(MESH, order = order)
 
 rhs = scaling*unit_coil_B @ DB @ phiB_Hdiv.T
+
 # print(rhs[rhs!=0],np.argwhere(rhs!=0))
 # rhs[np.argwhere(rhs!=0)[14]]=-0.5
 

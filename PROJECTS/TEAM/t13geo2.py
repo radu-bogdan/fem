@@ -1,16 +1,14 @@
-print('t13_geo')
-
-# import ngsolve as ng
-# import netgen.occ as occ
-# import time
-
-from imports import *
+import ngsolve as ngs
+import netgen.occ as occ
+# import netgen.gui
+from netgen.webgui import Draw as DrawGeo
+from ngsolve.webgui import Draw
+import time
 
 # import netgen.gui
 # from netgen.webgui import Draw as DrawGeo
 
 tm = time.monotonic()
-println('Generating the geometry took ...  ')
 
 box1 = occ.Box(occ.Pnt(-0.100,-0.100,-0.050), occ.Pnt(0.100,0.100,0.050))
 box2 = occ.Box(occ.Pnt(-0.075,-0.075,-0.050), occ.Pnt(0.075,0.075,0.050))
@@ -43,13 +41,23 @@ corner4_int = occ.Box(occ.Pnt(-0.050,0.050,-0.050), occ.Pnt(-0.075,0.075,0.050))
 cyl4_int = occ.Cylinder(occ.Pnt(-0.050,0.050,-0.050), occ.Z, r=0.025, h=0.100)
 corner4_int = corner4_int-cyl4_int; corner4_ext = corner4_ext-cyl4_ext
 
-coil_full = (box1-box2)+corner1_int-corner1_ext+corner2_int-corner2_ext+corner3_int-corner3_ext+corner4_int-corner4_ext
-
 ##########################################################################
 # Adding the steel parts
 ##########################################################################
 
-mid_steel = occ.Sphere(occ.Pnt(0,0,0.05),0.05)
+coil_full = (box1-box2)+corner1_int-corner1_ext+corner2_int-corner2_ext+corner3_int-corner3_ext+corner4_int-corner4_ext
+
+mid_steel = occ.Box(occ.Pnt(-0.0016,-0.025,-0.0642),occ.Pnt(0.0016,0.025,0.0642))
+
+r_steel1 = occ.Box(occ.Pnt(0.0016 +0.0005,0.015,0.050+0.010-0.0032),occ.Pnt(0.0016 +0.1205,0.065, 0.050+0.010))
+r_steel2 = occ.Box(occ.Pnt(0.0016 +0.0005,0.015,-(0.050+0.010-0.0032)),occ.Pnt(0.0016 +0.1205,0.065,-(0.050+0.010)))
+r_steel3 = occ.Box(occ.Pnt(0.0016 +0.1205-0.0032,0.015,0.050+0.010-0.0032),occ.Pnt(0.0016 +0.1205,0.065,-(0.050+0.010)))
+r_steel = r_steel1 + r_steel2 + r_steel3
+
+l_steel1 = occ.Box(occ.Pnt(-0.0016 -0.0005,-0.015, 0.050+0.010-0.0032),occ.Pnt(-0.0016-0.1205,-0.065,0.050+0.010))
+l_steel2 = occ.Box(occ.Pnt(-0.0016 -0.0005,-0.015,-(0.050+0.010-0.0032)),occ.Pnt(-0.0016-0.1205,-0.065,-(0.050+0.010)))
+l_steel3 = occ.Box(occ.Pnt(-0.0016 -0.1205 +0.0032,-0.015,0.050+0.010-0.0032),occ.Pnt(-0.0016-0.1205,-0.065,-(0.050+0.010)))
+l_steel = l_steel1 + l_steel2 + l_steel3
 
 ##########################################################################
 # Glueing ...
@@ -62,10 +70,10 @@ coil_half_box_1 = coil_full*half_box_1
 coil_half_box_2 = coil_full*half_box_2
 
 coil = occ.Glue([coil_half_box_1,coil_half_box_2])
-ambient =  occ.Box(occ.Pnt(-0.200,-0.200,-0.200), occ.Pnt(0.200,0.200,0.200))
+ambient =  occ.Box(occ.Pnt(-0.200,-0.200,-0.100), occ.Pnt(0.200,0.200,0.100))
 
-full = occ.Glue([coil, mid_steel, ambient])
-# full = occ.Glue([coil, mid_steel, r_steel, l_steel, ambient])
+full = occ.Glue([coil, mid_steel, r_steel, l_steel, ambient])
+
 
 ##########################################################################
 # Identifications
@@ -73,30 +81,78 @@ full = occ.Glue([coil, mid_steel, ambient])
 
 
 for face in coil.faces: face.name = 'coil_face'
-# for face in r_steel.faces: face.name = 'r_steel_face'
-# for face in l_steel.faces: face.name = 'l_steel_face'
-# for face in mid_steel.faces: face.name = 'mid_steel_face'
+for face in r_steel.faces: face.name = 'r_steel_face'
+for face in l_steel.faces: face.name = 'l_steel_face'
+for face in mid_steel.faces: face.name = 'mid_steel_face'
 for face in ambient.faces: face.name = 'ambient_face'
+
+steel_h = 0.005
+# steel_h = 0.001
+
+for edge in r_steel.edges: edge.maxh = steel_h
+for edge in l_steel.edges: edge.maxh = steel_h
+for edge in mid_steel.edges: edge.maxh = steel_h
+
+# steel_hf = 0.005
+# for face in r_steel.faces: face.maxh = steel_hf
+# for face in l_steel.faces: face.maxh = steel_hf
+# for face in mid_steel.faces: face.maxh = steel_hf
+
+coil_up_indices = (1,14)
+coil_down_indices = (3,27)
+coil_outer_indices = (0,2,4,5,13,19,18,17,16,15)
+coil_inner_indices = (7,8,9,10,11,20,21,22,23,24,25)
+
+for i in list(coil_outer_indices): coil.faces[i].name = 'coil_outer'
+for i in list(coil_inner_indices): coil.faces[i].name = 'coil_inner'
+for i in list(coil_up_indices): coil.faces[i].name = 'coil_up'
+for i in list(coil_down_indices): coil.faces[i].name = 'coil_down'
 
 coil.faces[6].name = 'coil_cut_1'
 coil.faces[12].name = 'coil_cut_2'
 
-coil.mat("coil")
-# r_steel.mat("r_steel")
-# l_steel.mat("l_steel")
-mid_steel.mat("mid_steel")
+print(coil.faces[6].mass)
 
-# for face in mid_steel.faces: face.maxh = 0.002
-for face in mid_steel.faces: face.maxh = 0.004
+coil.mat("coil")
+r_steel.mat("r_steel")
+l_steel.mat("l_steel")
+mid_steel.mat("mid_steel")
+ambient.mat("ambient")
+
+# ambient.maxh = 0.05
+# coil.maxh = 0.05
+
+##########################################################################
+# "Fancy" coloring cuz why not I got a bit bored :)
+##########################################################################
+
+coil.faces.col = (1,0.5,0)
+for i in list(coil_outer_indices): coil.faces[i].col = (0.5,0.7,1)
+for i in list(coil_inner_indices): coil.faces[i].col = (0.5,0.7,0.4)
+for i in list(coil_down_indices): coil.faces[i].col = (0.5,0.3,0.4)
+for i in list(coil_up_indices): coil.faces[i].col = (0.5,0.1,0.7)
+
+l_steel.faces.col=(1,0.5,1)
+r_steel.faces.col=(1,0.5,1)
+mid_steel.faces.col=(1,0.5,1)
+ambient.faces.col=(1,1,1)
+
+##########################################################################
+
+DrawGeo(full, clipping={"z":-1, "dist":0.064})
+
+##########################################################################
+# Generating mesh...
+##########################################################################
 
 geoOCC = occ.OCCGeometry(full)
+# ng.Draw(geoOCC)
+print('Geometry ... %.2fs'%(time.monotonic()-tm))
+
+tm = time.monotonic()
 geoOCCmesh = geoOCC.GenerateMesh()
+print('Mesh ... %.2fs' %(time.monotonic()-tm))
 
-MESH = pde.mesh3.netgen(geoOCCmesh)
-print(MESH)
 
-print('Generating the mesh took ...', time.monotonic()-tm)
-
-# geoOCCmesh.SecondOrder()
-# geoOCCmesh.Refine()
-# geoOCCmesh.Refine()
+geoOCCmesh.Save('whatever2.vol')
+mesh = ngs.Mesh('whatever2.vol')

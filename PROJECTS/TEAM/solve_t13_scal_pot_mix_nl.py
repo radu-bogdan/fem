@@ -6,9 +6,6 @@ from nonlin_TEAM13_new import *
 from solve_t13_strom import *
 from solve_t13_mag_pot_lin import A
 
-# @profile
-# def do():
-    
 MESH = pde.mesh3.netgen(geoOCCmesh)
 
 ##############################################################################
