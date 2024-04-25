@@ -67,7 +67,7 @@ def BHCurves(nr):
     HL = Hdata[L]
     dH = HL-Hdata[L-1]
     dB = BL-Bdata[L-1]
-    for i in range(0,10):
+    for i in range(0,100):
         BL = BL + dB
         HL = HL + dH
         Bdata.append(BL)
@@ -87,7 +87,7 @@ def BHCurves(nr):
         return BSpline(order,hh,bb)
     
 
-# w1 = BHCurves(-4).Differentiate()
+# w1 = BHCurves(-4)
 # wd1 = w1.Differentiate()
 # wv = []
 
@@ -105,7 +105,7 @@ def BHCurves(nr):
 
 # ##################################
 
-# w2 = BHCurves(-3).Differentiate()
+# w2 = BHCurves(-3)
 # wd2 = w2.Differentiate()
 # wv = []
 
@@ -123,7 +123,7 @@ def BHCurves(nr):
 
 # ##################################
 
-# w = BHCurves(-2).Differentiate()
+# w = BHCurves(-2)
 # wv = []
 
 # import matplotlib.pyplot as plt
