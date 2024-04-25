@@ -1,7 +1,7 @@
-def BHCurves(nr):
-    import numpy as np
-    from ngsolve import BSpline
+import numpy as np
+from ngsolve import BSpline
 
+def BHCurves(nr):
     if abs(nr)==1:
         # nlhfo.fnc from pchstein dipl
         print("BH data from Pechstein nlhfo.fnc")
@@ -48,11 +48,11 @@ def BHCurves(nr):
         #    1.750000, 1.800000, 1.820000, 1.870000, 1.920000, 1.970000, 2.020000, 2.070000, 2.120000, 2.170000, 2.220000, 2.270000, 
         #    2.320000]
 
-    elif abs(nr)==5:
-        mu0 = 1.256636e-6
-        nu0 = 1/mu0
-        B = list(np.arange(0,5,0.1))
-        H = list(nu0*np.arange(0,5,0.1))
+    # elif abs(nr)==5:
+    #     mu0 = 1.256636e-6
+    #     nu0 = 1/mu0
+    #     B = list(np.arange(0,5,0.1))
+    #     H = list(nu0*np.arange(0,5,0.1))
 
     else:
         print("unknown bh curve")
@@ -67,17 +67,17 @@ def BHCurves(nr):
     HL = Hdata[L]
     dH = HL-Hdata[L-1]
     dB = BL-Bdata[L-1]
-    for i in range(0,100):
+    for i in range(0,10):
         BL = BL + dB
         HL = HL + dH
         Bdata.append(BL)
         Hdata.append(HL)
 
-    bb=Bdata.copy()
-    hh=Hdata.copy()
+    bb = Bdata.copy()
+    hh = Hdata.copy()
     
-    order=2
-    if nr>0:
+    order = 2
+    if nr > 0:
         print("returning energy")
         bb.insert(0,0)
         return BSpline(order,bb,hh)
@@ -85,4 +85,73 @@ def BHCurves(nr):
         print("returning coenergy")
         hh.insert(0,0)
         return BSpline(order,hh,bb)
+    
+
+# w1 = BHCurves(-4).Differentiate()
+# wd1 = w1.Differentiate()
+# wv = []
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+# # x = np.arange(0,100_000,100)
+# x = np.arange(0,1000000,100)
+
+# for i in range(x.size):
+#     wv.append(w1(x[i]))
+
+# plt.plot(x,wv,'*')
+
+
+
+# ##################################
+
+# w2 = BHCurves(-3).Differentiate()
+# wd2 = w2.Differentiate()
+# wv = []
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+# # x = np.arange(0,100_000,100)
+# x = np.arange(0,1000000,100)
+
+# for i in range(x.size):
+#     wv.append(w2(x[i]))
+
+# plt.plot(x,wv,'*')
+
+
+
+# ##################################
+
+# w = BHCurves(-2).Differentiate()
+# wv = []
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+# # x = np.arange(0,100_000,100)
+# x = np.arange(0,1000000,100)
+
+# for i in range(x.size):
+#     wv.append(w(x[i]))
+
+# # plt.plot(x,wv,'*')
+
+
+
+# ##################################
+
+# w = BHCurves(-5)
+# wv = []
+
+# import matplotlib.pyplot as plt
+# import numpy as np
+# x = np.arange(0,1000000,100)
+
+# for i in range(x.size):
+#     wv.append(w(x[i]))
+
+# # plt.plot(x,wv,'*')
+
+
+
 
