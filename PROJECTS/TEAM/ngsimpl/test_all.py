@@ -115,7 +115,7 @@ u,v = HCurl.TnT()
 
 # Nonlinear:
 
-maxit = 10000
+maxit = 1000
 tol2 = 1e-8
 regb = 1e-12
 
@@ -132,7 +132,7 @@ def fun_W():
     # with ngs.TaskManager(): res = ngs.Integrate(cf_energy - ngs.curl(Hs)*A, mesh)
     return res
 
-ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 2*deg)
+ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 3*deg)
 
 
 if lin == 1: cf_rhs = mesh.MaterialCF({linear: nu0, nonlinear: nu0}, default = nu0).Compile()
@@ -276,7 +276,7 @@ u,v = H1.TnT()
 
 
 # Nonlinear:
-maxit = 100000
+maxit = 1000
 tol2 = 1e-8
 regh = 1e-12
 
@@ -292,7 +292,7 @@ def fun_W():
     res = ngs.Integrate(cf_coenergy, mesh)
     return res
 
-ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 2*deg)
+ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 3*deg)
 
 if lin == 1: cf_rhs = mesh.MaterialCF({linear: mu0, nonlinear: mu0}, default = mu0).Compile()
 else: cf_rhs = mesh.MaterialCF({linear: mu0, nonlinear: fun_dw(normH)/normH}, default = mu0).Compile()
@@ -451,7 +451,7 @@ X = Q*V
 
 # Nonlinear:
 
-maxit = int(1e7)
+maxit = 1000
 
 tol2 = 1e-8
 regb = 1e-12
@@ -470,7 +470,7 @@ def fun_W():
     with ngs.TaskManager(): res = ngs.Integrate(cf_energy - Hs*B, mesh)
     return res
 
-ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 2*deg)
+ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 3*deg)
 
 if lin == 1: cf_rhs = mesh.MaterialCF({linear: nu0, nonlinear: nu0}, default = nu0).Compile()
 else: cf_rhs = mesh.MaterialCF({linear: nu0, nonlinear: fun_dw(normB)/normB}, default = nu0).Compile()
@@ -533,7 +533,7 @@ for it in range(1,maxit+1):
     tic()
     with ngs.TaskManager():
         rhs_mod = (da.harmonic_extension_trans * rhs.vec).Evaluate()
-        iterativeSolver = CGSolver(mat = da.mat, pre = C_iter.mat, tol  = 1e-4,  maxiter = maxit)
+        iterativeSolver = CGSolver(mat = da.mat, pre = C_iter.mat, tol = 1e-4,  maxiter = maxit)
         du.vec.data = iterativeSolver * rhs_mod
         # du.vec.data = RT * du.vec
 
