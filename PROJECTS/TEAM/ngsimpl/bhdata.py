@@ -18,7 +18,7 @@ def BHCurves(nr):
             1.40, 1.50, 1.60, 1.70, 1.80]
     elif abs(nr)==3: 
         # team problem 20
-        print("BH data from TEAM 20 problem")
+        # print("BH data from TEAM 20 problem")
         B = [0.0, 0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70,
             0.80, 0.90, 1.0, 1.1, 1.2, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6, 1.65, 
             1.7, 1.75, 1.8, 1.85, 1.9, 1.95, 2.0, 2.05, 2.1, 2.15, 2.2, 2.25, 2.3]
@@ -67,7 +67,7 @@ def BHCurves(nr):
     HL = Hdata[L]
     dH = HL-Hdata[L-1]
     dB = BL-Bdata[L-1]
-    for i in range(0,100):
+    for i in range(0,1000):
         BL = BL + dB
         HL = HL + dH
         Bdata.append(BL)
@@ -76,13 +76,13 @@ def BHCurves(nr):
     bb = Bdata.copy()
     hh = Hdata.copy()
     
-    order = 2
+    order = 3
     if nr > 0:
-        print("returning energy")
+        # print("returning energy")
         bb.insert(0,0)
         return BSpline(order,bb,hh)
     else:
-        print("returning coenergy")
+        # print("returning coenergy")
         hh.insert(0,0)
         return BSpline(order,hh,bb)
     

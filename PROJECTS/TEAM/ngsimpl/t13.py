@@ -12,7 +12,7 @@ tm = time.monotonic()
 
 box1 = occ.Box(occ.Pnt(-0.100,-0.100,-0.050), occ.Pnt(0.100,0.100,0.050))
 box2 = occ.Box(occ.Pnt(-0.075,-0.075,-0.050), occ.Pnt(0.075,0.075,0.050))
-    
+
 ##########################################################################
 # Rounding corners ...
 ##########################################################################
@@ -90,11 +90,6 @@ for face in ambient.faces: face.name = 'ambient_face'
 
 # steel_h = 0.002
 
-# steel_hf = 0.005
-# for face in r_steel.faces: face.maxh = steel_hf
-# for face in l_steel.faces: face.maxh = steel_hf
-# for face in mid_steel.faces: face.maxh = steel_hf
-
 coil_up_indices = (1,14)
 coil_down_indices = (3,27)
 coil_outer_indices = (0,2,4,5,13,19,18,17,16,15)
@@ -116,19 +111,23 @@ l_steel.mat("l_steel")
 mid_steel.mat("mid_steel")
 ambient.mat("ambient")
 
-h = 2**-6
+h = 2**-5
 
-steel_h = 0.1*h
+steel_hf = h/8
+for face in r_steel.faces: face.maxh = steel_hf
+for face in l_steel.faces: face.maxh = steel_hf
+for face in mid_steel.faces: face.maxh = steel_hf
+
+steel_h = h/16
 
 for edge in r_steel.edges: edge.maxh = steel_h
 for edge in l_steel.edges: edge.maxh = steel_h
 for edge in mid_steel.edges: edge.maxh = steel_h
 
-vh = 0.01*h
-
-for vertex in r_steel.vertices : vertex.maxh = vh
-for vertex in l_steel.vertices : vertex.maxh = vh
-for vertex in mid_steel.vertices : vertex.maxh = vh
+# vh = h/100
+# for vertex in r_steel.vertices : vertex.maxh = vh
+# for vertex in l_steel.vertices : vertex.maxh = vh
+# for vertex in mid_steel.vertices : vertex.maxh = vh
 
 
 # ambient.maxh = 0.05
