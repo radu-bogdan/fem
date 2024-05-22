@@ -1,11 +1,9 @@
 # Python program for Kruskal's algorithm to find 
 # Minimum Spanning Tree of a given connected, 
 # undirected and weighted graph 
-  
-  
+
 # Class to represent a graph 
-class Graph: 
-  
+class Graph:
     def __init__(self, vertices): 
         self.V = vertices 
         self.graph = []
