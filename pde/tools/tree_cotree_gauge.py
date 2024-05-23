@@ -2,7 +2,7 @@ from .mst import *
 import numpy as np
 import scipy.sparse as sp
 
-def tree_cotree_gauge(MESH, random_edges=False, edges = None):
+def tree_cotree_gauge(MESH, random_edges = False, edges = None):
 
     if edges is None: edges = MESH.EdgesToVertices[:,:2]
 
