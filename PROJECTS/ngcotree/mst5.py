@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
-# Python program for Kruskal's algorithm to find 
-# Minimum Spanning Trees of given connected or disconnected, 
+# Python program for Kruskal's algorithm to find
+# Minimum Spanning Trees of given connected or disconnected,
 # undirected graph, with edges provided as an Nx3 list
 
-# Class to represent a graph 
+# Class to represent a graph
 class Graph: 
     def __init__(self, vertices): 
         self.V = vertices 
@@ -18,15 +18,15 @@ class Graph:
             self.graph.append(tuple(edge))
   
     def find(self, parent, i):
-        if parent[i] != i: 
-            parent[i] = self.find(parent, parent[i]) 
+        if parent[i] != i:
+            parent[i] = self.find(parent, parent[i])
         return parent[i]
   
     def union(self, parent, rank, x, y): 
-        if rank[x] < rank[y]: 
-            parent[x] = y 
-        elif rank[x] > rank[y]: 
-            parent[y] = x 
+        if rank[x] < rank[y]:
+            parent[x] = y
+        elif rank[x] > rank[y]:
+            parent[y] = x
         else:
             parent[y] = x 
             rank[x] += 1
