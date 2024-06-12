@@ -101,29 +101,11 @@ def BHCurves(nr):
 
 # plt.plot(x,wv,'*')
 
-# ##################################
 
-# w2 = BHCurves(4)
-# wd2 = w2.Differentiate()
-
-# wv = []
-# wv2 = []
-
-# import matplotlib.pyplot as plt
-# import numpy as np
-# x = np.arange(-20,20,0.1)
-
-# for i in range(x.size):
-#     wv.append(w2(x[i]))
-#     wv2.append(wd2(x[i]))
-
-# # plt.plot(x,wv,'*')
-# plt.plot(x,wv2,'*')
-# print(min(wv2),max(wv2))
 
 # ##################################
 
-# w2 = BHCurves(3)
+# w2 = BHCurves(-3)
 # wd2 = w2.Differentiate()
 # wv = []
 
