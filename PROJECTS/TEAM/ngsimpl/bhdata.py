@@ -1,5 +1,6 @@
 import numpy as np
 from ngsolve import BSpline
+import ngsolve as ngs
 
 def BHCurves(nr):
     if abs(nr)==1:
@@ -87,6 +88,29 @@ def BHCurves(nr):
         return BSpline(order,hh,bb)
     
 
+def Brauer():
+    
+    k1 = 49.4; k2 = 1.46; k3 = 520.6;
+
+    # f= lambda x,y: k1/2/k2*(np.exp(k2*x**2+k2*y**2)-1)+1/2*k3*(x**2+y**2)
+    
+    # fx= lambda x,y: (k1*np.exp(k2*(x**2+y**2))+k3)*x
+    # fy= lambda x,y: (k1*np.exp(k2*(x**2+y**2))+k3)*y
+    
+    # fxx=lambda x,y: k1*np.exp(k2*(x**2+y**2))+2*x**2*k1*k2*np.exp(k2*(x**2+y**2))+k3
+    # fyy=lambda x,y: k1*np.exp(k2*(x**2+y**2))+2*y**2*k1*k2*np.exp(k2*(x**2+y**2))+k3
+    # fxy=fyx=lambda x,y: 2*x*y*k1*k2*np.exp(k2*(x**2+y**2))
+    # df= lambda x,y:np.array([fx(x,y),fy(x,y)])
+    # ddf= lambda x,y:np.array([[fxx(x,y),fxy(x,y)],[fyx(x,y),fyy(x,y)]])
+
+    fun_w = lambda B : k1/2/k2*(ngs.exp(B**2)-1)+1/2*k3*B**2
+    fun_dw = lambda B : (k1*ngs.exp(k2*B**2)+k3)*B
+    fun_ddw = lambda B : 2*k1*k2*B**2*ngs.exp(k2*B**2) + k1*ngs.exp(k2*B**2) +k3
+
+
+
+    return fun_w, fun_dw, fun_ddw
+
 # w1 = BHCurves(-4)
 # wd1 = w1.Differentiate()
 # wv = []
@@ -169,7 +193,3 @@ def BHCurves(nr):
 #     wv.append(w(x[i]))
 
 # # plt.plot(x,wv,'*')
-
-
-
-

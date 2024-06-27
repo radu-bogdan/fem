@@ -4,7 +4,7 @@ from ngsolve.krylovspace import CGSolver
 from ngcotree import *
 
 
-def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw):
+def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     linear = "coil_plus|coil_minus"
     nonlinear = "stator"
@@ -154,9 +154,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw):
 
 
 
-def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw):
-    linear = "coil_plus|coil_minus"
-    nonlinear = "stator"
+def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     mu0 = 1.256636e-6
     nu0 = 1/mu0
@@ -169,19 +167,19 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw):
 
     
     maxit = 100000
-    tol2 = 1e-8
+    tol2 = 1e-13
     regb = 1e-8
 
     B = curl2d(A)
     normB = ngs.sqrt(B*B + regb)
 
-    ir = ngs.IntegrationRule(ngs.fem.ET.TRIG, order = 2*deg)
+    ir = ngs.IntegrationRule(ngs.fem.ET.TRIG, order = 3*deg)
 
     cf_energy = mesh.MaterialCF({linear: nu0/2*B*B, nonlinear: fun_w(normB)}, default = nu0/2*B*B).Compile()
 
     def fun_W():
         # with ngs.TaskManager(): res = ngs.Integrate(cf_energy - curl2d(A)*Hs, mesh, order = 2*deg)
-        with ngs.TaskManager(): res = ngs.Integrate(cf_energy - A*J, mesh, order = 2*deg)
+        with ngs.TaskManager(): res = ngs.Integrate(cf_energy - A*J, mesh, order = 3*deg)
         return res
 
 
@@ -251,7 +249,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw):
             nrm0 = nrm
         
         # wn = 1e12
-        if abs(wo-w)/abs(w) < tol2:
+        if abs(wo-w)/abs(w+regb) < tol2:
         # if abs(wn-w) < tol2:
         # if nrm/nrm0 < tol2:
             # print("converged to desired tolerance")
