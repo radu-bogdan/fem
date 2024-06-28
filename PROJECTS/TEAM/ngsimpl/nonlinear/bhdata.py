@@ -1,6 +1,7 @@
 import numpy as np
 from ngsolve import BSpline
 import ngsolve as ngs
+from scipy.optimize import fsolve
 
 def BHCurves(nr):
     if abs(nr)==1:
@@ -68,16 +69,18 @@ def BHCurves(nr):
     HL = Hdata[L]
     dH = HL-Hdata[L-1]
     dB = BL-Bdata[L-1]
-    for i in range(0,1000):
+
+    for i in range(0,1_000_000):
         BL = BL + dB
         HL = HL + dH
-        Bdata.append(BL)
-        Hdata.append(HL)
+        if i%1000 == 0:
+            Bdata.append(BL)
+            Hdata.append(HL)
 
     bb = Bdata.copy()
     hh = Hdata.copy()
     
-    order = 3
+    order = 4
     if nr > 0:
         # print("returning energy")
         bb.insert(0,0)
@@ -89,27 +92,54 @@ def BHCurves(nr):
     
 
 def Brauer():
-    
-    k1 = 49.4; k2 = 1.46; k3 = 520.6;
-
-    # f= lambda x,y: k1/2/k2*(np.exp(k2*x**2+k2*y**2)-1)+1/2*k3*(x**2+y**2)
-    
-    # fx= lambda x,y: (k1*np.exp(k2*(x**2+y**2))+k3)*x
-    # fy= lambda x,y: (k1*np.exp(k2*(x**2+y**2))+k3)*y
-    
-    # fxx=lambda x,y: k1*np.exp(k2*(x**2+y**2))+2*x**2*k1*k2*np.exp(k2*(x**2+y**2))+k3
-    # fyy=lambda x,y: k1*np.exp(k2*(x**2+y**2))+2*y**2*k1*k2*np.exp(k2*(x**2+y**2))+k3
-    # fxy=fyx=lambda x,y: 2*x*y*k1*k2*np.exp(k2*(x**2+y**2))
-    # df= lambda x,y:np.array([fx(x,y),fy(x,y)])
-    # ddf= lambda x,y:np.array([[fxx(x,y),fxy(x,y)],[fyx(x,y),fyy(x,y)]])
-
+    k1 = 49.4; k2 = 1.46; k3 = 520.6
     fun_w = lambda B : k1/2/k2*(ngs.exp(B**2)-1)+1/2*k3*B**2
     fun_dw = lambda B : (k1*ngs.exp(k2*B**2)+k3)*B
     fun_ddw = lambda B : 2*k1*k2*B**2*ngs.exp(k2*B**2) + k1*ngs.exp(k2*B**2) +k3
+    return fun_w, fun_dw, fun_ddw
 
+def BrauerCut():
+    mu0 = 1.256636e-6; nu0 = 1/mu0
 
+    k1 = 49.4; k2 = 1.46; k3 = 520.6
+
+    f = lambda B : k1/2/k2*(ngs.exp(B**2)-1)+1/2*k3*B**2
+    df = lambda B : (k1*ngs.exp(k2*B**2)+k3)*B
+    ddf = lambda B : 2*k1*k2*B**2*ngs.exp(k2*B**2) + k1*ngs.exp(k2*B**2) +k3
+
+    # Finding Schnittpunkt zwischen lin und nonlin
+    r = fsolve(lambda x : ddf(x)-nu0, 2)
+    a = df(r); s = f(r)
+
+    # fl1 = lambda B: 1/2*nu0*B**2 + ngs.CF((a-nu0*r))*B
+    # fl = lambda B: fl1(B)-ngs.CF(fl1(r)+f(r)) # adjusted convexity
+    fl = lambda B: (1/2*nu0*B**2 + ngs.CF((a-nu0*r))*B)-\
+                   ngs.CF((1/2*nu0*r**2 + (a-nu0*r)*r)+ (k1/2/k2*(np.exp(r**2)-1)+1/2*k3*r**2))
+
+    dfl = lambda B : nu0*B+a-nu0*r
+    ddfl = lambda B : nu0
+
+    fun_w = lambda B : fl(B)*ngs.IfPos(B-r,1,0) + f(B)*ngs.IfPos(B-r,0,1)
+    fun_dw = lambda B : dfl(B)*ngs.IfPos(B-r,1,0) + df(B)*ngs.IfPos(B-r,0,1)
+    fun_ddw = lambda B : ddfl(B)*ngs.IfPos(B-r,1,0) + ddf(B)*ngs.IfPos(B-r,0,1)
 
     return fun_w, fun_dw, fun_ddw
+
+
+
+
+
+
+    # fl = lambda B: B#(1/2*nu0*B**2 + (a-nu0*r)*B)-(1/2*nu0*r**2 + (a-nu0*r)*r)+ (k1/2/k2*(np.exp(r**2)-1)+1/2*k3*r**2)
+
+
+
+
+
+
+
+
+
 
 # w1 = BHCurves(-4)
 # wd1 = w1.Differentiate()

@@ -167,7 +167,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     
     maxit = 100000
-    tol2 = 1e-13
+    tol2 = 1e-9
     regb = 1e-8
 
     B = curl2d(A)
@@ -244,19 +244,21 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         tm2 = toc()
 
         nrm = ngs.InnerProduct(du.vec,dw.vec)
-        
+
         if it == 1:
             nrm0 = nrm
         
         # wn = 1e12
         if abs(wo-w)/abs(w+regb) < tol2:
+        # if abs(wo-w)/abs(w) < tol2:
         # if abs(wn-w) < tol2:
         # if nrm/nrm0 < tol2:
+            print("Iter: %2d | assem : %.2fs | CG took %.2fs | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,alpha,w,nrm/nrm0))
             # print("converged to desired tolerance")
             break
-        # elif abs(wo-w)< tol2*1e-2:
+        elif abs(wo-w)< tol2*1e-2:
         #     # print(abs(wo-w),abs(w),alpha,nrm,nrm0)
-        #     print("stopped early due to stagnation | energy= %.10f" %w)
+            print("stopped early due to stagnation | energy= %.10f" %w)
         #     # print("Iter: %2d | assem : %.2fs | CG took %.2fs with %4d iterations | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,iterativeSolver.iterations,alpha,w,nrm/nrm0))
         #     break
         else:
@@ -264,14 +266,15 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
             uo.vec.data = A.vec.data
             wo = w
             alpha = 1
-            for init in range(1,21):
+            for init in range(1,210):
                 A.vec.data -= alpha*du.vec.data
                 wn = fun_W()
+                # if wn < w - alpha*1/2*nrm:
                 if wn < w - alpha*0.01*nrm:
-                    # print("Iter: %2d | assem : %.2fs | CG took %.2fs | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,alpha,w,nrm/nrm0))
+                    print("Iter: %2d | assem : %.2fs | CG took %.2fs | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,alpha,w,nrm/nrm0))
                     break
                 else:
                     alpha = alpha/2
                     A.vec.data = uo.vec.data
-
+            # print(alpha)
     return A,it
