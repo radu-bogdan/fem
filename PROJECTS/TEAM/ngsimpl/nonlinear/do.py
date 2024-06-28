@@ -19,7 +19,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     # Nonlinear:
     maxit = 2000
-    tol2 = 1e-8
+    tol2 = 1e-15
     regb = 1e-8
 
     # A = ngs.GridFunction(HCurl, nested=True)
