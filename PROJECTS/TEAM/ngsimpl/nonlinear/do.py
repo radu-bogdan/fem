@@ -6,8 +6,8 @@ from ngcotree import *
 
 def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
-    linear = "coil_plus|coil_minus"
-    nonlinear = "stator"
+    # linear = "coil_plus|coil_minus"
+    # nonlinear = "stator"
 
     mu0 = 1.256636e-6
     nu0 = 1/mu0
@@ -18,21 +18,21 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
 
     # Nonlinear:
-    maxit = 2000
-    tol2 = 1e-15
+    maxit = 1_000_000
+    tol2 = 1e-13
     regb = 1e-8
 
     # A = ngs.GridFunction(HCurl, nested=True)
     B = ngs.curl(A)
     normB = ngs.sqrt(B*B + regb)
 
-    ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 2*deg)
+    ir = ngs.IntegrationRule(ngs.fem.ET.TET, order = 3*deg)
 
     cf_energy = mesh.MaterialCF({linear: nu0/2*B*B, nonlinear: fun_w(normB)}, default = nu0/2*B*B).Compile()
 
     def fun_W():
         # with ngs.TaskManager(): res = ngs.Integrate(cf_energy - J*A, mesh)
-        with ngs.TaskManager(): res = ngs.Integrate(cf_energy - J*A, mesh, order = 2*deg)
+        with ngs.TaskManager(): res = ngs.Integrate(cf_energy - J*A, mesh, order = 3*deg)
         # with ngs.TaskManager(): res = ngs.Integrate(cf_energy - ngs.curl(Hs)*A, mesh)
         # print("res:" + str(ngs.Integrate(cf_energy, mesh)))
         return res
@@ -100,7 +100,8 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         # iterativeSolver = CGSolver(K_iter.mat, freedofs = HCurl.FreeDofs(), atol = 1e-2,  maxiter = maxit, printrates = False)
         # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit*10)
         with ngs.TaskManager():
-            iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
+            # iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
+            iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit, printrates = False)
 
             # du.vec.data = iterativeSolver * dw.vec
             du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec 
@@ -118,14 +119,14 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
             nrm0 = nrm
         
         # wn = 1e12
-        if abs(wo-w) < tol2:
+        if abs(wo-w)/abs(w+regb) < tol2:
         # if abs(wn-w) < tol2:
         # if nrm/nrm0 < tol2:
             # print(wo,w)
             # print("converged to desired tolerance")
             break
-        # elif abs(wo-w) < tol2*1e-2:
-        #     print("stopped early due to stagnation")
+        elif abs(wo-w) < tol2*1e-2:
+            print("stopped early due to stagnation")
         #     break
         else:
             # linesearch
@@ -137,9 +138,9 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
                 A.vec.data -= alpha*du.vec.data
                 wn = fun_W()
                 # print(w,wn)
-                if wn < w - alpha*0.1*nrm:
+                if wn < w - alpha*0.01*nrm:
                     # print("Iter: %2d | assem : %.2fs | CG took %.2fs with %4d iterations | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,iterativeSolver.iterations,alpha,w,nrm/nrm0))
-                    # print("Iter: %2d | assem : %.2fs | CG took %.2fs with %4d iterations | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,len(iterativeSolver.residuals),alpha,w,nrm/nrm0))
+                    print("Iter: %2d | assem : %.2fs | CG took %.2fs with %4d iterations | alpha : %.2f | energy = %.10f | relres = %.2e |"  %(it,tm1,tm2,len(iterativeSolver.residuals),alpha,w,nrm/nrm0))
                     break
                 else:
                     # print(alpha)
@@ -149,6 +150,8 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
     # HDiv = ngs.HDiv(mesh, order = deg)
     # B = ngs.GridFunction(HDiv)
     # with ngs.TaskManager(): B.Set(ngs.curl(A))
+
+    print(A.vec.data.FV().NumPy().max())
 
     return A,it
 
@@ -166,8 +169,8 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         return rot*ngs.grad(a)
 
     
-    maxit = 100000
-    tol2 = 1e-9
+    maxit = 100_000
+    tol2 = 1e-13
     regb = 1e-8
 
     B = curl2d(A)
@@ -266,7 +269,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
             uo.vec.data = A.vec.data
             wo = w
             alpha = 1
-            for init in range(1,210):
+            for init in range(1,2100):
                 A.vec.data -= alpha*du.vec.data
                 wn = fun_W()
                 # if wn < w - alpha*1/2*nrm:
