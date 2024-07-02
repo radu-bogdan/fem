@@ -89,11 +89,12 @@ def BHCurves(nr):
         # print("returning coenergy")
         hh.insert(0,0)
         return BSpline(order,hh,bb)
-    
+
+k1 = 2.6; k2 = 2.72; k3 = 154.4
+# k1 = 49.4; k2 = 1.46; k3 = 520.6
 
 def Brauer():
-    k1 = 49.4; k2 = 1.46; k3 = 520.6
-    fun_w = lambda B : k1/2/k2*(ngs.exp(B**2)-1)+1/2*k3*B**2
+    fun_w = lambda B : k1/(2*k2)*(ngs.exp(k2*B**2)-1)+1/2*k3*B**2
     fun_dw = lambda B : (k1*ngs.exp(k2*B**2)+k3)*B
     fun_ddw = lambda B : 2*k1*k2*B**2*ngs.exp(k2*B**2) + k1*ngs.exp(k2*B**2) +k3
     return fun_w, fun_dw, fun_ddw
@@ -101,9 +102,7 @@ def Brauer():
 def BrauerCut():
     mu0 = 1.256636e-6; nu0 = 1/mu0
 
-    k1 = 49.4; k2 = 1.46; k3 = 520.6
-
-    f = lambda B : k1/2/k2*(ngs.exp(B**2)-1)+1/2*k3*B**2
+    f = lambda B : k1/(2*k2)*(ngs.exp(k2*B**2)-1)+1/2*k3*B**2
     df = lambda B : (k1*ngs.exp(k2*B**2)+k3)*B
     ddf = lambda B : 2*k1*k2*B**2*ngs.exp(k2*B**2) + k1*ngs.exp(k2*B**2) +k3
 
@@ -138,14 +137,16 @@ def BrauerCut():
 
 
 
+# import matplotlib.pyplot as plt
 
+# import matplotlib
+# matplotlib.use('TkAgg')
 
 
 # w1 = BHCurves(-4)
 # wd1 = w1.Differentiate()
 # wv = []
 
-# import matplotlib.pyplot as plt
 # import numpy as np
 # # x = np.arange(0,100_000,100)
 # x = np.arange(0,1000000,100)

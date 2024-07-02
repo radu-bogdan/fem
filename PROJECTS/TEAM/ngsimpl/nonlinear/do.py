@@ -100,11 +100,11 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         # iterativeSolver = CGSolver(K_iter.mat, freedofs = HCurl.FreeDofs(), atol = 1e-2,  maxiter = maxit, printrates = False)
         # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit*10)
         with ngs.TaskManager():
-            # iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
-            iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit, printrates = False)
+            iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
+            # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-13,  maxiter = maxit, printrates = False)
 
-            # du.vec.data = iterativeSolver * dw.vec
-            du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec 
+            du.vec.data = iterativeSolver * dw.vec
+            # du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec 
         
         # print('MAXdu: ' + str(du.vec.FV().NumPy().max()))
         # print('MAXdw: ' + str(dw.vec.FV().NumPy().max()))

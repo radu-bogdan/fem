@@ -11,7 +11,7 @@ degdif = 1
 
 ######################################################
 # from bhdata import BHCurves
-# fun_dw  = BHCurves(4)
+# fun_dw  = BHCurves(3)
 # fun_w   = fun_dw.Integrate()
 # fun_ddw = fun_dw.Differentiate()
 ######################################################
