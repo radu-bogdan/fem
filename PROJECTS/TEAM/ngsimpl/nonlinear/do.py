@@ -96,12 +96,29 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         
         tic()
 
+    
+        jac = K_iter.mat.CreateSmoother(newFreeDofs)
+
+        class SymmetricGS(ngs.BaseMatrix):
+            def __init__ (self, smoother):
+                super(SymmetricGS, self).__init__()
+                self.smoother = smoother
+            def Mult (self, x, y):
+                y[:] = 0.0
+                self.smoother.Smooth(y, x)
+                self.smoother.SmoothBack(y,x)
+            def Height (self):
+                return self.smoother.height
+            def Width (self):
+                return self.smoother.height
+            
+        jacmod = SymmetricGS(jac)
         
         # iterativeSolver = CGSolver(K_iter.mat, freedofs = HCurl.FreeDofs(), atol = 1e-2,  maxiter = maxit, printrates = False)
         # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit*10)
         with ngs.TaskManager():
-            iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
-            # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-13,  maxiter = maxit, printrates = False)
+            # iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
+            iterativeSolver = CGSolver(K_iter.mat, pre = jacmod, tol  = 1e-13,  maxiter = maxit, printrates = False)
 
             du.vec.data = iterativeSolver * dw.vec
             # du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec 
@@ -169,7 +186,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         return rot*ngs.grad(a)
 
     
-    maxit = 100_000
+    maxit = 10_000_000
     tol2 = 1e-13
     regb = 1e-8
 
