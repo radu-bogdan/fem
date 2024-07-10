@@ -169,10 +169,10 @@ if doarr[0]==1:
                 0,0,1), dims=(3,3))
 
     BBt = ngs.CF((B[0]*B[0], B[0]*B[1], B[0]*B[2],
-                B[1]*B[0], B[1]*B[1], B[1]*B[2],
-                B[2]*B[0], B[2]*B[1], B[2]*B[2]), dims = (3,3))
+                  B[1]*B[0], B[1]*B[1], B[1]*B[2],
+                  B[2]*B[0], B[2]*B[1], B[2]*B[2]), dims = (3,3))
 
-
+    
     fun1 = fun_dw(normB)/normB
     fun2 = (fun_ddw(normB) - fun_dw(normB)/normB)/(normB*normB)
 
