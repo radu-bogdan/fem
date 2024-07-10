@@ -4,7 +4,9 @@ def makeGeo():
     r_coil = 0.025
     y_coil = 0.05
     r_outer = 0.1
-    height = 0.02
+    height = 0.012
+
+    print("dsadas313")
 
     ###############################################################
     c1 = occ.Cylinder((0,0,0), occ.Z, r = r_outer, h = height)

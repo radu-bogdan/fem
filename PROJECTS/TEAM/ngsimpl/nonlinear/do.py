@@ -3,7 +3,6 @@ from ttictoc import tic, toc
 from ngsolve.krylovspace import CGSolver
 from ngcotree import *
 
-
 def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     # linear = "coil_plus|coil_minus"
@@ -18,8 +17,8 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
 
     # Nonlinear:
-    maxit = 1_000_000
-    tol2 = 1e-13
+    maxit = 100_000_000
+    tol2 = 1e-14
     regb = 1e-8
 
     # A = ngs.GridFunction(HCurl, nested=True)
@@ -64,10 +63,14 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
     cf_iter = mesh.MaterialCF({linear: nu0*Id, nonlinear: fun1*Id + fun2*BBt}, default = nu0*Id).Compile()
 
     K_iter = ngs.BilinearForm(HCurl)
-    K_iter += ngs.SymbolicBFI(cf_iter*ngs.curl(u)*ngs.curl(v), intrule = ir)
+    K_iter += ngs.SymbolicBFI(cf_iter*ngs.curl(u)*ngs.curl(v) + 1e-5*u*v, intrule = ir)
     # K_iter += (cf_iter*ngs.curl(u)*ngs.curl(v))*ngs.dx
-    C_iter = ngs.Preconditioner(K_iter, type = "local")
+    # C_iter = ngs.Preconditioner(K_iter, type = "local")
+    C_iter = ngs.Preconditioner(K_iter, "bddc")
 
+    # C_iter = ngs.MultiGridPreconditioner(K_iter, coarsetype="hcurlamg") 
+    # C_iter = ngs.MultiGridPreconditioner(K_iter)
+    
     def fun_ddW():
         with ngs.TaskManager(): K_iter.Assemble()
         return K_iter
@@ -76,7 +79,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     print("Using 3D mesh with ne=", mesh.ne, "elements and nv=", mesh.nv, "points and " ,HCurl.ndof, "DOFs.\n ")
 
-    with ngs.TaskManager(): A.Set(ngs.CF((0,0,0)))
+    # with ngs.TaskManager(): A.Set(ngs.CF((0,0,0)))
 
     du = ngs.GridFunction(HCurl)
     uo = ngs.GridFunction(HCurl)
@@ -96,15 +99,35 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         
         tic()
 
+    
+        jac = K_iter.mat.CreateSmoother(newFreeDofs)
+
+        # class SymmetricGS(ngs.BaseMatrix):
+        #     def __init__ (self, smoother):
+        #         super(SymmetricGS, self).__init__()
+        #         self.smoother = smoother
+        #     def Mult (self, x, y):
+        #         y[:] = 0.0
+        #         self.smoother.Smooth(y, x)
+        #         self.smoother.SmoothBack(y,x)
+        #     def Height (self):
+        #         return self.smoother.height
+        #     def Width (self):
+        #         return self.smoother.height
+            
+        # jacmod = SymmetricGS(jac)
         
         # iterativeSolver = CGSolver(K_iter.mat, freedofs = HCurl.FreeDofs(), atol = 1e-2,  maxiter = maxit, printrates = False)
         # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit*10)
-        with ngs.TaskManager():
-            iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-8,  maxiter = maxit, printrates = False)
-            # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-13,  maxiter = maxit, printrates = False)
 
-            du.vec.data = iterativeSolver * dw.vec
-            # du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec 
+        # print("At iteration:")
+        with ngs.TaskManager():
+            # iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-12,  maxiter = maxit, printrates = False)
+            iterativeSolver = CGSolver(K_iter.mat, pre = C_iter, atol  = 1e-11,  maxiter = maxit, printrates = False)
+
+            # du.vec.data = iterativeSolver * dw.vec
+            # du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec
+            du.vec.data = da.mat.Inverse(newFreeDofs, inverse="pardiso") * dw.vec
         
         # print('MAXdu: ' + str(du.vec.FV().NumPy().max()))
         # print('MAXdw: ' + str(dw.vec.FV().NumPy().max()))
@@ -119,7 +142,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
             nrm0 = nrm
         
         # wn = 1e12
-        if abs(wo-w)/abs(w+regb) < tol2:
+        if abs(wo-w) < tol2:
         # if abs(wn-w) < tol2:
         # if nrm/nrm0 < tol2:
             # print(wo,w)
@@ -151,7 +174,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
     # B = ngs.GridFunction(HDiv)
     # with ngs.TaskManager(): B.Set(ngs.curl(A))
 
-    print(A.vec.data.FV().NumPy().max())
+    # print(A.vec.data.FV().NumPy().max())
 
     return A,it
 
@@ -169,7 +192,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         return rot*ngs.grad(a)
 
     
-    maxit = 100_000
+    maxit = 10_000_000
     tol2 = 1e-13
     regb = 1e-8
 
@@ -216,7 +239,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
     
     print("Using 2D mesh with ne=", mesh.ne, "elements and nv=", mesh.nv, "points and " ,H1.ndof, "DOFs.\n ")
 
-    with ngs.TaskManager(): A.Set(ngs.CF((0)))
+    # with ngs.TaskManager(): A.Set(ngs.CF((0)))
 
     du = ngs.GridFunction(H1)
     uo = ngs.GridFunction(H1)
@@ -252,7 +275,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
             nrm0 = nrm
         
         # wn = 1e12
-        if abs(wo-w)/abs(w+regb) < tol2:
+        if abs(wo-w) < tol2:
         # if abs(wo-w)/abs(w) < tol2:
         # if abs(wn-w) < tol2:
         # if nrm/nrm0 < tol2:

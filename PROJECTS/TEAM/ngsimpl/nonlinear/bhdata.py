@@ -90,7 +90,8 @@ def BHCurves(nr):
         hh.insert(0,0)
         return BSpline(order,hh,bb)
 
-k1 = 2.6; k2 = 2.72; k3 = 154.4
+k1 = 3.8; k2 = 2.17; k3 = 396.2
+# k1 = 2.6; k2 = 2.72; k3 = 154.4
 # k1 = 49.4; k2 = 1.46; k3 = 520.6
 
 def Brauer():
