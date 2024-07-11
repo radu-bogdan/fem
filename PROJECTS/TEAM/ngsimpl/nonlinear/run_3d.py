@@ -33,7 +33,7 @@ linear = "coil_plus|coil_minus"
 nonlinear = "stator"
 
 strom = 1e5
-amps = 0.025**2*3.15*strom
+amps = 0.025**2*3.1415926*strom
 print(f'Applying a current of {amps:.2f} Amps')
 ######################################################
 
