@@ -11,8 +11,8 @@ ngcore.SetNumThreads(48)
 # netgen.meshing.Mesh.EnableTableClass("edges", True)
 # netgen.meshing.Mesh.EnableTableClass("faces", True)
 
-levels = 5
-deg = 3
+levels = 4
+deg = 2
 degdif = 1
 
 
