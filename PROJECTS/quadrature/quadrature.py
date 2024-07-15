@@ -35,6 +35,7 @@ T4 = lambda a : np.c_[a*p1 + (1-a)*p2,
                       a*p1 + (1-a)*p3,
                       a*p3 + (1-a)*p2,
                       a*p2 + (1-a)*p3]
+
 eval_T4 = lambda a,i,j : T4(a)[0,:]**(0*int(i<0)+i*int(i>=0))*T4(a)[1,:]**(0*int(j<0)+j*int(j>=0))
 
 dT4 = np.c_[p1-p2,
@@ -63,7 +64,7 @@ T6 = lambda a,b : np.c_[b*(a*m1 + (1-a)*p1) + (1-b)*(a*m2 + (1-a)*p2),
                         b*(a*m3 + (1-a)*p3) + (1-b)*(a*m2 + (1-a)*p2),
                         b*(a*m2 + (1-a)*p2) + (1-b)*(a*m1 + (1-a)*p1),
                         b*(a*m3 + (1-a)*p3) + (1-b)*(a*m1 + (1-a)*p1),
-                        b*(a*m2 + (1-a)*p2) + (1-b)*(a*m3 + (1-a)*p3)] 
+                        b*(a*m2 + (1-a)*p2) + (1-b)*(a*m3 + (1-a)*p3)]
 
 ##### Evaluation #####
 
