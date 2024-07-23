@@ -1,3 +1,15 @@
+function rule02()
+    # Function to return the rule of degree 2
+
+    x = [0.00000000000000000000000000000000]
+    
+    y = [0.57735026918962576450914878050196]
+    
+    w = [0.21934566882541541013653648363283]
+
+    return x, y, w
+end
+
 function rule50()
     x = [0.00000000000000000000000000000000,
      -0.11243137017724544706384538604138,
@@ -256,6 +268,78 @@ function rule50()
     return x,y,w
 end
 
+function quaerotate(xin::Float64, yin::Float64)
+    # Function to apply a rotation
+
+    # Initialize the matrix of rotation
+    theta = 2.0 * π / 3.0
+    a11 = cos(theta)
+    a22 = cos(theta)
+    a12 = -sin(theta)
+    a21 = -a12
+
+    # Apply the rotation matrix to the input vector
+    xout = a11 * xin + a12 * yin
+    yout = a21 * xin + a22 * yin
+
+    return xout, yout
+end
+
+function quaeinside(iitype::Int, xsout::Float64, ysout::Float64)
+    # Function to check whether a point is inside a triangle
+
+    s = sqrt(3.0)
+
+    if iitype == 2
+        # The 1/6 of triangle
+        nbool = 1
+
+        if xsout < -1.0 || 0.0 < xsout
+            nbool = 0
+        end
+
+        # hx
+        if ysout < -1.0 / s - 1.0e-30 || xsout / s < ysout
+            nbool = 0
+        end
+
+    elseif iitype == 1
+        # The 1/3 of triangle
+        nbool = 0
+
+        if xsout <= 0.0 && -1.0 <= xsout && 
+           -1.0 / s <= ysout && ysout <= xsout / s
+            nbool = 1
+        end
+
+        if 0.0 <= xsout && xsout <= 1.0 && 
+           -1.0 / s <= ysout && ysout <= -xsout / s
+            nbool = 1
+        end
+
+    elseif iitype == 0
+        # The entire triangle
+        nbool = 1
+
+        if ysout < -1.0 / s
+            nbool = 0
+        end
+
+        if s * xsout + 2.0 / s < ysout
+            nbool = 0
+        end
+
+        if -s * xsout + 2.0 / s < ysout
+            nbool = 0
+        end
+
+    else
+        error("Invalid iitype")
+    end
+
+    return nbool
+end
+
 
 function quaequad0(mmax::Int, kk::Int)
     # Function to return the requested quadrature rule
@@ -298,3 +382,133 @@ function quaequad0(mmax::Int, kk::Int)
 
     return xnew, ynew, w
 end
+
+function rule_compressed_size(mmax::Int)
+    # Function to return the compressed size of the requested quadrature rule
+
+    nnodes = [
+        1,  1,  2,  2,  3,
+        3,  4,  5,  6,  7,
+        8,  8, 10, 10, 12,
+        13, 13, 15, 17, 18,
+        19, 20, 23, 24, 25,
+        27, 29, 30, 32, 34,
+        37, 39, 41, 44, 46,
+        46, 49, 51, 54, 58,
+        58, 62, 65, 67, 70,
+        73, 75, 78, 82, 84
+    ]
+
+    if 1 <= mmax <= 50
+        npts = nnodes[mmax]
+    else
+        error("RULE_COMPRESSED_SIZE - Fatal error! Degree MMAX must be between 1 and 50.")
+    end
+
+    return npts
+end
+
+
+
+function quaecopy(xs::Vector{Float64}, ys::Vector{Float64}, ws::Vector{Float64}, kk::Int)
+    z = zeros(Float64, 2, kk)
+    w = zeros(Float64, kk)
+    
+    z[1, :] = xs[1:kk]
+    z[2, :] = ys[1:kk]
+    w[:] = ws[1:kk]
+    
+    return z, w
+end
+
+
+
+
+
+function quaenodes(nptsout::Int, xsout::Vector{Float64}, ysout::Vector{Float64}, wsout::Vector{Float64})
+
+    ntot = 0
+    xs2 = Float64[]
+    ys2 = Float64[]
+    ws2 = Float64[]
+
+    for i in 1:nptsout
+        if xsout[i]^2 + ysout[i]^2 < eps()
+        ntot += 1
+        push!(xs2, xsout[i])
+        push!(ys2, ysout[i])
+        push!(ws2, wsout[i])
+        elseif xsout[i]^2 < eps() || abs(ysout[i] - xsout[i] / sqrt(3.0)) < sqrt(eps())
+        x0, y0 = xsout[i], ysout[i]
+        w0 = wsout[i] / 3.0
+
+        ntot += 1
+        push!(xs2, x0)
+        push!(ys2, y0)
+        push!(ws2, w0)
+
+        ntot += 1
+        x1, y1 = quaerotate(x0, y0)
+        push!(xs2, x1)
+        push!(ys2, y1)
+        push!(ws2, w0)
+
+        ntot += 1
+        x2, y2 = quaerotate(x1, y1)
+        push!(xs2, x2)
+        push!(ys2, y2)
+        push!(ws2, w0)
+        else
+        x0, y0 = xsout[i], ysout[i]
+        w0 = wsout[i] / 6.0
+
+        for (x, y) in [(x0, y0), quaerotate(x0, y0), quaerotate(quaerotate(x0, y0)...),
+                    (-x0, y0), quaerotate(-x0, y0), quaerotate(quaerotate(-x0, y0)...)]
+        ntot += 1
+        push!(xs2, x)
+        push!(ys2, y)
+        push!(ws2, w0)
+        end
+    end
+end
+
+return ntot, xs2, ys2, ws2
+end
+
+function quaequad(itype::Int, mmax::Int)
+    # Function to return a symmetric quadrature formula for a reference triangle
+
+    if !(1 <= mmax <= 50)
+        error("QUAEQUAD - Fatal error! 1 <= MMAX <= 50 is required.")
+    end
+
+    if !(0 <= itype <= 2)
+        error("QUAEQUAD - Fatal error! 0 <= ITYPE <= 2 is required.")
+    end
+
+    # Retrieve the compressed rule
+    kk = rule_compressed_size(mmax)
+    xnew, ynew, whts = quaequad0(mmax, kk)
+
+    nptsout = kk
+
+    # Expand the nodes to the entire triangle
+    if itype == 0
+        nptsout, xsout, ysout, wsout = quaenodes(kk, xnew, ynew, whts)
+        zs, whts = quaecopy(xsout, ysout, wsout, nptsout)
+
+    # Expand the nodes to the lower 1/3 of the triangle
+    elseif itype == 1
+        nptsout, xsout, ysout, wsout = quaenodes2(kk, xnew, ynew, whts)
+        zs, whts = quaecopy(xsout, ysout, wsout, nptsout)
+
+    # Simply copy the nodes; they are already in the lower-left 1/6 of the triangle
+    elseif itype == 2
+        zs, whts = quaecopy(xnew, ynew, whts, nptsout)
+    end
+
+    return zs, whts
+end
+
+
+print("kek")
