@@ -511,4 +511,11 @@ function quaequad(itype::Int, mmax::Int)
 end
 
 
-print("kek")
+
+vertices = [
+    0.0 0.0
+    1.0 0.0
+    0.0 1.0
+]
+
+X, W = simplexquad(2, vertices)
