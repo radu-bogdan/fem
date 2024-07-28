@@ -1,7 +1,8 @@
 module OrthoPols
 export ortho2eva3
 
-function kjacopols2(x::T, a::T, b::T, n::Int) where T <: AbstractFloat
+function kjacopols2(x::T, a::T, b::T, n::Int) where T
+# function kjacopols2(x::T, a::T, b::T, n::Int) where T <: AbstractFloat
     pols = zeros(T, n+1)
     ders = zeros(T, n+1)
 
@@ -51,7 +52,8 @@ function kjacopols2(x::T, a::T, b::T, n::Int) where T <: AbstractFloat
     return pols, ders
 end
 
-function klegeypols3(x::T, y::T, n::Int) where T <: AbstractFloat
+function klegeypols3(x::T, y::T, n::Int) where T
+# function klegeypols3(x::T, y::T, n::Int) where T <: AbstractFloat
     pols = zeros(T, n + 1)
     dersx = zeros(T, n + 1)
     dersy = zeros(T, n + 1)
@@ -99,15 +101,23 @@ function klegeypols3(x::T, y::T, n::Int) where T <: AbstractFloat
     return pols, dersx, dersy
 end
 
-function ortho2eva30(mmax::Int, z::Vector{T}) where T <: AbstractFloat
+function ortho2eva30(mmax::Int, z::Vector{T}) where T
+# function ortho2eva30(mmax::Int, z::Vector{T}) where T <: AbstractFloat
     # Constants
+    # zero_T = zero(T)
+    # sqrt2 = sqrt(T(2))
+    # sqrt3 = sqrt(T(3))
+    # r11 = T(-1) / 3
+    # r12 = T(-1) / sqrt3
+    # r21 = T(-1) / 3
+    # r22 = T(2) / sqrt3
     zero_T = zero(T)
-    sqrt2 = sqrt(T(2))
-    sqrt3 = sqrt(T(3))
-    r11 = T(-1) / 3
-    r12 = T(-1) / sqrt3
-    r21 = T(-1) / 3
-    r22 = T(2) / sqrt3
+    sqrt2 = sqrt(2one(T))
+    sqrt3 = sqrt(3one(T))
+    r11 = -one(T) / 3
+    r12 = -one(T) / sqrt3
+    r21 = -one(T) / 3
+    r22 = 2one(T) / sqrt3
 
     x, y = z
 
@@ -157,14 +167,18 @@ function ortho2eva30(mmax::Int, z::Vector{T}) where T <: AbstractFloat
     return pols, dersx, dersy
 end
 
-function ortho2eva3(mmax::Int, z::Vector{T}) where T <: AbstractFloat
+function ortho2eva3(mmax::Int, z::Vector{T}) where T
+# function ortho2eva3(mmax::Int, z::Vector{T}) where T <: AbstractFloat
     # Check if z has exactly 2 elements
     @assert length(z) == 2 "z must be a vector of length 2"
 
     # Constants
-    c0 = T(1) / sqrt(T(3)) * sqrt(sqrt(T(3)))
-    c1 = sqrt(T(2)) * sqrt(sqrt(T(3)))
-    c2 = sqrt(T(2)) * sqrt(sqrt(T(3)))
+    # c0 = T(1) / sqrt(T(3)) * sqrt(sqrt(T(3)))
+    # c1 = sqrt(T(2)) * sqrt(sqrt(T(3)))
+    # c2 = sqrt(T(2)) * sqrt(sqrt(T(3)))
+    c0 = one(T) / sqrt(3one(T)) * sqrt(sqrt(3one(T)))
+    c1 = sqrt(2one(T)) * sqrt(sqrt(3one(T)))
+    c2 = sqrt(2one(T)) * sqrt(sqrt(3one(T)))
 
     if mmax == 0
         pols = [c0]
