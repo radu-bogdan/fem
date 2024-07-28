@@ -111,8 +111,6 @@ def BrauerCut():
     r = fsolve(lambda x : ddf(x)-nu0, 2)
     a = df(r); s = f(r)
 
-    # fl1 = lambda B: 1/2*nu0*B**2 + ngs.CF((a-nu0*r))*B
-    # fl = lambda B: fl1(B)-ngs.CF(fl1(r)+f(r)) # adjusted convexity
     fl = lambda B: (1/2*nu0*B**2 + ngs.CF((a-nu0*r))*B)-\
                    ngs.CF((1/2*nu0*r**2 + (a-nu0*r)*r)+ (k1/2/k2*(np.exp(r**2)-1)+1/2*k3*r**2))
 
