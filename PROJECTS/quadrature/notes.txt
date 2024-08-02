@@ -135,7 +135,6 @@ specs = [
 specs = [
     (1, 0), # Vertices
     (2, 0), # Edge Midpoints
-    (3, 0), # Trig Midpoint
     (4, 1), # Edge class
     (4, 1), # Edge class
     (5, 1), # Interior class, type 1
@@ -171,3 +170,19 @@ specs = [
 # Ordnung 14
 ###################################################################################
 
+specs = [
+    (1, 0), # Vertices
+    (3, 0), # Trig Midpoint
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+    (3, 0), # Trig Midpoint
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+]
+
+... hmm.... scheint nicht wirklich zu gehen

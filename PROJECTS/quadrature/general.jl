@@ -104,7 +104,7 @@ using LinearAlgebra
 using Optim
 using Plots
 using Optim
-using LineSearches
+# using LineSearches
 
 BLAS.set_num_threads(Sys.CPU_THREADS)
 
@@ -116,32 +116,21 @@ seed = hash(time_ns)
 Random.seed!(seed)
 
 
-order = 10
+order = 14
 
 specs = [
     (1, 0), # Vertices
-    (2, 0), # Edge Midpoints
-    # (3, 0), # Trig Midpoint
     (4, 1), # Edge class
     (4, 1), # Edge class
-    # (5, 1), # Interior class, type 1
-    # (5, 1), # Interior class, type 1
+    (4, 1), # Edge class
+    (3, 0), # Trig Midpoint
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (6, 2), # Interior class, type 2
-    (6, 2)  # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
 ]
-
-# specs = [
-#     (1, 0), # Vertices
-#     (4, 1), # Edge class
-#     (4, 1), # Edge class
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (6, 2)  # Interior class, type 2
-# ]
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
@@ -450,7 +439,7 @@ function run(A,up,g,freeparam)
                 res = up(a)*g(a)
                 a = a-res
 
-                # println("$(@sprintf("%.3g", f(a))). ", norm(res))
+                println("$(@sprintf("%.3g", f(a))). ", norm(res))
                 if norm(res)<1e-15
                     print(".. res looking good!.")
                     bad = false
@@ -461,19 +450,19 @@ function run(A,up,g,freeparam)
                 
                 if any(x -> (x<0), weight(a)) && i>50
                     bad = true
-                    print(".. neg lams.\n")
+                    # print(".. neg lams.\n")
                     break
-                elseif norm(res)>2  && i>50
-                    print(".. res norm too big, breaking.\n")
+                elseif norm(res)>2  && i>10
+                    # print(".. res norm too big, breaking.\n")
                     bad = true
                     break
-                elseif f(a)>0.01  && i>200
-                    print(".. Zielfunktion not decreasing.\n")
+                elseif f(a)>0.01  && i>10
+                    # print(".. Zielfunktion not decreasing.\n")
                     display(a)
                     bad = true
                     break
-                elseif any(x-> (x>5), a)  && i>50
-                    print(".. big weights.\n")
+                elseif any(x-> (x>2), a)  && i>10
+                    # print(".. big weights.\n")
                     bad = true
                     break
                 end
@@ -504,15 +493,18 @@ function run(A,up,g,freeparam)
 end
 ##############################################################################################################################
 
-a = BigFloat.([0.08241680931165081,
-0.73365862149363,
-0.39515722242112705,
-0.08705039744468356,
-0.7906691698228041,
-0.13151329528213934,
-0.36107813272056627,
-0.11401492882391107,
-0.12893069036277907])
+a = BigFloat.(["0.38795567023711125",
+"0.19919036675837604",
+"0.04228598931612859",
+"0.30329531785740743",
+"0.9447829689502107",
+"0.08023462740680715",
+"1.3419989636655103",
+"0.6111585613042461",
+"0.08142499585711943",
+"0.09489106159252968",
+"0.3396898680218051",
+"0.6965597558127528"])
 
 function deeper(a)
     for i in 1:1000

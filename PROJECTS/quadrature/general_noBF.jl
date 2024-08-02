@@ -6,12 +6,12 @@ using .OrthoPols
 
 using Printf, LinearAlgebra, Optim, Plots, Random
 
-BLAS.set_num_threads(1)
-# BLAS.set_num_threads(Sys.CPU_THREADS)
+# BLAS.set_num_threads(1)
+BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 12
+order = 14
 
 # specs = [
 #     (1, 0), # Vertices
@@ -25,18 +25,29 @@ order = 12
 
 specs = [
     (1, 0), # Vertices
-    (2, 0), # Edge Midpoints
-    # (3, 0), # Trig Midpoint
     (4, 1), # Edge class
     (4, 1), # Edge class
-    # (5, 1), # Interior class, type 1
-    # (5, 1), # Interior class, type 1
+    (4, 1), # Edge class
+    (3, 0), # Trig Midpoint
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (6, 2), # Interior class, type 2
-    (6, 2)  # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
 ]
+
+# specs = [
+#     (1, 0), # Vertices
+#     (2, 0), # Edge Midpoints
+#     (4, 1), # Edge class
+#     (4, 1), # Edge class
+#     (5, 1), # Interior class, type 1
+#     (5, 1), # Interior class, type 1
+#     (5, 1), # Interior class, type 1
+#     (6, 2), # Interior class, type 2
+#     (6, 2)  # Interior class, type 2
+# ]
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
@@ -412,7 +423,7 @@ end
 weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 
-function run_parallel(max_attempts = 200, target_f = 1e-10)
+function run_parallel(max_attempts = 500, target_f = 1e-10, target_res = 1e-15)
     rhs_val = rhs()  # Precompute rhs
     
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs_val))
@@ -431,10 +442,9 @@ function run_parallel(max_attempts = 200, target_f = 1e-10)
             
             try
                 current_f = f(a)
-                @printf("Thread %d starting with a new config: f(a) is about %.3g. ", Threads.threadid(), current_f)
+                @printf("Thread %d starting with a new config: f(a) is about %.3g. \n", Threads.threadid(), current_f)
                 
-                for i in 1:1000
-                    A_a = A(a)  # Compute once
+                for i in 1:10000
                     res = up(a) * g(a)
                     a = a .- res  # Element-wise subtraction
                     
@@ -442,12 +452,13 @@ function run_parallel(max_attempts = 200, target_f = 1e-10)
                     
                     w = weight(a)
                     
-                    if all(x -> x > 0, w) && all(x -> x > 0, a)
+                    # if all(x -> x > 0, w) && all(x -> x > 0, a)
+                    if all(x -> x > 0, w)
                         lock(result_lock) do
                             if current_f < best_f
                                 best_result = a
                                 best_f = current_f
-                                println("Thread $(Threads.threadid()): New best result! f(a) = $current_f")
+                                println("Thread $(Threads.threadid()): New best result! f(a) = $current_f and res = $(norm(res))")
                             end
                         end
                         
@@ -456,14 +467,23 @@ function run_parallel(max_attempts = 200, target_f = 1e-10)
                             Threads.atomic_xchg!(solution_found, true)
                             return
                         end
-                    end
+                        
+                        if norm(res) < target_res
+                            println("Thread $(Threads.threadid()): Small res found! f(a) = $current_f")
+                            Threads.atomic_xchg!(solution_found, true)
+                            return
+                        end
+                    end            
                     
-                    if i > 500
-                        if norm(res) > 2
+                    if i > 30
+                        if any(x -> x > 0, w)
+                            println("Thread $(Threads.threadid()): .. weights negative.")
+                            break
+                        elseif norm(res) > 2
                             println("Thread $(Threads.threadid()): .. res norm too big, breaking.")
                             break
                         elseif any(x -> x > 5, a)
-                            println("Thread $(Threads.threadid()): .. big weights.")
+                            println("Thread $(Threads.threadid()): .. big lams.")
                             break
                         end
                     end
@@ -504,7 +524,7 @@ function run_parallel(max_attempts = 200, target_f = 1e-10)
     end
 
     if solution_found[]
-        println("Solution found with positive weights and f(a) < $target_f:")
+        println("Solution found with positive weights with either f(a) < $target_f: or small res, u gotta check!")
         display(best_result)
         println("f(a) = ", best_f)
     else
@@ -521,15 +541,20 @@ function run_parallel(max_attempts = 200, target_f = 1e-10)
     return best_result, best_f
 end
 
-a = BigFloat.(["0.08241681507823011945294286373531904405845952423134596282614025628517770576804981",
-"0.7336586356282496528158148279730068963729017833255884881520737441032971857121487", 
-"0.3968992432090585282173714149068856270044609413319084636886713959115893061823328", 
-"0.08483206729954031152189230763403608792291905858396488199050836173441803150625181",
-"0.7897555797440240196725215804242898435608124756653441874097675727603200540085861", 
-"0.1324011112438714654919235821499105342443585799348871082110686313515405366807619", 
-"0.3618924416944691121874987235030598557249083247797107107788101611925815667687246", 
-"0.1147700956805489009249444304666597162954323750142438600326002054576767855213305", 
-"0.127964059325616321114149468299952478585934750904417616264837824112179310167174"])
+
+
+# a = BigFloat.(["0.08241681507823011945294286373531904405845952423134596282614025628517770576804981",
+#                 "0.7336586356282496528158148279730068963729017833255884881520737441032971857121487", 
+#                 "0.3968992432090585282173714149068856270044609413319084636886713959115893061823328", 
+#                 "0.08483206729954031152189230763403608792291905858396488199050836173441803150625181",
+#                 "0.7897555797440240196725215804242898435608124756653441874097675727603200540085861", 
+#                 "0.1324011112438714654919235821499105342443585799348871082110686313515405366807619", 
+#                 "0.3618924416944691121874987235030598557249083247797107107788101611925815667687246", 
+#                 "0.1147700956805489009249444304666597162954323750142438600326002054576767855213305", 
+#                 "0.127964059325616321114149468299952478585934750904417616264837824112179310167174"])
+
+
+
 
 function deeper(a)
     for i in 1:1000
@@ -537,6 +562,7 @@ function deeper(a)
         a = a .- res  # Element-wise subtraction
         println(a, " and ", norm(res), " and ", f(a))
     end
+    return a
 end
 
 
@@ -594,13 +620,6 @@ function plot_configuration(specs, a)
     return p  # Return the plot object
 end
 
-# # Usage
-# specs = [(1, 0), 
-#          (4, 1), 
-#          (5, 1), 
-#          (5, 2)]
 
-# a = [0.1, 0.2, 0.3, 0.4]
-
-p = plot_configuration(specs, a)
-display(p)
+# p = plot_configuration(specs, a)
+# display(p)
