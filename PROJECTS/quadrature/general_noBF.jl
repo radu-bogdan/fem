@@ -521,15 +521,15 @@ function run_parallel(max_attempts = 200, target_f = 1e-10)
     return best_result, best_f
 end
 
-# a =  [0.9334102272619269,
-# 0.2667643973861267,
-# 0.38254889275250037,
-# 0.09484058786804535,
-# 0.7656644739920165,
-# 0.136698877977577,
-# 0.3615135471870996,
-# 0.10586945917648398,
-# 0.12904825539775194]
+a = BigFloat.(["0.08241681507823011945294286373531904405845952423134596282614025628517770576804981",
+"0.7336586356282496528158148279730068963729017833255884881520737441032971857121487", 
+"0.3968992432090585282173714149068856270044609413319084636886713959115893061823328", 
+"0.08483206729954031152189230763403608792291905858396488199050836173441803150625181",
+"0.7897555797440240196725215804242898435608124756653441874097675727603200540085861", 
+"0.1324011112438714654919235821499105342443585799348871082110686313515405366807619", 
+"0.3618924416944691121874987235030598557249083247797107107788101611925815667687246", 
+"0.1147700956805489009249444304666597162954323750142438600326002054576767855213305", 
+"0.127964059325616321114149468299952478585934750904417616264837824112179310167174"])
 
 function deeper(a)
     for i in 1:1000
@@ -538,3 +538,69 @@ function deeper(a)
         println(a, " and ", norm(res), " and ", f(a))
     end
 end
+
+
+
+weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
+
+
+
+
+
+
+
+
+
+function plot_configuration(specs, a)
+    # Create a new plot
+    p = plot()
+
+    # Define the vertices of the triangle
+    p1, p2, p3 = [0,0], [0,1], [1,0]
+    x = [p1[1], p2[1], p3[1], p1[1]]
+    y = [p1[2], p2[2], p3[2], p1[2]]
+
+    # Plot the triangle
+    plot!(p, x, y, seriestype = :shape, fillalpha = 0.3, linecolor = :blue, legend = false, aspect_ratio = :equal)
+
+    a_index = 1
+    for (T, param_count) in specs
+        if T == 1
+            scatter!(p, T1[1, :], T1[2, :], markersize = 3, markercolor = :blue)
+        elseif T == 2
+            scatter!(p, T2[1, :], T2[2, :], markersize = 3, markercolor = :blue)
+        elseif T == 3
+            scatter!(p, T3[1, :], T3[2, :], markersize = 3, markercolor = :blue)
+        elseif T == 4
+            for i in 1:param_count
+                scatter!(p, T4(a[a_index])[1, :], T4(a[a_index])[2, :], markersize = 3, markercolor = :blue)
+                a_index += 1
+            end
+        elseif T == 5
+            for i in 1:param_count
+                scatter!(p, T5(a[a_index])[1, :], T5(a[a_index])[2, :], markersize = 3, markercolor = :blue)
+                a_index += 1
+            end
+        elseif T == 6
+            scatter!(p, T6(a[a_index], a[a_index+1])[1, :], T6(a[a_index], a[a_index+1])[2, :], markersize = 3, markercolor = :blue)
+            a_index += 2
+        end
+    end
+
+    # Add plot title and labels
+    xlabel!(p, "x")
+    ylabel!(p, "y")
+
+    return p  # Return the plot object
+end
+
+# # Usage
+# specs = [(1, 0), 
+#          (4, 1), 
+#          (5, 1), 
+#          (5, 2)]
+
+# a = [0.1, 0.2, 0.3, 0.4]
+
+p = plot_configuration(specs, a)
+display(p)

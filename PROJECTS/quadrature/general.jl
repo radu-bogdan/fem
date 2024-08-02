@@ -6,7 +6,7 @@ using .OrthoPols
 
 using Printf
 
-use_bigfloat = false
+use_bigfloat = true
 
 ##############################################################################################################################
 
@@ -118,30 +118,30 @@ Random.seed!(seed)
 
 order = 10
 
-# specs = [
-#     (1, 0), # Vertices
-#     (2, 0), # Edge Midpoints
-#     (3, 0), # Trig Midpoint
-#     (4, 1), # Edge class
-#     (4, 1), # Edge class
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (6, 2), # Interior class, type 2
-#     (6, 2)  # Interior class, type 2
-# ]
-
 specs = [
     (1, 0), # Vertices
+    (2, 0), # Edge Midpoints
+    # (3, 0), # Trig Midpoint
     (4, 1), # Edge class
     (4, 1), # Edge class
+    # (5, 1), # Interior class, type 1
+    # (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
+    (6, 2), # Interior class, type 2
     (6, 2)  # Interior class, type 2
 ]
+
+# specs = [
+#     (1, 0), # Vertices
+#     (4, 1), # Edge class
+#     (4, 1), # Edge class
+#     (5, 1), # Interior class, type 1
+#     (5, 1), # Interior class, type 1
+#     (5, 1), # Interior class, type 1
+#     (6, 2)  # Interior class, type 2
+# ]
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
@@ -503,3 +503,25 @@ function run(A,up,g,freeparam)
     end
 end
 ##############################################################################################################################
+
+a = BigFloat.([0.08241680931165081,
+0.73365862149363,
+0.39515722242112705,
+0.08705039744468356,
+0.7906691698228041,
+0.13151329528213934,
+0.36107813272056627,
+0.11401492882391107,
+0.12893069036277907])
+
+function deeper(a)
+    for i in 1:1000
+        res = up(a) * g(a)
+        a = a .- res  # Element-wise subtraction
+        # println(a, " and ", norm(res), " and ", f(a))
+        println(a)
+        println(norm(res))
+        println(f(a),"\n\n")
+    end
+    return a
+end
