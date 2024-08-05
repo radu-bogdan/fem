@@ -11,31 +11,48 @@ BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 14
-
-# specs = [
-#     (1, 0), # Vertices
-#     (4, 1), # Edge class
-#     (4, 1), # Edge class
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (6, 2)  # Interior class, type 2
-# ]
+order = 8
 
 specs = [
     (1, 0), # Vertices
+    (2, 0), # Edge midpoints
     (4, 1), # Edge class
-    (4, 1), # Edge class
-    (4, 1), # Edge class
-    (3, 0), # Trig Midpoint
+    (3, 0), # Trig midpoint
     (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
+    (6, 2)  # Interior class, type 2
 ]
+
+
+# specs = [
+#     (1, 0), # Vertices (T1)
+#     (4, 1), # Edge class (T4)
+#     (4, 1), # Edge class (T4)
+#     (4, 1), # Edge class (T4)
+#     # (3, 0), # Trig Midpoint (T3)
+#     # (2, 0), # Edge Midpoints (T2)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (6, 2), # Interior class, type 2 (T6)
+#     (6, 2), # Interior class, type 2 (T6)
+#     (6, 2), # Interior class, type 2 (T6)
+#     # (6, 2), # Interior class, type 2 (T6)
+# ]
+
+# 12-element Vector{Float64}:
+#  0.00018754936834924115
+#  0.002290712128579711
+#  0.004460620633823175
+#  0.0057642049439120754
+#  0.06177890295220832
+#  0.03922564348847025
+#  0.02037253914463989
+#  0.00716779670253598
+#  0.019911018092357142
+#  0.05118216931026127
+#  0.031057889522220987
+#  0.01818231290432509
 
 # specs = [
 #     (1, 0), # Vertices
@@ -423,7 +440,7 @@ end
 weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 
-function run_parallel(max_attempts = 500, target_f = 1e-10, target_res = 1e-15)
+function run_parallel(max_attempts = 1000, target_f = 1e-5, target_res = 1e-12)
     rhs_val = rhs()  # Precompute rhs
     
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs_val))
@@ -444,7 +461,7 @@ function run_parallel(max_attempts = 500, target_f = 1e-10, target_res = 1e-15)
                 current_f = f(a)
                 @printf("Thread %d starting with a new config: f(a) is about %.3g. \n", Threads.threadid(), current_f)
                 
-                for i in 1:10000
+                for i in 1:1000
                     res = up(a) * g(a)
                     a = a .- res  # Element-wise subtraction
                     
@@ -453,12 +470,12 @@ function run_parallel(max_attempts = 500, target_f = 1e-10, target_res = 1e-15)
                     w = weight(a)
                     
                     # if all(x -> x > 0, w) && all(x -> x > 0, a)
-                    if all(x -> x > 0, w)
+                    if all(x -> x > 0, w) && i>100
                         lock(result_lock) do
                             if current_f < best_f
                                 best_result = a
                                 best_f = current_f
-                                println("Thread $(Threads.threadid()): New best result! f(a) = $current_f and res = $(norm(res))")
+                                println("Thread $(Threads.threadid()): New best result! f(a) = $current_f and res = $(norm(res))\n")
                             end
                         end
                         
@@ -469,33 +486,33 @@ function run_parallel(max_attempts = 500, target_f = 1e-10, target_res = 1e-15)
                         end
                         
                         if norm(res) < target_res
-                            println("Thread $(Threads.threadid()): Small res found! f(a) = $current_f")
+                            println("Thread $(Threads.threadid()): Small res found! f(a) = $current_f\n")
                             Threads.atomic_xchg!(solution_found, true)
                             return
                         end
                     end            
                     
                     if i > 30
-                        if any(x -> x > 0, w)
-                            println("Thread $(Threads.threadid()): .. weights negative.")
+                        if any(x -> x < 0, w)
+                            # println("Thread $(Threads.threadid()): .. weights negative.")
                             break
                         elseif norm(res) > 2
-                            println("Thread $(Threads.threadid()): .. res norm too big, breaking.")
+                            # println("Thread $(Threads.threadid()): .. res norm too big, breaking.")
                             break
                         elseif any(x -> x > 5, a)
-                            println("Thread $(Threads.threadid()): .. big lams.")
+                            # println("Thread $(Threads.threadid()): .. big lams.")
                             break
                         end
                     end
                     
-                    if i > 500 && current_f > 0.01
+                    if i > 50 && current_f > 0.9
                         println("Thread $(Threads.threadid()): .. Zielfunktion not decreasing.")
                         break
                     end
                 end
             catch e
-                println("Thread $(Threads.threadid()): Error occurred.")
-                println("Error: ", e)
+                # println("Thread $(Threads.threadid()): Error occurred.")
+                # println("Error: ", e)
             end
         end
     end
@@ -553,11 +570,22 @@ end
 #                 "0.1147700956805489009249444304666597162954323750142438600326002054576767855213305", 
 #                 "0.127964059325616321114149468299952478585934750904417616264837824112179310167174"])
 
-
+# a = ([0.3828143013439116
+# 0.08511328607393404
+# 0.7984717474686043
+# 0.9577093426075332
+# 0.5651556254604532
+# 0.33286009325968297
+# 0.10208758770165365
+# 0.8987534863990224
+# 0.28758812032783093
+# 0.34480981083058154
+# 0.09783787981656486
+# 0.7271618752599643])
 
 
 function deeper(a)
-    for i in 1:1000
+    for i in 1:100
         res = up(a) * g(a)
         a = a .- res  # Element-wise subtraction
         println(a, " and ", norm(res), " and ", f(a))
@@ -620,6 +648,8 @@ function plot_configuration(specs, a)
     return p  # Return the plot object
 end
 
-
-# p = plot_configuration(specs, a)
-# display(p)
+function draw()
+    p = plot_configuration(specs, a)
+    display(p)
+    gui()
+end

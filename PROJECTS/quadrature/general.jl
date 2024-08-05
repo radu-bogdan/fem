@@ -115,22 +115,32 @@ time_ns = floor(Int, current_time * 1e9)
 seed = hash(time_ns)
 Random.seed!(seed)
 
-
-order = 14
+order = 8
 
 specs = [
     (1, 0), # Vertices
+    (2, 0), # Edge midpoints
     (4, 1), # Edge class
-    (4, 1), # Edge class
-    (4, 1), # Edge class
-    (3, 0), # Trig Midpoint
+    (3, 0), # Trig midpoint
     (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
+    (6, 2)  # Interior class, type 2
 ]
+
+# order = 14
+
+# specs = [
+#     (1, 0), # Vertices
+#     (4, 1), # Edge class
+#     (4, 1), # Edge class
+#     (4, 1), # Edge class
+#     (3, 0), # Trig Midpoint
+#     (5, 1), # Interior class, type 1
+#     (5, 1), # Interior class, type 1
+#     (5, 1), # Interior class, type 1
+#     (6, 2), # Interior class, type 2
+#     (6, 2), # Interior class, type 2
+#     (6, 2), # Interior class, type 2
+# ]
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
@@ -421,6 +431,7 @@ up(a) = inv(J(a)'*J(a))*J(a)'
 
 ##############################################################################################################################
 
+weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 function run(A,up,g,freeparam)
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
@@ -493,21 +504,26 @@ function run(A,up,g,freeparam)
 end
 ##############################################################################################################################
 
-a = BigFloat.(["0.38795567023711125",
-"0.19919036675837604",
-"0.04228598931612859",
-"0.30329531785740743",
-"0.9447829689502107",
-"0.08023462740680715",
-"1.3419989636655103",
-"0.6111585613042461",
-"0.08142499585711943",
-"0.09489106159252968",
-"0.3396898680218051",
-"0.6965597558127528"])
+# a = BigFloat.(["0.38795567023711125",
+# "0.19919036675837604",
+# "0.04228598931612859",
+# "0.30329531785740743",
+# "0.9447829689502107",
+# "0.08023462740680715",
+# "1.3419989636655103",
+# "0.6111585613042461",
+# "0.08142499585711943",
+# "0.09489106159252968",
+# "0.3396898680218051",
+# "0.6965597558127528"])
+
+a = BigFloat.([ 0.8003678928810258
+0.1609918383399788
+1.1789907903535488
+0.627081634602641])
 
 function deeper(a)
-    for i in 1:1000
+    for i in 1:300
         res = up(a) * g(a)
         a = a .- res  # Element-wise subtraction
         # println(a, " and ", norm(res), " and ", f(a))
