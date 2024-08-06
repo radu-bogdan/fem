@@ -115,32 +115,32 @@ time_ns = floor(Int, current_time * 1e9)
 seed = hash(time_ns)
 Random.seed!(seed)
 
-order = 8
-
-specs = [
-    (1, 0), # Vertices
-    (2, 0), # Edge midpoints
-    (4, 1), # Edge class
-    (3, 0), # Trig midpoint
-    (5, 1), # Interior class, type 1
-    (6, 2)  # Interior class, type 2
-]
-
-# order = 14
+# order = 8
 
 # specs = [
 #     (1, 0), # Vertices
+#     (2, 0), # Edge midpoints
 #     (4, 1), # Edge class
-#     (4, 1), # Edge class
-#     (4, 1), # Edge class
-#     (3, 0), # Trig Midpoint
+#     (3, 0), # Trig midpoint
 #     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (6, 2), # Interior class, type 2
-#     (6, 2), # Interior class, type 2
-#     (6, 2), # Interior class, type 2
+#     (6, 2)  # Interior class, type 2
 # ]
+
+order = 14
+
+specs = [
+    (1, 0), # Vertices
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1 
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1 # no midpoint, additional 5-class, so 2 additional points...
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+]
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
@@ -517,10 +517,19 @@ end
 # "0.3396898680218051",
 # "0.6965597558127528"])
 
-a = BigFloat.([ 0.8003678928810258
-0.1609918383399788
-1.1789907903535488
-0.627081634602641])
+a = BigFloat.([0.6210448422613127
+0.07972789185817206
+0.7986370960715439
+0.5611177925929208
+0.9599692164209439
+0.0663324701435207
+0.33433070672479104
+0.09983680739923065
+0.9032546144314979
+0.09867362791330596
+0.7281109491586926
+1.0329436596868007
+0.31597553195402994])
 
 function deeper(a)
     for i in 1:300

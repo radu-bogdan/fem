@@ -11,63 +11,31 @@ BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 8
+order = 16
 
 specs = [
-    (1, 0), # Vertices
-    (2, 0), # Edge midpoints
-    (4, 1), # Edge class
-    (3, 0), # Trig midpoint
-    (5, 1), # Interior class, type 1
-    (6, 2)  # Interior class, type 2
+    # (1, 0), # Vertices (T1)
+    # (4, 1), # Edge class (T4)
+    # (4, 1), # Edge class (T4)
+    # (4, 1), # Edge class (T4)
+    # (2, 0), # Edge Midpoints (T2)
+    # (3, 0), # Trig midpoint
+    # (5, 1), # Interior class, type 1 (T5)
+    # (5, 1), # Interior class, type 1 (T5)
+    # (5, 1), # Interior class, type 1 (T5)
+    # (5, 1), # Interior class, type 1 (T5)
+    # (5, 1), # Interior class, type 1 (T5)
+    # (5, 1), # Interior class, type 1 (T5)
+    # (6, 2), # Interior class, type 2 (T6)
+    # (6, 2), # Interior class, type 2 (T6)
+    # (6, 2), # Interior class, type 2 (T6)
+    # (6, 2), # Interior class, type 2 (T6)
+    (6, 2), # Interior class, type 2 (T6)
 ]
 
-
-# specs = [
-#     (1, 0), # Vertices (T1)
-#     (4, 1), # Edge class (T4)
-#     (4, 1), # Edge class (T4)
-#     (4, 1), # Edge class (T4)
-#     # (3, 0), # Trig Midpoint (T3)
-#     # (2, 0), # Edge Midpoints (T2)
-#     (5, 1), # Interior class, type 1 (T5)
-#     (5, 1), # Interior class, type 1 (T5)
-#     (5, 1), # Interior class, type 1 (T5)
-#     (5, 1), # Interior class, type 1 (T5)
-#     (6, 2), # Interior class, type 2 (T6)
-#     (6, 2), # Interior class, type 2 (T6)
-#     (6, 2), # Interior class, type 2 (T6)
-#     # (6, 2), # Interior class, type 2 (T6)
-# ]
-
-# 12-element Vector{Float64}:
-#  0.00018754936834924115
-#  0.002290712128579711
-#  0.004460620633823175
-#  0.0057642049439120754
-#  0.06177890295220832
-#  0.03922564348847025
-#  0.02037253914463989
-#  0.00716779670253598
-#  0.019911018092357142
-#  0.05118216931026127
-#  0.031057889522220987
-#  0.01818231290432509
-
-# specs = [
-#     (1, 0), # Vertices
-#     (2, 0), # Edge Midpoints
-#     (4, 1), # Edge class
-#     (4, 1), # Edge class
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (5, 1), # Interior class, type 1
-#     (6, 2), # Interior class, type 2
-#     (6, 2)  # Interior class, type 2
-# ]
-
 freeparam = sum(x[2] for x in specs)
-indices = 1:(Int((order+1)*(order+2)/2))
+# indices = 1:(Int((order+1)*(order+2)/2))
+indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
 
 function Trans(point::Vector{Float64})
     @assert length(point) == 2 "Input point must be a 2-element vector"
@@ -192,6 +160,15 @@ T6(a, b) =  hcat(b * (a * m1 .+ (1 - a) .* p1) .+ (1 - b) * (a * m2 .+ (1 - a) .
                  b * (a * m2 .+ (1 - a) .* p2) .+ (1 - b) * (a * m1 .+ (1 - a) .* p1),
                  b * (a * m3 .+ (1 - a) .* p3) .+ (1 - b) * (a * m1 .+ (1 - a) .* p1),
                  b * (a * m2 .+ (1 - a) .* p2) .+ (1 - b) * (a * m3 .+ (1 - a) .* p3))
+
+# T6(a, b) = hcat(
+#     (1-a)*(1-b) * p1 + a*(1-b) * p2 + b * m1,
+#     (1-a)*(1-b) * p1 + a*(1-b) * p3 + b * m1,
+#     (1-a)*(1-b) * p2 + a*(1-b) * p3 + b * m3,
+#     (1-a)*(1-b) * p2 + a*(1-b) * p1 + b * m2,
+#     (1-a)*(1-b) * p3 + a*(1-b) * p1 + b * m3,
+#     (1-a)*(1-b) * p3 + a*(1-b) * p2 + b * m2
+# )
 
 daT6(b) = hcat(b * (m1 - p1) + (1 - b) * (m2 - p2),
                b * (m1 - p1) + (1 - b) * (m3 - p3),
@@ -325,16 +302,16 @@ end
 
 functions = generate_A_and_dA(specs)
 
-function rhs_slow()
-    X, W = mysimplexquad(order, 2)
-    w = zeros(div((order + 1) * (order + 2), 2))[indices]
+# function rhs_slow()
+#     X, W = mysimplexquad(order, 2)
+#     w = zeros(div((order + 1) * (order + 2), 2))[indices]
     
-    for k = 1:length(W)
-        pols = (ortho2eva3(order, Trans(X[k,:]))[1])[indices]
-        w .+= 2*W[k] .* pols
-    end
-    return w
-end
+#     for k = 1:length(W)
+#         pols = (ortho2eva3(order, Trans(X[k,:]))[1])[indices]
+#         w .+= 2*W[k] .* pols
+#     end
+#     return w
+# end
 
 function rhs()
     w = zeros(div((order + 1) * (order + 2), 2))[indices]
@@ -440,7 +417,7 @@ end
 weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 
-function run_parallel(max_attempts = 1000, target_f = 1e-5, target_res = 1e-12)
+function run_parallel(max_attempts = 2000000, target_f = 1e-5, target_res = 1e-12)
     rhs_val = rhs()  # Precompute rhs
     
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs_val))
@@ -454,14 +431,21 @@ function run_parallel(max_attempts = 1000, target_f = 1e-5, target_res = 1e-12)
     
     function worker()
         while Threads.atomic_add!(attempts, 1) <= max_attempts && !solution_found[]
-            min_val, max_val = 0.01, 0.99
+            # min_val, max_val = -1.99, 1.99
+            min_val, max_val = 0.09, 0.99
             a = min_val .+ (max_val - min_val) .* rand(freeparam)
             
+            cids = calculate_inverse_distance_sum(specs, a)
+
+            if cids>11000
+                break
+            end
+
             try
                 current_f = f(a)
-                @printf("Thread %d starting with a new config: f(a) is about %.3g. \n", Threads.threadid(), current_f)
+                @printf("Thread %d starting with a new config: f(a) is about %.3g and cids is %2d. \n", Threads.threadid(), current_f, cids)
                 
-                for i in 1:1000
+                for i in 1:20000
                     res = up(a) * g(a)
                     a = a .- res  # Element-wise subtraction
                     
@@ -492,20 +476,20 @@ function run_parallel(max_attempts = 1000, target_f = 1e-5, target_res = 1e-12)
                         end
                     end            
                     
-                    if i > 30
+                    if i > 200
                         if any(x -> x < 0, w)
-                            # println("Thread $(Threads.threadid()): .. weights negative.")
+                            println("Thread $(Threads.threadid()): .. weights negative.")
                             break
                         elseif norm(res) > 2
-                            # println("Thread $(Threads.threadid()): .. res norm too big, breaking.")
+                            println("Thread $(Threads.threadid()): .. res norm too big, breaking.")
                             break
                         elseif any(x -> x > 5, a)
-                            # println("Thread $(Threads.threadid()): .. big lams.")
+                            println("Thread $(Threads.threadid()): .. big lams.")
                             break
                         end
                     end
                     
-                    if i > 50 && current_f > 0.9
+                    if i > 1000 && current_f > 0.9
                         println("Thread $(Threads.threadid()): .. Zielfunktion not decreasing.")
                         break
                     end
@@ -560,28 +544,50 @@ end
 
 
 
-# a = BigFloat.(["0.08241681507823011945294286373531904405845952423134596282614025628517770576804981",
-#                 "0.7336586356282496528158148279730068963729017833255884881520737441032971857121487", 
-#                 "0.3968992432090585282173714149068856270044609413319084636886713959115893061823328", 
-#                 "0.08483206729954031152189230763403608792291905858396488199050836173441803150625181",
-#                 "0.7897555797440240196725215804242898435608124756653441874097675727603200540085861", 
-#                 "0.1324011112438714654919235821499105342443585799348871082110686313515405366807619", 
-#                 "0.3618924416944691121874987235030598557249083247797107107788101611925815667687246", 
-#                 "0.1147700956805489009249444304666597162954323750142438600326002054576767855213305", 
-#                 "0.127964059325616321114149468299952478585934750904417616264837824112179310167174"])
 
-# a = ([0.3828143013439116
-# 0.08511328607393404
-# 0.7984717474686043
-# 0.9577093426075332
-# 0.5651556254604532
-# 0.33286009325968297
-# 0.10208758770165365
-# 0.8987534863990224
-# 0.28758812032783093
-# 0.34480981083058154
-# 0.09783787981656486
-# 0.7271618752599643])
+function calculate_inverse_distance_sum(specs, a)
+    points = []
+    a_index = 1
+    
+    for (T, param_count) in specs
+        if T == 1
+            append!(points, [Trans(T1[:, i]) for i in 1:size(T1, 2)])
+        elseif T == 2
+            append!(points, [Trans(T2[:, i]) for i in 1:size(T2, 2)])
+        elseif T == 3
+            append!(points, [Trans(T3[:, i]) for i in 1:size(T3, 2)])
+        elseif T == 4
+            for _ in 1:param_count
+                append!(points, [Trans(T4(a[a_index])[:, i]) for i in 1:size(T4(a[a_index]), 2)])
+                a_index += 1
+            end
+        elseif T == 5
+            for _ in 1:param_count
+                append!(points, [Trans(T5(a[a_index])[:, i]) for i in 1:size(T5(a[a_index]), 2)])
+                a_index += 1
+            end
+        elseif T == 6
+            append!(points, [Trans(T6(a[a_index], a[a_index+1])[:, i]) for i in 1:size(T6(a[a_index], a[a_index+1]), 2)])
+            a_index += 2
+        end
+    end
+    
+    n = length(points)
+    sum_inverse_distances = 0.0
+    
+    for i in 1:n
+        for j in (i+1):n
+            distance_squared = sum((points[i] - points[j]).^2)
+            sum_inverse_distances += 1 / distance_squared
+        end
+    end
+    
+    return sum_inverse_distances
+end
+
+
+
+
 
 
 function deeper(a)
@@ -605,12 +611,32 @@ weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 
 
-function plot_configuration(specs, a)
+function plot_configuration(specs, a; equi=false)
     # Create a new plot
     p = plot()
 
     # Define the vertices of the triangle
     p1, p2, p3 = [0,0], [0,1], [1,0]
+    
+    # Define the vertices of the equilateral triangle
+    eq_p1, eq_p2, eq_p3 = [0, 0], [1, 0], [0.5, sqrt(3)/2]
+    
+    # Function to map points to the equilateral triangle
+    function map_to_equilateral(point)
+        # Barycentric coordinates
+        λ1 = 1 - point[1] - point[2]
+        λ2 = point[1]
+        λ3 = point[2]
+        
+        # Map to equilateral triangle
+        return λ1 * eq_p1 + λ2 * eq_p2 + λ3 * eq_p3
+    end
+    
+    # Apply mapping if equi is true
+    if equi
+        p1, p2, p3 = map_to_equilateral(p1), map_to_equilateral(p2), map_to_equilateral(p3)
+    end
+    
     x = [p1[1], p2[1], p3[1], p1[1]]
     y = [p1[2], p2[2], p3[2], p1[2]]
 
@@ -620,23 +646,29 @@ function plot_configuration(specs, a)
     a_index = 1
     for (T, param_count) in specs
         if T == 1
-            scatter!(p, T1[1, :], T1[2, :], markersize = 3, markercolor = :blue)
+            points = equi ? map(map_to_equilateral, eachcol(T1)) : eachcol(T1)
+            scatter!(p, first.(points), last.(points), markersize = 3, markercolor = :blue)
         elseif T == 2
-            scatter!(p, T2[1, :], T2[2, :], markersize = 3, markercolor = :blue)
+            points = equi ? map(map_to_equilateral, eachcol(T2)) : eachcol(T2)
+            scatter!(p, first.(points), last.(points), markersize = 3, markercolor = :blue)
         elseif T == 3
-            scatter!(p, T3[1, :], T3[2, :], markersize = 3, markercolor = :blue)
+            points = equi ? map(map_to_equilateral, eachcol(T3)) : eachcol(T3)
+            scatter!(p, first.(points), last.(points), markersize = 3, markercolor = :blue)
         elseif T == 4
             for i in 1:param_count
-                scatter!(p, T4(a[a_index])[1, :], T4(a[a_index])[2, :], markersize = 3, markercolor = :blue)
+                points = equi ? map(map_to_equilateral, eachcol(T4(a[a_index]))) : eachcol(T4(a[a_index]))
+                scatter!(p, first.(points), last.(points), markersize = 3, markercolor = :blue)
                 a_index += 1
             end
         elseif T == 5
             for i in 1:param_count
-                scatter!(p, T5(a[a_index])[1, :], T5(a[a_index])[2, :], markersize = 3, markercolor = :blue)
+                points = equi ? map(map_to_equilateral, eachcol(T5(a[a_index]))) : eachcol(T5(a[a_index]))
+                scatter!(p, first.(points), last.(points), markersize = 3, markercolor = :blue)
                 a_index += 1
             end
         elseif T == 6
-            scatter!(p, T6(a[a_index], a[a_index+1])[1, :], T6(a[a_index], a[a_index+1])[2, :], markersize = 3, markercolor = :blue)
+            points = equi ? map(map_to_equilateral, eachcol(T6(a[a_index], a[a_index+1]))) : eachcol(T6(a[a_index], a[a_index+1]))
+            scatter!(p, first.(points), last.(points), markersize = 3, markercolor = :blue)
             a_index += 2
         end
     end
@@ -649,7 +681,121 @@ function plot_configuration(specs, a)
 end
 
 function draw()
-    p = plot_configuration(specs, a)
+    p = plot_configuration(specs, a, equi=true)
     display(p)
     gui()
+end
+
+
+
+
+
+using Statistics: mean, median, std
+
+function seeALL(num_samples = 10000)
+    min_val, max_val = 0, 1
+    vals = zeros(num_samples)
+    best_a = nothing
+    best_val = Inf
+    
+    for i in 1:num_samples
+        a = min_val .+ (max_val - min_val) .* rand(freeparam)
+        val = calculate_inverse_distance_sum(specs, a)
+        vals[i] = val
+        
+        if val < best_val
+            best_val = val
+            best_a = copy(a)  # Make a copy to ensure we keep the best configuration
+        end
+    end
+    
+    p = plot(vals, title="Distribution of Inverse Distance Sum",
+             xlabel="Sample", ylabel="Sum of Inverse Squared Distances",
+             legend=false, linewidth=2)
+    
+    # Add histogram as an inset
+    histogram!(twinx(), vals, orientation=:h, ylabel="Frequency",
+               alpha=0.3, bins=50, legend=false)
+    
+    display(p)
+    
+    # Return statistics and best configuration
+    return (
+        mean = mean(vals),
+        median = median(vals),
+        min = minimum(vals),
+        max = maximum(vals),
+        std = std(vals),
+        best_a = best_a,
+        best_val = best_val
+    )
+end
+
+
+
+
+
+
+function check_points_in_triangle(specs, a)
+    # Helper function to check if a point is inside the triangle
+    function is_inside_triangle(point)
+        x, y = point
+        return x >= 0 && y >= 0 && x + y <= 1
+    end
+
+    # Generate points based on specs and parameters
+    points = []
+    a_index = 1
+
+    for (T, param_count) in specs
+        if T == 1
+            append!(points, [T1[:, i] for i in 1:size(T1, 2)])
+        elseif T == 2
+            append!(points, [T2[:, i] for i in 1:size(T2, 2)])
+        elseif T == 3
+            append!(points, [T3[:, i] for i in 1:size(T3, 2)])
+        elseif T == 4
+            for _ in 1:param_count
+                append!(points, [T4(a[a_index])[:, i] for i in 1:size(T4(a[a_index]), 2)])
+                a_index += 1
+            end
+        elseif T == 5
+            for _ in 1:param_count
+                append!(points, [T5(a[a_index])[:, i] for i in 1:size(T5(a[a_index]), 2)])
+                a_index += 1
+            end
+        elseif T == 6
+            append!(points, [T6(a[a_index], a[a_index+1])[:, i] for i in 1:size(T6(a[a_index], a[a_index+1]), 2)])
+            a_index += 2
+        end
+    end
+
+    # Check if all points are inside the triangle
+    all_inside = all(is_inside_triangle, points)
+
+    # Check if parameters are within the allowed ranges
+    params_in_range = all(0 .<= a[1:end-2] .<= 1) && all(-1 .<= a[end-1:end] .<= 1)
+
+    return all_inside && params_in_range
+end
+
+# Function to generate valid parameters
+function generate_valid_parameters(specs)
+    freeparam = sum(x[2] for x in specs)
+    
+    while true
+        a = rand(freeparam)
+        
+        # Adjust the range for T6 parameters
+        for i in 1:length(specs)
+            if specs[i][1] == 6
+                start_index = sum(x[2] for x in specs[1:i-1]) + 1
+                a[start_index:start_index+1] = 2 .* a[start_index:start_index+1] .- 1
+            end
+        end
+        
+        if check_points_in_triangle(specs, a)
+            return a
+        end
+    end
 end
