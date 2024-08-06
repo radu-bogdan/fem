@@ -11,7 +11,7 @@ BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 16
+order = 12
 
 specs = [
     # (1, 0), # Vertices (T1)
@@ -20,22 +20,22 @@ specs = [
     # (4, 1), # Edge class (T4)
     # (2, 0), # Edge Midpoints (T2)
     # (3, 0), # Trig midpoint
+    (5, 1), # Interior class, type 1 (T5)
+    (5, 1), # Interior class, type 1 (T5)
+    (5, 1), # Interior class, type 1 (T5)
+    (5, 1), # Interior class, type 1 (T5)
+    (5, 1), # Interior class, type 1 (T5)
     # (5, 1), # Interior class, type 1 (T5)
-    # (5, 1), # Interior class, type 1 (T5)
-    # (5, 1), # Interior class, type 1 (T5)
-    # (5, 1), # Interior class, type 1 (T5)
-    # (5, 1), # Interior class, type 1 (T5)
-    # (5, 1), # Interior class, type 1 (T5)
-    # (6, 2), # Interior class, type 2 (T6)
-    # (6, 2), # Interior class, type 2 (T6)
-    # (6, 2), # Interior class, type 2 (T6)
-    # (6, 2), # Interior class, type 2 (T6)
     (6, 2), # Interior class, type 2 (T6)
+    (6, 2), # Interior class, type 2 (T6)
+    (6, 2), # Interior class, type 2 (T6)
+    # (6, 2), # Interior class, type 2 (T6)
+    # (6, 2), # Interior class, type 2 (T6)
 ]
 
 freeparam = sum(x[2] for x in specs)
-# indices = 1:(Int((order+1)*(order+2)/2))
-indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
+indices = 1:(Int((order+1)*(order+2)/2))
+# indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
 
 function Trans(point::Vector{Float64})
     @assert length(point) == 2 "Input point must be a 2-element vector"
@@ -348,67 +348,107 @@ J(a) = J1(a) + J2(a)
 
 up(a) = inv(J(a)'*J(a))*J(a)'
 
-function run(A, up, g, freeparam)
+function run()
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
-    for k=1:10
+    global a = nothing
+
+    for j = 1:100
         min_val = 0.01
         max_val = 0.99
         a = min_val .+ (max_val - min_val) .*(rand(freeparam))
-        bad = false
-
-        print("starting with a new config: ")
-        print("f(a) is about $(@sprintf("%.3g", f(a))). ")
-
-        for i=1:3000
-            try
-                res = up(a)*g(a)
-                a = a-res
-
-                if norm(res)<1e-15
-                    print(".. res looking good!.")
-                    bad = false
-                    break
-                end
-                
-                if any(x -> (x<0), weight(a)) && i>50
-                    bad = true
-                    print(".. neg lams.\n")
-                    break
-                elseif norm(res)>2  && i>50
-                    print(".. res norm too big, breaking.\n")
-                    bad = true
-                    break
-                elseif f(a)>0.01  && i>200
-                    print(".. Zielfunktion not decreasing.\n")
-                    display(a)
-                    bad = true
-                    break
-                elseif any(x-> (x>5), a)  && i>50
-                    print(".. big weights.\n")
-                    bad = true
-                    break
-                end
-            catch e
-                bad = true
-                print(".. nans... breaking\n")
-                break
-            end
+        cids = calculate_inverse_distance_sum(specs, a)
+        if cids<2300
+            break
         end
+    end
+    
+    bad = false
 
-        if !bad
-            print(".. found something promising... \n")
-            weights = ((A(a)' * A(a))\(A(a)' * rhs()))
-            display(a)
-            display(f(a))
+    print("starting with a new config: ")
+    print("f(a) is about $(@sprintf("%.3g", f(a))). ")
 
-            if all(x -> (x>0), weights) && f(a)<1e-1
-                print(" WEIGHTS POSITIVE! \n")
-                break
-            else
-                print("..weights negative, continuing ..")
-                print("f(a)=", f(a), "\n")
+    for i=1:30000
+
+        # try
+            alpha = 1
+            fa = f(a)
+            res = up(a) * g(a)
+            ga = g(a)
+            Ja = J(a)
+            
+            fan = 0
+
+            for j = 1:20
+                an = a .- (alpha.*res)  # Element-wise subtraction
+                
+                gan = g(an)
+                fan = f(an)
+
+                # if fan < fa .- alpha*0.01*sqrt(res'*res)
+                # if all(ga-gan .> 0) #alpha*1/2*(res'*(J(a)'*ga))
+                if fa>fan #alpha*1/2*(res'*(J(a)'*ga))
+                    a = an
+                    break
+                else
+                    alpha = alpha/2
+                    # println(alpha)
+                end
             end
+
+            print(" norm: ", norm(fa-fan))
+
+            if norm(fa-fan)<1e-14
+                break
+            end
+
+            println(" fan: ", fan, " fa: ", fa)
+
+            # a = a .- (alpha.*res)
+
+            if norm(res)<1e-15
+                print(".. res looking good!.")
+                bad = false
+                break
+            end
+            
+            if any(x -> (x<0), weight(a)) && i>50
+                bad = true
+                print(".. neg lams.\n")
+                break
+            elseif norm(res)>2  && i>50
+                print(".. res norm too big, breaking.\n")
+                bad = true
+                break
+            elseif f(a)>0.01  && i>200
+                print(".. Zielfunktion not decreasing.\n")
+                display(a)
+                bad = true
+                break
+            elseif any(x-> (x>5), a)  && i>50
+                print(".. big weights.\n")
+                bad = true
+                break
+            end
+        # catch e
+        #     bad = true
+        #     print(".. nans... breaking\n")
+        #     break
+        # end
+    end
+
+    if !bad
+        print(".. found something promising... \n")
+        weights = ((A(a)' * A(a))\(A(a)' * rhs()))
+        display(a)
+        display(f(a))
+
+        if all(x -> (x>0), weights) && f(a)<1e-1
+            print(" WEIGHTS POSITIVE! \n")
+            # break
+        else
+            print("..weights negative, continuing ..")
+            print("f(a)=", f(a), "\n")
         end
     end
 end
@@ -417,7 +457,7 @@ end
 weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 
-function run_parallel(max_attempts = 2000000, target_f = 1e-5, target_res = 1e-12)
+function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-19)
     rhs_val = rhs()  # Precompute rhs
     
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs_val))
@@ -432,51 +472,73 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-5, target_res = 1e-1
     function worker()
         while Threads.atomic_add!(attempts, 1) <= max_attempts && !solution_found[]
             # min_val, max_val = -1.99, 1.99
-            min_val, max_val = 0.09, 0.99
+            min_val, max_val = 0.001, 0.999
             a = min_val .+ (max_val - min_val) .* rand(freeparam)
             
             cids = calculate_inverse_distance_sum(specs, a)
 
-            if cids>11000
+            if cids>2600
                 break
             end
 
             try
-                current_f = f(a)
-                @printf("Thread %d starting with a new config: f(a) is about %.3g and cids is %2d. \n", Threads.threadid(), current_f, cids)
+                fa = f(a)
+                @printf("Thread %d starting with a new config: f(a) is about %.3g and cids is %2d. \n", Threads.threadid(), fa, cids)
                 
-                for i in 1:20000
+                for i in 1:50000
+                    
+                    alpha = 1
+                    fa = f(a)
                     res = up(a) * g(a)
-                    a = a .- res  # Element-wise subtraction
+                    ga = g(a)
+                    Ja = J(a)
                     
-                    current_f = f(a)
-                    
+                    fan = 0
+
+                    for j = 1:20
+                        an = a .- (alpha.*res)  # Element-wise subtraction
+                        
+                        gan = g(an)
+                        fan = f(an)
+
+                        # if fan < fa .- alpha*0.01*sqrt(res'*res)
+                        # if all(ga-gan .> 0) #alpha*1/2*(res'*(J(a)'*ga))
+                        if fa>fan #alpha*1/2*(res'*(J(a)'*ga))
+                            a = an
+                            break
+                        else
+                            alpha = alpha/2
+                            # println(alpha)
+                        end
+                    end
+
+                    # a = a .- (alpha.*res)
                     w = weight(a)
                     
                     # if all(x -> x > 0, w) && all(x -> x > 0, a)
                     if all(x -> x > 0, w) && i>100
                         lock(result_lock) do
-                            if current_f < best_f
+                            if fa < best_f
                                 best_result = a
-                                best_f = current_f
-                                println("Thread $(Threads.threadid()): New best result! f(a) = $current_f and res = $(norm(res))\n")
+                                best_f = fa
+                                println("Thread $(Threads.threadid()): New best result! f(a) = $fa and res = $(norm(res))\n")
                             end
                         end
                         
-                        if current_f < target_f
-                            println("Thread $(Threads.threadid()): Solution found! f(a) = $current_f")
+                        if fa < target_f
+                            println("Thread $(Threads.threadid()): Solution found! f(a) = $fa")
                             Threads.atomic_xchg!(solution_found, true)
                             return
                         end
                         
                         if norm(res) < target_res
-                            println("Thread $(Threads.threadid()): Small res found! f(a) = $current_f\n")
+                            println("Thread $(Threads.threadid()): Small res found! f(a) = $fa\n")
                             Threads.atomic_xchg!(solution_found, true)
                             return
                         end
                     end            
                     
-                    if i > 200
+                    if i > 60
                         if any(x -> x < 0, w)
                             println("Thread $(Threads.threadid()): .. weights negative.")
                             break
@@ -486,17 +548,20 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-5, target_res = 1e-1
                         elseif any(x -> x > 5, a)
                             println("Thread $(Threads.threadid()): .. big lams.")
                             break
+                        elseif !check_points_in_triangle(specs, a)
+                            println("Thread $(Threads.threadid()): .. points outside.")
+                            break
                         end
                     end
                     
-                    if i > 1000 && current_f > 0.9
+                    if i > 1000 && fa > 0.9
                         println("Thread $(Threads.threadid()): .. Zielfunktion not decreasing.")
                         break
                     end
                 end
             catch e
-                # println("Thread $(Threads.threadid()): Error occurred.")
-                # println("Error: ", e)
+                println("Thread $(Threads.threadid()): Error occurred ")
+                print("Error: ", e)
             end
         end
     end
