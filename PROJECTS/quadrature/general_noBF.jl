@@ -477,7 +477,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
             
             cids = calculate_inverse_distance_sum(specs, a)
 
-            if cids>2600
+            if cids>2100
                 break
             end
 
@@ -485,7 +485,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                 fa = f(a)
                 @printf("Thread %d starting with a new config: f(a) is about %.3g and cids is %2d. \n", Threads.threadid(), fa, cids)
                 
-                for i in 1:50000
+                for i in 1:50_000
                     
                     alpha = 1
                     fa = f(a)
@@ -498,7 +498,6 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                     for j = 1:20
                         an = a .- (alpha.*res)  # Element-wise subtraction
                         
-                        gan = g(an)
                         fan = f(an)
 
                         # if fan < fa .- alpha*0.01*sqrt(res'*res)
