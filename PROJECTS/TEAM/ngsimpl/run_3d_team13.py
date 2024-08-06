@@ -1,5 +1,5 @@
 import ngsolve as ngs
-from do import solve
+from nonlinear import do
 from ngsolve.webgui import Draw
 import matplotlib.pyplot as plt
 from copy import deepcopy
@@ -7,14 +7,10 @@ import pyngcore as ngcore
 ngcore.SetNumThreads(48)
 
 
-# import netgen.meshing
-# netgen.meshing.Mesh.EnableTableClass("edges", True)
-# netgen.meshing.Mesh.EnableTableClass("faces", True)
-
 levels = 4
+
 deg = 2
 degdif = 1
-
 
 ######################################################
 # from bhdata import BHCurves
@@ -31,6 +27,9 @@ nu0 = 1/mu0
 
 linear = "coil|ambient|default"
 nonlinear = "r_steel|l_steel|mid_steel"
+
+# linear = "r_steel|l_steel|mid_steel|coil|ambient|default"
+# nonlinear = ""
 ######################################################
 
 
@@ -47,6 +46,10 @@ for i in range(levels):
 
     with ngs.TaskManager():
         mesh = ngs.Mesh('whatever.vol')
+    
+    # Just for testing!
+    # mesh.Refine()
+    # mesh.Refine()
 
     for j in range(i):
         mesh.Refine()
@@ -133,7 +136,7 @@ for i in range(levels):
     L2_0 = ngs.L2(mesh, dim = 3, order = deg-1)
     A0 = ngs.GridFunction(HCurl_0)
     with ngs.TaskManager(): A0.Set(ngs.CF((0,0,0)))
-    A0, it = solve(HCurl_0, A0, mesh, deg, J, fun_w, fun_dw, fun_ddw, linear, nonlinear)
+    A0, it = do.solve(HCurl_0, A0, mesh, deg, J, fun_w, fun_dw, fun_ddw, linear, nonlinear)
     its.append(it)
     B0 = ngs.GridFunction(L2_0, nested = True)
     with ngs.TaskManager(): B0.Set(ngs.curl(A0), bonus_intorder = 10)
@@ -147,7 +150,7 @@ for i in range(levels):
     A1 = ngs.GridFunction(HCurl_1)
     # with ngs.TaskManager(): A1.Set(A0, bonus_intorder = 10)
     with ngs.TaskManager(): A0.Set(ngs.CF((0,0,0)))
-    A1, it = solve(HCurl_1, A1, mesh, deg+degdif, J, fun_w, fun_dw, fun_ddw, linear, nonlinear)
+    A1, it = do.solve(HCurl_1, A1, mesh, deg+degdif, J, fun_w, fun_dw, fun_ddw, linear, nonlinear)
     B1 = ngs.GridFunction(L2_1, nested = True)
     with ngs.TaskManager(): B1.Set(ngs.curl(A1), bonus_intorder = 10)
 
