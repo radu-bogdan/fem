@@ -11,26 +11,29 @@ BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 12
+order = 16
 
 specs = [
-    # (1, 0), # Vertices (T1)
-    # (4, 1), # Edge class (T4)
-    # (4, 1), # Edge class (T4)
-    # (4, 1), # Edge class (T4)
-    # (2, 0), # Edge Midpoints (T2)
-    # (3, 0), # Trig midpoint
+    (1, 0), # Vertices (T1)
+    (4, 1), # Edge class (T4)
+    (4, 1), # Edge class (T4)
+    (4, 1), # Edge class (T4)
+    (2, 0), # Edge Midpoints (T2)
+
+    (3, 0), # Trig Midpoint (T3)
+
     (5, 1), # Interior class, type 1 (T5)
     (5, 1), # Interior class, type 1 (T5)
     (5, 1), # Interior class, type 1 (T5)
     (5, 1), # Interior class, type 1 (T5)
     (5, 1), # Interior class, type 1 (T5)
     # (5, 1), # Interior class, type 1 (T5)
+
     (6, 2), # Interior class, type 2 (T6)
     (6, 2), # Interior class, type 2 (T6)
     (6, 2), # Interior class, type 2 (T6)
-    # (6, 2), # Interior class, type 2 (T6)
-    # (6, 2), # Interior class, type 2 (T6)
+    (6, 2), # Interior class, type 2 (T6)
+    (6, 2), # Interior class, type 2 (T6)
 ]
 
 freeparam = sum(x[2] for x in specs)
@@ -161,15 +164,6 @@ T6(a, b) =  hcat(b * (a * m1 .+ (1 - a) .* p1) .+ (1 - b) * (a * m2 .+ (1 - a) .
                  b * (a * m3 .+ (1 - a) .* p3) .+ (1 - b) * (a * m1 .+ (1 - a) .* p1),
                  b * (a * m2 .+ (1 - a) .* p2) .+ (1 - b) * (a * m3 .+ (1 - a) .* p3))
 
-# T6(a, b) = hcat(
-#     (1-a)*(1-b) * p1 + a*(1-b) * p2 + b * m1,
-#     (1-a)*(1-b) * p1 + a*(1-b) * p3 + b * m1,
-#     (1-a)*(1-b) * p2 + a*(1-b) * p3 + b * m3,
-#     (1-a)*(1-b) * p2 + a*(1-b) * p1 + b * m2,
-#     (1-a)*(1-b) * p3 + a*(1-b) * p1 + b * m3,
-#     (1-a)*(1-b) * p3 + a*(1-b) * p2 + b * m2
-# )
-
 daT6(b) = hcat(b * (m1 - p1) + (1 - b) * (m2 - p2),
                b * (m1 - p1) + (1 - b) * (m3 - p3),
                b * (m3 - p3) + (1 - b) * (m2 - p2),
@@ -198,7 +192,7 @@ eval_daT6(order,a,b) = ([ortho2eva3(order, Trans(T6(a, b)[:,1]))[2], ortho2eva3(
                         [ortho2eva3(order, Trans(T6(a, b)[:,5]))[2], ortho2eva3(order, Trans(T6(a, b)[:,5]))[3]]'*TransJ()*(daT6(b)[:,5])+
                         [ortho2eva3(order, Trans(T6(a, b)[:,6]))[2], ortho2eva3(order, Trans(T6(a, b)[:,6]))[3]]'*TransJ()*(daT6(b)[:,6]))'
 
-                        eval_dbT6(order,a,b) = ([ortho2eva3(order, Trans(T6(a, b)[:,1]))[2], ortho2eva3(order, Trans(T6(a, b)[:,1]))[3]]'*TransJ()*(dbT6(a)[:,1])+
+eval_dbT6(order,a,b) = ([ortho2eva3(order, Trans(T6(a, b)[:,1]))[2], ortho2eva3(order, Trans(T6(a, b)[:,1]))[3]]'*TransJ()*(dbT6(a)[:,1])+
                         [ortho2eva3(order, Trans(T6(a, b)[:,2]))[2], ortho2eva3(order, Trans(T6(a, b)[:,2]))[3]]'*TransJ()*(dbT6(a)[:,2])+
                         [ortho2eva3(order, Trans(T6(a, b)[:,3]))[2], ortho2eva3(order, Trans(T6(a, b)[:,3]))[3]]'*TransJ()*(dbT6(a)[:,3])+
                         [ortho2eva3(order, Trans(T6(a, b)[:,4]))[2], ortho2eva3(order, Trans(T6(a, b)[:,4]))[3]]'*TransJ()*(dbT6(a)[:,4])+
@@ -477,7 +471,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
             
             cids = calculate_inverse_distance_sum(specs, a)
 
-            if cids>2100
+            if cids>16000
                 break
             end
 
@@ -485,7 +479,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                 fa = f(a)
                 @printf("Thread %d starting with a new config: f(a) is about %.3g and cids is %2d. \n", Threads.threadid(), fa, cids)
                 
-                for i in 1:50_000
+                for i in 1:500
                     
                     alpha = 1
                     fa = f(a)
@@ -763,6 +757,7 @@ function seeALL(num_samples = 10000)
     best_val = Inf
     
     for i in 1:num_samples
+        println(i)
         a = min_val .+ (max_val - min_val) .* rand(freeparam)
         val = calculate_inverse_distance_sum(specs, a)
         vals[i] = val
