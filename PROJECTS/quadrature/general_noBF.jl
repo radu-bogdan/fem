@@ -21,7 +21,7 @@ specs = [
     (4, 1), # Edge class
     (2, 0), # Edge Midpoints (T2)
 
-    (3, 0), # Trig midpoint
+    # (3, 0), # Trig midpoint
 
     (5, 1), # Interior class, type 1 
     (5, 1), # Interior class, type 1
@@ -368,7 +368,7 @@ end
 J2(a) = -A(a)*C(a)*reshape(m_new(a)*C(a)*A(a)'*rhs(),:,freeparam)
 J(a) = J1(a) + J2(a)
 
-up(a) = inv(J(a)'*J(a))*J(a)'
+up(a) = (J(a)'*J(a))\J(a)'
 
 
 
@@ -698,8 +698,9 @@ end
 
 
 function deeper(a)
+    upa = up(a)
     for i in 1:100
-        res = up(a) * g(a)
+        res = upa * g(a)
         a = a .- res  # Element-wise subtraction
         println(a, " and ", norm(res), " and ", f(a))
     end

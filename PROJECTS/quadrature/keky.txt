@@ -1,0 +1,2067 @@
+Overhead ╎ [+additional indent] Count File:Line; Function
+=========================================================
+   ╎1067 @Base\client.jl:552; _start()
+   ╎ 1067 @Base\client.jl:333; exec_options(opts::Base.JLOptions)
+   ╎  1067 @Base\client.jl:416; run_main_repl(interactive::Bool, quiet::Bool, b…
+   ╎   1067 @Base\essentials.jl:889; invokelatest
+   ╎    1067 @Base\essentials.jl:892; #invokelatest#2
+   ╎     1067 @Base\client.jl:432; (::Base.var"#1013#1015"{Bool, Bool, Bool})(R…
+   ╎    ╎ 1067 …10\REPL\src\REPL.jl:375; run_repl(repl::REPL.AbstractREPL, cons…
+   ╎    ╎  1067 …10\REPL\src\REPL.jl:389; run_repl(repl::REPL.AbstractREPL, con…
+   ╎    ╎   1067 …10\REPL\src\REPL.jl:228; kwcall(::NamedTuple, ::typeof(REPL.s…
+   ╎    ╎    1067 …0\REPL\src\REPL.jl:231; start_repl_backend(backend::REPL.REP…
+   ╎    ╎     1067 …0\REPL\src\REPL.jl:246; repl_backend_loop(backend::REPL.REP…
+   ╎    ╎    ╎ 1067 …\REPL\src\REPL.jl:150; eval_user_input(ast::Any, backend::…
+  2╎    ╎    ╎  1067 @Base\boot.jl:385; eval
+   ╎    ╎    ╎   1065 …rature\general.jl:412; f(a::Vector{BigFloat})
+   ╎    ╎    ╎    331  …ature\general.jl:337; A(a::Vector{BigFloat})
+   ╎    ╎    ╎     10   …ature\general.jl:186; eval_T1(order::Int64)
+   ╎    ╎    ╎    ╎ 1    …se\arraymath.jl:16; +(::Vector{BigFloat}, ::Vector{Bi…
+   ╎    ╎    ╎    ╎  1    …se\broadcast.jl:892; broadcast_preserving_zero_d
+   ╎    ╎    ╎    ╎   1    …se\broadcast.jl:903; materialize
+   ╎    ╎    ╎    ╎    1    …e\broadcast.jl:928; copy
+   ╎    ╎    ╎    ╎     1    …e\broadcast.jl:956; copyto!
+   ╎    ╎    ╎    ╎    ╎ 1    …\broadcast.jl:1003; copyto!
+   ╎    ╎    ╎    ╎    ╎  1    …e\simdloop.jl:77; macro expansion
+   ╎    ╎    ╎    ╎    ╎   1    …broadcast.jl:1004; macro expansion
+   ╎    ╎    ╎    ╎    ╎    1    …broadcast.jl:636; getindex
+   ╎    ╎    ╎    ╎    ╎     1    …broadcast.jl:682; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …roadcast.jl:709; _broadcast_getindex_evalf
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:608; +(a::BigFloat, b::BigFloa…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎ 9    …re\OrthoPols.jl:192; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎  7    …re\OrthoPols.jl:137; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:37; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:38; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:40; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:127; BigFloat(; precision::In…
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   2    …re\OrthoPols.jl:42; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:587; +
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; #BigFloat#8
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:0; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:44; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:45; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:155; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:607; +(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   1    …se\promotion.jl:425; /
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎     18   …ature\general.jl:192; eval_T2(order::Int64)
+   ╎    ╎    ╎    ╎ 18   …re\OrthoPols.jl:192; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎  5    …re\OrthoPols.jl:131; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   4    …re\OrthoPols.jl:93; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    4    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:95; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:66; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎  7    …re\OrthoPols.jl:137; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:37; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   2    …re\OrthoPols.jl:38; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:40; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   2    …re\OrthoPols.jl:42; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:66; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:44; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:153; ortho2eva30(mmax::Int64, z::Vec…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  4    …re\OrthoPols.jl:155; ortho2eva30(mmax::Int64, z::Vec…
+  1╎    ╎    ╎    ╎   1    @Base\array.jl:0; setindex!
+   ╎    ╎    ╎    ╎   3    …se\promotion.jl:425; /
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:161; ortho2eva30(mmax::Int64, z::Vec…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎     96   …ature\general.jl:216; eval_T4(order::Int64, a::BigFloa…
+   ╎    ╎    ╎    ╎ 88   …re\OrthoPols.jl:192; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎  7    …re\OrthoPols.jl:131; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   3    …re\OrthoPols.jl:93; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    3    …e\operators.jl:587; *
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:212; set_si
+  1╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   3    …re\OrthoPols.jl:94; klegeypols3(x::BigFloat, y::Big…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:425; /
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:101; klegeypols3(x::BigFloat, y::Bi…
+   ╎    ╎    ╎    ╎  63   …re\OrthoPols.jl:137; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:12; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    @Base\number.jl:309; zero
+   ╎    ╎    ╎    ╎     1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision:…
+   ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   4    …re\OrthoPols.jl:20; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    3    …e\promotion.jl:425; /
+  3╎    ╎    ╎    ╎     3    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    …re\OrthoPols.jl:37; kjacopols2(x::BigFloat, a::BigF…
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; #BigFloat#8
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   16   …re\OrthoPols.jl:38; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    11   …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 6    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  6    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  6╎    ╎    ╎    ╎    ╎   6    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎     5    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎    1    …ngs\string.jl:90; _string_n
+  2╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\boot.jl:381; getptls
+   ╎    ╎    ╎    ╎    5    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+  2╎    ╎    ╎    ╎     2    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   23   …re\OrthoPols.jl:40; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    5    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     5    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 5    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  5    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   5    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 5    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  4    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   4    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    4    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  4╎    ╎    ╎    ╎    ╎    ╎     4    …ase\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    5    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎     4    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 4    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  4    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     3    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 3    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  3    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\boot.jl:381; getptls
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:127; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    11   …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎     10   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 10   …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  10   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   10   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    10   @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     6    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 6    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  6    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   5    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    5    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  5╎    ╎    ╎    ╎    ╎    ╎     5    @Base\gmp.jl:151; init2!
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  4    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   4    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  4╎    ╎    ╎    ╎    ╎    ╎    4    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   6    …re\OrthoPols.jl:42; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    4    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     2    …e\operators.jl:544; afoldl
+  2╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   3    …re\OrthoPols.jl:44; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   6    …re\OrthoPols.jl:45; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:124; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  10   …re\OrthoPols.jl:155; ortho2eva30(mmax::Int64, z::Vec…
+  2╎    ╎    ╎    ╎   2    @Base\mpfr.jl:608; *(a::BigFloat, b::BigFloat, c::Bi…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:609; *(a::BigFloat, b::BigFloat, c::Bi…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:609; +(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎   6    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎    3    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:160; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   2    …se\promotion.jl:425; /
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:161; ortho2eva30(mmax::Int64, z::Vec…
+  2╎    ╎    ╎    ╎   2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:162; ortho2eva30(mmax::Int64, z::Vec…
+  2╎    ╎    ╎    ╎   2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:163; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎ 7    …ture\general.jl:202; T4(a::BigFloat)
+   ╎    ╎    ╎    ╎  5    …se\broadcast.jl:903; materialize
+   ╎    ╎    ╎    ╎   5    …se\broadcast.jl:918; copy
+   ╎    ╎    ╎    ╎    5    …e\broadcast.jl:636; getindex
+   ╎    ╎    ╎    ╎     5    …e\broadcast.jl:682; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎ 5    …\broadcast.jl:709; _broadcast_getindex_evalf
+   ╎    ╎    ╎    ╎    ╎  5    …\promotion.jl:424; -
+   ╎    ╎    ╎    ╎    ╎   5    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:129; BigFloat(; precision::Int3…
+  5╎    ╎    ╎    ╎    ╎    ╎ 5    …ase\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎  2    …se\broadcast.jl:903; materialize(bc::Base.Broadcast.…
+   ╎    ╎    ╎    ╎   1    …se\broadcast.jl:928; copy
+   ╎    ╎    ╎    ╎    1    …e\broadcast.jl:223; similar
+   ╎    ╎    ╎    ╎     1    …e\broadcast.jl:224; similar
+   ╎    ╎    ╎    ╎    ╎ 1    …tractarray.jl:876; similar
+   ╎    ╎    ╎    ╎    ╎  1    …tractarray.jl:877; similar
+   ╎    ╎    ╎    ╎    ╎   1    @Base\boot.jl:494; Array
+   ╎    ╎    ╎    ╎    ╎    1    @Base\boot.jl:486; Array
+  1╎    ╎    ╎    ╎    ╎     1    @Base\boot.jl:477; Array
+   ╎    ╎    ╎    ╎ 1    …ture\general.jl:35; Trans(point::Vector{BigFloat})
+   ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision::Int…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Base.MPF…
+   ╎    ╎    ╎     72   …ature\general.jl:239; eval_T5(order::Int64, a::BigFloa…
+   ╎    ╎    ╎    ╎ 72   …re\OrthoPols.jl:192; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:115; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …se\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎  4    …re\OrthoPols.jl:131; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:93; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎    1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:94; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    …e\operators.jl:544; afoldl
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   2    …re\OrthoPols.jl:95; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:425; /
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎  49   …re\OrthoPols.jl:137; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:7; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎    1    @Base\array.jl:632; zeros
+   ╎    ╎    ╎    ╎     1    @Base\array.jl:636; zeros
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\boot.jl:486; Array
+  1╎    ╎    ╎    ╎    ╎  1    @Base\boot.jl:477; Array
+   ╎    ╎    ╎    ╎   3    …re\OrthoPols.jl:20; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:422; +
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:425; /
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   5    …re\OrthoPols.jl:37; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:124; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:127; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   6    …re\OrthoPols.jl:38; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    4    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     4    …e\promotion.jl:422; +
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:432; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:125; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    ╎    1    @Base\int.jl:1068; -
+  1╎    ╎    ╎    ╎    ╎     1    @Base\int.jl:86; -
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎   12   …re\OrthoPols.jl:40; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    4    …e\operators.jl:587; *
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     3    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    4    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     4    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 4    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  4    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     4    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  4    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   4    @Base\gmp.jl:63; BigInt
+  3╎    ╎    ╎    ╎    ╎    ╎    4    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   9    …re\OrthoPols.jl:42; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    6    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     6    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 6    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  6    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   6    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:272; #BigFloat#8
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:331; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 5    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  5    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   5    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:127; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎    ╎    4    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  4╎    ╎    ╎    ╎    ╎    ╎     4    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    3    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    …se\refvalue.jl:59; getindex
+  1╎    ╎    ╎    ╎    ╎  1    @Base\Base.jl:37; getproperty
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎    2    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   8    …re\OrthoPols.jl:44; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎    3    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   5    …re\OrthoPols.jl:45; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:151; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:153; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎  10   …re\OrthoPols.jl:155; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   3    @Base\mpfr.jl:607; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎    3    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:609; *(a::BigFloat, b::BigFloat, c::Bi…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:610; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:609; +(a::BigFloat, b::BigFloat, c::Bi…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎   4    …se\promotion.jl:425; /
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    3    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     3    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 3    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  3    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   3    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    3    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:129; BigFloat(; precision::Int…
+  2╎    ╎    ╎    ╎    ╎    ╎   2    …ase\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  5    …re\OrthoPols.jl:160; ortho2eva30(mmax::Int64, z::Vec…
+  3╎    ╎    ╎    ╎   3    @Base\mpfr.jl:639; sqrt(x::BigFloat)
+   ╎    ╎    ╎    ╎   2    …se\promotion.jl:425; /
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:161; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎     135  …ature\general.jl:270; eval_T6(order::Int64, a::BigFloa…
+   ╎    ╎    ╎    ╎ 133  …re\OrthoPols.jl:192; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:118; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:631; -(x::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎   1    @Base\number.jl:347; one
+   ╎    ╎    ╎    ╎    1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision::…
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Base.…
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:119; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+  1╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎  4    …re\OrthoPols.jl:131; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   2    …re\OrthoPols.jl:93; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:94; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:95; klegeypols3(x::BigFloat, y::Big…
+   ╎    ╎    ╎    ╎    1    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   1    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎  97   …re\OrthoPols.jl:137; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    …re\OrthoPols.jl:12; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    @Base\number.jl:309; zero
+   ╎    ╎    ╎    ╎     1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision:…
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Base…
+   ╎    ╎    ╎    ╎   6    …re\OrthoPols.jl:20; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    6    …e\promotion.jl:425; /
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     5    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 5    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  5    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   5    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  4    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   4    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  4╎    ╎    ╎    ╎    ╎    ╎    4    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   4    …re\OrthoPols.jl:37; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\boot.jl:381; getptls
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+  1╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:331; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   14   …re\OrthoPols.jl:38; kjacopols2(x::BigFloat, a::BigF…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    9    …e\operators.jl:587; +
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     8    …e\promotion.jl:422; +
+  2╎    ╎    ╎    ╎    ╎ 3    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎    ╎ 5    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  5    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   5    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎ 3    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:127; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …s\string.jl:90; _string_n
+  2╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    4    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     4    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 4    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  4    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     4    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  4    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   4    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    4    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  4╎    ╎    ╎    ╎    ╎    ╎     4    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   23   …re\OrthoPols.jl:40; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    13   …e\operators.jl:587; *
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     4    …e\operators.jl:544; afoldl
+   ╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎    4    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     8    …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎ 8    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  8    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   8    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    8    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     8    @Base\mpfr.jl:272; BigFloat(x::Int64; precisi…
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:331; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 7    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  6    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   6    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    6    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  6╎    ╎    ╎    ╎    ╎    ╎     6    …ase\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    5    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 3    @Base\mpfr.jl:122; BigFloat
+  2╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    5    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     4    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 4    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  4    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+  1╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:331; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+  1╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   15   …re\OrthoPols.jl:42; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    4    …e\operators.jl:587; *
+   ╎    ╎    ╎    ╎     1    …e\operators.jl:544; afoldl
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     3    …e\promotion.jl:423; *
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   2    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\boot.jl:381; getptls
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    5    …e\operators.jl:587; +
+   ╎    ╎    ╎    ╎     5    …e\promotion.jl:422; +
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 4    …\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎  4    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎   4    …ase\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 3    …ase\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …ase\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Ba…
+   ╎    ╎    ╎    ╎    6    …e\promotion.jl:424; -
+   ╎    ╎    ╎    ╎     6    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 6    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  6    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   6    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 5    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  5    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   5    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  5╎    ╎    ╎    ╎    ╎    ╎    5    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   9    …re\OrthoPols.jl:44; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   25   …re\OrthoPols.jl:45; kjacopols2(x::BigFloat, a::BigF…
+   ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎  4    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:119; _BigFloat
+  5╎    ╎    ╎    ╎    6    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 6    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  6╎    ╎    ╎    ╎    ╎  6    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  4╎    ╎    ╎    ╎    4    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:151; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎  19   …re\OrthoPols.jl:155; ortho2eva30(mmax::Int64, z::Vec…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:606; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:607; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:119; _BigFloat
+  5╎    ╎    ╎    ╎   6    @Base\mpfr.jl:608; *(a::BigFloat, b::BigFloat, c::Bi…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:145; unsafe_convert
+  3╎    ╎    ╎    ╎   3    @Base\mpfr.jl:609; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎   7    …se\promotion.jl:425; /
+  4╎    ╎    ╎    ╎    4    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    3    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     3    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 3    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  3    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   3    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:127; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎  7    …re\OrthoPols.jl:160; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   7    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  4╎    ╎    ╎    ╎    4    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:129; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎  2    …re\OrthoPols.jl:162; ortho2eva30(mmax::Int64, z::Vec…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎ 2    …ture\general.jl:249; T6(a::BigFloat, b::BigFloat)
+   ╎    ╎    ╎    ╎  2    …se\arraymath.jl:21; *(A::BigFloat, B::Vector{BigFloa…
+   ╎    ╎    ╎    ╎   2    …se\broadcast.jl:892; broadcast_preserving_zero_d
+   ╎    ╎    ╎    ╎    2    …e\broadcast.jl:903; materialize
+   ╎    ╎    ╎    ╎     2    …e\broadcast.jl:928; copy
+   ╎    ╎    ╎    ╎    ╎ 2    …\broadcast.jl:956; copyto!
+   ╎    ╎    ╎    ╎    ╎  2    …\broadcast.jl:1003; copyto!
+   ╎    ╎    ╎    ╎    ╎   2    …e\simdloop.jl:77; macro expansion
+   ╎    ╎    ╎    ╎    ╎    2    …broadcast.jl:1004; macro expansion
+   ╎    ╎    ╎    ╎    ╎     2    …broadcast.jl:636; getindex
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …roadcast.jl:681; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …roadcast.jl:705; _getindex
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …roadcast.jl:706; _getindex
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …roadcast.jl:675; _broadcast_getindex
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …sentials.jl:13; getindex
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …roadcast.jl:682; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …roadcast.jl:709; _broadcast_getindex_evalf
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:434; *(x::BigFloat, y::BigFlo…
+   ╎    ╎    ╎    68   …ature\general.jl:397; rhs()
+   ╎    ╎    ╎     68   …MySimplexQuad.jl:51; mysimplexquad
+   ╎    ╎    ╎    ╎ 67   …MySimplexQuad.jl:75; mysimplexquad(N::Int64, vert::Ma…
+   ╎    ╎    ╎    ╎  67   …ySimplexQuad.jl:117; rquad(::Type{BigFloat}, N::Int6…
+   ╎    ╎    ╎    ╎   67   …\src\tridiag.jl:253; eigen(A::SymTridiagonal{BigFlo…
+   ╎    ╎    ╎    ╎    67   …SelfAdjoint.jl:603; eigen!(A::SymTridiagonal{BigFl…
+   ╎    ╎    ╎    ╎     67   …SelfAdjoint.jl:603; #eigen!#14
+   ╎    ╎    ╎    ╎    ╎ 67   …elfAdjoint.jl:593; _eigen!
+   ╎    ╎    ╎    ╎    ╎  67   …elfAdjoint.jl:593; #_eigen!#11
+   ╎    ╎    ╎    ╎    ╎   67   …elfAdjoint.jl:222; eigQL!
+   ╎    ╎    ╎    ╎    ╎    1    …lfAdjoint.jl:252; eigQL!(S::SymTridiagonal{Bi…
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:639; sqrt(x::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    1    …lfAdjoint.jl:263; eigQL!(S::SymTridiagonal{Bi…
+   ╎    ╎    ╎    ╎    ╎     1    …e\logging.jl:389; macro expansion
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …\logging.jl:328; current_logger_for_env(std…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …\logging.jl:544; env_override_minlevel(gro…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\env.jl:157; get
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\env.jl:30; access_env(onError::Retu…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\env.jl:24; _getenvlen
+   ╎    ╎    ╎    ╎    ╎    1    …lfAdjoint.jl:277; eigQL!(S::SymTridiagonal{Bi…
+   ╎    ╎    ╎    ╎    ╎     1    …e\logging.jl:389; macro expansion
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …\logging.jl:328; current_logger_for_env(std…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …\logging.jl:544; env_override_minlevel(gro…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\env.jl:157; get
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\env.jl:30; access_env(onError::Retu…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\env.jl:24; _getenvlen
+   ╎    ╎    ╎    ╎    ╎    63   …lfAdjoint.jl:278; eigQL!(S::SymTridiagonal{Bi…
+   ╎    ╎    ╎    ╎    ╎     1    …lfAdjoint.jl:389; singleShiftQL!(S::SymTridi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …e\number.jl:347; one
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …se\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:272; BigFloat(x::Int64; prec…
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎     43   …lfAdjoint.jl:394; singleShiftQL!(S::SymTridi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …c\givens.jl:79; givensAlgorithm(f::BigFloat…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …e\number.jl:347; one
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …e\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …ase\mpfr.jl:272; BigFloat(x::Int64; pre…
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:268; BigFloat(x::BigInt, …
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …romotion.jl:423; *
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …romotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …romotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …e\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:272; BigFloat(x::Int64; p…
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:268; BigFloat(x::BigInt…
+   ╎    ╎    ╎    ╎    ╎    ╎ 25   …c\givens.jl:84; givensAlgorithm(f::BigFloat…
+   ╎    ╎    ╎    ╎    ╎    ╎  25   …c\givens.jl:69; floatmin2(::Type{BigFloat})
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:728; log(x::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:878; <(x::BigFloat, y::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …ase\mpfr.jl:863; cmp
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:493; big
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …e\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:64; BigInt(; nbits::…
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:151; init2!
+ 21╎    ╎    ╎    ╎    ╎    ╎   21   …ase\mpfr.jl:734; log(x::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    ╎   3    …ase\mpfr.jl:365; trunc
+   ╎    ╎    ╎    ╎    ╎    ╎    3    …ase\mpfr.jl:364; trunc
+   ╎    ╎    ╎    ╎    ╎    ╎     3    …ase\mpfr.jl:353; round
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 3    …ase\mpfr.jl:346; round
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎  3    …ase\mpfr.jl:314; _unchecked_cast
+  3╎    ╎    ╎    ╎    ╎    ╎    ╎   3    …ase\mpfr.jl:326; _unchecked_cast(::T…
+   ╎    ╎    ╎    ╎    ╎    ╎ 13   …c\givens.jl:85; givensAlgorithm(f::BigFloat…
+   ╎    ╎    ╎    ╎    ╎    ╎  13   …c\givens.jl:69; floatmin2(::Type{BigFloat})
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:1013; eps
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …ase\mpfr.jl:272; BigFloat(x::Int64; pre…
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:64; BigInt(; nbits::In…
+ 12╎    ╎    ╎    ╎    ╎    ╎   12   …ase\mpfr.jl:734; log(x::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …c\givens.jl:132; givensAlgorithm(f::BigFloa…
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:434; *(x::BigFloat, y::BigFloa…
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:639; sqrt(x::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …c\givens.jl:134; givensAlgorithm(f::BigFloa…
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:477; /(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎     5    …lfAdjoint.jl:400; singleShiftQL!(S::SymTridi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    …ase\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎    ╎  4    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   4    …ase\mpfr.jl:127; BigFloat(; precision::In…
+  4╎    ╎    ╎    ╎    ╎    ╎    4    …s\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎     1    …lfAdjoint.jl:401; singleShiftQL!(S::SymTridi…
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎     1    …lfAdjoint.jl:402; singleShiftQL!(S::SymTridi…
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎     12   …lfAdjoint.jl:405; singleShiftQL!(S::SymTridi…
+   ╎    ╎    ╎    ╎    ╎    ╎ 5    …fAdjoint.jl:127; _updateVectors!(c::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:433; *(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    ╎   2    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:127; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …s\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  2╎    ╎    ╎    ╎    ╎    ╎  3    …ase\mpfr.jl:434; *(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …\pointer.jl:278; ==
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …romotion.jl:521; ==
+   ╎    ╎    ╎    ╎    ╎    ╎ 7    …fAdjoint.jl:128; _updateVectors!(c::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:433; *(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    ╎   2    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:127; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …ase\mpfr.jl:119; _BigFloat
+  5╎    ╎    ╎    ╎    ╎    ╎  5    …ase\mpfr.jl:434; *(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    1    …lfAdjoint.jl:279; eigQL!(S::SymTridiagonal{Bi…
+   ╎    ╎    ╎    ╎    ╎     1    …e\logging.jl:389; macro expansion
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …\logging.jl:328; current_logger_for_env(std…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …\logging.jl:544; env_override_minlevel(gro…
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\env.jl:157; get
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\env.jl:29; access_env(onError::Retu…
+   ╎    ╎    ╎    ╎    ╎    ╎     1    @Base\env.jl:14; memoized_env_lookup(str…
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\lock.jl:269; macro expansion
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\lock.jl:177; unlock
+   ╎    ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\lock.jl:182; (::Base.var"#_unloc…
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\Base.jl:70; swapproperty!
+   ╎    ╎    ╎    ╎ 1    …MySimplexQuad.jl:87; mysimplexquad(N::Int64, vert::Ma…
+   ╎    ╎    ╎    ╎  1    …a\src\matmul.jl:106; *(A::Matrix{BigFloat}, B::Matri…
+   ╎    ╎    ╎    ╎   1    …a\src\matmul.jl:237; mul!
+   ╎    ╎    ╎    ╎    1    …\src\matmul.jl:263; mul!
+   ╎    ╎    ╎    ╎     1    …\src\matmul.jl:785; generic_matmatmul!(C::Matrix{…
+   ╎    ╎    ╎    ╎    ╎ 1    …src\matmul.jl:872; _generic_matmatmul!(C::Matrix…
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎     1    …gs\string.jl:90; _string_n
+  1╎    ╎    ╎    651  …ature\general.jl:401; rhs()
+   ╎    ╎    ╎     1    …ure\OrthoPols.jl:180; ortho2eva3(mmax::Int64, z::Vecto…
+  1╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:639; sqrt(x::BigFloat)
+   ╎    ╎    ╎     1    …ure\OrthoPols.jl:181; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎ 1    @Base\number.jl:347; one
+   ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision::In…
+   ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎     648  …ure\OrthoPols.jl:192; ortho2eva3(mmax::Int64, z::Vecto…
+   ╎    ╎    ╎    ╎ 1    …re\OrthoPols.jl:118; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  1    @Base\number.jl:347; one
+   ╎    ╎    ╎    ╎   1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision::I…
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Base.M…
+   ╎    ╎    ╎    ╎ 31   …re\OrthoPols.jl:131; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  10   …re\OrthoPols.jl:93; klegeypols3(x::BigFloat, y::BigF…
+   ╎    ╎    ╎    ╎   6    …se\operators.jl:587; *
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    …e\operators.jl:544; afoldl
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:124; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:423; *
+  2╎    ╎    ╎    ╎     2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    …se\promotion.jl:425; /
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:129; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎  9    …re\OrthoPols.jl:94; klegeypols3(x::BigFloat, y::BigF…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   1    …se\promotion.jl:423; *
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:269; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   1    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  12   …re\OrthoPols.jl:95; klegeypols3(x::BigFloat, y::BigF…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:607; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:609; *(a::BigFloat, b::BigFloat, c::Bi…
+   ╎    ╎    ╎    ╎   2    …se\operators.jl:587; *
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:423; *
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:432; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   4    …se\promotion.jl:423; *
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎   2    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎ 1    …re\OrthoPols.jl:136; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎ 420  …re\OrthoPols.jl:137; ortho2eva30(mmax::Int64, z::Vect…
+  1╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:0; kjacopols2(x::BigFloat, a::BigFlo…
+  1╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:4; kjacopols2(x::BigFloat, a::BigFlo…
+   ╎    ╎    ╎    ╎  3    …re\OrthoPols.jl:7; kjacopols2(x::BigFloat, a::BigFlo…
+   ╎    ╎    ╎    ╎   3    @Base\array.jl:632; zeros
+   ╎    ╎    ╎    ╎    2    @Base\array.jl:636; zeros
+   ╎    ╎    ╎    ╎     2    @Base\boot.jl:486; Array
+  2╎    ╎    ╎    ╎    ╎ 2    @Base\boot.jl:477; Array
+   ╎    ╎    ╎    ╎    1    @Base\array.jl:637; zeros
+   ╎    ╎    ╎    ╎     1    @Base\number.jl:309; zero
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:127; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:12; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   1    @Base\number.jl:309; zero
+   ╎    ╎    ╎    ╎    1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision::…
+   ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:212; set_si
+  1╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎  12   …re\OrthoPols.jl:20; kjacopols2(x::BigFloat, a::BigFl…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   3    …se\operators.jl:587; +
+   ╎    ╎    ╎    ╎    3    …e\promotion.jl:422; +
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 2    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  2    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:127; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   3    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  9    …re\OrthoPols.jl:24; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   1    …se\operators.jl:587; +
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 1    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎   8    …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎    3    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     1    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎  36   …re\OrthoPols.jl:37; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎ 2    …ings\string.jl:90; _string_n
+  4╎    ╎    ╎    ╎   4    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎   16   …se\operators.jl:587; +
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    13   …e\promotion.jl:422; +
+  4╎    ╎    ╎    ╎     4    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     9    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 9    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  9    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   9    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    9    @Base\mpfr.jl:272; #BigFloat#8
+  1╎    ╎    ╎    ╎    ╎     5    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  4    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   4    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎    4    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  3╎    ╎    ╎    ╎    ╎    ╎     3    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎    ╎    ╎ 3    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   13   …se\promotion.jl:424; -
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    11   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     11   …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 11   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  11   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   11   @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    5    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     5    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 5    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  5    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎   4    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  4╎    ╎    ╎    ╎    ╎    ╎    4    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:127; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:129; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  89   …re\OrthoPols.jl:38; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   7    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    7    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  6╎    ╎    ╎    ╎    ╎ 6    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:119; _BigFloat
+  5╎    ╎    ╎    ╎   5    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   48   …se\operators.jl:587; +
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    45   …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     8    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 8    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎  7    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  7╎    ╎    ╎    ╎    ╎   7    @Base\mpfr.jl:119; _BigFloat
+ 13╎    ╎    ╎    ╎     13   @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     24   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 24   …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  24   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   24   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    24   @Base\mpfr.jl:272; #BigFloat#8
+  2╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:331; BigInt(x::Int64)
+  1╎    ╎    ╎    ╎    ╎     10   @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 9    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  9    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   8    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:63; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    6    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  6╎    ╎    ╎    ╎    ╎    ╎     6    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\boot.jl:381; getptls
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎    ╎     12   @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 7    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  7    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:127; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎    1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎    ╎   6    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  6╎    ╎    ╎    ╎    ╎    ╎    6    …ase\mpfr.jl:119; _BigFloat
+  4╎    ╎    ╎    ╎    ╎    ╎ 5    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎   29   …se\promotion.jl:424; -
+   ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 5    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  5╎    ╎    ╎    ╎    ╎  5    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    24   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     24   …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 24   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  24   @Base\mpfr.jl:272; BigFloat
+  1╎    ╎    ╎    ╎    ╎   24   @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    13   @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     13   @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 13   @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  13   @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:63; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎   12   @Base\gmp.jl:64; BigInt(; nbits::Int64)
+ 11╎    ╎    ╎    ╎    ╎    ╎    11   @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    10   @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 3    …ase\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat(; precision::Int…
+   ╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:127; BigFloat(; precision::Int…
+  2╎    ╎    ╎    ╎    ╎    ╎   2    …s\string.jl:90; _string_n
+  6╎    ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  101  …re\OrthoPols.jl:40; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   21   …se\operators.jl:587; *
+  2╎    ╎    ╎    ╎    3    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    …se\refvalue.jl:59; getindex
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\Base.jl:37; getproperty
+   ╎    ╎    ╎    ╎    6    …e\operators.jl:544; afoldl
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:432; *(x::BigFloat, y::BigFloat)
+  5╎    ╎    ╎    ╎     5    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    12   …e\promotion.jl:423; *
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:432; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎     2    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     8    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 8    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  8    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   8    @Base\mpfr.jl:272; BigFloat
+  1╎    ╎    ╎    ╎    ╎    8    @Base\mpfr.jl:272; BigFloat(x::Int64; precisio…
+   ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎     2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:266; BigFloat
+  5╎    ╎    ╎    ╎    ╎    ╎ 5    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   22   …se\operators.jl:587; +
+   ╎    ╎    ╎    ╎    7    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     7    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎  2    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎ 5    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  5╎    ╎    ╎    ╎    ╎  5    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    15   …e\promotion.jl:422; +
+   ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 3    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    …e\refvalue.jl:59; getindex
+  1╎    ╎    ╎    ╎    ╎   1    @Base\Base.jl:37; getproperty
+  3╎    ╎    ╎    ╎     3    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     9    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 9    …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  9    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   9    @Base\mpfr.jl:272; BigFloat
+  1╎    ╎    ╎    ╎    ╎    9    @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     5    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 5    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  5    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   5    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    3    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  3╎    ╎    ╎    ╎    ╎    ╎     3    @Base\gmp.jl:151; init2!
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:66; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:266; BigFloat(x::BigInt, r::Bas…
+  2╎    ╎    ╎    ╎    ╎    ╎ 2    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   32   …se\promotion.jl:422; +
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:432; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:124; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎  1    …ngs\string.jl:90; _string_n
+  5╎    ╎    ╎    ╎    5    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:435; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    23   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     23   …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 23   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  23   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   23   @Base\mpfr.jl:272; #BigFloat#8
+  1╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:331; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    15   @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     15   @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 15   @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  15   @Base\gmp.jl:63; BigInt
+  6╎    ╎    ╎    ╎    ╎    ╎   15   @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  9╎    ╎    ╎    ╎    ╎    ╎    9    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    7    @Base\mpfr.jl:266; BigFloat
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:266; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:129; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:119; _BigFloat
+  4╎    ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:269; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   26   …se\promotion.jl:424; -
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:475; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎ 6    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  6╎    ╎    ╎    ╎    ╎  6    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    18   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     18   …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 18   @Base\number.jl:7; convert
+  1╎    ╎    ╎    ╎    ╎  18   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   17   @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    11   @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     11   @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 11   @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  11   @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   10   @Base\gmp.jl:64; BigInt(; nbits::Int64)
+ 10╎    ╎    ╎    ╎    ╎    ╎    10   @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …ase\boot.jl:381; getptls
+   ╎    ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …ase\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  2    …ase\mpfr.jl:129; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:119; _BigFloat
+  4╎    ╎    ╎    ╎    ╎     4    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  73   …re\OrthoPols.jl:42; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   20   …se\operators.jl:587; *
+   ╎    ╎    ╎    ╎    3    …e\operators.jl:544; afoldl
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    17   …e\promotion.jl:423; *
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎     3    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     12   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 12   …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  12   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   12   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    12   @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎     4    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  4    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   4    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎    3    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  3╎    ╎    ╎    ╎    ╎    ╎     3    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …\gcutils.jl:93; finalizer
+   ╎    ╎    ╎    ╎    ╎     8    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  4    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:123; BigFloat(; precision::In…
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …romotion.jl:462; <
+  1╎    ╎    ╎    ╎    ╎    ╎     1    @Base\int.jl:83; <
+   ╎    ╎    ╎    ╎    ╎    ╎   3    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  3╎    ╎    ╎    ╎    ╎    ╎    3    …ase\mpfr.jl:119; _BigFloat
+  4╎    ╎    ╎    ╎    ╎    ╎ 4    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   46   …se\operators.jl:587; +
+   ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 5    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    38   …e\promotion.jl:422; +
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:432; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     10   @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎ 10   @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    ╎  7    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  7╎    ╎    ╎    ╎    ╎   7    …ngs\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎     2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎     25   …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    ╎ 25   …\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎  25   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎   25   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎    25   @Base\mpfr.jl:272; #BigFloat#8
+  1╎    ╎    ╎    ╎    ╎     1    @Base\gmp.jl:331; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     7    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎ 7    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  7    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎   6    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎    5    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  4╎    ╎    ╎    ╎    ╎    ╎     4    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎    1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎     1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\boot.jl:381; getptls
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎    ╎     17   @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 10   …ase\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎  10   …ase\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …ase\mpfr.jl:122; BigFloat(; precision::In…
+  1╎    ╎    ╎    ╎    ╎    ╎   9    …ase\mpfr.jl:129; BigFloat(; precision::In…
+  8╎    ╎    ╎    ╎    ╎    ╎    8    …ase\mpfr.jl:119; _BigFloat
+  7╎    ╎    ╎    ╎    ╎    ╎ 7    …ase\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎   7    …se\promotion.jl:424; -
+   ╎    ╎    ╎    ╎    7    …e\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎     7    …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎    ╎ 7    @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎  7    @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎   7    @Base\mpfr.jl:272; BigFloat(x::Int64; precision…
+   ╎    ╎    ╎    ╎    ╎    3    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎     3    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎ 3    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎  3    @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎   2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  2╎    ╎    ╎    ╎    ╎    ╎    2    @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …\gcutils.jl:93; finalizer
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …ase\boot.jl:381; getptls
+   ╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …ase\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:122; BigFloat(; precision::Int…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:127; BigFloat(; precision::Int…
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …s\string.jl:90; _string_n
+  2╎    ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Bas…
+   ╎    ╎    ╎    ╎  38   …re\OrthoPols.jl:44; kjacopols2(x::BigFloat, a::BigFl…
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:432; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   7    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    7    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  6╎    ╎    ╎    ╎    ╎ 6    …ings\string.jl:90; _string_n
+ 13╎    ╎    ╎    ╎   13   @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  3╎    ╎    ╎    ╎    ╎ 3    @Base\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎   2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:476; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎    ╎ 1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  3╎    ╎    ╎    ╎    ╎ 3    @Base\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎   2    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:475; /(x::BigFloat, y::BigFloat)
+  4╎    ╎    ╎    ╎   4    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  55   …re\OrthoPols.jl:45; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   14   @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    14   @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎     7    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  7╎    ╎    ╎    ╎    ╎ 7    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  5╎    ╎    ╎    ╎    ╎ 5    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎     1    …se\refvalue.jl:59; getindex
+  1╎    ╎    ╎    ╎    ╎ 1    @Base\Base.jl:37; getproperty
+ 19╎    ╎    ╎    ╎   21   @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎    1    …se\refvalue.jl:59; getindex
+  1╎    ╎    ╎    ╎     1    @Base\Base.jl:37; getproperty
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎ 2    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎     2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  2╎    ╎    ╎    ╎    ╎ 2    @Base\mpfr.jl:119; _BigFloat
+  2╎    ╎    ╎    ╎   2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:475; -(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:477; -(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:124; BigFloat(; precision::Int32)
+ 11╎    ╎    ╎    ╎   11   @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎  1    …re\OrthoPols.jl:50; kjacopols2(x::BigFloat, a::BigFl…
+   ╎    ╎    ╎    ╎   1    @Base\range.jl:901; iterate
+  1╎    ╎    ╎    ╎    1    …e\promotion.jl:521; ==
+   ╎    ╎    ╎    ╎ 1    …re\OrthoPols.jl:138; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  1    …bstractarray.jl:1396; setindex!
+   ╎    ╎    ╎    ╎   1    …idimensional.jl:944; _setindex!
+   ╎    ╎    ╎    ╎    1    …dimensional.jl:955; _unsafe_setindex!(::IndexLinea…
+   ╎    ╎    ╎    ╎     1    …e\cartesian.jl:64; macro expansion
+  1╎    ╎    ╎    ╎    ╎ 1    …imensional.jl:958; macro expansion
+   ╎    ╎    ╎    ╎ 20   …re\OrthoPols.jl:151; ortho2eva30(mmax::Int64, z::Vect…
+  1╎    ╎    ╎    ╎  1    …e\essentials.jl:14; getindex
+   ╎    ╎    ╎    ╎  9    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   9    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  5╎    ╎    ╎    ╎     5    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎     4    @Base\mpfr.jl:119; _BigFloat
+  9╎    ╎    ╎    ╎  10   @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎ 4    …re\OrthoPols.jl:153; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    …ings\string.jl:90; _string_n
+  3╎    ╎    ╎    ╎  3    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎ 117  …re\OrthoPols.jl:155; ortho2eva30(mmax::Int64, z::Vect…
+  2╎    ╎    ╎    ╎  2    @Base\mpfr.jl:606; *(a::BigFloat, b::BigFloat, c::Big…
+   ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:607; *(a::BigFloat, b::BigFloat, c::Big…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    …ings\string.jl:90; _string_n
+ 14╎    ╎    ╎    ╎  18   @Base\mpfr.jl:608; *(a::BigFloat, b::BigFloat, c::Big…
+  4╎    ╎    ╎    ╎   4    @Base\mpfr.jl:145; unsafe_convert
+ 13╎    ╎    ╎    ╎  13   @Base\mpfr.jl:609; *(a::BigFloat, b::BigFloat, c::Big…
+   ╎    ╎    ╎    ╎  8    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   8    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+   ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  6╎    ╎    ╎    ╎     6    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:119; _BigFloat
+  1╎    ╎    ╎    ╎  1    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎  1    @Base\mpfr.jl:606; +(a::BigFloat, b::BigFloat, c::Big…
+   ╎    ╎    ╎    ╎  9    @Base\mpfr.jl:607; +(a::BigFloat, b::BigFloat, c::Big…
+   ╎    ╎    ╎    ╎   9    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    …ings\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    8    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  8╎    ╎    ╎    ╎     8    @Base\mpfr.jl:119; _BigFloat
+  3╎    ╎    ╎    ╎  4    @Base\mpfr.jl:609; +(a::BigFloat, b::BigFloat, c::Big…
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    ╎    1    …ase\pointer.jl:278; ==
+  1╎    ╎    ╎    ╎     1    …e\promotion.jl:521; ==
+   ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:631; -(x::BigFloat)
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎     4    @Base\mpfr.jl:119; _BigFloat
+   ╎    ╎    ╎    ╎  56   …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎   6    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎     5    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  5╎    ╎    ╎    ╎    ╎ 5    …ings\string.jl:90; _string_n
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+ 23╎    ╎    ╎    ╎   23   @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎   1    @Base\mpfr.jl:478; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   26   …se\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    26   …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎     26   @Base\number.jl:7; convert
+  1╎    ╎    ╎    ╎    ╎ 26   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎  25   @Base\mpfr.jl:272; BigFloat(x::Int64; precision:…
+   ╎    ╎    ╎    ╎    ╎   12   @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    12   @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎     12   @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎ 12   @Base\gmp.jl:63; BigInt
+   ╎    ╎    ╎    ╎    ╎    ╎  11   @Base\gmp.jl:64; BigInt(; nbits::Int64)
+ 11╎    ╎    ╎    ╎    ╎    ╎   11   @Base\gmp.jl:151; init2!
+   ╎    ╎    ╎    ╎    ╎    ╎  1    @Base\gmp.jl:65; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎   1    …\gcutils.jl:93; finalizer
+   ╎    ╎    ╎    ╎    ╎   13   @Base\mpfr.jl:266; BigFloat
+  3╎    ╎    ╎    ╎    ╎    3    @Base\mpfr.jl:266; BigFloat(x::BigInt, r::Base…
+   ╎    ╎    ╎    ╎    ╎    6    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Base…
+   ╎    ╎    ╎    ╎    ╎     6    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:124; BigFloat(; precision::Int3…
+   ╎    ╎    ╎    ╎    ╎    ╎ 4    …ase\mpfr.jl:127; BigFloat(; precision::Int3…
+  4╎    ╎    ╎    ╎    ╎    ╎  4    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:129; BigFloat(; precision::Int3…
+  1╎    ╎    ╎    ╎    ╎    ╎  1    …ase\mpfr.jl:119; _BigFloat
+  4╎    ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Base…
+   ╎    ╎    ╎    ╎ 30   …re\OrthoPols.jl:160; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  1    @Base\mpfr.jl:638; sqrt(x::BigFloat)
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:119; _BigFloat
+ 10╎    ╎    ╎    ╎  10   @Base\mpfr.jl:639; sqrt(x::BigFloat)
+   ╎    ╎    ╎    ╎  19   …se\promotion.jl:425; /
+   ╎    ╎    ╎    ╎   1    @Base\mpfr.jl:476; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat(; precision::Int32)
+  7╎    ╎    ╎    ╎   7    @Base\mpfr.jl:477; /(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   11   …se\promotion.jl:393; promote
+   ╎    ╎    ╎    ╎    11   …e\promotion.jl:370; _promote
+   ╎    ╎    ╎    ╎     11   @Base\number.jl:7; convert
+   ╎    ╎    ╎    ╎    ╎ 11   @Base\mpfr.jl:272; BigFloat
+   ╎    ╎    ╎    ╎    ╎  11   @Base\mpfr.jl:272; #BigFloat#8
+   ╎    ╎    ╎    ╎    ╎   3    @Base\gmp.jl:334; BigInt(x::Int64)
+   ╎    ╎    ╎    ╎    ╎    3    @Base\gmp.jl:312; BigInt
+   ╎    ╎    ╎    ╎    ╎     3    @Base\gmp.jl:212; set_si
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    @Base\gmp.jl:63; BigInt
+  1╎    ╎    ╎    ╎    ╎    ╎  2    @Base\gmp.jl:64; BigInt(; nbits::Int64)
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\gmp.jl:151; init2!
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    @Base\gmp.jl:211; set_si!
+   ╎    ╎    ╎    ╎    ╎   8    @Base\mpfr.jl:266; BigFloat
+   ╎    ╎    ╎    ╎    ╎    3    @Base\mpfr.jl:267; BigFloat(x::BigInt, r::Base…
+   ╎    ╎    ╎    ╎    ╎     3    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:124; BigFloat(; precision::Int3…
+   ╎    ╎    ╎    ╎    ╎    ╎ 2    …ase\mpfr.jl:127; BigFloat(; precision::Int3…
+  2╎    ╎    ╎    ╎    ╎    ╎  2    …s\string.jl:90; _string_n
+  5╎    ╎    ╎    ╎    ╎    5    @Base\mpfr.jl:268; BigFloat(x::BigInt, r::Base…
+   ╎    ╎    ╎    ╎ 9    …re\OrthoPols.jl:161; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  2    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   2    @Base\mpfr.jl:122; BigFloat
+  1╎    ╎    ╎    ╎    2    @Base\mpfr.jl:129; BigFloat(; precision::Int32)
+  1╎    ╎    ╎    ╎     1    @Base\mpfr.jl:119; _BigFloat
+  7╎    ╎    ╎    ╎  7    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎ 8    …re\OrthoPols.jl:162; ortho2eva30(mmax::Int64, z::Vect…
+   ╎    ╎    ╎    ╎  4    @Base\mpfr.jl:433; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎   4    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    4    @Base\mpfr.jl:127; BigFloat(; precision::Int32)
+  4╎    ╎    ╎    ╎     4    …ings\string.jl:90; _string_n
+  4╎    ╎    ╎    ╎  4    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎ 6    …re\OrthoPols.jl:163; ortho2eva30(mmax::Int64, z::Vect…
+  6╎    ╎    ╎    ╎  6    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    12   …ature\general.jl:402; rhs()
+   ╎    ╎    ╎     12   …ase\broadcast.jl:911; materialize!(dest::Vector{BigFlo…
+   ╎    ╎    ╎    ╎ 12   …se\broadcast.jl:914; materialize!
+   ╎    ╎    ╎    ╎  12   …se\broadcast.jl:956; copyto!
+   ╎    ╎    ╎    ╎   12   …e\broadcast.jl:1003; copyto!
+   ╎    ╎    ╎    ╎    12   …ase\simdloop.jl:77; macro expansion
+   ╎    ╎    ╎    ╎     12   …\broadcast.jl:1004; macro expansion
+   ╎    ╎    ╎    ╎    ╎ 12   …\broadcast.jl:636; getindex
+   ╎    ╎    ╎    ╎    ╎  9    …\broadcast.jl:681; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎   9    …\broadcast.jl:705; _getindex
+   ╎    ╎    ╎    ╎    ╎    9    …broadcast.jl:706; _getindex
+   ╎    ╎    ╎    ╎    ╎     9    …broadcast.jl:682; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎    ╎ 9    …roadcast.jl:709; _broadcast_getindex_evalf
+   ╎    ╎    ╎    ╎    ╎    ╎  5    …ase\mpfr.jl:433; *(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎    ╎   5    …ase\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎    1    …ase\mpfr.jl:127; BigFloat(; precision::I…
+  1╎    ╎    ╎    ╎    ╎    ╎     1    …s\string.jl:90; _string_n
+   ╎    ╎    ╎    ╎    ╎    ╎    4    …ase\mpfr.jl:129; BigFloat(; precision::I…
+  4╎    ╎    ╎    ╎    ╎    ╎     4    …ase\mpfr.jl:119; _BigFloat
+  4╎    ╎    ╎    ╎    ╎    ╎  4    …ase\mpfr.jl:434; *(x::BigFloat, y::BigFloa…
+   ╎    ╎    ╎    ╎    ╎  3    …\broadcast.jl:682; _broadcast_getindex
+   ╎    ╎    ╎    ╎    ╎   3    …\broadcast.jl:709; _broadcast_getindex_evalf
+   ╎    ╎    ╎    ╎    ╎    1    @Base\mpfr.jl:433; +(x::BigFloat, y::BigFloat)
+   ╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:122; BigFloat
+   ╎    ╎    ╎    ╎    ╎    ╎ 1    …ase\mpfr.jl:123; BigFloat(; precision::Int3…
+   ╎    ╎    ╎    ╎    ╎    ╎  1    …romotion.jl:462; <
+  1╎    ╎    ╎    ╎    ╎    ╎   1    @Base\int.jl:83; <
+  1╎    ╎    ╎    ╎    ╎    2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+  1╎    ╎    ╎    ╎    ╎     1    @Base\mpfr.jl:145; unsafe_convert
+   ╎    ╎    ╎    3    …ra\src\matmul.jl:106; *(A::Adjoint{BigFloat, Matrix{Big…
+   ╎    ╎    ╎     3    …ra\src\matmul.jl:237; mul!
+   ╎    ╎    ╎    ╎ 3    …a\src\matmul.jl:263; mul!
+   ╎    ╎    ╎    ╎  3    …a\src\matmul.jl:785; generic_matmatmul!(C::Matrix{Bi…
+   ╎    ╎    ╎    ╎   3    …a\src\matmul.jl:904; _generic_matmatmul!(C::Matrix{…
+  1╎    ╎    ╎    ╎    1    @Base\mpfr.jl:434; *(x::BigFloat, y::BigFloat)
+  2╎    ╎    ╎    ╎    2    @Base\mpfr.jl:434; +(x::BigFloat, y::BigFloat)
+Total snapshots: 1186. Utilization: 100% across all threads and tasks. Use the `groupby` kwarg to break down by thread and/or task.
