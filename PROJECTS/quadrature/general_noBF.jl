@@ -14,31 +14,59 @@ Random.seed!(hash(floor(Int, time() * 1e9)))
 order = 16
 
 specs = [
-    (1, 0), # Vertices (T1)
-    (4, 1), # Edge class (T4)
-    (4, 1), # Edge class (T4)
-    (4, 1), # Edge class (T4)
+    (1, 0), # Vertices
+
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+    (4, 1), # Edge class
     (2, 0), # Edge Midpoints (T2)
 
-    (3, 0), # Trig Midpoint (T3)
+    (3, 0), # Trig midpoint
 
-    (5, 1), # Interior class, type 1 (T5)
-    (5, 1), # Interior class, type 1 (T5)
-    (5, 1), # Interior class, type 1 (T5)
-    (5, 1), # Interior class, type 1 (T5)
-    (5, 1), # Interior class, type 1 (T5)
-    # (5, 1), # Interior class, type 1 (T5)
+    (5, 1), # Interior class, type 1 
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1
 
-    (6, 2), # Interior class, type 2 (T6)
-    (6, 2), # Interior class, type 2 (T6)
-    (6, 2), # Interior class, type 2 (T6)
-    (6, 2), # Interior class, type 2 (T6)
-    (6, 2), # Interior class, type 2 (T6)
+    # (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
 ]
+
+# order = 16
+
+# specs = [
+#     (1, 0), # Vertices (T1)
+#     (4, 1), # Edge class (T4)
+#     (4, 1), # Edge class (T4)
+#     (4, 1), # Edge class (T4)
+#     (2, 0), # Edge Midpoints (T2)
+
+#     (3, 0), # Trig Midpoint (T3)
+
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     (5, 1), # Interior class, type 1 (T5)
+#     # (5, 1), # Interior class, type 1 (T5)
+
+#     # (6, 2), # Interior class, type 2 (T6)
+#     (6, 2), # Interior class, type 2 (T6)
+#     (6, 2), # Interior class, type 2 (T6)
+#     (6, 2), # Interior class, type 2 (T6)
+#     (6, 2), # Interior class, type 2 (T6)
+# ]
+
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
 # indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
+# indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120]
 
 function Trans(point::Vector{Float64})
     @assert length(point) == 2 "Input point must be a 2-element vector"
@@ -342,10 +370,15 @@ J(a) = J1(a) + J2(a)
 
 up(a) = inv(J(a)'*J(a))*J(a)'
 
+
+
+
+
+
 function run()
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
-    global a = nothing
+    a = nothing
 
     for j = 1:100
         min_val = 0.01
@@ -355,6 +388,7 @@ function run()
         if cids<2300
             break
         end
+        print(j)
     end
     
     bad = false
@@ -396,7 +430,7 @@ function run()
                 break
             end
 
-            println(" fan: ", fan, " fa: ", fa)
+            println(" fa: ", fa)
 
             # a = a .- (alpha.*res)
 
@@ -471,7 +505,8 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
             
             cids = calculate_inverse_distance_sum(specs, a)
 
-            if cids>16000
+            # if cids>5500 # Ordnung 14
+            if cids>14500 # Ordnung 16
                 break
             end
 
@@ -506,10 +541,23 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                     end
 
                     # a = a .- (alpha.*res)
+                    # fan = f(a)
+                    
+                    # println(" norm: ", norm(fa-fan), " fa: ", fa, " with an alpha of ", alpha)
+
+                    # if norm(fa-fan)<1e-12# & fa<1e-12
+                    #     print(a)
+                    # end
+
+
+
+
+
+                    # a = a .- (alpha.*res)
                     w = weight(a)
                     
                     # if all(x -> x > 0, w) && all(x -> x > 0, a)
-                    if all(x -> x > 0, w) && i>100
+                    if all(x -> x > -1e-10, w) && i>100
                         lock(result_lock) do
                             if fa < best_f
                                 best_result = a
@@ -531,9 +579,13 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                         end
                     end            
                     
-                    if i > 60
-                        if any(x -> x < 0, w)
+                    if i > 50 || (norm(fa-fan)<1e-5 && fa>1e-2) || (norm(fa-fan)<1e-13 && fa<1e-12)
+                        if any(x -> x < -1e-10, w)
                             println("Thread $(Threads.threadid()): .. weights negative.")
+                            if (norm(fa-fan)<1e-3 && fa<1e-1)
+                                display(w)
+                                display(a)
+                            end
                             break
                         elseif norm(res) > 2
                             println("Thread $(Threads.threadid()): .. res norm too big, breaking.")
@@ -547,7 +599,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                         end
                     end
                     
-                    if i > 1000 && fa > 0.9
+                    if i > 50 && fa > 0.9
                         println("Thread $(Threads.threadid()): .. Zielfunktion not decreasing.")
                         break
                     end
@@ -642,9 +694,6 @@ function calculate_inverse_distance_sum(specs, a)
     
     return sum_inverse_distances
 end
-
-
-
 
 
 
