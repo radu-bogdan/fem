@@ -154,8 +154,11 @@ specs = [
     (1, 0), # Vertices
     (2, 0), # Edge midpoints
     (4, 1), # Edge class
+
     (3, 0), # Trig midpoint
+
     (5, 1), # Interior class, type 1
+
     (6, 2)  # Interior class, type 2
 ]
 
@@ -181,9 +184,11 @@ specs = [
     (1, 0), # Vertices
     (4, 1), # Edge class
     (4, 1), # Edge class
+
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
+
     (6, 2)  # Interior class, type 2
 ]
 
@@ -214,9 +219,11 @@ specs = [
     (2, 0), # Edge Midpoints
     (4, 1), # Edge class
     (4, 1), # Edge class
+
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
+
     (6, 2), # Interior class, type 2
     (6, 2)  # Interior class, type 2
 ]
@@ -379,6 +386,8 @@ specs = [
     (4, 1), # Edge class
     (4, 1), # Edge class
     (4, 1), # Edge class
+    
+    (3, 0), # Trig midpoint
 
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1 
