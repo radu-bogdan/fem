@@ -11,7 +11,7 @@ BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 16
+order = 18
 
 specs = [
     (1, 0), # Vertices
@@ -19,17 +19,17 @@ specs = [
     (4, 1), # Edge class
     (4, 1), # Edge class
     (4, 1), # Edge class
-    (2, 0), # Edge Midpoints (T2)
+    (4, 1), # Edge class
 
-    # (3, 0), # Trig midpoint
-
+    (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1 
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1
 
-    # (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
@@ -64,9 +64,12 @@ specs = [
 
 
 freeparam = sum(x[2] for x in specs)
-indices = 1:(Int((order+1)*(order+2)/2))
-# indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
-# indices = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120]
+# indices = 1:(Int((order+1)*(order+2)/2))
+# indices14 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
+# indices16 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120]
+indices18 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190]
+
+indices = indices18
 
 function Trans(point::Vector{Float64})
     @assert length(point) == 2 "Input point must be a 2-element vector"
@@ -381,9 +384,10 @@ function run()
     a = nothing
 
     for j = 1:100
-        min_val = 0.01
-        max_val = 0.99
-        a = min_val .+ (max_val - min_val) .*(rand(freeparam))
+        # min_val = 0.01
+        # max_val = 0.99
+        # a = min_val .+ (max_val - min_val) .*(rand(freeparam))
+        a = generate_valid_parameters(specs)
         cids = calculate_inverse_distance_sum(specs, a)
         if cids<2300
             break
@@ -506,7 +510,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
             cids = calculate_inverse_distance_sum(specs, a)
 
             # if cids>5500 # Ordnung 14
-            if cids>14500 # Ordnung 16
+            if cids>16000 # Ordnung 18
                 break
             end
 
