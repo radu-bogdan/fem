@@ -21,17 +21,17 @@ specs = [
     (4, 1), # Edge class
     (4, 1), # Edge class
     
-    # (3, 0), # Trig midpoint
+    (3, 0), # Trig midpoint
 
-    (5, 1), # Interior class, type 1
+    # (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1 
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
+    # (5, 1), # Interior class, type 1
 
+    (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
@@ -513,7 +513,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
             cids = calculate_inverse_distance_sum(specs, a)
 
             # if cids>5500 # Ordnung 14
-            if cids>19100 || any(weight(a).<-2e-1) # Ordnung 18
+            if cids>24100 || any(weight(a).<-2e-1) # Ordnung 18
                 break
             end
 

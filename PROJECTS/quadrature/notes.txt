@@ -386,16 +386,15 @@ specs = [
     (4, 1), # Edge class
     (4, 1), # Edge class
     (4, 1), # Edge class
-    
-    (3, 0), # Trig midpoint
 
+    (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1 
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
     (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
 
+    (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
     (6, 2), # Interior class, type 2
@@ -403,4 +402,26 @@ specs = [
     (6, 2), # Interior class, type 2
 ]
 
-
+22-element Vector{Float64}:
+0.22602274479966727
+0.05554275033556339
+0.8809651342369424
+0.38610851964110793
+0.8215824924982053
+0.40470602317511895
+0.5778432879613025
+0.2306725741198919
+0.9808841598152929
+0.0430455226280874
+0.32783005074502947
+0.32610232636680003
+0.1539705448108261
+0.5948746214874675
+0.19304049368084872
+0.8026525798695466
+0.052427440911469204
+0.31819283585385766
+0.06892420195266408
+0.05979099891334915
+0.06595443915802122
+0.8314386543713359
