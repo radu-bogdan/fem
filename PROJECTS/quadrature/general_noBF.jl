@@ -366,12 +366,13 @@ function m_new(a)
     return vcat([dAi' * A_a + A_a' * dAi for dAi in dA_blocks]...)
 end
 
-J2(a) = -A(a)*C(a)*reshape(m_new(a)*C(a)*A(a)'*rhs(),:,freeparam)
+
+z(a) = -C(a)*reshape(m_new(a)*C(a)*A(a)'*rhs(),:,freeparam)
+
+J2(a) = A(a)*z(a)
 J(a) = J1(a) + J2(a)
 
 up(a) = (J(a)'*J(a))\J(a)'
-
-
 
 
 
@@ -558,8 +559,8 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                     # a = a .- (alpha.*res)
                     w = weight(a)
                     
-                    # if all(x -> x > 0, w) && all(x -> x > 0, a)
                     if all(x -> x > -1e-10, w) && i>100
+                    # if i>100
                         lock(result_lock) do
                             if fa < best_f
                                 best_result = a
@@ -583,6 +584,7 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                     
                     if i > 20 || (norm(fa-fan)<1e-5 && fa>1e-2) || (norm(fa-fan)<1e-13 && fa<1e-12)
                         if any(x -> x < -1e-10, w)
+                        # if any(x -> x < -10, w)
                             println("Thread $(Threads.threadid()): .. weights negative.")
                             if (norm(fa-fan)<1e-3 && fa<1e-1)
                                 display(w)
@@ -597,6 +599,8 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                             break
                         elseif !check_points_in_triangle(specs, a)
                             println("Thread $(Threads.threadid()): .. points outside.")
+                            display(w)
+                            display(a)
                             break
                         end
                     end
