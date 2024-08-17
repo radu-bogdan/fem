@@ -661,7 +661,7 @@ end
 
 
 using Base.Threads
-using DataStructures
+# using DataStructures
 
 function run_parallel_new(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-19)
     rhs_val = rhs()  # Precompute rhs
