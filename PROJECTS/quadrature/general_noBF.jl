@@ -11,33 +11,7 @@ BLAS.set_num_threads(Sys.CPU_THREADS)
 
 Random.seed!(hash(floor(Int, time() * 1e9)))
 
-order = 18
-
-specs = [
-    (1, 0), # Vertices
-
-    (4, 1), # Edge class
-    (4, 1), # Edge class
-    (4, 1), # Edge class
-    (4, 1), # Edge class
-
-    (3, 0), # Trig midpoint
-
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1 
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1
-
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-]
-
-# order = 14
+# order = 18
 
 # specs = [
 #     (1, 0), # Vertices
@@ -45,17 +19,42 @@ specs = [
 #     (4, 1), # Edge class
 #     (4, 1), # Edge class
 #     (4, 1), # Edge class
-#     (3, 0), # Trig midpoint    
+#     (4, 1), # Edge class
 
+#     (3, 0), # Trig midpoint
+
+#     (5, 1), # Interior class, type 1
 #     (5, 1), # Interior class, type 1
 #     (5, 1), # Interior class, type 1 
 #     (5, 1), # Interior class, type 1
-#     # (5, 1), # Interior class, type 1 # no midpoint, additional 5-class, so 2 additional points...
+#     (5, 1), # Interior class, type 1
 
+#     (6, 2), # Interior class, type 2
+#     (6, 2), # Interior class, type 2
+#     (6, 2), # Interior class, type 2
 #     (6, 2), # Interior class, type 2
 #     (6, 2), # Interior class, type 2
 #     (6, 2), # Interior class, type 2
 # ]
+
+order = 14
+
+specs = [
+    (1, 0), # Vertices
+
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+    (4, 1), # Edge class
+
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1 
+    (5, 1), # Interior class, type 1
+    (5, 1), # Interior class, type 1 # no midpoint, additional 5-class, so 2 additional points...
+
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+    (6, 2), # Interior class, type 2
+]
 
 
 freeparam = sum(x[2] for x in specs)
@@ -65,11 +64,12 @@ indices = 1:(Int((order+1)*(order+2)/2))
 
 # indices14 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120]
 # indices16 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153]
-indices18 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190]
+# indices18 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190]
 # indices20 = [1, 4, 6, 8, 10, 11, 13, 15, 17, 19, 21, 22, 24, 26, 28, 30, 32, 34, 36, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190, 192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 211, 213, 215, 217, 219, 221, 223, 225, 227, 229, 231]
-indices = indices18
+# indices = indices18
 
-function Trans(point::Vector{Float64})
+# function Trans(point::Vector{Float64})
+function Trans(point)
     @assert length(point) == 2 "Input point must be a 2-element vector"
     v1 = [-1.0, -1.0 / sqrt(3.0)]
     v2 = [ 1.0, -1.0 / sqrt(3.0)]
@@ -87,29 +87,6 @@ function TransJ()
     return [
         v2[1] - v1[1]  v3[1] - v1[1];
         v2[2] - v1[2]  v3[2] - v1[2]
-    ]
-end
-
-function TransBack(point::Vector{Float64})
-    @assert length(point) == 2 "Input point must be a 2-element vector"
-    v1 = [-1.0, -1.0 / sqrt(3.0)]
-    v2 = [ 1.0, -1.0 / sqrt(3.0)]
-    v3 = [ 0.0,  2.0 / sqrt(3.0)]
-    x, y = point
-    denominator = (v1[1] * (v2[2] - v3[2]) + v2[1] * (v3[2] - v1[2]) + v3[1] * (v1[2] - v2[2]))
-    new_x = ((v2[2] - v3[2]) * (x - v1[1]) + (v3[1] - v2[1]) * (y - v1[2])) / denominator
-    new_y = ((v3[2] - v1[2]) * (x - v2[1]) + (v1[1] - v3[1]) * (y - v2[2])) / denominator
-    return [new_x, new_y]
-end
-
-function TransBackJ()
-    v1 = [-1.0, -1.0 / sqrt(3.0)]
-    v2 = [ 1.0, -1.0 / sqrt(3.0)]
-    v3 = [ 0.0,  2.0 / sqrt(3.0)]
-    denominator = (v1[1] * (v2[2] - v3[2]) + v2[1] * (v3[2] - v1[2]) + v3[1] * (v1[2] - v2[2]))
-    return [
-        (v2[2] - v3[2]) / denominator  (v3[1] - v2[1]) / denominator;
-        (v3[2] - v1[2]) / denominator  (v1[1] - v3[1]) / denominator
     ]
 end
 
@@ -228,6 +205,10 @@ eval_dbT6(order,a,b) = ([ortho2eva3(order, Trans(T6(a, b)[:,1]))[2], ortho2eva3(
                         [ortho2eva3(order, Trans(T6(a, b)[:,5]))[2], ortho2eva3(order, Trans(T6(a, b)[:,5]))[3]]'*TransJ()*(dbT6(a)[:,5])+
                         [ortho2eva3(order, Trans(T6(a, b)[:,6]))[2], ortho2eva3(order, Trans(T6(a, b)[:,6]))[3]]'*TransJ()*(dbT6(a)[:,6]))'
 
+#####################################################################################################################################################################
+# Generating A and dA in one go
+#####################################################################################################################################################################
+
 function generate_A(specs)
     expr = quote
         function A(a)
@@ -325,6 +306,14 @@ end
 
 functions = generate_A_and_dA(specs)
 
+A = functions.A
+dA = functions.dA
+
+#####################################################################################################################################################################
+# Generate rhs
+#####################################################################################################################################################################
+
+
 # function rhs_slow()
 #     X, W = mysimplexquad(order, 2)
 #     w = zeros(div((order + 1) * (order + 2), 2))[indices]
@@ -342,8 +331,10 @@ function rhs()
     return w
 end
 
-A = functions.A
-dA = functions.dA
+#####################################################################################################################################################################
+
+
+weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 f(a) = norm(A(a)*((A(a)' * A(a))\(A(a)' * rhs()))-rhs())
 g(a) = A(a)*((A(a)' * A(a))\(A(a)' * rhs()))-rhs()
@@ -366,55 +357,97 @@ function m_new(a)
     return vcat([dAi' * A_a + A_a' * dAi for dAi in dA_blocks]...)
 end
 
+a = rand(freeparam)
 
 z(a) = -C(a)*reshape(m_new(a)*C(a)*A(a)'*rhs(),:,freeparam)
 
 J2(a) = A(a)*z(a)
 J(a) = J1(a) + J2(a)
 
+using ForwardDiff
+
+# J(a) = ForwardDiff.jacobian(g, a)
+# z(a) = ForwardDiff.jacobian(weight, a)
+
 up(a) = (J(a)'*J(a))\J(a)'
 
 
+upa_ga_2(a,L) = (J(a)'*J(a) + 1/L*z(a)'*diagm(weight(a).^2)*z(a))\(J(a)'*g(a)-1/L*z(a)'*weight(a))
+
+function fnew(a, L)
+    w = weight(a)
+    if any(w .< 0)
+        min_w = minimum(w)  # Find the most negative value in weight(a)
+        penalty = f(a) + 20*exp(-min_w)  # Exponential growth penalty
+        return penalty  # Return the penalty value as the function output
+    else
+        return f(a) - 1/L * sum(log.(w))
+    end
+end
 
 
-function run()
+function run(L)
     weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
-    a = nothing
+    a = generate_valid_parameters(specs)
+    cids = calculate_inverse_distance_sum(specs, a)
 
-    for j = 1:100
+    while any(weight(a).<0) && cids>6500
         # min_val = 0.01
         # max_val = 0.99
         # a = min_val .+ (max_val - min_val) .*(rand(freeparam))
         a = generate_valid_parameters(specs)
         cids = calculate_inverse_distance_sum(specs, a)
-        if cids<2300
-            break
-        end
-        print(j)
+        # cids = calculate_inverse_distance_sum(specs, a)
+        # if any(weight(a).<0)
+        #     break
+        # end
+        # print(j)
     end
     
+    print(weight(a))
     bad = false
 
     print("starting with a new config: ")
-    print("f(a) is about $(@sprintf("%.3g", f(a))). ")
+    print("f(a) is about $(@sprintf("%.3g", fnew(a,L))). ")
 
     for i=1:30000
 
-        # try
+        if i%5 == 0
+            L = L*2
+            if i>30
+                L = 0
+            end
+        end
+
+        try
             alpha = 1
-            fa = f(a)
-            res = up(a) * g(a)
+
+            
+
+            if L>0
+                res = upa_ga_2(a,L)
+                fa = fnew(a,L)
+            else
+                res = up(a) * g(a)
+                fa = f(a)
+            end
+
             ga = g(a)
             Ja = J(a)
             
             fan = 0
 
-            for j = 1:20
+            for j = 1:200
                 an = a .- (alpha.*res)  # Element-wise subtraction
                 
                 gan = g(an)
-                fan = f(an)
+                
+                if L>0
+                    fan = fnew(an,L)
+                else
+                    fan = f(an)
+                end
 
                 # if fan < fa .- alpha*0.01*sqrt(res'*res)
                 # if all(ga-gan .> 0) #alpha*1/2*(res'*(J(a)'*ga))
@@ -427,13 +460,13 @@ function run()
                 end
             end
 
-            print(" norm: ", norm(fa-fan))
+            print("Iter", i ,". norm: ", norm(fa-fan), " alpha: ", alpha, " fa: ", fa)
 
             if norm(fa-fan)<1e-14
                 break
             end
 
-            println(" fa: ", fa)
+            println()
 
             # a = a .- (alpha.*res)
 
@@ -445,27 +478,28 @@ function run()
             
             if any(x -> (x<0), weight(a)) && i>50
                 bad = true
+                print(weight(a))
                 print(".. neg lams.\n")
                 break
             elseif norm(res)>2  && i>50
                 print(".. res norm too big, breaking.\n")
                 bad = true
                 break
-            elseif f(a)>0.01  && i>200
-                print(".. Zielfunktion not decreasing.\n")
-                display(a)
-                bad = true
-                break
+            # elseif fnew(a,L)>0.01  && i>200
+            #     print(".. Zielfunktion not decreasing.\n")
+            #     display(a)
+            #     bad = true
+            #     break
             elseif any(x-> (x>5), a)  && i>50
                 print(".. big weights.\n")
                 bad = true
                 break
             end
-        # catch e
-        #     bad = true
-        #     print(".. nans... breaking\n")
-        #     break
-        # end
+        catch e
+            bad = true
+            print(".. nans... breaking\n")
+            break
+        end
     end
 
     if !bad
@@ -482,10 +516,11 @@ function run()
             print("f(a)=", f(a), "\n")
         end
     end
+    
+    return a
 end
 
 
-weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
 
 
 function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-19)
@@ -521,12 +556,14 @@ function run_parallel(max_attempts = 2000000, target_f = 1e-3, target_res = 1e-1
                     
                     alpha = 1
                     fa = f(a)
-                    res = up(a) * g(a)
+                    # res = up(a) * g(a)
+                    L = 1/8
+                    res = upa_ga_2(a,L)
                     ga = g(a)
                     Ja = J(a)
                     
                     fan = 0
-
+                    
                     for j = 1:20
                         an = a .- (alpha.*res)  # Element-wise subtraction
                         
@@ -830,13 +867,6 @@ function deeper(a)
     end
     return a
 end
-
-
-
-weight(a) = ((A(a)' * A(a))\(A(a)' * rhs()))
-
-
-
 
 
 
