@@ -37,25 +37,19 @@ Random.seed!(hash(floor(Int, time() * 1e9)))
 #     (6, 2), # Interior class, type 2
 # ]
 
-order = 14
+order = 8
 
 specs = [
     (1, 0), # Vertices
+    (2, 0), # Edge midpoints
+    (4, 1), # Edge class
 
-    (4, 1), # Edge class
-    (4, 1), # Edge class
-    (4, 1), # Edge class
+    (3, 0), # Trig midpoint
 
     (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1 
-    (5, 1), # Interior class, type 1
-    (5, 1), # Interior class, type 1 # no midpoint, additional 5-class, so 2 additional points...
 
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
-    (6, 2), # Interior class, type 2
+    (6, 2)  # Interior class, type 2
 ]
-
 
 freeparam = sum(x[2] for x in specs)
 indices = 1:(Int((order+1)*(order+2)/2))
@@ -359,15 +353,14 @@ end
 
 a = rand(freeparam)
 
-z(a) = -C(a)*reshape(m_new(a)*C(a)*A(a)'*rhs(),:,freeparam)
-
-J2(a) = A(a)*z(a)
-J(a) = J1(a) + J2(a)
+z_old(a) = -C(a)*reshape(m_new(a)*C(a)*A(a)'*rhs(),:,freeparam)
+# J2(a) = A(a)*z(a)
+# J(a) = J1(a) + J2(a)
 
 using ForwardDiff
 
-# J(a) = ForwardDiff.jacobian(g, a)
-# z(a) = ForwardDiff.jacobian(weight, a)
+J(a) = ForwardDiff.jacobian(g, a)
+z(a) = ForwardDiff.jacobian(weight, a)
 
 up(a) = (J(a)'*J(a))\J(a)'
 
@@ -510,6 +503,8 @@ function run(L)
 
         if all(x -> (x>0), weights) && f(a)<1e-1
             print(" WEIGHTS POSITIVE! \n")
+            print("These are: ")
+            display(weight(a))
             # break
         else
             print("..weights negative, continuing ..")
