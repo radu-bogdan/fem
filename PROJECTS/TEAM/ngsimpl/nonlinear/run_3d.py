@@ -6,6 +6,8 @@ from copy import deepcopy
 import pyngcore as ngcore
 ngcore.SetNumThreads(48)
 
+ngs.ngsglobals.msg_level = 0
+
 
 # import netgen.meshing
 # netgen.meshing.Mesh.EnableTableClass("edges", True)

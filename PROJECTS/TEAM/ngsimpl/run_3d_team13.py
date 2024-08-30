@@ -7,7 +7,7 @@ import pyngcore as ngcore
 ngcore.SetNumThreads(48)
 
 
-levels = 4
+levels = 3
 
 deg = 2
 degdif = 1

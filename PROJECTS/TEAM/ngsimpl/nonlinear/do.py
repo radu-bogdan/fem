@@ -62,11 +62,13 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
 
     cf_iter = mesh.MaterialCF({linear: nu0*Id, nonlinear: fun1*Id + fun2*BBt}, default = nu0*Id).Compile()
 
-    K_iter = ngs.BilinearForm(HCurl)
-    K_iter += ngs.SymbolicBFI(cf_iter*ngs.curl(u)*ngs.curl(v) + 1e-5*u*v, intrule = ir)
+    K_iter = ngs.BilinearForm(HCurl, symmetric = True)
+    K_iter += ngs.SymbolicBFI(cf_iter*ngs.curl(u)*ngs.curl(v) + 1e-6*nu0*u*v, intrule = ir)
     # K_iter += (cf_iter*ngs.curl(u)*ngs.curl(v))*ngs.dx
     # C_iter = ngs.Preconditioner(K_iter, type = "local")
-    C_iter = ngs.Preconditioner(K_iter, "bddc")
+    jac = ngs.Preconditioner(K_iter, "bddc")
+    # jac = ngs.Preconditioner(K_iter, type="multigrid", coarsetype="direct", blocktype=4)
+
 
     # C_iter = ngs.MultiGridPreconditioner(K_iter, coarsetype="hcurlamg") 
     # C_iter = ngs.MultiGridPreconditioner(K_iter)
@@ -75,7 +77,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         with ngs.TaskManager(): K_iter.Assemble()
         return K_iter
 
-    newFreeDofs = CoTreeBitArray(mesh, HCurl, plot = False)
+    # newFreeDofs = CoTreeBitArray(mesh, HCurl, plot = False)
 
     print("Using 3D mesh with ne=", mesh.ne, "elements and nv=", mesh.nv, "points and " ,HCurl.ndof, "DOFs.\n ")
 
@@ -100,7 +102,7 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         tic()
 
     
-        jac = K_iter.mat.CreateSmoother(newFreeDofs)
+        # jac = K_iter.mat.CreateSmoother(newFreeDofs)
 
         # class SymmetricGS(ngs.BaseMatrix):
         #     def __init__ (self, smoother):
@@ -121,13 +123,14 @@ def solve(HCurl,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         # iterativeSolver = CGSolver(K_iter.mat, pre = C_iter.mat, tol  = 1e-8,  maxiter = maxit*10)
 
         # print("At iteration:")
-        with ngs.TaskManager():
+        # with ngs.TaskManager():
             # iterativeSolver = CGSolver(K_iter.mat, freedofs = newFreeDofs, tol  = 1e-12,  maxiter = maxit, printrates = False)
-            iterativeSolver = CGSolver(K_iter.mat, pre = C_iter, atol  = 1e-11,  maxiter = maxit, printrates = False)
+        iterativeSolver = CGSolver(K_iter.mat, pre = jac, tol  = 1e-4,  maxiter = maxit, printrates = True)
 
-            # du.vec.data = iterativeSolver * dw.vec
+        du.vec.data = iterativeSolver * dw.vec
+
             # du.vec.data = da.mat.Inverse(newFreeDofs, inverse="sparsecholesky") * dw.vec
-            du.vec.data = da.mat.Inverse(newFreeDofs, inverse="pardiso") * dw.vec
+            # du.vec.data = da.mat.Inverse(newFreeDofs, inverse="pardiso") * dw.vec
         
         # print('MAXdu: ' + str(du.vec.FV().NumPy().max()))
         # print('MAXdw: ' + str(dw.vec.FV().NumPy().max()))
@@ -192,7 +195,7 @@ def solve_2d(H1,A,mesh,deg,J,fun_w,fun_dw,fun_ddw,linear,nonlinear):
         return rot*ngs.grad(a)
 
     
-    maxit = 10_000_000
+    maxit = 1_000
     tol2 = 1e-13
     regb = 1e-8
 
